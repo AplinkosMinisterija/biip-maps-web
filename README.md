@@ -30,7 +30,6 @@ Ministerija.
   - [Zuvinimas](#zuvinimas)
   - [Zuvinimas Draw](#zuvinimas-draw)
   - [Types](#types)
-  - [Styles](#styles)
 
 ## About the Project
 
@@ -427,32 +426,4 @@ https://maps.biip.lt?field={$lt:1}
 
 ```
 https://maps.biip.lt?field={$lte:1}
-```
-
-## Styles
-
-### Applying styles for draw
-
-Set style for modify, select, draw and draw layer instances:
-
-**setIcon**
-
-Set icon name and additional style main and secondary (for select, editing case) color:
-
-```
-.setIcon('animals').setColors('#00ff00', '#ff0000')
-```
-
-**setColors**
-Set colors for line/polygon/point:
-
-```
-setColors(primaryColor, secondaryColor)
-```
-
-**setStyles**
-All styles can be applied via:
-
-```
-setStyles({colors: {primary:  '', secondary: ''}, width: 3, icon: 'name'})
 ```
