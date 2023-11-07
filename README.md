@@ -33,12 +33,13 @@ Ministerija.
 
 ## About the Project
 
-The BĮIP Maps WEB is designed to provide information and functionalities related to activities of different water bodies located in Lithuania. It aims to support the management of water bodies.
+The BĮIP Maps WEB is designed to provide maps and it's functionalities for a number of BĮIP projects.
 
 Key features of the WEB include:
 
-- Retrieving fish stocking data, such as planned fish stockings and historical information.
-- Managing fish stocking data.
+- Displaying different maps' layers
+- Identifying objects
+- Filtering and displaying features
 
 ## Getting Started
 
