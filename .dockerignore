@@ -1,0 +1,13 @@
+app/docker-compose.env
+app/docker-compose.yml
+app/Dockerfile
+app/node_modules
+app/test
+
+legacy/docker-compose.env
+legacy/docker-compose.yml
+legacy/Dockerfile
+legacy/node_modules
+legacy/test
+
+.vscode

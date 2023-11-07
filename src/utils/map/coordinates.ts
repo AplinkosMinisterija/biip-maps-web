@@ -1,0 +1,309 @@
+import { boundingExtent, getCenter } from 'ol/extent';
+import { GeoJSON } from 'ol/format';
+import { Geometry, LineString, Point, Polygon } from 'ol/geom';
+import { dataToFeatureCollection } from './utils';
+import { getArea, getLength } from 'ol/sphere';
+import { transform } from 'ol/proj';
+import _ from 'lodash';
+import { projection } from '../constants';
+
+const singleCoordPattern = '(-?\\d+(\\.\\d+)?)';
+
+const joinCoordsPattern = '\\s*[,\\s]\\s*';
+
+const coordPairPattern = `${singleCoordPattern}${joinCoordsPattern}${singleCoordPattern}`;
+
+const coordPatternRegex = new RegExp(`^${coordPairPattern}$`, 'gi');
+const coordPatternMultiRegex = new RegExp(
+  `^(${coordPairPattern}(${joinCoordsPattern})?)+$`,
+  'gi'
+);
+const coordPairRegex = new RegExp(coordPairPattern, 'gi');
+
+const fixCoordinatesText = (text: string) => {
+  return `${text.trim().replace(/\[|\]/gi, '')}`;
+};
+
+const coordinatesToString = (coordinates: any[]): string => {
+  const allItemsAreNumbers = coordinates.every((i) => !isNaN(i));
+  let text = '';
+  if (allItemsAreNumbers) {
+    text = coordinates.join(' ');
+  } else {
+    text = `[${coordinates.map(coordinatesToString).join(', ')}]`;
+  }
+
+  return text;
+};
+
+export function convertCoordinatesTo3346(
+  coordinates: any[] | any,
+  initialProjection = ''
+) {
+  if (coordinates?.type === 'FeatureCollection') {
+    const options: any = {};
+    if (initialProjection) {
+      options.dataProjection = initialProjection;
+    }
+
+    if (
+      coordinates.bbox?.length &&
+      !isWGSCoordinates(coordinates.bbox[0], coordinates.bbox[1])
+    ) {
+      options.featureProjection = projection;
+    }
+
+    const features = new GeoJSON().readFeatures(
+      _.cloneDeep(coordinates),
+      options
+    );
+
+    try {
+      const transformedCoordinates = JSON.parse(
+        new GeoJSON().writeFeatures(features, {
+          decimals: 2,
+        })
+      );
+
+      return transformedCoordinates;
+    } catch (err) {
+      console.error('parsing error', err);
+      return {};
+    }
+  }
+
+  const transformCoordinates = (coordinates: any[]): any => {
+    const allItemsAreArray = coordinates.some((i) => Array.isArray(i));
+    if (allItemsAreArray) return coordinates.map(transformCoordinates);
+
+    const firstEl = coordinates[0];
+    const lastEl = coordinates[1];
+
+    if (!firstEl || !lastEl || isWGSCoordinates(firstEl, lastEl) || isWGSCoordinates(lastEl, firstEl)) {
+      return coordinates;
+    }
+
+    let data = [firstEl, lastEl];
+    // TODO: hack for changing places
+    if (firstEl > lastEl) {
+      data = [lastEl, firstEl];
+    }
+
+    return transform(data, initialProjection || 'EPSG:4326', projection);
+  };
+
+  return transformCoordinates(coordinates);
+}
+
+export function getElementFromCoordinates(
+  type: string,
+  coordinates: any[]
+): {
+  item: Point | LineString | Polygon;
+  coordinates: number[][];
+  extent: number[];
+  center: number[];
+  geom: object;
+} {
+  let item: any;
+  let transformedCoordinates: number[][];
+
+  coordinates = convertCoordinatesTo3346(coordinates);
+
+  if (type === 'Point') {
+    transformedCoordinates = [coordinates];
+    item = new Point(coordinates);
+  } else if (type === 'Polygon') {
+    transformedCoordinates = coordinates.reduce(
+      (acc, item) => [...acc, ...item],
+      []
+    );
+    item = new Polygon(coordinates);
+  } else {
+    transformedCoordinates = coordinates;
+    item = new LineString(coordinates);
+  }
+
+  return {
+    item,
+    coordinates: transformedCoordinates,
+    geom: toGeoJSON(item),
+    ...parseCoordinatesArray(transformedCoordinates),
+  };
+}
+
+function toGeoJSON(data: Geometry) {
+  return dataToFeatureCollection(JSON.parse(new GeoJSON().writeGeometry(data)));
+}
+
+const formatLength = function (line: LineString) {
+  let length = getLength(line);
+  let unit = 'm';
+
+  if (length > 1000) {
+    length = length / 1000;
+    unit = 'km';
+  }
+
+  return `${Math.round(length * 100) / 100} ${unit}`;
+};
+
+const formatArea = function (polygon: Polygon) {
+  let length = getArea(polygon);
+  let unit = 'm';
+
+  if (length > 10000) {
+    length = length / 10000;
+    unit = 'km';
+  }
+
+  return `${Math.round(length * 100) / 100} ${unit}<sup>2</sup>`;
+};
+
+export function isCoordinate(input: string, multi: boolean = false) {
+  input = fixCoordinatesText(input);
+
+  if (!multi) {
+    return !!input.match(coordPatternRegex); //.test(input);
+  }
+
+  return !!input.match(coordPatternMultiRegex); //.test(input);
+}
+
+export function isWGSCoordinates(x: number, y: number) {
+  const coordLength = (coordinate: number) =>
+    Math.floor(coordinate).toString().length;
+
+  return coordLength(x) == 6 && coordLength(y) == 7;
+}
+
+export function parseCoordinates(input: string) {
+  input = fixCoordinatesText(input);
+  const coordinates =
+    input
+      .match(coordPairRegex)
+      ?.map((item) =>
+        item
+          .split(/,|\s/gi)
+          .map((item) => item.trim())
+          .filter((item) => !!item)
+          .map((item) => parseFloat(item))
+      )
+      .map((item) =>
+        !isWGSCoordinates(item[0], item[1]) ? [item[1], item[0]] : item
+      ) || [];
+
+  if (!coordinates.length) return [];
+
+  if (coordinates.length < 1) return coordinates;
+  return coordinates;
+}
+
+export function parseCoordinatesArray(data: number[][]) {
+  const extent = boundingExtent(data as number[][]);
+
+  return {
+    extent,
+    center: getCenter(extent),
+  };
+}
+
+export function parseGeomFromString(input: string) {
+  input = fixCoordinatesText(input);
+  const coordinatesPairs =
+    input
+      .match(coordPairRegex)
+      ?.map((item) =>
+        item
+          .split(/,|\s/gi)
+          .map((item) => item.trim())
+          .filter((item) => !!item)
+          .map((item) => parseFloat(item))
+      )
+      .map((item) =>
+        !isWGSCoordinates(item[0], item[1]) ? [item[1], item[0]] : item
+      ) || [];
+
+  const results: Array<{
+    type: 'LineString' | 'Point' | 'Polygon';
+    geometry: Geometry;
+    coordinates: number[] | number[][] | number[][][];
+    center: number[];
+    content?: string;
+    extent?: number[];
+    geom?: any;
+    properties?: any;
+  }> = [];
+
+  const getElement = (
+    type: 'LineString' | 'Point' | 'Polygon',
+    geometry: Geometry,
+    coordinates: number[] | number[][] | number[][][],
+    properties: any = {}
+  ) => {
+    return {
+      type,
+      geometry,
+      geom: toGeoJSON(geometry),
+      content: coordinatesToString([coordinates]),
+      properties,
+      coordinates,
+    };
+  };
+  if (!coordinatesPairs.length) return results;
+  else if (coordinatesPairs.length < 2) {
+    const {
+      item: point,
+      coordinates: pointCoordinates,
+      extent,
+      center,
+    } = getElementFromCoordinates('Point', coordinatesPairs[0]);
+    results.push({
+      ...getElement('Point', point, pointCoordinates),
+      extent,
+      center,
+    });
+  } else {
+    const {
+      item: lineString,
+      extent,
+      center,
+    } = getElementFromCoordinates('LineString', coordinatesPairs);
+
+    const startMatchEnd =
+      coordinatesPairs[0] === coordinatesPairs[coordinatesPairs.length - 1];
+
+    if (!startMatchEnd) {
+      results.push({
+        ...getElement('LineString', lineString, coordinatesPairs, {
+          distance: formatLength(lineString as LineString),
+        }),
+        center,
+        extent,
+      });
+    }
+
+    if (coordinatesPairs.length > 2) {
+      const polygonCoordinates = _.cloneDeep(coordinatesPairs);
+      if (!startMatchEnd) {
+        polygonCoordinates.push(coordinatesPairs[0]);
+      }
+
+      const {
+        item: polygon,
+        extent,
+        center,
+      } = getElementFromCoordinates('Polygon', [polygonCoordinates]);
+
+      results.push({
+        ...getElement('Polygon', polygon, [polygonCoordinates], {
+          area: formatArea(polygon as Polygon),
+        }),
+        center,
+        extent,
+      });
+    }
+  }
+
+  return results;
+}
