@@ -149,6 +149,7 @@ export function geosjonLoaderFn(
   url: string,
   cb: Function,
   queryOptions: Function = () => ({}),
+  dataProjection?: string,
 ) {
   return function (
     extent: any,
@@ -162,7 +163,12 @@ export function geosjonLoaderFn(
     }
     fetch(url, queryOptions())
       .then((res) => res.json())
-      .then((res) => new GeoJSON().readFeatures(res.geom || res))
+      .then((res) =>
+        new GeoJSON().readFeatures(res.geom || res, {
+          dataProjection: dataProjection || projection,
+          featureProjection: projection,
+        }),
+      )
       .then((data) => {
         cb(data);
         success(data);
