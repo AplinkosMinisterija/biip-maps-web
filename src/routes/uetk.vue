@@ -15,7 +15,10 @@
         <UiButtonIcon icon="legend" @click="filtersStore.toggle('legend')" />
       </template>
       <template v-if="filtersStore.active" #filtersContent>
-        <UiMapLayerToggle v-if="filtersStore.isActive('layers')" :layers="toggleLayers" />
+        <UiMapLayerToggle
+          v-if="filtersStore.isActive('layers')"
+          :layers="toggleLayers"
+        />
         <Search
           v-else-if="filtersStore.isActive('search')"
           :value="filtersStore.search"
@@ -27,7 +30,10 @@
             { type: 'upė', weight: 2 },
           ]"
         />
-        <UiMapLegend v-if="filtersStore.isActive('legend')" :layer="uetkService.id" />
+        <UiMapLegend
+          v-if="filtersStore.isActive('legend')"
+          :layer="uetkService.id"
+        />
       </template>
       <template #sidebar>
         <UiSidebarFeatures
@@ -40,16 +46,16 @@
   </div>
 </template>
 <script setup lang="ts">
-import { inject, ref } from "vue";
-import { useFiltersStore } from "@/stores/filters";
+import { inject, ref } from 'vue';
+import { useFiltersStore } from '@/stores/filters';
 import {
   geoportalTopo,
   geoportalOrto,
   geoportalTopoGray,
   uetkService,
-  stvkService,
+  gamtotvarkaStvkService,
   inspireParcelService,
-  municipalitiesService,
+  administrativeBoundariesLabelsService,
   geoportalOrto1995,
   geoportalOrto2005,
   geoportalOrto2009,
@@ -60,22 +66,26 @@ import {
   geoportalGrpk,
   parseRouteParams,
   MapFilters,
-} from "@/utils";
-import { useRoute } from "vue-router";
+} from '@/utils';
+import { useRoute } from 'vue-router';
 
 const filtersStore = useFiltersStore();
 
-const mapLayers: any = inject("mapLayers");
+const mapLayers: any = inject('mapLayers');
 const selectedFeatures = ref([] as any[]);
 const $route = useRoute();
 
-const query = parseRouteParams($route.query, ["cadastralId", "preview", "screenshot"]);
+const query = parseRouteParams($route.query, [
+  'cadastralId',
+  'preview',
+  'screenshot',
+]);
 
 const isPreview = ref(!!query.preview);
 const isScreenshot = ref(!!query.screenshot);
 
 if (isPreview.value && isScreenshot.value) {
-  filtersStore.toggle("legend", true);
+  filtersStore.toggle('legend', true);
 }
 
 function onSearch(search: string) {
@@ -88,9 +98,9 @@ function onSearch(search: string) {
 
 const toggleLayers = [
   uetkService,
-  stvkService,
   inspireParcelService,
-  municipalitiesService,
+  gamtotvarkaStvkService,
+  administrativeBoundariesLabelsService,
   geoportalOrto1995,
   geoportalOrto2005,
   geoportalOrto2009,
@@ -113,8 +123,8 @@ mapLayers
   .add(geoportalOrto2009.id, { isHidden: true })
   .add(geoportalOrto2005.id, { isHidden: true })
   .add(geoportalOrto1995.id, { isHidden: true })
-  .add(municipalitiesService.id, { isHidden: true })
-  .add(stvkService.id, { isHidden: true })
+  .add(administrativeBoundariesLabelsService.id, { isHidden: true })
+  .add(gamtotvarkaStvkService.id, { isHidden: true })
   .add(inspireParcelService.id, { isHidden: true })
   .add(uetkService.id)
   .click(async ({ coordinate }: any) => {
@@ -124,7 +134,7 @@ mapLayers
       ({ geometries, properties }: any) => {
         mapLayers.highlightFeatures(geometries);
         selectedFeatures.value = properties;
-      }
+      },
     );
   });
 
@@ -133,12 +143,14 @@ if (query.cadastralId) {
     .getAllSublayers(uetkService.id)
     .filter(
       (item: string) =>
-        !["upiu_pabaseiniai", "upiu_baseinu_rajonai", "upiu_baseinai"].includes(item)
+        !['upiu_pabaseiniai', 'upiu_baseinu_rajonai', 'upiu_baseinai'].includes(
+          item,
+        ),
     );
   const filters = new MapFilters();
 
   layers.forEach((item: string) => {
-    filters.on(item).set("kadastro_id", `${query.cadastralId}`);
+    filters.on(item).set('kadastro_id', `${query.cadastralId}`);
   });
 
   await mapLayers.zoomNew(uetkService.id, { addStroke: true, filters });

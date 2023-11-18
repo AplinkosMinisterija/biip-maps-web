@@ -71,8 +71,8 @@ export const administrativeBoundariesService = {
   ],
 };
 
-export const administrativeBoundariesLabelService = {
-  id: 'administrativeBoundariesService',
+export const administrativeBoundariesLabelsService = {
+  id: 'administrativeBoundariesLabelsService',
   name: 'Administracinės ribos',
   description: biipCopyright,
   layer: getWMSImageLayer(
@@ -82,20 +82,20 @@ export const administrativeBoundariesLabelService = {
   ),
   sublayers: [
     {
-      value: 'residential_areas_label',
+      value: 'residential_areas_labels',
       name: 'Gyvenamosios vietovės',
     },
     {
-      value: 'elderships_label',
+      value: 'elderships_labels',
       name: 'Seniūnijos',
     },
     {
-      value: 'counties_label',
-      name: 'Apskritys',
+      value: 'municipalities_labels',
+      name: 'Savivaldybės',
     },
     {
-      value: 'municipalities_label',
-      name: 'Savivaldybės',
+      value: 'counties_labels',
+      name: 'Apskritys',
     },
   ],
 };
