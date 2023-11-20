@@ -73,8 +73,14 @@ export const useStatsStore = defineStore('stats', () => {
       };
 
     const data = await fetch(options.url)
-      .then((d) => d.json())
-      .then(transformFn);
+      .then((data) => data.json())
+      .then(transformFn)
+      .then((data) =>
+        data.map((r: any) => ({
+          ...r,
+          count: r[options.countProperty] || r.count,
+        })),
+      );
 
     _.set(stats.value, type, data);
   }
@@ -86,14 +92,12 @@ export const useStatsStore = defineStore('stats', () => {
 
     const stats = getStats(type) || [];
 
-    const maxValue = Math.max(
-      ...stats.map((item: any) => _.get(item, options.countProperty)),
-    );
+    const maxValue = Math.max(...stats.map((item: any) => item.count));
 
     const matchingConfig = stats.find(
       (s: any) => _.get(s, options.idProperty) == id,
     );
-    const count = _.get(matchingConfig, options.countProperty) || 0;
+    const count = matchingConfig?.count || 0;
 
     let featureFillColor = defaultFeatureFillColor;
     if (count) {
@@ -116,6 +120,7 @@ export const useStatsStore = defineStore('stats', () => {
     return {
       color: featureFillColor,
       style,
+      stats: matchingConfig,
     };
   }
 

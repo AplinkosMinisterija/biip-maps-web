@@ -2,10 +2,7 @@
   <div
     ref="el"
     class="bg-white px-4 py-2 rounded shadow-md min-w-max max-w-xl overflow-y-auto max-h-96"
-    :class="[
-      (position && positions[position]) || '',
-      showArrow ? 'display-arrow' : '',
-    ]"
+    :class="[(position && positions[position]) || '', showArrow ? 'display-arrow' : '']"
   >
     <div class="w-full">
       <div
@@ -13,10 +10,7 @@
         class="flex gap-3 items-center"
         :class="[title ? 'justify-between' : 'justify-end']"
       >
-        <div
-          v-if="title"
-          class="text-sm font-semibold"
-        >
+        <div v-if="title" class="text-sm font-semibold">
           {{ title }}
         </div>
         <UiIcon
@@ -26,10 +20,7 @@
           @click="emit('close')"
         />
       </div>
-      <hr
-        v-if="title && $slots.default"
-        class="my-2"
-      >
+      <hr v-if="title && $slots.default && showSeparator" class="my-2" />
       <slot />
     </div>
   </div>
@@ -50,6 +41,10 @@ defineProps({
   showClose: {
     type: Boolean,
     default: false,
+  },
+  showSeparator: {
+    type: Boolean,
+    default: true,
   },
 });
 const emit = defineEmits(["close"]);
