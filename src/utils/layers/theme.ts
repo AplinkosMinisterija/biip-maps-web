@@ -71,6 +71,35 @@ export const administrativeBoundariesService = {
   ],
 };
 
+export const administrativeBoundariesLabelsService = {
+  id: 'administrativeBoundariesLabelsService',
+  name: 'Administracinės ribos',
+  description: biipCopyright,
+  layer: getWMSImageLayer(
+    `${qgisServerUrl}/administrative_boundaries`,
+    '',
+    biipCopyright,
+  ),
+  sublayers: [
+    {
+      value: 'residential_areas_labels',
+      name: 'Gyvenamosios vietovės',
+    },
+    {
+      value: 'elderships_labels',
+      name: 'Seniūnijos',
+    },
+    {
+      value: 'municipalities_labels',
+      name: 'Savivaldybės',
+    },
+    {
+      value: 'counties_labels',
+      name: 'Apskritys',
+    },
+  ],
+};
+
 export const huntingTracksService = {
   id: 'huntingTracksService',
   description: biipCopyright,
