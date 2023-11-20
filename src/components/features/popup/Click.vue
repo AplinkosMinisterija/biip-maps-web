@@ -43,11 +43,6 @@ const rows = ref([
     titleOne: "svetimžemių rūšių radavietė",
     key: "invaIntroducedPlaces",
   },
-  {
-    title: "zoologijos sodai",
-    titleOne: "zoologijos sodas",
-    key: "zooCount",
-  },
 ] as any[]);
 
 const overlayLayer = ref();
