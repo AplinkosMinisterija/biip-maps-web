@@ -6,15 +6,16 @@
   >
     <div class="w-full">
       <div
-        v-if="title || showClose"
+        v-if="title || $slots.title || showClose"
         class="flex gap-3 items-center"
-        :class="[title ? 'justify-between' : 'justify-end']"
+        :class="[title || $slots.title ? 'justify-between' : 'justify-end']"
       >
-        <div v-if="title" class="text-sm font-semibold">
-          {{ title }}
+        <div v-if="title || $slots.title" class="text-sm font-semibold">
+          <template v-if="title">{{ title }}</template>
+          <template v-else-if="$slots.title"><slot name="title" /></template>
         </div>
         <UiIcon
-          v-if="showArrow"
+          v-if="showClose"
           name="close"
           class="text-gray-600 cursor-pointer"
           @click="emit('close')"

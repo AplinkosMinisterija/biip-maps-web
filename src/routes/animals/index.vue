@@ -13,11 +13,18 @@
       </template>
     </UiMap>
 
-    <RusysFeaturesPopup />
+    <FeaturesPopupHover>
+      <template #title="{ feature }">
+        {{ feature?.get("name") }}
+      </template>
+      <template #content="{ data }">
+        <div class="text-xs">{{ countTranslation }}: {{ data.count }}</div>
+      </template>
+    </FeaturesPopupHover>
   </div>
 </template>
 <script setup lang="ts">
-import { inject, ref, watch } from "vue";
+import { computed, inject, ref, watch } from "vue";
 import {
   geoportalTopo,
   geoportalOrto,
@@ -34,21 +41,29 @@ const allLayers = [
   {
     key: "animals.permits",
     title: "Leidimai",
+    countTranslate: "Viso išduota leidimų",
   },
   {
     key: "animals.species",
     title: "NLLG individų skaičius",
+    countTranslate: "Viso laikomų laukinių gyvūnų",
   },
   {
     key: "animals.fostered",
     title: "Globojami gyvūnai",
+    countTranslate: "Viso globojamų laukinių gyvūnų",
   },
   {
     key: "animals.aviaries",
     title: "Aptvarai miško žemėje",
+    countTranslate: "Viso aptvarų",
   },
 ];
 const visibleLayer = ref(allLayers[0].key);
+
+const countTranslation = computed(() => {
+  return allLayers.find((l) => l.key === visibleLayer.value)?.countTranslate;
+});
 
 watch(visibleLayer, () => {
   municipalitiesServiceVT.layer?.getSource()?.changed();
