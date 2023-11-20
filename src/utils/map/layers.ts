@@ -410,10 +410,15 @@ export class MapLayers extends Queues {
     const styleItems = () => {
       const styleFn = layer.stats.styleFn(data);
       source.forEachFeature((feature: any) => {
-        if (!Array.isArray(data)) return;
-        const matchingConfig = data.find(
-          (data: any) => data.id === feature.get('id'),
-        );
+        let matchingConfig: any;
+        if (layer?.stats?.applyToFeatureFn) {
+          matchingConfig = layer.stats.applyToFeatureFn(data, feature);
+        } else {
+          if (!Array.isArray(data)) return;
+          matchingConfig = data.find(
+            (data: any) => data.id === feature.get('id'),
+          );
+        }
         feature.set('stats', matchingConfig || {});
         feature.setStyle(styleFn);
       });

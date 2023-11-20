@@ -4,7 +4,7 @@ import LayerGroup from 'ol/layer/Group';
 import { Text, Fill } from 'ol/style';
 import { useConfigStore } from '@/stores/config';
 import { getCopyrightLabel } from '../utils';
-import { qgisServerUrl, rusysApiHost } from '../../config';
+import { qgisApiUrl, qgisServerUrl, rusysApiHost } from '../../config';
 import { getVectorLayer, getWMSImageLayer } from './utils';
 
 const config = () => {
@@ -1188,3 +1188,67 @@ export const gamtotvarkaStvkService = {
   }),
 };
 gamtotvarkaStvkService.layer.set('id', 'gamtotvarkaStvkService');
+
+export const municipalitiesGridService = {
+  id: 'municipalitiesGridService',
+  stats: {
+    url: ``,
+    applyToFeatureFn: undefined as any,
+    styleFn: (data: any) => {
+      if (!Array.isArray(data?.rows)) return;
+      const maxValue = Math.max(
+        ...data.rows.map((item: any) => item.permitCount),
+      );
+
+      const colorPalette = [
+        'rgba(178,226,226,0.5)',
+        'rgba(102,194,164,0.5)',
+        'rgba(44,162,95,0.5)',
+        'rgba(0,109,44,0.5)',
+      ];
+
+      return (feature: any) => {
+        const matchingConfig = feature.get('stats');
+
+        let featureFillColor = 'rgba(237,248,251,0.5)';
+
+        const count = matchingConfig?.count || 0;
+        if (count) {
+          const colorIndex = Math.round(
+            (count / maxValue) * (colorPalette.length - 1),
+          );
+          featureFillColor = colorPalette[colorIndex];
+        }
+
+        let text;
+
+        if (count > 0) {
+          text = new Text({
+            text: `${count}`,
+          });
+        }
+
+        return new Style({
+          fill: new Fill({
+            color: featureFillColor,
+          }),
+          text,
+          stroke: new Stroke({
+            color: 'rgba(15,15,15,0.3)',
+            width: 1,
+          }),
+        });
+      };
+    },
+  },
+  layer: getVectorLayer(
+    `${qgisApiUrl}/administrative_boundaries/collections/municipalities/items.json?limit=100`,
+    {
+      stroke: {
+        color: 'rgba(0,70,80,0.8)',
+        width: 1,
+      },
+      dataProjection: 'EPSG:4326',
+    },
+  ),
+};
