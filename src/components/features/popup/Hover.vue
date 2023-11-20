@@ -31,25 +31,39 @@ const togglePopup = (position?: any) => {
 
 const visibleFeature = ref(null as any);
 
-mapLayers.hover(({ pixel }: any) => {
-  if (!mapLayers.overlayLayer) return;
+function getFromFeatures(features: any[]) {
+  if (!mapLayers.overlayLayer) return {};
 
-  const features = mapLayers.map.getFeaturesAtPixel(pixel);
-  if (!features?.length) return togglePopup();
+  if (!features?.length || !features[0]) return {};
+  const feature = features[0];
+  const stats = feature.get("stats") || {};
 
-  if (!features[0] || visibleFeature.value == features[0]) return;
+  return {
+    feature,
+    stats,
+  };
+}
 
-  visibleFeature.value = features[0];
-  hoverFeatureData.value = visibleFeature.value.get("stats") || {};
+mapLayers.hover(({ features }: any) => {
+  const { feature, stats } = getFromFeatures(features);
 
-  const center = mapLayers.getCenter(visibleFeature.value);
-  if (!hoverFeatureData.value?.count) return togglePopup();
+  if (!feature) return togglePopup();
 
+  if (visibleFeature.value == feature) return;
+
+  visibleFeature.value = feature;
+  hoverFeatureData.value = stats || {};
+  if (!stats?.count) return togglePopup();
+
+  const center = mapLayers.getCenter(feature);
   if (!center) return togglePopup();
+
   togglePopup(center);
 });
 
-mapLayers.click(() => {
-  emit("click", { ...hoverFeatureData.value });
+mapLayers.click(({ features }: any) => {
+  const { stats } = getFromFeatures(features);
+
+  emit("click", stats || {});
 });
 </script>

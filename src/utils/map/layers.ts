@@ -56,6 +56,8 @@ export class MapLayers extends Queues {
   private _draw: MapDraw | undefined;
   private _geolocation: Geolocation | undefined;
 
+  private _hoverTimeout: any;
+
   waitForLoaded: Promise<void> = new Promise(async (resolve) => {
     const waitForMap = async () => {
       return new Promise<void>((resolve) => {
@@ -95,10 +97,15 @@ export class MapLayers extends Queues {
 
       this._processQueue();
       map.on('singleclick', (e) => {
-        this._clickCallbacks.map((fn) => fn(e));
+        const features = map.getFeaturesAtPixel(e.pixel);
+        this._clickCallbacks.map((fn) => fn({ ...e, features }));
       });
       map.on('pointermove', (e) => {
-        this._hoverCallbacks.map((fn) => fn(e));
+        clearTimeout(this._hoverTimeout);
+        this._hoverTimeout = setTimeout(() => {
+          const features = map.getFeaturesAtPixel(e.pixel);
+          this._hoverCallbacks.map((fn) => fn({ ...e, features }));
+        }, 50);
       });
     }
 

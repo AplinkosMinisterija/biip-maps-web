@@ -63,10 +63,9 @@ const togglePopup = (position?: any) => {
   mapLayers.overlayLayer.setPosition(position);
 };
 
-mapLayers.click(({ pixel }: any) => {
+mapLayers.click(({ features }: any) => {
   if (!mapLayers.overlayLayer) return;
 
-  const features = mapLayers.map.getFeaturesAtPixel(pixel);
   if (!features?.length) return togglePopup();
 
   const feature = features[0];
