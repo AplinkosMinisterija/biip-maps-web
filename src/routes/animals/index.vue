@@ -1,36 +1,69 @@
 <template>
   <div>
-    <UiMap :show-scale-line="true" />
+    <UiMap :show-scale-line="true" :projection="projection3857">
+      <template #filters>
+        <UiDropdown
+          v-model="visibleLayer"
+          class="px-1 rounded border border-gray-400 bg-white pointer-events-auto"
+        >
+          <UiDropdownItem v-for="l in allLayers" :key="l.key" :value="`${l.key}`">
+            {{ l.title }}
+          </UiDropdownItem>
+        </UiDropdown>
+      </template>
+    </UiMap>
 
     <RusysFeaturesPopup />
   </div>
 </template>
 <script setup lang="ts">
-import { inject } from "vue";
+import { inject, ref, watch } from "vue";
 import {
   geoportalTopo,
   geoportalOrto,
   geoportalTopoGray,
-  municipalitiesGridService,
+  municipalitiesServiceVT,
+  projection3857,
 } from "@/utils";
-import { gyvunaiApiHost } from "@/config";
+import { useStatsStore } from "@/stores/stats";
+const statsStore = useStatsStore();
 
 const mapLayers: any = inject("mapLayers");
 
-municipalitiesGridService.stats.url = `${gyvunaiApiHost}/api/public/permits`;
-municipalitiesGridService.stats.applyToFeatureFn = (data: any, feature: any) => {
-  const result = data.rows.find((d: any) => d.municipality.id == feature.get("code"));
-  if (!result) return;
+const allLayers = [
+  {
+    key: "animals.permits",
+    title: "Leidimai",
+  },
+  {
+    key: "animals.species",
+    title: "NLLG individų skaičius",
+  },
+  {
+    key: "animals.fostered",
+    title: "Globojami gyvūnai",
+  },
+  {
+    key: "animals.aviaries",
+    title: "Aptvarai miško žemėje",
+  },
+];
+const visibleLayer = ref(allLayers[0].key);
 
-  return {
-    ...result,
-    count: result.permitCount,
-  };
-};
-mapLayers.loadStats(municipalitiesGridService.id);
+watch(visibleLayer, () => {
+  municipalitiesServiceVT.layer?.getSource()?.changed();
+});
+
+municipalitiesServiceVT.layer.setStyle((feature: any) => {
+  const styles = statsStore.getStyles(visibleLayer.value, feature.get("code"));
+  return styles.style;
+});
+
+await statsStore.preloadStats(allLayers.map((l) => l.key));
+
 mapLayers
   .addBaseLayer(geoportalTopoGray.id)
   .addBaseLayer(geoportalTopo.id)
   .addBaseLayer(geoportalOrto.id)
-  .add(municipalitiesGridService.id);
+  .add(municipalitiesServiceVT.id);
 </script>

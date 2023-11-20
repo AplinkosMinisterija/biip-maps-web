@@ -1,14 +1,12 @@
-import { Fill, Stroke, Style } from 'ol/style';
-
 import VectorTileLayer from 'ol/layer/VectorTile';
 import VectorTileSource from 'ol/source/VectorTile';
 import { MVT } from 'ol/format';
 import { Feature } from 'ol';
 import { projection3857 } from '../constants';
-import { qgisServerHost } from '@/config';
+import { qgisTilesUrl } from '@/config';
 
 function getVectorTilesUrl(type: string, source: string) {
-  return `${qgisServerHost}/tiles/${type}/${source}/{z}/{x}/{y}`;
+  return `${qgisTilesUrl}/${type}/${source}/{z}/{x}/{y}`;
 }
 
 export const municipalitiesServiceVT = {

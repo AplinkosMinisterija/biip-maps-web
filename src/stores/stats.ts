@@ -1,6 +1,8 @@
 import { ref } from 'vue';
 import { defineStore } from 'pinia';
 import { Fill, Stroke, Style } from 'ol/style';
+import { gyvunaiApiHost } from '@/config';
+import _ from 'lodash';
 
 const colorPalette = [
   'rgba(178,226,226,0.5)',
@@ -9,25 +11,91 @@ const colorPalette = [
   'rgba(0,109,44,0.5)',
 ];
 
+const defaultFeatureFillColor = 'rgba(237,248,251,0.5)';
+const defaultStrokeColor = 'rgba(15,15,15,0.3)';
+
+const statsByType = {
+  animals: {
+    permits: {
+      url: `${gyvunaiApiHost}/api/public/permits`,
+      transformFn: (data: any) => data.rows || [],
+      idProperty: 'municipality.id',
+      countProperty: 'permitCount',
+    },
+    fostered: {
+      url: `${gyvunaiApiHost}/api/public/fosteredAnimals`,
+      transformFn: (data: any) => data.rows || [],
+      idProperty: 'municipality.id',
+      countProperty: 'amount',
+    },
+    aviaries: {
+      url: `${gyvunaiApiHost}/api/public/aviaries`,
+      transformFn: (data: any) => data.rows || [],
+      idProperty: 'municipality.id',
+      countProperty: 'aviaryCount',
+    },
+    species: {
+      url: `${gyvunaiApiHost}/api/public/species`,
+      transformFn: (data: any) => data.rows || [],
+      idProperty: 'municipality.id',
+      countProperty: 'amount',
+    },
+  },
+};
+
 export const useStatsStore = defineStore('stats', () => {
   const stats = ref({} as any);
 
   function getStats(type: string) {
-    return stats.value[type];
+    return _.get(stats.value, type);
+  }
+
+  function preloadStats(types: string[]) {
+    return Promise.all(types.map((t) => loadStatsIfNeeded(t)));
+  }
+
+  async function loadStatsIfNeeded(type: string) {
+    if (!getStats(type)) {
+      await loadStats(type);
+    }
+
+    return getStats(type);
+  }
+
+  async function loadStats(type: string) {
+    const options = _.get(statsByType, type);
+    if (!options) return;
+
+    const transformFn =
+      options.transformFn ||
+      function (data: any) {
+        return data;
+      };
+
+    const data = await fetch(options.url)
+      .then((d) => d.json())
+      .then(transformFn);
+
+    _.set(stats.value, type, data);
   }
 
   function getStyles(type: string, id: string | number) {
-    const countField = 'count';
-    const idField = 'code';
+    const options = _.get(statsByType, type);
+
+    if (!options) return {};
 
     const stats = getStats(type) || [];
 
-    const maxValue = Math.max(...stats.map((item: any) => item[countField]));
+    const maxValue = Math.max(
+      ...stats.map((item: any) => _.get(item, options.countProperty)),
+    );
 
-    const matchingConfig = stats.find((s: any) => s[idField] == id);
-    const count = matchingConfig?.[countField] || 0;
+    const matchingConfig = stats.find(
+      (s: any) => _.get(s, options.idProperty) == id,
+    );
+    const count = _.get(matchingConfig, options.countProperty) || 0;
 
-    let featureFillColor = 'rgba(237,248,251,0.5)';
+    let featureFillColor = defaultFeatureFillColor;
     if (count) {
       const colorIndex = Math.round(
         (count / maxValue) * (colorPalette.length - 1),
@@ -40,7 +108,7 @@ export const useStatsStore = defineStore('stats', () => {
         color: featureFillColor,
       }),
       stroke: new Stroke({
-        color: 'rgba(15,15,15,0.3)',
+        color: defaultStrokeColor,
         width: 1,
       }),
     });
@@ -51,5 +119,5 @@ export const useStatsStore = defineStore('stats', () => {
     };
   }
 
-  return { getStats, getStyles };
+  return { getStats, getStyles, loadStats, preloadStats };
 });

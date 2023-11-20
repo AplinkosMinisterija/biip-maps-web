@@ -7,3 +7,4 @@ export const rusysApiHost = `${apiServerHost}/rusys`;
 export const gyvunaiApiHost = `${apiServerHost}/gyvunai`;
 export const qgisServerUrl = `${qgisServerHost}/qgisserver`;
 export const qgisApiUrl = `${qgisServerHost}/api`;
+export const qgisTilesUrl = `${qgisServerHost}/tiles`;
