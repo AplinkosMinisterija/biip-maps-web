@@ -7,6 +7,7 @@
         attributionOptions: attributionOptions,
         showScaleLine: showScaleLine,
         showCoordinates: showCoordinates && !isPreview,
+        projection: projection,
       }"
     />
     <div
@@ -161,6 +162,10 @@ defineProps({
   markCenter: {
     type: Boolean,
     default: false,
+  },
+  projection: {
+    type: String,
+    default: "",
   },
 });
 
