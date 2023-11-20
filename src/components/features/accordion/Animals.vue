@@ -35,7 +35,6 @@
 </template>
 
 <script setup lang="ts">
-import { isInteger } from 'lodash';
 
 defineProps({
   features: {

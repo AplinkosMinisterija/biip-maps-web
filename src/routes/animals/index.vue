@@ -33,13 +33,7 @@
 </template>
 <script setup lang="ts">
 import { computed, inject, ref, watch } from "vue";
-import {
-  geoportalTopo,
-  geoportalOrto,
-  geoportalTopoGray,
-  municipalitiesServiceVT,
-  projection3857,
-} from "@/utils";
+import { municipalitiesServiceVT, projection3857, geoportalTopo3857 } from "@/utils";
 import { useStatsStore } from "@/stores/stats";
 const statsStore = useStatsStore();
 
@@ -94,9 +88,5 @@ municipalitiesServiceVT.layer.setStyle((feature: any) => {
 
 await statsStore.preloadStats(allLayers.map((l) => l.key));
 
-mapLayers
-  .addBaseLayer(geoportalTopoGray.id)
-  .addBaseLayer(geoportalTopo.id)
-  .addBaseLayer(geoportalOrto.id)
-  .add(municipalitiesServiceVT.id);
+mapLayers.addBaseLayer(geoportalTopo3857.id).add(municipalitiesServiceVT.id);
 </script>
