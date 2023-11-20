@@ -15,6 +15,8 @@
 import { inject, ref, watch } from "vue";
 const mapLayers: any = inject("mapLayers");
 
+const emit = defineEmits(["click"]);
+
 const overlayLayer = ref();
 const hoverFeatureData = ref({} as any);
 
@@ -45,5 +47,9 @@ mapLayers.hover(({ pixel }: any) => {
 
   if (!center) return togglePopup();
   togglePopup(center);
+});
+
+mapLayers.click(() => {
+  emit("click", { ...hoverFeatureData.value });
 });
 </script>

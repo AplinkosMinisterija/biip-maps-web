@@ -11,9 +11,17 @@
           </UiDropdownItem>
         </UiDropdown>
       </template>
+      <template #sidebar>
+        <UiSidebarFeatures
+          :features="selectedFeatures"
+          :is-open="!!selectedFeatures?.length"
+          :title="selectedFeatures?.[0]?.munipality?.name"
+          type="animals"
+        />
+      </template>
     </UiMap>
 
-    <FeaturesPopupHover>
+    <FeaturesPopupHover @click="selectFeatures">
       <template #title="{ feature }">
         {{ feature?.get("name") }}
       </template>
@@ -37,6 +45,15 @@ const statsStore = useStatsStore();
 
 const mapLayers: any = inject("mapLayers");
 
+const selectedFeatures = ref([] as any);
+
+function selectFeatures(feature: any) {
+  if (!feature?.count) {
+    selectedFeatures.value = [];
+  } else {
+    selectedFeatures.value = [feature];
+  }
+}
 const allLayers = [
   {
     key: "animals.permits",

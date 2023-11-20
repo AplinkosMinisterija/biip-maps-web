@@ -48,26 +48,6 @@ const rows = ref([
     titleOne: "zoologijos sodas",
     key: "zooCount",
   },
-  {
-    title: "aptvarai/voljerai/statiniai",
-    titleOne: "aptvaras/voljeras/statinys",
-    key: "aviaryCount",
-  },
-  {
-    title: "leidimai",
-    titleOne: "leidimas",
-    key: "permitCount",
-  },
-  {
-    title: "aptvarai/voljerai/statiniai esančių miško teritorijoje",
-    titleOne: "aptvaras/voljeras/statinys esantis miško teritorijoje",
-    key: "forestCount",
-  },
-  {
-    title: "aptvarai/voljerai/statiniai saugomoje teritorijoje",
-    titleOne: "aptvaras/voljeras/statinys saugomoje teritorijoje",
-    key: "protectedTerritoryCount",
-  },
 ] as any[]);
 
 const overlayLayer = ref();

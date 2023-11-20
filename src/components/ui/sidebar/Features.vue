@@ -13,6 +13,7 @@ import FeaturesAccordionRusys from '@/components/features/accordion/Rusys.vue';
 import FeaturesAccordionUETK from '@/components/features/accordion/UETK.vue';
 import FeaturesAccordionHunting from '@/components/features/accordion/Hunting.vue';
 import FeaturesAccordionGamtotvarka from '@/components/features/accordion/Gamtotvarka.vue';
+import FeaturesAccordionAnimals from '@/components/features/accordion/Animals.vue';
 const props = defineProps({
   title: { type: String, default: '' },
   type: { type: String, default: '' },
@@ -26,6 +27,7 @@ const componentByType = computed(() => {
   else if (props.type === 'uetk') return FeaturesAccordionUETK;
   else if (props.type === 'hunting') return FeaturesAccordionHunting;
   else if (props.type === 'gamtotvarka') return FeaturesAccordionGamtotvarka;
+  else if (props.type === 'animals') return FeaturesAccordionAnimals;
   return 'pre';
 });
 const features = computed(() => props.features || []);
