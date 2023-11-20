@@ -11,16 +11,6 @@ function getVectorTilesUrl(type: string, source: string) {
   return `${qgisServerHost}/tiles/${type}/${source}/{z}/{x}/{y}`;
 }
 
-const country = new Style({
-  stroke: new Stroke({
-    color: 'gray',
-    width: 1,
-  }),
-  fill: new Fill({
-    color: 'rgba(20,20,20,0.3)',
-  }),
-});
-
 export const municipalitiesServiceVT = {
   id: 'municipalitiesServiceVT',
   name: 'Savivaldybės',
@@ -35,5 +25,4 @@ export const municipalitiesServiceVT = {
       url: getVectorTilesUrl('boundaries', 'municipalities'),
     }),
   }),
-  style: country,
 };

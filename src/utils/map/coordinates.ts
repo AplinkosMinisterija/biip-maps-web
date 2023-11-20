@@ -16,7 +16,7 @@ const coordPairPattern = `${singleCoordPattern}${joinCoordsPattern}${singleCoord
 const coordPatternRegex = new RegExp(`^${coordPairPattern}$`, 'gi');
 const coordPatternMultiRegex = new RegExp(
   `^(${coordPairPattern}(${joinCoordsPattern})?)+$`,
-  'gi'
+  'gi',
 );
 const coordPairRegex = new RegExp(coordPairPattern, 'gi');
 
@@ -38,7 +38,7 @@ const coordinatesToString = (coordinates: any[]): string => {
 
 export function convertCoordinatesTo3346(
   coordinates: any[] | any,
-  initialProjection = ''
+  initialProjection = '',
 ) {
   if (coordinates?.type === 'FeatureCollection') {
     const options: any = {};
@@ -55,14 +55,14 @@ export function convertCoordinatesTo3346(
 
     const features = new GeoJSON().readFeatures(
       _.cloneDeep(coordinates),
-      options
+      options,
     );
 
     try {
       const transformedCoordinates = JSON.parse(
         new GeoJSON().writeFeatures(features, {
           decimals: 2,
-        })
+        }),
       );
 
       return transformedCoordinates;
@@ -79,7 +79,12 @@ export function convertCoordinatesTo3346(
     const firstEl = coordinates[0];
     const lastEl = coordinates[1];
 
-    if (!firstEl || !lastEl || isWGSCoordinates(firstEl, lastEl) || isWGSCoordinates(lastEl, firstEl)) {
+    if (
+      !firstEl ||
+      !lastEl ||
+      isWGSCoordinates(firstEl, lastEl) ||
+      isWGSCoordinates(lastEl, firstEl)
+    ) {
       return coordinates;
     }
 
@@ -95,9 +100,29 @@ export function convertCoordinatesTo3346(
   return transformCoordinates(coordinates);
 }
 
+export function convertCoordinates(
+  coordinates: any[] | any,
+  sourceProjection = '',
+  resultProjection = '',
+) {
+  const result: number[] = [];
+
+  for (let i = 0; i < coordinates.length / 2; i++) {
+    const coordinatesPair = transform(
+      [coordinates[i * 2], coordinates[i * 2 + 1]],
+      sourceProjection || 'EPSG:4326',
+      resultProjection,
+    );
+
+    result.push(...coordinatesPair);
+  }
+
+  return result;
+}
+
 export function getElementFromCoordinates(
   type: string,
-  coordinates: any[]
+  coordinates: any[],
 ): {
   item: Point | LineString | Polygon;
   coordinates: number[][];
@@ -116,7 +141,7 @@ export function getElementFromCoordinates(
   } else if (type === 'Polygon') {
     transformedCoordinates = coordinates.reduce(
       (acc, item) => [...acc, ...item],
-      []
+      [],
     );
     item = new Polygon(coordinates);
   } else {
@@ -187,10 +212,10 @@ export function parseCoordinates(input: string) {
           .split(/,|\s/gi)
           .map((item) => item.trim())
           .filter((item) => !!item)
-          .map((item) => parseFloat(item))
+          .map((item) => parseFloat(item)),
       )
       .map((item) =>
-        !isWGSCoordinates(item[0], item[1]) ? [item[1], item[0]] : item
+        !isWGSCoordinates(item[0], item[1]) ? [item[1], item[0]] : item,
       ) || [];
 
   if (!coordinates.length) return [];
@@ -218,10 +243,10 @@ export function parseGeomFromString(input: string) {
           .split(/,|\s/gi)
           .map((item) => item.trim())
           .filter((item) => !!item)
-          .map((item) => parseFloat(item))
+          .map((item) => parseFloat(item)),
       )
       .map((item) =>
-        !isWGSCoordinates(item[0], item[1]) ? [item[1], item[0]] : item
+        !isWGSCoordinates(item[0], item[1]) ? [item[1], item[0]] : item,
       ) || [];
 
   const results: Array<{
@@ -239,7 +264,7 @@ export function parseGeomFromString(input: string) {
     type: 'LineString' | 'Point' | 'Polygon',
     geometry: Geometry,
     coordinates: number[] | number[][] | number[][][],
-    properties: any = {}
+    properties: any = {},
   ) => {
     return {
       type,

@@ -18,7 +18,7 @@ import {
   WMSLegendRequest,
 } from './utils';
 import LayerGroup from 'ol/layer/Group';
-import { convertCoordinatesTo3346 } from './coordinates';
+import { convertCoordinates, convertCoordinatesTo3346 } from './coordinates';
 import { getCenter } from 'ol/extent';
 import { Queues } from './queues';
 
@@ -106,7 +106,12 @@ export class MapLayers extends Queues {
   }
 
   centerMap() {
-    this.zoomToExtent([306000, 5975000, 680000, 6258000], 0);
+    let extent = [306000, 5975000, 680000, 6258000];
+    const viewProjection = this.map?.getView()?.getProjection();
+    if (viewProjection && projection != viewProjection.getCode()) {
+      extent = convertCoordinates(extent, projection, viewProjection.getCode());
+    }
+    this.zoomToExtent(extent, 0);
   }
 
   getVectorLayer(id: string) {
