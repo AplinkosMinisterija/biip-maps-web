@@ -4,7 +4,7 @@ import LayerGroup from 'ol/layer/Group';
 import { Text, Fill } from 'ol/style';
 import { useConfigStore } from '@/stores/config';
 import { getCopyrightLabel } from '../utils';
-import { qgisServerUrl, rusysApiHost } from '../../config';
+import { qgisApiUrl, qgisServerUrl, rusysApiHost } from '../../config';
 import { getVectorLayer, getWMSImageLayer } from './utils';
 
 const config = () => {

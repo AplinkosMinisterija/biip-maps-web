@@ -7,12 +7,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
-import FeaturesAccordionDefault from "@/components/features/accordion/Default.vue";
-import FeaturesAccordionRusys from "@/components/features/accordion/Rusys.vue";
-import FeaturesAccordionUETK from "@/components/features/accordion/UETK.vue";
-import FeaturesAccordionHunting from "@/components/features/accordion/Hunting.vue";
-import FeaturesAccordionGamtotvarka from "@/components/features/accordion/Gamtotvarka.vue";
+import { computed } from 'vue';
+import FeaturesAccordionDefault from '@/components/features/accordion/Default.vue';
+import FeaturesAccordionRusys from '@/components/features/accordion/Rusys.vue';
+import FeaturesAccordionUETK from '@/components/features/accordion/UETK.vue';
+import FeaturesAccordionHunting from '@/components/features/accordion/Hunting.vue';
+import FeaturesAccordionGamtotvarka from '@/components/features/accordion/Gamtotvarka.vue';
+import FeaturesAccordionAnimals from '@/components/features/accordion/Animals.vue';
 
 const emit = defineEmits(["close"]);
 
@@ -25,11 +26,12 @@ const props = defineProps({
 
 const componentByType = computed(() => {
   if (!props.type) return FeaturesAccordionDefault;
-  else if (props.type === "rusys") return FeaturesAccordionRusys;
-  else if (props.type === "uetk") return FeaturesAccordionUETK;
-  else if (props.type === "hunting") return FeaturesAccordionHunting;
-  else if (props.type === "gamtotvarka") return FeaturesAccordionGamtotvarka;
-  return "pre";
+  else if (props.type === 'rusys') return FeaturesAccordionRusys;
+  else if (props.type === 'uetk') return FeaturesAccordionUETK;
+  else if (props.type === 'hunting') return FeaturesAccordionHunting;
+  else if (props.type === 'gamtotvarka') return FeaturesAccordionGamtotvarka;
+  else if (props.type === 'animals') return FeaturesAccordionAnimals;
+  return 'pre';
 });
 const features = computed(() => props.features || []);
 

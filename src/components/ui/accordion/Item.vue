@@ -25,14 +25,15 @@
 <script setup lang="ts">
 import { ref } from "vue";
 
-defineProps({
+const props = defineProps({
   title: { type: String, default: "" },
   subtitle: { type: String, default: "" },
   description: { type: String, default: "" },
   badge: { type: String, default: "" },
+  isOpen: { type: Boolean, default: false },
 });
 
-const isOpen = ref(false);
+const isOpen = ref(props.isOpen || false);
 const toggleItem = () => {
   isOpen.value = !isOpen.value;
 };

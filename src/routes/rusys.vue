@@ -37,7 +37,7 @@
     <UiModal ref="emptyModalRef" title="Nerasta">
       <p>Pagal pateiktą užklausą radaviečių šiuo metu nėra.</p>
     </UiModal>
-    <RusysFeaturesPopup />
+    <FeaturesPopupClick />
   </div>
 </template>
 <script setup lang="ts">

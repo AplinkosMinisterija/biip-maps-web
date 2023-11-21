@@ -22,15 +22,16 @@ export function createMap(
     showCoordinates?: boolean;
     centerView?: number[];
     zoomView?: number;
+    projection?: string;
   },
 ) {
-  const projLKS94 = get(projection);
+  const proj = get(options?.projection || projection);
 
   const map = new Map({
     target,
     view: new View({
       center: options?.centerView || [495074.61, 6116454.53],
-      projection: projLKS94 as Projection,
+      projection: proj as Projection,
       zoom: options?.zoomView || 9,
       constrainResolution: true,
     }),

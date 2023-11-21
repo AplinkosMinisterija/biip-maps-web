@@ -18,7 +18,7 @@ import {
   WMSLegendRequest,
 } from './utils';
 import LayerGroup from 'ol/layer/Group';
-import { convertCoordinatesTo3346 } from './coordinates';
+import { convertCoordinates, convertCoordinatesTo3346 } from './coordinates';
 import { getCenter } from 'ol/extent';
 import { Queues } from './queues';
 
@@ -55,6 +55,8 @@ export class MapLayers extends Queues {
   private _layers: { [id: string]: any } = {};
   private _draw: MapDraw | undefined;
   private _geolocation: Geolocation | undefined;
+
+  private _hoverTimeout: any;
 
   waitForLoaded: Promise<void> = new Promise(async (resolve) => {
     const waitForMap = async () => {
@@ -95,10 +97,15 @@ export class MapLayers extends Queues {
 
       this._processQueue();
       map.on('singleclick', (e) => {
-        this._clickCallbacks.map((fn) => fn(e));
+        const features = map.getFeaturesAtPixel(e.pixel);
+        this._clickCallbacks.map((fn) => fn({ ...e, features }));
       });
       map.on('pointermove', (e) => {
-        this._hoverCallbacks.map((fn) => fn(e));
+        clearTimeout(this._hoverTimeout);
+        this._hoverTimeout = setTimeout(() => {
+          const features = map.getFeaturesAtPixel(e.pixel);
+          this._hoverCallbacks.map((fn) => fn({ ...e, features }));
+        }, 50);
       });
     }
 
@@ -106,7 +113,12 @@ export class MapLayers extends Queues {
   }
 
   centerMap() {
-    this.zoomToExtent([306000, 5975000, 680000, 6258000], 0);
+    let extent = [306000, 5975000, 680000, 6258000];
+    const viewProjection = this.map?.getView()?.getProjection();
+    if (viewProjection && projection != viewProjection.getCode()) {
+      extent = convertCoordinates(extent, projection, viewProjection.getCode());
+    }
+    this.zoomToExtent(extent, 0);
   }
 
   getVectorLayer(id: string) {
@@ -405,10 +417,15 @@ export class MapLayers extends Queues {
     const styleItems = () => {
       const styleFn = layer.stats.styleFn(data);
       source.forEachFeature((feature: any) => {
-        if (!Array.isArray(data)) return;
-        const matchingConfig = data.find(
-          (data: any) => data.id === feature.get('id'),
-        );
+        let matchingConfig: any;
+        if (layer?.stats?.applyToFeatureFn) {
+          matchingConfig = layer.stats.applyToFeatureFn(data, feature);
+        } else {
+          if (!Array.isArray(data)) return;
+          matchingConfig = data.find(
+            (data: any) => data.id === feature.get('id'),
+          );
+        }
         feature.set('stats', matchingConfig || {});
         feature.setStyle(styleFn);
       });

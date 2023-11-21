@@ -4,4 +4,7 @@ export const apiServerHost =
   import.meta.env.VUE_APP_API_HOST || 'https://internalapi.biip.lt';
 export const uetkApiHost = `${apiServerHost}/uetk`;
 export const rusysApiHost = `${apiServerHost}/rusys`;
+export const gyvunaiApiHost = `${apiServerHost}/gyvunai`;
 export const qgisServerUrl = `${qgisServerHost}/qgisserver`;
+export const qgisApiUrl = `${qgisServerHost}/api`;
+export const qgisTilesUrl = `${qgisServerHost}/tiles`;

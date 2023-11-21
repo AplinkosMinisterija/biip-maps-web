@@ -2,7 +2,7 @@ import TileGrid from 'ol/tilegrid/TileGrid';
 import TileLayer from 'ol/layer/Tile';
 import XYZ from 'ol/source/XYZ';
 import { getCopyrightLabel } from '../utils';
-import { projection } from '../constants';
+import { projection, projection3857 } from '../constants';
 import ImageLayer from 'ol/layer/Image';
 import ImageArcGISRest from 'ol/source/ImageArcGISRest';
 
@@ -55,6 +55,34 @@ export const geoportalTopo = {
         tileSize: [512, 512],
       }),
       projection,
+    }),
+  }),
+};
+
+export const geoportalTopo3857 = {
+  id: 'geoportalTopo3857',
+  title: 'Topografinis',
+  layer: new TileLayer({
+    source: new XYZ({
+      crossOrigin,
+      attributions: geoportalCopyright('gisc_pagrindinis_wm'),
+      url: geoportalTileUrl('gisc_pagrindinis_wm'),
+      tileGrid: new TileGrid({
+        extent: [
+          -2337708.2691449076, 3105406.5486537516, 7681044.112130543,
+          18383409.96838039,
+        ],
+        origin: [-20037508.342787, 20037508.342787],
+        resolutions: [
+          2445.98490512499, 1222.992452562495, 611.4962262813797,
+          305.74811314055756, 152.87405657041106, 76.43702828507324,
+          38.21851414253662, 19.10925707126831, 9.554628535634155,
+          4.77731426794937, 2.388657133974685, 1.1943285668550503,
+          0.5971642835598172,
+        ],
+        tileSize: [256, 256],
+      }),
+      projection: projection3857,
     }),
   }),
 };
