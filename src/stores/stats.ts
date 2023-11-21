@@ -17,28 +17,24 @@ const defaultStrokeColor = 'rgba(15,15,15,0.3)';
 const statsByType = {
   animals: {
     permits: {
-      url: `${gyvunaiApiHost}/api/public/permits`,
-      transformFn: (data: any) => data.rows || [],
+      url: `${gyvunaiApiHost}/api/public/permits/all`,
       idProperty: 'municipality.id',
-      countProperty: 'permitCount',
+      countProperty: 'permitsCount',
     },
     fostered: {
-      url: `${gyvunaiApiHost}/api/public/fosteredAnimals`,
-      transformFn: (data: any) => data.rows || [],
+      url: `${gyvunaiApiHost}/api/public/fosteredAnimals/all`,
       idProperty: 'municipality.id',
-      countProperty: 'amount',
+      countProperty: 'count',
     },
     aviaries: {
-      url: `${gyvunaiApiHost}/api/public/aviaries`,
-      transformFn: (data: any) => data.rows || [],
+      url: `${gyvunaiApiHost}/api/public/aviaries/all`,
       idProperty: 'municipality.id',
-      countProperty: 'aviaryCount',
+      countProperty: 'aviariesCount',
     },
     species: {
-      url: `${gyvunaiApiHost}/api/public/species`,
-      transformFn: (data: any) => data.rows || [],
+      url: `${gyvunaiApiHost}/api/public/species/all`,
       idProperty: 'municipality.id',
-      countProperty: 'amount',
+      countProperty: 'count',
     },
   },
 };

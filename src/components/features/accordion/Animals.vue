@@ -45,12 +45,12 @@ defineProps({
 
 const rows: any[] = [
   {key: 'municipality', translate: 'Savivaldybė', fn: (municipality: any) => municipality.name},
-  {key: 'amount', translate: 'Individų skaičius'},
-  {key: 'permitCount', translate: 'Viso išduotų leidimų'},
-  {key: 'zooCount', translate: 'Zoologijos sodų'},
-  {key: 'aviaryCount', translate: 'Aptvarų / Voljerų statinių'},
-  {key: 'forestCount', translate: 'Aptvarų / Voljerų statinių esančių miško teritorijoje'},
-  {key: 'protectedTerritoryCount', translate: 'Aptvarų / Voljerų statinių esančių saugomoje teritorijoje'},
+  {key: 'count', translate: 'Individų skaičius'},
+  {key: 'permitsCount', translate: 'Viso išduotų leidimų'},
+  {key: 'zoosCount', translate: 'Zoologijos sodų'},
+  {key: 'aviariesCount', translate: 'Aptvarų / Voljerų statinių'},
+  {key: 'forestsCount', translate: 'Aptvarų / Voljerų statinių esančių miško teritorijoje'},
+  {key: 'protectedTerritoriesCount', translate: 'Aptvarų / Voljerų statinių esančių saugomoje teritorijoje'},
   {key: 'fencedAreaSum', translate: 'Aptvertas plotas'},
   {key: 'speciesClassifier', translate: '', subitemsFn: (items: any) => items.map((i: any) => ({
     name: `${i.name} (lot. <i>${i.nameLatin}</i>)`,
