@@ -1,18 +1,7 @@
 import { ref } from 'vue';
 import { defineStore } from 'pinia';
-import { Fill, Stroke, Style } from 'ol/style';
 import { gyvunaiApiHost } from '@/config';
 import _ from 'lodash';
-
-const colorPalette = [
-  'rgba(178,226,226,0.5)',
-  'rgba(102,194,164,0.5)',
-  'rgba(44,162,95,0.5)',
-  'rgba(0,109,44,0.5)',
-];
-
-const defaultFeatureFillColor = 'rgba(237,248,251,0.5)';
-const defaultStrokeColor = 'rgba(15,15,15,0.3)';
 
 const statsByType = {
   animals: {
@@ -81,7 +70,7 @@ export const useStatsStore = defineStore('stats', () => {
     _.set(stats.value, type, data);
   }
 
-  function getStyles(type: string, id: string | number) {
+  function getStatsById(type: string, id: string | number) {
     const options = _.get(statsByType, type);
 
     if (!options) return {};
@@ -89,36 +78,16 @@ export const useStatsStore = defineStore('stats', () => {
     const stats = getStats(type) || [];
 
     const maxValue = Math.max(...stats.map((item: any) => item.count));
-
     const matchingConfig = stats.find(
       (s: any) => _.get(s, options.idProperty) == id,
     );
-    const count = matchingConfig?.count || 0;
-
-    let featureFillColor = defaultFeatureFillColor;
-    if (count) {
-      const colorIndex = Math.round(
-        (count / maxValue) * (colorPalette.length - 1),
-      );
-      featureFillColor = colorPalette[colorIndex];
-    }
-
-    const style = new Style({
-      fill: new Fill({
-        color: featureFillColor,
-      }),
-      stroke: new Stroke({
-        color: defaultStrokeColor,
-        width: 1,
-      }),
-    });
 
     return {
-      color: featureFillColor,
-      style,
-      stats: matchingConfig,
+      maxValue,
+      count: matchingConfig?.count || 0,
+      properties: matchingConfig || {},
     };
   }
 
-  return { getStats, getStyles, loadStats, preloadStats };
+  return { getStats, loadStats, preloadStats, getStatsById };
 });

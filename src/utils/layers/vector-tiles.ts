@@ -4,6 +4,7 @@ import { MVT } from 'ol/format';
 import { Feature } from 'ol';
 import { projection3857 } from '../constants';
 import { qgisTilesUrl } from '@/config';
+import { vectorTileStyles } from './styling';
 
 function getVectorTilesUrl(type: string, source: string) {
   return `${qgisTilesUrl}/${type}/${source}/{z}/{x}/{y}`;
@@ -26,5 +27,6 @@ export const municipalitiesServiceVT = {
       tileSize: [512, 512],
       url: getVectorTilesUrl('boundaries', 'municipalities'),
     }),
+    style: vectorTileStyles({ layerPrefix: 'boundaries' }),
   }),
 };

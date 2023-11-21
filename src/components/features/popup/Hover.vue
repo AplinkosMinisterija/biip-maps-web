@@ -36,11 +36,11 @@ function getFromFeatures(features: any[]) {
 
   if (!features?.length || !features[0]) return {};
   const feature = features[0];
-  const stats = feature.get("stats") || {};
+  const statsFn = feature.get("statsFn") || {};
 
   return {
     feature,
-    stats,
+    stats: statsFn ? statsFn() : {},
   };
 }
 
@@ -64,6 +64,6 @@ mapLayers.hover(({ features }: any) => {
 mapLayers.click(({ features }: any) => {
   const { stats } = getFromFeatures(features);
 
-  emit("click", stats || {});
+  emit("click", stats?.properties || {});
 });
 </script>

@@ -81,12 +81,13 @@ watch(visibleLayer, () => {
   municipalitiesServiceVT.layer?.getSource()?.changed();
 });
 
-municipalitiesServiceVT.layer.setStyle((feature: any) => {
-  const styles = statsStore.getStyles(visibleLayer.value, feature.getId());
-  feature.set("stats", styles.stats);
-  return styles.style;
+municipalitiesServiceVT.layer.getSource()?.on("tileloadend", ({ tile }: any) => {
+  tile?.getFeatures()?.forEach((feature: any) => {
+    feature.set("statsFn", () =>
+      statsStore.getStatsById(visibleLayer.value, feature.getId())
+    );
+  });
 });
-
 await statsStore.preloadStats(allLayers.map((l) => l.key));
 
 mapLayers.addBaseLayer(geoportalTopo3857.id).add(municipalitiesServiceVT.id);
