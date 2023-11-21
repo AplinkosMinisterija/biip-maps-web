@@ -13,10 +13,14 @@ export const municipalitiesServiceVT = {
   id: 'municipalitiesServiceVT',
   name: 'Savivaldybės',
   layer: new VectorTileLayer({
+    renderMode: 'vector',
+    declutter: true,
     source: new VectorTileSource({
+      overlaps: false,
       projection: projection3857,
       format: new MVT({
         featureClass: Feature,
+        idProperty: 'code',
       }),
 
       tileSize: [512, 512],

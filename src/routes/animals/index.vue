@@ -81,7 +81,7 @@ watch(visibleLayer, () => {
 });
 
 municipalitiesServiceVT.layer.setStyle((feature: any) => {
-  const styles = statsStore.getStyles(visibleLayer.value, feature.get("code"));
+  const styles = statsStore.getStyles(visibleLayer.value, feature.getId());
   feature.set("stats", styles.stats);
   return styles.style;
 });
