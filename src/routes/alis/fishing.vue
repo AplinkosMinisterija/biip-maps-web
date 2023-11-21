@@ -7,19 +7,10 @@
       @search="filtersStore.search = $event"
     >
       <template #filters>
-        <UiButtonIcon
-          icon="layers"
-          @click="filtersStore.toggle('layers')"
-        />
+        <UiButtonIcon icon="layers" @click="filtersStore.toggle('layers')" />
       </template>
-      <template
-        v-if="filtersStore.active"
-        #filtersContent
-      >
-        <UiMapLayerToggle
-          v-if="filtersStore.isActive('layers')"
-          :layers="toggleLayers"
-        />
+      <template v-if="filtersStore.active" #filtersContent>
+        <UiMapLayerToggle v-if="filtersStore.isActive('layers')" :layers="toggleLayers" />
         <Search
           v-else-if="filtersStore.isActive('search')"
           :value="filtersStore.search"
@@ -38,6 +29,7 @@
           :is-open="!!selectedFeatures.length"
           :features="selectedFeatures"
           type="uetk"
+          @close="selectedFeatures = []"
         />
       </template>
     </UiMap>
