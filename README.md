@@ -1,6 +1,5 @@
 # BĮIP Maps WEB
 
-[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/AplinkosMinisterija/biip-maps-web/badge)](https://securityscorecards.dev/viewer/?platform=github.com&org={AplinkosMinisterija}&repo={biip-maps-web})
 [![License](https://img.shields.io/github/license/AplinkosMinisterija/biip-maps-web)](https://github.com/AplinkosMinisterija/biip-maps-web/blob/main/LICENSE)
 [![GitHub issues](https://img.shields.io/github/issues/AplinkosMinisterija/biip-maps-web)](https://github.com/AplinkosMinisterija/biip-maps-web/issues)
 [![GitHub stars](https://img.shields.io/github/stars/AplinkosMinisterija/biip-maps-web)](https://github.com/AplinkosMinisterija/biip-maps-web/stargazers)
