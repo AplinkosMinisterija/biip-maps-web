@@ -12,14 +12,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, inject } from 'vue';
-const eventBus: any = inject('eventBus');
-const mapLayers: any = inject('mapLayers');
+import { ref, watch, computed, inject } from "vue";
+const eventBus: any = inject("eventBus");
+const mapLayers: any = inject("mapLayers");
+const emit = defineEmits(["close"]);
 
 const props = defineProps({
   title: {
     type: String,
-    default: '',
+    default: "",
   },
   isOpen: Boolean,
 });
@@ -37,9 +38,10 @@ const open = () => {
 const close = () => {
   isOpen.value = false;
   mapLayers.highlightFeatures([]);
+  emit("close");
 };
 
-eventBus.on('uiSidebar', ({ open }: any) => {
+eventBus.on("uiSidebar", ({ open }: any) => {
   isOpen.value = !!open;
 });
 

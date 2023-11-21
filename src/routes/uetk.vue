@@ -40,6 +40,7 @@
           :is-open="!!selectedFeatures.length"
           :features="selectedFeatures"
           type="uetk"
+          @close="selectedFeatures = []"
         />
       </template>
     </UiMap>
