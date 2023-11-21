@@ -17,6 +17,7 @@
           :is-open="!!selectedFeatures?.length"
           :title="selectedFeatures?.[0]?.munipality?.name"
           type="animals"
+          @close="selectFeatures"
         />
       </template>
     </UiMap>
