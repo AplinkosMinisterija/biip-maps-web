@@ -18,6 +18,7 @@ Ministerija.
 - [License](#license)
 - [Documentation](#documentation)
   - [Alis](#alis)
+  - [Animals](#animals)
   - [Animals Draw](#animals-draw)
   - [Edit](#edit)
   - [Medziokle](#medziokle)
@@ -125,6 +126,12 @@ https://maps.biip.lt/alis/fishing
 | Name    | Desciption              | Type           |
 | ------- | ----------------------- | -------------- |
 | `click` | Provides click features | Array of items |
+
+## Animals
+
+```
+https://maps.biip.lt/animals
+```
 
 ## Animals draw
 
@@ -296,10 +303,10 @@ https://maps.biip.lt/rusys
 
 **Listens:**
 
-| Name     | Desciption                             | Type                                                                             |
-| -------- | -------------------------------------- | -------------------------------------------------------------------------------- |
-| `filter` | Defines filters                        | `Filter`                                                                         |
-| `geom`   | Highlights provided feature collection | Feature collection                                                               |
+| Name     | Desciption                             | Type               |
+| -------- | -------------------------------------- | ------------------ |
+| `filter` | Defines filters                        | `Filter`           |
+| `geom`   | Highlights provided feature collection | Feature collection |
 
 **Sends:**
 
