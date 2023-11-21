@@ -23,7 +23,7 @@ function getVectorTileLayer(type: string, source: string) {
         idProperty: 'code',
       }),
 
-      tileSize: [256, 256],
+      tileSize: [512, 512],
       url: getVectorTilesUrl(type, source),
     }),
     style: vectorTileStyles({ layerPrefix: type }),
