@@ -96,15 +96,17 @@ export class MapLayers extends Queues {
       this.centerMap();
 
       this._processQueue();
-      map.on('singleclick', (e) => {
+      map.on('singleclick', (e: any) => {
         const features = map.getFeaturesAtPixel(e.pixel);
-        this._clickCallbacks.map((fn) => fn({ ...e, features }));
+        e.features = features;
+        this._clickCallbacks.map((fn) => fn(e));
       });
-      map.on('pointermove', (e) => {
+      map.on('pointermove', (e: any) => {
         clearTimeout(this._hoverTimeout);
         this._hoverTimeout = setTimeout(() => {
           const features = map.getFeaturesAtPixel(e.pixel);
-          this._hoverCallbacks.map((fn) => fn({ ...e, features }));
+          e.features = features;
+          this._hoverCallbacks.map((fn) => fn(e));
         }, 50);
       });
     }
