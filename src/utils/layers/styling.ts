@@ -4,7 +4,30 @@ import Style from 'ol/style/Style';
 
 const LAYER_TYPE = {
   BOUNDARIES_MUNICIPALITIES: 'boundaries.municipalities',
+  BOUNDARIES_MUNICIPALITIES_LABEL: 'boundaries.municipalities_centroid',
+  BOUNDARIES_ELDERSHIPS: 'boundaries.elderships',
+  BOUNDARIES_ELDERSHIPS_LABEL: 'boundaries.elderships_centroid',
+  BOUNDARIES_COUNTIES: 'boundaries.counties',
+  BOUNDARIES_COUNTIES_LABEL: 'boundaries.counties_centroid',
+  BOUNDARIES_RESIDENTIAL_AREAS: 'boundaries.residential_areas',
+  BOUNDARIES_RESIDENTIAL_AREAS_LABEL: 'boundaries.residential_areas_centroid',
 };
+
+const FONT_FAMILY = '"Open Sans", "Arial Unicode MS"';
+
+const COLORS = {
+  GRAY: '#0f0f0f',
+  WHITE: '#ffffff',
+  BLACK: '#000000',
+};
+
+function getFont(
+  size: number,
+  type: 'normal' | 'bold' = 'bold',
+  fontFamily: string = FONT_FAMILY,
+) {
+  return `${type ? `${type} ` : ''}${size}px ${fontFamily}`;
+}
 
 function getColorWithOpacity(color: string, opacity: number) {
   function hexToRgb(hex: string) {
@@ -34,10 +57,6 @@ function getFillColorByStats(count: number, max: number) {
   return getColorWithOpacity(color, 0.5);
 }
 
-const COLORS = {
-  GRAY: '#0f0f0f',
-};
-
 export function vectorTileStyles(options?: { layerPrefix: string }): any {
   const fill = new Fill({ color: '' });
   const stroke = new Stroke({ color: '', width: 1 });
@@ -65,10 +84,31 @@ export function vectorTileStyles(options?: { layerPrefix: string }): any {
       stroke.setColor(getColorWithOpacity(COLORS.GRAY, 0.3));
       fill.setColor(getFillColorByStats(stats?.count, stats?.maxValue || 0));
       styles[length++] = strokedPolygon;
-    } else if (layer === LAYER_TYPE.BOUNDARIES_MUNICIPALITIES) {
+    } else if (
+      [
+        LAYER_TYPE.BOUNDARIES_MUNICIPALITIES,
+        LAYER_TYPE.BOUNDARIES_ELDERSHIPS,
+        LAYER_TYPE.BOUNDARIES_COUNTIES,
+        LAYER_TYPE.BOUNDARIES_RESIDENTIAL_AREAS,
+      ].includes(layer)
+    ) {
       stroke.setColor(getColorWithOpacity(COLORS.GRAY, 0.3));
       stroke.setWidth(2);
       styles[length++] = line;
+    } else if (
+      [
+        LAYER_TYPE.BOUNDARIES_MUNICIPALITIES_LABEL,
+        LAYER_TYPE.BOUNDARIES_ELDERSHIPS_LABEL,
+        LAYER_TYPE.BOUNDARIES_COUNTIES_LABEL,
+        LAYER_TYPE.BOUNDARIES_RESIDENTIAL_AREAS_LABEL,
+      ].includes(layer)
+    ) {
+      text.getText().setText(feature.get('name'));
+      fill.setColor(COLORS.GRAY);
+      text.getText().setFont(getFont(11));
+      stroke.setColor(getColorWithOpacity(COLORS.WHITE, 0.3));
+      stroke.setWidth(2);
+      styles[length++] = text;
     }
 
     styles.length = length;
