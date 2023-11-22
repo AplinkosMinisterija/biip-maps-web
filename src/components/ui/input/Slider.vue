@@ -1,11 +1,6 @@
 <template>
   <div class="flex flex-col gap-1">
-    <UiLabel
-      v-if="label"
-      class="cursor-pointer"
-      size="xs"
-      :align-column="true"
-    >
+    <UiLabel v-if="label" class="cursor-pointer" size="xs" :align-column="true">
       <div>{{ label }}</div>
       <input
         v-model="modelValue"
@@ -14,7 +9,7 @@
         :step="step || 1"
         :max="max || 10"
         class="w-full"
-      >
+      />
     </UiLabel>
   </div>
 </template>
@@ -23,7 +18,7 @@
 import { computed } from "vue";
 
 const props = defineProps({
-  modelValue: { type: String, default: "" },
+  modelValue: { type: Number, default: 0 },
   value: { type: String, default: "" },
   label: { type: String, default: "" },
   min: { type: Number, default: 0 },

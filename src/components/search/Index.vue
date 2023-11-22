@@ -211,10 +211,10 @@ const tabs = computed(() => {
 });
 
 const zoomToMatch = (match: any) => {
-  if (!match.id) return;
+  if (!match?.id) return;
 
-  if (props.addStroke && match.geom) {
-    mapLayers.zoomToFeatureCollection(match.geom, true);
+  if (match.geom) {
+    mapLayers.zoomToFeatureCollection(match.geom, !!props.addStroke);
   } else if (match.extent) {
     mapLayers.zoomToExtent(match.extent);
   } else if (match.x && match.y) {

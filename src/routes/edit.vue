@@ -88,7 +88,9 @@ const isPreview = !!query.preview;
 const activeDrawType = computed(() => mapDraw.value.activeType);
 const selectedFeature = ref({} as any);
 const showBufferChangeBox = computed(
-  () => query.buffer && ["Point", "LineString"].includes(selectedFeature.value?.type)
+  () =>
+    query.buffer &&
+    ["Point", "LineString"].includes(selectedFeature.value?.geometry?.type)
 );
 
 const toggleLayers = [
@@ -153,7 +155,12 @@ const selectSearch = (match: any) => {
   }
   if (!match?.geom) return;
 
-  mapDraw.value.setFeatures(match.geom, !!query.multi).edit();
+  mapDraw.value
+    .setFeatures(match.geom, {
+      append: !!query.multi,
+      types: drawTypes.value.map((i) => i.type),
+    })
+    .edit();
 };
 
 const toggleDrawType = (type: string) => {
