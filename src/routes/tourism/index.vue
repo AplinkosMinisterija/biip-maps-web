@@ -24,7 +24,7 @@
         />
       </template>
       <template #sidebar>
-        <UiSidebarFeatures :features="selectedFeatures" />
+        <UiSidebarFeatures :features="selectedFeatures" type="tourism" />
       </template>
     </UiMap>
   </div>

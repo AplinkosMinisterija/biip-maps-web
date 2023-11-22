@@ -21,17 +21,20 @@
 </template>
 
 <script setup lang="ts">
-import { isInteger } from "lodash";
+import { isInteger } from 'lodash';
 
 defineProps({
   features: {
     type: Array<any>,
-    default: []
-  }
+    default: [],
+  },
 });
 
-function getSubtitle(feature:any) {
-  const cadastralId = getValue(feature, ['2. Kadastro identifikavimo kodas', '2. Hidrostatinio unikalus identifikatorius'])
+function getSubtitle(feature: any) {
+  const cadastralId = getValue(feature, [
+    '2. Kadastro identifikavimo kodas',
+    '2. Hidrostatinio unikalus identifikatorius',
+  ]);
   const translates: any = {
     upes: 'Upės',
     ezerai_tvenkiniai: 'Ežerai tvenkiniai',
@@ -43,25 +46,24 @@ function getSubtitle(feature:any) {
     hidroelektrines: 'Hidroelektrinės',
     upiu_pabaseiniai: 'Upių pabaseiniai',
     upiu_baseinu_rajonai: 'Upių baseinų rajonai',
-    upiu_baseinai: 'Upių baseinai'
-  }
+    upiu_baseinai: 'Upių baseinai',
+  };
 
   const objectType = translates[feature.featureId?.split('.')?.[0]];
   if (!cadastralId) return objectType || '';
 
   return `${objectType || 'Objektas'} (${cadastralId})`;
 }
-const getValue = (item: any,
- props: string | string[], translates?: any) => {
+const getValue = (item: any, props: string | string[], translates?: any) => {
   if (!Array.isArray(props)) {
-    props = [props]
+    props = [props];
   }
-  const prop = props.find(p => !!item[p])
-  if (!prop) return ''
-  const value = item[prop]
-  if (!value) return ''
+  const prop = props.find((p) => !!item[p]);
+  if (!prop) return '';
+  const value = item[prop];
+  if (!value) return '';
   if (translates) {
-    return translates[value] || ''
+    return translates[value] || '';
   }
   return value;
 };
@@ -69,13 +71,14 @@ const getValue = (item: any,
 const getSorted = (properties: any) => {
   return Object.entries(properties)
     .reduce((acc: any, [key, value]) => {
-      let id: number | string = parseInt(key.split(".")[0]);
+      let id: number | string = parseInt(key.split('.')[0]);
       if (isNaN(id)) id = key;
       return [...acc, { name: key, value, id }];
     }, [])
     .sort((a: any, b: any) => {
       if (isInteger(a.id)) return a.id - b.id;
       return a.id.localeCompare(b.id);
-    }).filter((item: any) => !['featureId', '_layerTitle'].includes(item.name));
+    })
+    .filter((item: any) => !['featureId', '_layerTitle'].includes(item.name));
 };
 </script>
