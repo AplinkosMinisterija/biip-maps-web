@@ -1,8 +1,10 @@
-import { extend } from 'ol/extent';
+import { extend, getCenter } from 'ol/extent';
 import { GeoJSON } from 'ol/format';
 import VectorSource from 'ol/source/Vector';
 import { projection } from '../constants';
 import { serializeQuery } from '../requests';
+import type { Feature } from 'ol';
+import { Geometry, LineString, Point } from 'ol/geom';
 
 export function dataToFeatureCollection(data: any) {
   if (!data) return data;
@@ -121,4 +123,49 @@ export function parseRouteParams(params: any, items: string[]) {
   });
 
   return parsed;
+}
+
+export function convertFeaturesToPoints(features: Feature[], types?: string[]) {
+  const resultFeatures: Feature[] = [];
+
+  if (!types?.length) return features;
+
+  function toPointCoordsByExtent(geometry: Geometry) {
+    const extent = geometry?.getExtent();
+    let coords = getCenter(extent as any);
+    if (Array.isArray(coords?.[0])) {
+      coords = coords[0];
+    }
+    return coords;
+  }
+
+  function toPointByLineCenter(lineString: Geometry) {
+    let coords = (lineString as LineString).getCoordinateAt(0.5);
+    if (Array.isArray(coords?.[0])) {
+      coords = coords[0];
+    }
+    return coords;
+  }
+
+  for (const feature of features) {
+    const geometry = feature?.getGeometry();
+    const type = geometry?.getType() || '';
+
+    if (!geometry || !type) continue;
+
+    // for now - convert to points only!
+    if (!types.includes(type) && types.includes('Point')) {
+      if (['Polygon', 'MultiPolygon', 'MultiPoint'].includes(type)) {
+        feature.setGeometry(new Point(toPointCoordsByExtent(geometry)));
+      } else if (['LineString', 'MultiLineString'].includes(type)) {
+        feature.setGeometry(new Point(toPointByLineCenter(geometry)));
+      } else {
+        throw new Error(`Geometry type ${type} is not supported`);
+      }
+    }
+
+    resultFeatures.push(feature);
+  }
+
+  return resultFeatures;
 }

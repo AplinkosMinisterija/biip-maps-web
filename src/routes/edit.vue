@@ -155,7 +155,12 @@ const selectSearch = (match: any) => {
   }
   if (!match?.geom) return;
 
-  mapDraw.value.setFeatures(match.geom, !!query.multi).edit();
+  mapDraw.value
+    .setFeatures(match.geom, {
+      append: !!query.multi,
+      types: drawTypes.value.map((i) => i.type),
+    })
+    .edit();
 };
 
 const toggleDrawType = (type: string) => {

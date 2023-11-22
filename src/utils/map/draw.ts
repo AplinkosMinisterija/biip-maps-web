@@ -10,6 +10,7 @@ import { click } from 'ol/events/condition';
 import _ from 'lodash';
 import { GeometryType, getFeatures, parse } from 'geojsonjs';
 import { getLayerStyles } from '../layers';
+import { convertFeaturesToPoints } from './utils';
 
 type CallbackType = 'change' | 'select' | 'remove';
 
@@ -66,12 +67,23 @@ export class MapDraw extends Queues {
     return this;
   }
 
-  setFeatures(features: { [key: string]: any }, append: boolean = false) {
+  setFeatures(
+    features: { [key: string]: any },
+    options: {
+      append?: boolean;
+      types?: string[];
+    } = {},
+  ) {
     if (_.isEmpty(features)) return;
 
     try {
-      const data = new GeoJSON().readFeatures(features);
-      if (!append) {
+      let data = new GeoJSON().readFeatures(features);
+
+      if (options?.types?.length) {
+        data = convertFeaturesToPoints(data, options?.types || []);
+      }
+
+      if (!options?.append) {
         this.remove();
       }
       this._source.addFeatures(data);
@@ -100,7 +112,7 @@ export class MapDraw extends Queues {
       this._defaultColors.primary = primary;
       this._defaultColors.secondary = secondary;
     }
-    
+
     return this.setStyles({
       ...this._styles.opts,
       colors: {
