@@ -648,14 +648,14 @@ export class MapLayers extends Queues {
     const coords = convertCoordinatesTo3346([x, y]);
 
     this.map.getView().setCenter(coords);
-    this.map.getView().setZoom(16);
+    this.map.getView().setZoom(10);
   }
 
   zoomToExtent(extent: any, padding: number = 50) {
     if (!extent || !this.map) return;
     this.map.getView().fit(extent, {
       padding: [padding, padding, padding, padding],
-      maxZoom: 16,
+      maxZoom: 10,
     });
   }
 

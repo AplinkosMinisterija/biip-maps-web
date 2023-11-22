@@ -68,7 +68,7 @@ import { useConfigStore } from "@/stores/config";
 import { rusysApiHost } from "@/config";
 import { getItemsByRequest } from "@/utils/requests/rusys";
 
-const GRID_TO_SERVICE_LEVEL = 11;
+const GRID_TO_SERVICE_LEVEL = 5;
 const filtersStore = useFiltersStore();
 const mapLayers: any = inject("mapLayers");
 const events: any = inject("events");
