@@ -1217,3 +1217,10 @@ export const gamtotvarkaStvkService = {
   }),
 };
 gamtotvarkaStvkService.layer.set('id', 'gamtotvarkaStvkService');
+
+export const tourismService = {
+  id: 'tourismService',
+  description: vsttCopyright,
+  title: 'Turizmo objektai',
+  layer: getWMSImageLayer(`${qgisServerUrl}/tourism`, 'forms', biipCopyright),
+};

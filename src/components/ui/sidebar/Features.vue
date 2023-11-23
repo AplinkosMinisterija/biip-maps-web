@@ -14,12 +14,13 @@ import FeaturesAccordionUETK from '@/components/features/accordion/UETK.vue';
 import FeaturesAccordionHunting from '@/components/features/accordion/Hunting.vue';
 import FeaturesAccordionGamtotvarka from '@/components/features/accordion/Gamtotvarka.vue';
 import FeaturesAccordionAnimals from '@/components/features/accordion/Animals.vue';
+import FeaturesAccordionTourism from '@/components/features/accordion/Tourism.vue';
 
-const emit = defineEmits(["close"]);
+const emit = defineEmits(['close']);
 
 const props = defineProps({
-  title: { type: String, default: "" },
-  type: { type: String, default: "" },
+  title: { type: String, default: '' },
+  type: { type: String, default: '' },
   features: { type: Array, default: () => [] },
   isOpen: Boolean,
 });
@@ -31,12 +32,13 @@ const componentByType = computed(() => {
   else if (props.type === 'hunting') return FeaturesAccordionHunting;
   else if (props.type === 'gamtotvarka') return FeaturesAccordionGamtotvarka;
   else if (props.type === 'animals') return FeaturesAccordionAnimals;
+  else if (props.type === 'tourism') return FeaturesAccordionTourism;
   return 'pre';
 });
 const features = computed(() => props.features || []);
 
 const title = computed(() => {
-  const title = props.title || "Identifikuoti objektai";
+  const title = props.title || 'Identifikuoti objektai';
 
   if (!features.value?.length) return title;
   return `${title} (${features.value.length})`;
