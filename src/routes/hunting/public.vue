@@ -11,7 +11,11 @@
         <UiButtonIcon icon="legend" @click="filtersStore.toggle('legend')" />
       </template>
       <template v-if="filtersStore.active" #filtersContent>
-        <UiMapLayerToggle v-if="filtersStore.isActive('layers')" :layers="toggleLayers" />
+        <UiMapLayerToggle
+          v-if="filtersStore.isActive('layers')"
+          :layers="toggleLayers"
+          @change="onToggleChange"
+        />
         <Search
           v-else-if="filtersStore.isActive('search')"
           :value="filtersStore.search"
@@ -107,6 +111,14 @@ function onSearch(search: string) {
 
   if (!search) {
     mapLayers.cleanHighlighs();
+  }
+}
+
+function onToggleChange() {
+  if (!mapLayers.isVisible(huntingPublicService.id)) {
+    municipalitiesServiceVT.layer.setVisible(false);
+  } else if (mapLayers.isVisible(huntingPublicService.id) && !!visibleLayer.value) {
+    municipalitiesServiceVT.layer.setVisible(true);
   }
 }
 
