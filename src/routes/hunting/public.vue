@@ -7,14 +7,6 @@
       @search="onSearch"
     >
       <template #filters>
-        <UiDropdown
-          v-model="visibleLayer"
-          class="px-1 rounded border border-gray-400 bg-white pointer-events-auto"
-        >
-          <UiDropdownItem v-for="l in allLayers" :key="l.key" :value="`${l.key}`">
-            {{ l.title }}
-          </UiDropdownItem>
-        </UiDropdown>
         <UiButtonIcon icon="layers" @click="filtersStore.toggle('layers')" />
         <UiButtonIcon icon="legend" @click="filtersStore.toggle('legend')" />
       </template>
@@ -139,6 +131,7 @@ allLayers
       ({
         value: layer.key,
         name: layer.title,
+        virtual: true,
         isVisible,
         setVisible,
       } as any)

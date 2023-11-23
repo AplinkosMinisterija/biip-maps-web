@@ -40,7 +40,7 @@ function getFromFeatures(features: any[]) {
 
   return {
     feature,
-    stats: statsFn ? statsFn() : {},
+    stats: typeof statsFn === "function" ? statsFn() : {},
   };
 }
 

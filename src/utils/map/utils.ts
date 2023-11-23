@@ -79,7 +79,10 @@ export function WMSFeatureQuery(query: string, layers: string | string[]) {
   });
 }
 
-export function WMSLegendRequest(layers: string | string[]) {
+export function WMSLegendRequest(
+  layers: string | string[],
+  proj: string = projection,
+) {
   if (Array.isArray(layers)) {
     layers = layers.join(',');
   }
@@ -90,7 +93,7 @@ export function WMSLegendRequest(layers: string | string[]) {
     REQUEST: 'GetLegendGraphic',
     LAYERS: layers,
     FORMAT: 'application/json',
-    SRS: projection,
+    SRS: proj,
     STYLE: 'default',
   });
 }

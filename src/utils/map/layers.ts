@@ -175,7 +175,10 @@ export class MapLayers extends Queues {
 
     let query: any;
     if (type === LayerType.WMS) {
-      query = WMSLegendRequest(sublayers);
+      query = WMSLegendRequest(
+        sublayers,
+        this.map?.getView().getProjection().getCode(),
+      );
     }
 
     if (!query) return;
@@ -716,7 +719,7 @@ export class MapLayers extends Queues {
     const { source } = featureCollectionToExtent(
       data,
       this.map.getView().getProjection(),
-      options?.dataProjection
+      options?.dataProjection,
     );
 
     this.getVectorLayer(options?.layer || highlightLayerId).setSource(source);
@@ -761,6 +764,7 @@ export class MapLayers extends Queues {
           if (item.sublayers?.length) {
             return [...acc, ...computeSublayers(item.sublayers)];
           }
+          if (item?.virtual) return acc;
           return [...acc, item?.value];
         }, [])
         .filter((i) => !!i);
