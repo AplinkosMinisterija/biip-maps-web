@@ -48,6 +48,7 @@ const setVisible = (layer: any, value: boolean = false, sublayerName: string = "
   }
 
   const currentSublayers = layer.sublayers
+    .filter((s: any) => !s.virtual)
     .map((s: any) => s.value)
     .filter((name: string) => {
       if (name === sublayerName) return value;
