@@ -13,7 +13,7 @@ import {
   geoportalTopoGray,
   huntingService,
   parseRouteParams,
-  convertCoordinatesTo3346,
+  convertCoordinatesToProjection,
 } from "@/utils";
 
 const mapLayers: any = inject("mapLayers");
@@ -34,7 +34,7 @@ const colors: any = {
 };
 
 function zoomToCoordinate(data: any) {
-  const coordinates = convertCoordinatesTo3346([data.x, data.y]);
+  const coordinates = convertCoordinatesToProjection([data.x, data.y]);
   mapLayers.zoomToCoordinate(...coordinates);
 }
 
@@ -59,7 +59,7 @@ function parsePoints(data: any[]) {
   const featureCollection = parse(
     data.map((item) => ({
       type: GeometryType.POINT,
-      coordinates: convertCoordinatesTo3346([item.x, item.y]),
+      coordinates: convertCoordinatesToProjection([item.x, item.y]),
       properties: {
         color: colors[item.type] || colors.current,
         radius: 5,

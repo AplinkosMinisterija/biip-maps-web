@@ -1,6 +1,6 @@
 import { ref } from 'vue';
 import { defineStore } from 'pinia';
-import { gyvunaiApiHost } from '@/config';
+import { gyvunaiApiHost, medziokleApiHost } from '@/config';
 import _ from 'lodash';
 
 const statsByType = {
@@ -23,6 +23,46 @@ const statsByType = {
     species: {
       url: `${gyvunaiApiHost}/api/public/species/all`,
       idProperty: 'municipality.id',
+      countProperty: 'count',
+    },
+  },
+  medziokle: {
+    loots: {
+      url: `${medziokleApiHost}/api/lootsByMunicipality/stats`,
+      transformFn: (data: any) =>
+        Object.entries(data).reduce(
+          (acc: any, [municipalityId, stats]: any) => [
+            ...acc,
+            {
+              ...stats,
+              municipalityId,
+              count: stats.animals
+                .map((a: any) => a.count)
+                .reduce((acc: number, item: number) => acc + item, 0),
+            },
+          ],
+          [],
+        ),
+      idProperty: 'municipalityId',
+      countProperty: 'count',
+    },
+    limits: {
+      url: `${medziokleApiHost}/api/limitsByMunicipality/stats`,
+      transformFn: (data: any) =>
+        Object.entries(data).reduce(
+          (acc: any, [municipalityId, stats]: any) => [
+            ...acc,
+            {
+              ...stats,
+              municipalityId,
+              count: stats.animals
+                .map((a: any) => a.count)
+                .reduce((acc: number, item: number) => acc + item, 0),
+            },
+          ],
+          [],
+        ),
+      idProperty: 'municipalityId',
       countProperty: 'count',
     },
   },

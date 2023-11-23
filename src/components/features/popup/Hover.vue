@@ -62,8 +62,16 @@ mapLayers.hover(({ features }: any) => {
 });
 
 mapLayers.click(({ features }: any) => {
-  const { stats } = getFromFeatures(features);
+  const { stats, feature } = getFromFeatures(features);
 
-  emit("click", stats?.properties || {});
+  const properties: any = { ...(stats?.properties || {}) };
+
+  if (feature.get("layer") === "municipalities") {
+    properties.municipality = {
+      id: feature.getId(),
+      name: feature.get("name"),
+    };
+  }
+  emit("click", properties);
 });
 </script>

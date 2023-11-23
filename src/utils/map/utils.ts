@@ -38,10 +38,14 @@ export function getPropertiesFromFeaturesArray(
     .filter((item) => !!item);
 }
 
-export function featureCollectionToExtent(data: any, featureProjection?: any) {
+export function featureCollectionToExtent(
+  data: any,
+  featureProjection?: any,
+  dataProjection = projection,
+) {
   const vectorSource = new VectorSource({
     features: new GeoJSON().readFeatures(data, {
-      dataProjection: projection,
+      dataProjection,
       featureProjection,
     }),
   });

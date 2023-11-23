@@ -2,23 +2,24 @@
   <div>
     <UiMap
       :show-scale-line="true"
-      :show-coordinates="true"
+      :projection="projection3857"
       :show-search="true"
-      :attribution-options="{
-        collapsible: !isPreview,
-      }"
-      :is-preview="!!isPreview"
       @search="onSearch"
     >
       <template #filters>
+        <UiDropdown
+          v-model="visibleLayer"
+          class="px-1 rounded border border-gray-400 bg-white pointer-events-auto"
+        >
+          <UiDropdownItem v-for="l in allLayers" :key="l.key" :value="`${l.key}`">
+            {{ l.title }}
+          </UiDropdownItem>
+        </UiDropdown>
         <UiButtonIcon icon="layers" @click="filtersStore.toggle('layers')" />
         <UiButtonIcon icon="legend" @click="filtersStore.toggle('legend')" />
       </template>
       <template v-if="filtersStore.active" #filtersContent>
-        <UiMapLayerToggle
-          v-if="filtersStore.isActive('layers')"
-          :layers="toggleLayers"
-        />
+        <UiMapLayerToggle v-if="filtersStore.isActive('layers')" :layers="toggleLayers" />
         <Search
           v-else-if="filtersStore.isActive('search')"
           :value="filtersStore.search"
@@ -31,39 +32,83 @@
         />
       </template>
       <template #sidebar>
-        <UiSidebarFeatures :features="selectedFeatures" type="hunting" />
+        <UiSidebarFeatures
+          :features="selectedFeatures"
+          type="hunting"
+          @close="selectFeatures"
+        />
       </template>
     </UiMap>
+
+    <FeaturesPopupHover @click="selectFeatures">
+      <template #title="{ feature }">
+        {{ feature?.get("name") }}
+      </template>
+      <template #content="{ data }">
+        <div class="text-xs">{{ countTranslation }}: {{ data.count }}</div>
+      </template>
+    </FeaturesPopupHover>
   </div>
 </template>
 <script setup lang="ts">
-import { inject, ref } from 'vue';
-import { useFiltersStore } from '@/stores/filters';
+import { computed, inject, ref, watch } from "vue";
 import {
-  geoportalTopo,
-  geoportalOrto,
-  geoportalTopoGray,
+  municipalitiesServiceVT,
+  projection3857,
+  geoportalTopo3857,
   huntingPublicService,
   stvkService,
   inspireParcelService,
-  municipalitiesService,
-  parseRouteParams,
-} from '@/utils';
-import { useRoute } from 'vue-router';
+} from "@/utils";
+import { useStatsStore } from "@/stores/stats";
+import { useFiltersStore } from "@/stores/filters";
 
+const statsStore = useStatsStore();
 const filtersStore = useFiltersStore();
-const mapLayers: any = inject('mapLayers');
-const selectedFeatures = ref([] as any[]);
-const $route = useRoute();
-const eventBus: any = inject('eventBus');
+const mapLayers: any = inject("mapLayers");
+const eventBus: any = inject("eventBus");
 
-const query = parseRouteParams($route.query, ['cadastralId', 'preview']);
+const selectedFeatures = ref([] as any);
 
-const isPreview = ref(!!query.preview);
+function selectFeatures(feature: any) {
+  if (!feature?.count) {
+    selectedFeatures.value = [];
+  } else {
+    selectedFeatures.value = [feature];
+  }
 
-if (isPreview.value) {
-  filtersStore.toggle('legend', true);
+  eventBus.emit("uiSidebar", { open: !!selectedFeatures.value.length });
 }
+const allLayers = [
+  {
+    key: "medziokle.limits",
+    title: "Limitai",
+    countTranslate: "Suteikta limitų",
+  },
+  {
+    key: "medziokle.loots",
+    title: "Laimikiai",
+    countTranslate: "Viso laimikių",
+  },
+];
+const visibleLayer = ref(allLayers[0].key);
+
+const countTranslation = computed(() => {
+  return allLayers.find((l) => l.key === visibleLayer.value)?.countTranslate;
+});
+
+watch(visibleLayer, () => {
+  municipalitiesServiceVT.layer?.getSource()?.changed();
+});
+
+municipalitiesServiceVT.layer.getSource()?.on("tileloadend", ({ tile }: any) => {
+  tile?.getFeatures()?.forEach((feature: any) => {
+    feature.set("statsFn", () =>
+      statsStore.getStatsById(visibleLayer.value, feature.getId())
+    );
+  });
+});
+await statsStore.preloadStats(allLayers.map((l) => l.key));
 
 function onSearch(search: string) {
   filtersStore.search = search;
@@ -75,30 +120,29 @@ function onSearch(search: string) {
 
 const toggleLayers = [
   huntingPublicService,
-  municipalitiesService,
+  municipalitiesServiceVT,
   inspireParcelService,
   stvkService,
 ];
 
 mapLayers
-  .addBaseLayer(geoportalTopoGray.id)
-  .addBaseLayer(geoportalTopo.id)
-  .addBaseLayer(geoportalOrto.id)
-  .add(municipalitiesService.id, { isHidden: true })
+  .addBaseLayer(geoportalTopo3857.id)
+  .add(municipalitiesServiceVT.id)
   .add(stvkService.id, { isHidden: true })
   .add(inspireParcelService.id, { isHidden: true })
   .add(huntingPublicService.id)
   .click(async ({ coordinate }: any) => {
     selectedFeatures.value = [];
-    eventBus.emit('uiSidebar', { open: false });
     mapLayers.getFeatureInfo(
       huntingPublicService.id,
       coordinate,
       ({ geometries, properties }: any) => {
-        mapLayers.highlightFeatures(geometries);
+        mapLayers.highlightFeatures(geometries, {
+          dataProjection: projection3857
+        });
         selectedFeatures.value.push(...properties);
-        eventBus.emit('uiSidebar', { open: !!selectedFeatures.value.length });
-      },
+        eventBus.emit("uiSidebar", { open: !!selectedFeatures.value.length });
+      }
     );
   });
 </script>
