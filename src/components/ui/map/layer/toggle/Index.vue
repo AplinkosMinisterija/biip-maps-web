@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col gap-3">
     <span class="text-sm font-semibold">Sluoksniai</span>
-    <div>
+    <div :key="stateCount">
       <div v-for="l in layers" :key="l.id">
         <UiMapLayerToggleItem
           :layer="l"
@@ -14,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject } from "vue";
+import { computed, inject, ref } from "vue";
 
 const mapLayers: any = inject("mapLayers");
 
@@ -25,9 +25,22 @@ const props = defineProps({
   },
 });
 
+const stateCount = ref(0);
+
 const emit = defineEmits(["change"]);
 
 const setVisible = (layer: any, value: boolean = false, sublayerName: string = "") => {
+  let sublayer;
+  if (sublayerName) {
+    sublayer = layer?.sublayers?.find((sublayer: any) => sublayer.value === sublayerName);
+  }
+
+  if (typeof sublayer?.setVisible === "function") {
+    sublayer.setVisible(sublayer, value);
+    emit("change", layer, value);
+    stateCount.value++;
+    return;
+  }
   if (layer?.layer && !sublayerName) {
     layer.layer.setVisible(value);
     emit("change", layer, value);
@@ -35,6 +48,7 @@ const setVisible = (layer: any, value: boolean = false, sublayerName: string = "
   }
 
   const currentSublayers = layer.sublayers
+    .filter((s: any) => !s.virtual)
     .map((s: any) => s.value)
     .filter((name: string) => {
       if (name === sublayerName) return value;
@@ -47,7 +61,16 @@ const setVisible = (layer: any, value: boolean = false, sublayerName: string = "
 };
 
 const isVisible = (layer: any, sublayerName: string = "") => {
-  if (layer?.layer && !sublayerName) return mapLayers.isVisible(layer.id);
+  let sublayer;
+  if (sublayerName) {
+    sublayer = layer?.sublayers?.find((sublayer: any) => sublayer.value === sublayerName);
+  }
+
+  if (typeof sublayer?.isVisible === "function") {
+    return sublayer?.isVisible(sublayer);
+  } else if (layer?.layer && !sublayerName) {
+    return mapLayers.isVisible(layer.id);
+  }
 
   return mapLayers.getSublayers(layer.id).includes(sublayerName);
 };

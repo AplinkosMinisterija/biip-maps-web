@@ -18,7 +18,10 @@ import {
   WMSLegendRequest,
 } from './utils';
 import LayerGroup from 'ol/layer/Group';
-import { convertCoordinates, convertCoordinatesTo3346 } from './coordinates';
+import {
+  convertCoordinates,
+  convertCoordinatesToProjection,
+} from './coordinates';
 import { getCenter } from 'ol/extent';
 import { Queues } from './queues';
 
@@ -172,7 +175,10 @@ export class MapLayers extends Queues {
 
     let query: any;
     if (type === LayerType.WMS) {
-      query = WMSLegendRequest(sublayers);
+      query = WMSLegendRequest(
+        sublayers,
+        this.map?.getView().getProjection().getCode(),
+      );
     }
 
     if (!query) return;
@@ -645,7 +651,7 @@ export class MapLayers extends Queues {
       return this._addToQueue('zoomToCoordinate', x, y);
     }
 
-    const coords = convertCoordinatesTo3346([x, y]);
+    const coords = convertCoordinatesToProjection([x, y]);
 
     this.map.getView().setCenter(coords);
     this.map.getView().setZoom(10);
@@ -678,7 +684,7 @@ export class MapLayers extends Queues {
     }
 
     data = dataToFeatureCollection(data);
-    data = convertCoordinatesTo3346(data);
+    data = convertCoordinatesToProjection(data);
 
     const { extent } = featureCollectionToExtent(
       data,
@@ -699,17 +705,21 @@ export class MapLayers extends Queues {
   highlightFeatures(
     data: any,
     options: {
-      // dataProjection?: string;
+      dataProjection?: string;
       layer?: string;
     } = {},
   ) {
     if (!data || !this.map) return;
     data = dataToFeatureCollection(data);
-    data = convertCoordinatesTo3346(data);
+    data = convertCoordinatesToProjection(
+      data,
+      options?.dataProjection,
+      this.map.getView()?.getProjection().getCode(),
+    );
     const { source } = featureCollectionToExtent(
       data,
-      // options?.dataProjection,
       this.map.getView().getProjection(),
+      options?.dataProjection,
     );
 
     this.getVectorLayer(options?.layer || highlightLayerId).setSource(source);
@@ -754,6 +764,7 @@ export class MapLayers extends Queues {
           if (item.sublayers?.length) {
             return [...acc, ...computeSublayers(item.sublayers)];
           }
+          if (item?.virtual) return acc;
           return [...acc, item?.value];
         }, [])
         .filter((i) => !!i);
@@ -922,7 +933,7 @@ export class MapLayers extends Queues {
         .getFeatureInfoUrl(
           coordinate,
           this.map.getView().getResolution(),
-          projection,
+          this.map.getView().getProjection(),
           {
             FILTER: filters?.toWMS(),
             INFO_FORMAT: 'application/json',

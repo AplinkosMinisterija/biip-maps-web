@@ -38,10 +38,14 @@ export function getPropertiesFromFeaturesArray(
     .filter((item) => !!item);
 }
 
-export function featureCollectionToExtent(data: any, featureProjection?: any) {
+export function featureCollectionToExtent(
+  data: any,
+  featureProjection?: any,
+  dataProjection = projection,
+) {
   const vectorSource = new VectorSource({
     features: new GeoJSON().readFeatures(data, {
-      dataProjection: projection,
+      dataProjection,
       featureProjection,
     }),
   });
@@ -75,7 +79,10 @@ export function WMSFeatureQuery(query: string, layers: string | string[]) {
   });
 }
 
-export function WMSLegendRequest(layers: string | string[]) {
+export function WMSLegendRequest(
+  layers: string | string[],
+  proj: string = projection,
+) {
   if (Array.isArray(layers)) {
     layers = layers.join(',');
   }
@@ -86,7 +93,7 @@ export function WMSLegendRequest(layers: string | string[]) {
     REQUEST: 'GetLegendGraphic',
     LAYERS: layers,
     FORMAT: 'application/json',
-    SRS: projection,
+    SRS: proj,
     STYLE: 'default',
   });
 }

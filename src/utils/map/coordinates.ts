@@ -36,21 +36,22 @@ const coordinatesToString = (coordinates: any[]): string => {
   return text;
 };
 
-export function convertCoordinatesTo3346(
+export function convertCoordinatesToProjection(
   coordinates: any[] | any,
-  initialProjection = '',
+  dataProjection = '',
+  featureProjection = projection,
 ) {
   if (coordinates?.type === 'FeatureCollection') {
     const options: any = {};
-    if (initialProjection) {
-      options.dataProjection = initialProjection;
+    if (dataProjection) {
+      options.dataProjection = dataProjection;
     }
 
     if (
       coordinates.bbox?.length &&
       !isWGSCoordinates(coordinates.bbox[0], coordinates.bbox[1])
     ) {
-      options.featureProjection = projection;
+      options.featureProjection = featureProjection;
     }
 
     const features = new GeoJSON().readFeatures(
@@ -94,7 +95,7 @@ export function convertCoordinatesTo3346(
       data = [lastEl, firstEl];
     }
 
-    return transform(data, initialProjection || 'EPSG:4326', projection);
+    return transform(data, dataProjection || 'EPSG:4326', projection);
   };
 
   return transformCoordinates(coordinates);
@@ -133,7 +134,7 @@ export function getElementFromCoordinates(
   let item: any;
   let transformedCoordinates: number[][];
 
-  coordinates = convertCoordinatesTo3346(coordinates);
+  coordinates = convertCoordinatesToProjection(coordinates);
 
   if (type === 'Point') {
     transformedCoordinates = [coordinates];
