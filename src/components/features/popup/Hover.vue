@@ -66,7 +66,7 @@ mapLayers.click(({ features }: any) => {
 
   const properties: any = { ...(stats?.properties || {}) };
 
-  if (feature.get("layer") === "municipalities") {
+  if (feature?.get("layer") === "municipalities") {
     properties.municipality = {
       id: feature.getId(),
       name: feature.get("name"),
