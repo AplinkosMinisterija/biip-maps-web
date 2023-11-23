@@ -36,9 +36,6 @@ const statsByType = {
             {
               ...data[municipalityId],
               municipalityId,
-              count: data[municipalityId]?.animals
-                ?.map((a: any) => a.count)
-                ?.reduce((acc: number, item: number) => acc + item, 0),
             },
           ],
           [],
@@ -55,9 +52,6 @@ const statsByType = {
             {
               ...data[municipalityId],
               municipalityId,
-              count: data[municipalityId]?.animals
-                ?.map((a: any) => a.count)
-                ?.reduce((acc: number, item: number) => acc + item, 0),
             },
           ],
           [],

@@ -118,12 +118,32 @@ function onSearch(search: string) {
   }
 }
 
-const toggleLayers = [
-  huntingPublicService,
-  municipalitiesServiceVT,
-  inspireParcelService,
-  stvkService,
-];
+const toggleLayers = [huntingPublicService, inspireParcelService, stvkService];
+
+const setVisible = (layer: any, value: boolean) => {
+  if (visibleLayer.value === layer.value && !value) {
+    municipalitiesServiceVT.layer.setVisible(false);
+    visibleLayer.value = "";
+  } else if (value) {
+    visibleLayer.value = layer.value;
+    municipalitiesServiceVT.layer.setVisible(true);
+  }
+  return true;
+};
+
+const isVisible = (layer: any) => visibleLayer.value === layer.value;
+
+allLayers
+  .map(
+    (layer) =>
+      ({
+        value: layer.key,
+        name: layer.title,
+        isVisible,
+        setVisible,
+      } as any)
+  )
+  .forEach((layer) => huntingPublicService.sublayers.unshift(layer));
 
 mapLayers
   .addBaseLayer(geoportalTopo3857.id)
@@ -138,7 +158,7 @@ mapLayers
       coordinate,
       ({ geometries, properties }: any) => {
         mapLayers.highlightFeatures(geometries, {
-          dataProjection: projection3857
+          dataProjection: projection3857,
         });
         selectedFeatures.value.push(...properties);
         eventBus.emit("uiSidebar", { open: !!selectedFeatures.value.length });
