@@ -30,15 +30,15 @@ const statsByType = {
     loots: {
       url: `${medziokleApiHost}/api/lootsByMunicipality/stats`,
       transformFn: (data: any) =>
-        Object.entries(data).reduce(
-          (acc: any, [municipalityId, stats]: any) => [
+        Object.keys(data).reduce(
+          (acc: any, municipalityId) => [
             ...acc,
             {
-              ...stats,
+              ...data[municipalityId],
               municipalityId,
-              count: stats.animals
-                .map((a: any) => a.count)
-                .reduce((acc: number, item: number) => acc + item, 0),
+              count: data[municipalityId]?.animals
+                ?.map((a: any) => a.count)
+                ?.reduce((acc: number, item: number) => acc + item, 0),
             },
           ],
           [],
@@ -49,15 +49,15 @@ const statsByType = {
     limits: {
       url: `${medziokleApiHost}/api/limitsByMunicipality/stats`,
       transformFn: (data: any) =>
-        Object.entries(data).reduce(
-          (acc: any, [municipalityId, stats]: any) => [
+        Object.keys(data).reduce(
+          (acc: any, municipalityId) => [
             ...acc,
             {
-              ...stats,
+              ...data[municipalityId],
               municipalityId,
-              count: stats.animals
-                .map((a: any) => a.count)
-                .reduce((acc: number, item: number) => acc + item, 0),
+              count: data[municipalityId]?.animals
+                ?.map((a: any) => a.count)
+                ?.reduce((acc: number, item: number) => acc + item, 0),
             },
           ],
           [],
