@@ -8,7 +8,6 @@
     >
       <template #filters>
         <UiButtonIcon icon="layers" @click="filtersStore.toggle('layers')" />
-        <UiButtonIcon icon="legend" @click="filtersStore.toggle('legend')" />
       </template>
       <template v-if="filtersStore.active" #filtersContent>
         <UiMapLayerToggle
@@ -21,10 +20,6 @@
           :value="filtersStore.search"
           :add-stroke="true"
           :types="['geoportal']"
-        />
-        <UiMapLegend
-          v-if="filtersStore.isActive('legend')"
-          :layer="huntingPublicService.id"
         />
       </template>
       <template #sidebar>
