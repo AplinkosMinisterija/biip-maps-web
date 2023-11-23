@@ -360,13 +360,14 @@ https://maps.biip.lt/zuvinimas/draw
 
 ### Parameters
 
-| Name               | Desciption                   | Type     | Default |
-| ------------------ | ---------------------------- | -------- | ------- |
-| `id`               | Filters by ID                | `Filter` | -       |
-| `createdBy`        | Filters by creator           | `Filter` | -       |
-| `userId`           | Filters by user              | `Filter` | -       |
-| `stockingCustomer` | Filters by stocking customer | `Filter` | -       |
-| `tenantId`         | Filters by tenant            | `Filter` | -       |
+| Name               | Desciption                   | Type      | Default |
+| ------------------ | ---------------------------- | --------- | ------- |
+| `id`               | Filters by ID                | `Filter`  | -       |
+| `createdBy`        | Filters by creator           | `Filter`  | -       |
+| `userId`           | Filters by user              | `Filter`  | -       |
+| `stockingCustomer` | Filters by stocking customer | `Filter`  | -       |
+| `tenantId`         | Filters by tenant            | `Filter`  | -       |
+| `preview`          | Disables editing             | `Boolean` | false   |
 
 ### Events
 
