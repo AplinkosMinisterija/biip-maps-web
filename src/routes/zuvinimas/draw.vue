@@ -43,6 +43,7 @@ const query = parseRouteParams($route.query, [
   "tenantId",
   "userId",
   "stockingCustomer",
+  "preview",
 ]);
 
 const zuvinimasServiceFilters = mapLayers.filters(zuvinimasService.id);
@@ -78,10 +79,12 @@ mapLayers
   .add(uetkService.id)
   .enableLocationTracking();
 
-mapDraw.value
-  .setIcon("pin-water", { align: "top", size: 4 })
-  .start("Point")
-  .on(["change", "remove"], ({ features }: any) => {
-    postMessage("userObjects", features);
-  });
+if (!query.preview) {
+  mapDraw.value
+    .setIcon("pin-water", { align: "top", size: 4 })
+    .start("Point")
+    .on(["change", "remove"], ({ features }: any) => {
+      postMessage("userObjects", features);
+    });
+}
 </script>
