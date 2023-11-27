@@ -79,12 +79,11 @@ mapLayers
   .add(uetkService.id)
   .enableLocationTracking();
 
+mapDraw.value.setIcon("pin-water", { align: "top", size: 4 });
+
 if (!query.preview) {
-  mapDraw.value
-    .setIcon("pin-water", { align: "top", size: 4 })
-    .start("Point")
-    .on(["change", "remove"], ({ features }: any) => {
-      postMessage("userObjects", features);
-    });
+  mapDraw.value.start("Point").on(["change", "remove"], ({ features }: any) => {
+    postMessage("userObjects", features);
+  });
 }
 </script>
