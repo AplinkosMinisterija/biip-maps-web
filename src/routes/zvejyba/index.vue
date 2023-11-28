@@ -45,7 +45,7 @@ const mapLayers: any = inject("mapLayers");
 
 mapLayers.addBaseLayer(geoportalTopo3857.id).add(fishingsServiceVT.id);
 
-function getDuration(data) {
+function getDuration(data: any) {
   if (!data.started_at) return "";
 
   if (!data.ended_at) return "Vyksta dabar";
