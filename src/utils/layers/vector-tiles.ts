@@ -74,3 +74,9 @@ export const residentialAreasServiceVT = {
     ],
   }),
 };
+
+export const fishingsServiceVT = {
+  id: 'fishingsServiceVT',
+  name: 'Žvejybos',
+  layer: getVectorTileLayer('zvejyba', 'fishings'),
+};

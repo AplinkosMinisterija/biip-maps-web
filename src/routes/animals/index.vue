@@ -22,7 +22,7 @@
       </template>
     </UiMap>
 
-    <FeaturesPopupHover @click="selectFeatures">
+    <FeaturesPopupHover :check-stats="true" @click="selectFeatures">
       <template #title="{ feature }">
         {{ feature?.get("name") }}
       </template>

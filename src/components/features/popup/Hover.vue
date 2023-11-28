@@ -1,7 +1,7 @@
 <template>
   <UiPopupContent ref="overlayLayer" :show-arrow="true" :show-separator="false">
     <template #title>
-      <slot name="title" :feature="visibleFeature">
+      <slot name="title" :feature="visibleFeature" :data="hoverFeatureData">
         {{ hoverFeatureData.count }} identifikuoti objektai
       </slot>
     </template>
@@ -13,6 +13,14 @@
 
 <script setup lang="ts">
 import { inject, ref, watch } from "vue";
+
+const props = defineProps({
+  checkStats: {
+    type: Boolean,
+    default: false,
+  },
+});
+
 const mapLayers: any = inject("mapLayers");
 
 const emit = defineEmits(["click"]);
@@ -52,8 +60,12 @@ mapLayers.hover(({ features }: any) => {
   if (visibleFeature.value == feature) return;
 
   visibleFeature.value = feature;
-  hoverFeatureData.value = stats || {};
-  if (!stats?.count) return togglePopup();
+  if (props.checkStats) {
+    hoverFeatureData.value = stats || {};
+    if (!stats?.count && props.checkStats) return togglePopup();
+  } else {
+    hoverFeatureData.value = feature.getProperties() || {};
+  }
 
   const center = mapLayers.getCenter(feature);
   if (!center) return togglePopup();
