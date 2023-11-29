@@ -75,5 +75,6 @@ function clearFilters() {
   filters.clear();
   selectedYear.value = "";
   selectedFish.value = "";
+  emit("change", { filters: filters.toJson() });
 }
 </script>
