@@ -1,6 +1,15 @@
 <template>
   <div>
     <UiMap :show-scale-line="true" :projection="projection3857">
+      <template #filters>
+        <UiButtonIcon icon="filter" @click="filtersStore.toggle('filters')" />
+      </template>
+      <template v-if="filtersStore.active" #filtersContent>
+        <ZvejybaFilters
+          v-if="filtersStore.isActive('filters')"
+          @change.filters="onFiltersChange"
+        />
+      </template>
       <template #sidebar>
         <UiSidebarFeatures
           :features="selectedFeatures"
@@ -26,7 +35,9 @@
 import { inject, ref } from "vue";
 import { projection3857, geoportalTopo3857, uetkMergedCentroidServiceVT } from "@/utils";
 import { useStatsStore } from "@/stores/stats";
+import { useFiltersStore } from "@/stores/filters";
 const statsStore = useStatsStore();
+const filtersStore = useFiltersStore();
 
 const mapLayers: any = inject("mapLayers");
 
@@ -55,4 +66,9 @@ uetkMergedCentroidServiceVT.layer.getSource()?.on("tileloadend", ({ tile }: any)
 });
 
 await statsStore.preloadStats(statsKey);
+
+async function onFiltersChange({ filters }: any) {
+  await statsStore.setQuery(statsKey, filters);
+  uetkMergedCentroidServiceVT.layer?.getSource()?.changed();
+}
 </script>
