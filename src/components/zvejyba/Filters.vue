@@ -1,7 +1,7 @@
 <template>
   <div class="flex justify-between items-center">
     <span class="text-sm font-semibold">Filtrai</span>
-    <UiButton type="link" @click="filters.clear()"> Valyti filtrus </UiButton>
+    <UiButton type="link" @click="clearFilters()"> Valyti filtrus </UiButton>
   </div>
   <UiButtonRow>
     <UiDropdown v-model="selectedYear" label="Metai" @change="applyYearFilter">
@@ -39,7 +39,7 @@ const initialDate = filters.get("date")?.$gte
   ? moment(filters.get("date").$gte).format("YYYY")
   : "";
 const selectedYear = ref(initialDate as any);
-const selectedFish = ref(`${filters.get("fish") || ''}` as string);
+const selectedFish = ref(`${filters.get("fish") || ""}` as string);
 
 const fishTypes = ref(await getFishTypes());
 
@@ -69,5 +69,11 @@ function applyYearFilter() {
 }
 function applyFishFilter() {
   applyFilter(Number(selectedFish.value), "fish");
+}
+
+function clearFilters() {
+  filters.clear();
+  selectedYear.value = "";
+  selectedFish.value = "";
 }
 </script>
