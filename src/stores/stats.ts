@@ -1,6 +1,6 @@
 import { ref } from 'vue';
 import { defineStore } from 'pinia';
-import { gyvunaiApiHost, medziokleApiHost } from '@/config';
+import { gyvunaiApiHost, medziokleApiHost, zvejybaApiHost } from '@/config';
 import _ from 'lodash';
 
 const statsByType = {
@@ -24,6 +24,24 @@ const statsByType = {
       url: `${gyvunaiApiHost}/api/public/species/all`,
       idProperty: 'municipality.id',
       countProperty: 'count',
+    },
+  },
+  zvejyba: {
+    uetk: {
+      url: `${zvejybaApiHost}/api/public/uetk/statistics`,
+      idProperty: 'uetkCadastralId',
+      countProperty: 'count',
+      transformFn: (data: any) =>
+        Object.keys(data).reduce(
+          (acc: any, uetkCadastralId) => [
+            ...acc,
+            {
+              ...data[uetkCadastralId],
+              uetkCadastralId,
+            },
+          ],
+          [],
+        ),
     },
   },
   medziokle: {
@@ -69,7 +87,10 @@ export const useStatsStore = defineStore('stats', () => {
     return _.get(stats.value, type);
   }
 
-  function preloadStats(types: string[]) {
+  function preloadStats(types: string | string[]) {
+    if (!Array.isArray(types)) {
+      types = [types];
+    }
     return Promise.all(types.map((t) => loadStatsIfNeeded(t)));
   }
 

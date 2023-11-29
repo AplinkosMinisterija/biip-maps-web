@@ -48,6 +48,7 @@ function getFromFeatures(features: any[]) {
 
   return {
     feature,
+    features,
     stats: typeof statsFn === "function" ? statsFn() : {},
   };
 }

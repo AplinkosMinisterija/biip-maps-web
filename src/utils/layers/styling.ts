@@ -12,6 +12,7 @@ const LAYER_TYPE = {
   BOUNDARIES_COUNTIES_LABEL: 'boundaries.counties_centroid',
   BOUNDARIES_RESIDENTIAL_AREAS: 'boundaries.residential_areas',
   BOUNDARIES_RESIDENTIAL_AREAS_LABEL: 'boundaries.residential_areas_centroid',
+  UETK_MERGED_LABEL: 'uetk.uetk_merged.1',
   ZVEJYBA_FISHINGS: 'zvejyba.fishings',
 };
 
@@ -120,9 +121,21 @@ export function vectorTileStyles(options?: { layerPrefix: string }): any {
 
     if (statsFn && typeof statsFn === 'function') {
       const stats = statsFn();
-      stroke.setColor(getColorWithOpacity(COLORS.GRAY, 0.3));
-      fill.setColor(getFillColorByStats(stats?.count, stats?.maxValue || 0));
-      styles[length++] = strokedPolygon;
+      if (!stats?.hideEmpty || stats?.count > 0) {
+        if (stats?.type === 'icon') {
+          styles[length++] = getIcon(
+            stats.icon?.name || '',
+            stats.icon?.opts || {},
+          );
+        } else {
+          stroke.setColor(getColorWithOpacity(COLORS.GRAY, 0.3));
+          fill.setColor(
+            getFillColorByStats(stats?.count, stats?.maxValue || 0),
+          );
+
+          styles[length++] = strokedPolygon;
+        }
+      }
     } else if (
       [
         LAYER_TYPE.BOUNDARIES_MUNICIPALITIES,
@@ -148,9 +161,6 @@ export function vectorTileStyles(options?: { layerPrefix: string }): any {
       stroke.setColor(getColorWithOpacity(COLORS.WHITE, 0.3));
       stroke.setWidth(2);
       styles[length++] = text;
-    } else if ([LAYER_TYPE.ZVEJYBA_FISHINGS].includes(layer)) {
-      fill.setColor(getColorWithOpacity(COLORS.GRAY, 0.6));
-      styles[length++] = getIcon('pin-water', { align: 'top' });
     }
 
     styles.length = length;

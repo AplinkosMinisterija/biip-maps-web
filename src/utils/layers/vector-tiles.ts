@@ -11,16 +11,20 @@ function getVectorTilesUrl(type: string, source: string) {
   return `${qgisTilesUrl}/${type}/${source}/{z}/{x}/{y}`;
 }
 
-function getVectorTileLayer(type: string, source: string) {
+function getVectorTileLayer(
+  type: string,
+  source: string,
+  opts?: { idProperty?: string; declutter?: boolean },
+) {
   return new VectorTileLayer({
     renderMode: 'vector',
-    declutter: true,
+    declutter: !!opts?.declutter,
     source: new VectorTileSource({
       overlaps: false,
       projection: projection3857,
       format: new MVT({
         featureClass: Feature,
-        idProperty: 'code',
+        idProperty: opts?.idProperty,
       }),
 
       tileSize: [512, 512],
@@ -33,13 +37,19 @@ function getVectorTileLayer(type: string, source: string) {
 export const municipalitiesServiceVT = {
   id: 'municipalitiesServiceVT',
   name: 'Savivaldybės',
-  layer: getVectorTileLayer('boundaries', 'municipalities'),
+  layer: getVectorTileLayer('boundaries', 'municipalities', {
+    idProperty: 'code',
+    declutter: true,
+  }),
 };
 
 export const municipalitiesCentroidServiceVT = {
   id: 'municipalitiesCentroidServiceVT',
   name: 'Savivaldybės',
-  layer: getVectorTileLayer('boundaries', 'municipalities_centroid'),
+  layer: getVectorTileLayer('boundaries', 'municipalities_centroid', {
+    idProperty: 'code',
+    declutter: true,
+  }),
 };
 
 export const eldershipsServiceVT = {
@@ -75,8 +85,10 @@ export const residentialAreasServiceVT = {
   }),
 };
 
-export const fishingsServiceVT = {
-  id: 'fishingsServiceVT',
-  name: 'Žvejybos',
-  layer: getVectorTileLayer('zvejyba', 'fishings'),
+export const uetkMergedCentroidServiceVT = {
+  id: 'uetkMergedCentroidServiceVT',
+  name: 'UETK',
+  layer: getVectorTileLayer('uetk', 'uetk_merged.1', {
+    idProperty: 'cadastral_id',
+  }),
 };
