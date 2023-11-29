@@ -79,11 +79,13 @@ mapLayers.click(({ features }: any) => {
 
   const properties: any = { ...(stats?.properties || {}) };
 
+  function getFeatureData() {
+    return { ...feature.getProperties(), id: feature.getId() };
+  }
   if (feature?.get("layer") === "municipalities") {
-    properties.municipality = {
-      id: feature.getId(),
-      name: feature.get("name"),
-    };
+    properties.municipality = getFeatureData();
+  } else if (feature?.get("layer").includes("uetk_merged")) {
+    properties.uetk = getFeatureData();
   }
   emit("click", properties);
 });
