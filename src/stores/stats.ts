@@ -1,7 +1,8 @@
 import { ref } from 'vue';
 import { defineStore } from 'pinia';
-import { gyvunaiApiHost, medziokleApiHost } from '@/config';
+import { gyvunaiApiHost, medziokleApiHost, zvejybaApiHost } from '@/config';
 import _ from 'lodash';
+import { serializeQuery } from '@/utils';
 
 const statsByType = {
   animals: {
@@ -24,6 +25,24 @@ const statsByType = {
       url: `${gyvunaiApiHost}/api/public/species/all`,
       idProperty: 'municipality.id',
       countProperty: 'count',
+    },
+  },
+  zvejyba: {
+    uetk: {
+      url: `${zvejybaApiHost}/api/public/uetk/statistics`,
+      idProperty: 'uetkCadastralId',
+      countProperty: 'count',
+      transformFn: (data: any) =>
+        Object.keys(data).reduce(
+          (acc: any, uetkCadastralId) => [
+            ...acc,
+            {
+              ...data[uetkCadastralId],
+              uetkCadastralId,
+            },
+          ],
+          [],
+        ),
     },
   },
   medziokle: {
@@ -69,7 +88,10 @@ export const useStatsStore = defineStore('stats', () => {
     return _.get(stats.value, type);
   }
 
-  function preloadStats(types: string[]) {
+  function preloadStats(types: string | string[]) {
+    if (!Array.isArray(types)) {
+      types = [types];
+    }
     return Promise.all(types.map((t) => loadStatsIfNeeded(t)));
   }
 
@@ -91,7 +113,12 @@ export const useStatsStore = defineStore('stats', () => {
         return data;
       };
 
-    const data = await fetch(options.url)
+    let query = '';
+    if (options.query) {
+      query = `?${serializeQuery(options.query)}`;
+    }
+
+    const data = await fetch(`${options.url}${query}`)
       .then((data) => data.json())
       .then(transformFn)
       .then((data) =>
@@ -123,5 +150,11 @@ export const useStatsStore = defineStore('stats', () => {
     };
   }
 
-  return { getStats, loadStats, preloadStats, getStatsById };
+  async function setQuery(type: string, data: any) {
+    const options = _.get(statsByType, type);
+    options.query = data || {};
+    await loadStats(type);
+  }
+
+  return { getStats, setQuery, loadStats, preloadStats, getStatsById };
 });
