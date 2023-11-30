@@ -27,7 +27,7 @@
             class="text-xs flex justify-between py-1 text-gray-600"
           >
             <div>{{ fish.fish_type?.label }}</div>
-            <div class="font-semibold">{{ fish.fish_type?.count || 0 }} vnt.</div>
+            <div class="font-semibold">{{ fish?.count || 0 }} vnt.</div>
           </div>
         </template>
       </template>
