@@ -163,7 +163,12 @@ export function vectorTileStyles(options?: { layerPrefix: string }): any {
       stroke.setWidth(2);
       styles[length++] = text;
     } else if ([LAYER_TYPE.ZUVINIMAS_FISH_STOCKINGS].includes(layer)) {
-      styles[length++] = getIcon('pin-water', { align: 'top' });
+      const status = feature?.get('status');
+
+      styles[length++] = getIcon(
+        status === 'UPCOMING' ? 'pin-water-green' : 'pin-water',
+        { align: 'top' },
+      );
     }
 
     styles.length = length;

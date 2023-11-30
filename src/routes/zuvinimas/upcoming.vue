@@ -28,22 +28,38 @@
 
     <FeaturesPopupHover @click="selectFeatures">
       <template #title="{ data }">
-        {{ data?.location?.name || "" }} ({{ data?.location?.municipality?.name || "" }})
+        <div class="flex gap-2 items-start">
+          <span>
+            {{ data?.location?.name || "" }} ({{
+              data?.location?.municipality?.name || ""
+            }})
+          </span>
+        </div>
       </template>
       <template #content="{ data }">
-        <div class="text-xxs">
-          {{ moment(data?.event_time).format("YYYY-MM-DD HH:mm") }}
-        </div>
-        <template v-if="data?.fishes?.length">
-          <div
-            v-for="fish in data?.fishes"
-            :key="fish.id"
-            class="text-xs flex justify-between py-1 text-gray-600"
-          >
-            <div>{{ fish.fish_type?.label }}</div>
-            <div class="font-semibold">{{ fish?.count || 0 }} vnt.</div>
+        <div class="flex flex-col gap-2 items-start mt-2">
+          <div class="text-xxs">
+            {{ moment(data?.event_time).format("YYYY-MM-DD HH:mm") }}
           </div>
-        </template>
+
+          <UiBadge
+            v-if="byStatus[data?.status]?.text"
+            :type="byStatus[data?.status]?.badge"
+          >
+            {{ byStatus[data?.status]?.text }}
+          </UiBadge>
+
+          <template v-if="data?.fishes?.length">
+            <div
+              v-for="fish in data?.fishes"
+              :key="fish.id"
+              class="text-xs flex justify-between text-gray-600 w-full"
+            >
+              <div>{{ fish.fish_type?.label }}</div>
+              <div class="font-semibold">{{ fish?.count || 0 }} vnt.</div>
+            </div>
+          </template>
+        </div>
       </template>
     </FeaturesPopupHover>
   </div>
@@ -54,6 +70,17 @@ import { projection3857, geoportalTopo3857, zuvinimasServiceVT } from "@/utils";
 import moment from "moment";
 import { useFiltersStore } from "@/stores/filters";
 const filtersStore = useFiltersStore();
+
+const byStatus: any = {
+  UPCOMING: {
+    text: "Planuojamas",
+    badge: "",
+  },
+  ONGOING: {
+    text: "Įžuvinama",
+    badge: "success",
+  },
+};
 
 const mapLayers: any = inject("mapLayers");
 const events: any = inject("events");
