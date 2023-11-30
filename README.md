@@ -30,6 +30,7 @@ Ministerija.
   - [Zuvinimas](#zuvinimas)
   - [Zuvinimas Draw](#zuvinimas-draw)
   - [Zuvinimas Upcoming](#zuvinimas-upcoming)
+  - [Zuvinimas Stats](#zuvinimas-stats)
   - [Types](#types)
 
 ## About the Project
@@ -395,6 +396,12 @@ https://maps.biip.lt/zuvinimas/upcoming
 | Name | Desciption | Type |
 | ------ | --------------------------------- | ------------------ |
 | `zoom` | Zooms to provided feature collection | Feature collection |
+
+## Zuvinimas Stats
+
+```
+https://maps.biip.lt/zuvinimas/stats
+```
 
 ## Types
 
