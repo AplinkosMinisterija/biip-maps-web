@@ -50,12 +50,12 @@ defineProps({
 
 const rows: any[] = [
   {key: 'uetk.municipality', translate: 'Savivaldybė'},
+  {key: 'uetk.id', translate: 'UETK kadastro ID'},
   {key: 'count', translate: 'Bendras kiekis', fn: (value: any) => `${value} vnt.`},
   {key: 'byFishes', translate: '', subitemsFn: (items: any) => items.map((i: any) => ({
     name: i.fishType?.label,
     value: `${i.count || 0} vnt.`
   }))},
-  {key: 'uetk.id', translate: 'UETK kadastro ID'},
 ]
 
 const filteredRows = (feature: any) => {
