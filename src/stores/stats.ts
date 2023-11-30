@@ -1,6 +1,11 @@
 import { ref } from 'vue';
 import { defineStore } from 'pinia';
-import { gyvunaiApiHost, medziokleApiHost, zvejybaApiHost } from '@/config';
+import {
+  gyvunaiApiHost,
+  medziokleApiHost,
+  zuvinimasApiHost,
+  zvejybaApiHost,
+} from '@/config';
 import _ from 'lodash';
 import { serializeQuery } from '@/utils';
 
@@ -30,6 +35,24 @@ const statsByType = {
   zvejyba: {
     uetk: {
       url: `${zvejybaApiHost}/api/public/uetk/statistics`,
+      idProperty: 'uetkCadastralId',
+      countProperty: 'count',
+      transformFn: (data: any) =>
+        Object.keys(data).reduce(
+          (acc: any, uetkCadastralId) => [
+            ...acc,
+            {
+              ...data[uetkCadastralId],
+              uetkCadastralId,
+            },
+          ],
+          [],
+        ),
+    },
+  },
+  zuvinimas: {
+    uetk: {
+      url: `${zuvinimasApiHost}/api/public/uetk/statistics`,
       idProperty: 'uetkCadastralId',
       countProperty: 'count',
       transformFn: (data: any) =>

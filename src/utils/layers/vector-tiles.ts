@@ -92,3 +92,11 @@ export const uetkMergedCentroidServiceVT = {
     idProperty: 'cadastral_id',
   }),
 };
+
+export const zuvinimasServiceVT = {
+  id: 'zuvinimasServiceVT',
+  name: 'Įžuvinimas',
+  layer: getVectorTileLayer('zuvinimas', 'fish_stockings', {
+    idProperty: 'id',
+  }),
+};

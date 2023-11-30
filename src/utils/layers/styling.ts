@@ -14,6 +14,7 @@ const LAYER_TYPE = {
   BOUNDARIES_RESIDENTIAL_AREAS_LABEL: 'boundaries.residential_areas_centroid',
   UETK_MERGED_LABEL: 'uetk.uetk_merged.1',
   ZVEJYBA_FISHINGS: 'zvejyba.fishings',
+  ZUVINIMAS_FISH_STOCKINGS: 'zuvinimas.fish_stockings',
 };
 
 const FONT_FAMILY = '"Open Sans", "Arial Unicode MS"';
@@ -161,6 +162,13 @@ export function vectorTileStyles(options?: { layerPrefix: string }): any {
       stroke.setColor(getColorWithOpacity(COLORS.WHITE, 0.3));
       stroke.setWidth(2);
       styles[length++] = text;
+    } else if ([LAYER_TYPE.ZUVINIMAS_FISH_STOCKINGS].includes(layer)) {
+      const status = feature?.get('status');
+
+      styles[length++] = getIcon(
+        status === 'ONGOING' ? 'pin-water-green' : 'pin-water',
+        { align: 'top' },
+      );
     }
 
     styles.length = length;

@@ -654,14 +654,14 @@ export class MapLayers extends Queues {
     const coords = convertCoordinatesToProjection([x, y]);
 
     this.map.getView().setCenter(coords);
-    this.map.getView().setZoom(10);
+    this.map.getView().setZoom(this._getZoomLevel());
   }
 
   zoomToExtent(extent: any, padding: number = 50) {
     if (!extent || !this.map) return;
     this.map.getView().fit(extent, {
       padding: [padding, padding, padding, padding],
-      maxZoom: 10,
+      maxZoom: this._getZoomLevel(),
     });
   }
 
@@ -969,5 +969,17 @@ export class MapLayers extends Queues {
     }
 
     this._draw.setColors(colors.primary, colors.secondary, isTemporary);
+  }
+
+  private _getZoomLevel() {
+    if (!this.map) return 16;
+
+    const projectionCode = this.map.getView()?.getProjection()?.getCode();
+
+    if (projectionCode === projection) {
+      return 10;
+    }
+
+    return 16;
   }
 }
