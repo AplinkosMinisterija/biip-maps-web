@@ -166,7 +166,7 @@ export function vectorTileStyles(options?: { layerPrefix: string }): any {
       const status = feature?.get('status');
 
       styles[length++] = getIcon(
-        status === 'UPCOMING' ? 'pin-water-green' : 'pin-water',
+        status === 'ONGOING' ? 'pin-water-green' : 'pin-water',
         { align: 'top' },
       );
     }
