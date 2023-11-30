@@ -54,6 +54,7 @@ import {
   geoportalForests,
   geoportalKvr,
   parseRouteParams,
+invaService,
 } from '@/utils';
 import { useRoute } from 'vue-router';
 import moment from 'moment';
@@ -79,6 +80,7 @@ const toggleLayers = [
   inspireParcelService,
   municipalitiesService,
   geoportalGrpk,
+  invaService
 ];
 
 const gamtotvarkaServiceFilters = mapLayers.filters(gamtotvarkaService.id);
@@ -106,13 +108,14 @@ mapLayers
   .addBaseLayer(geoportalTopo.id)
   .addBaseLayer(geoportalOrto.id)
   .addBaseLayer(geoportalGrpk.id)
-  .add(gamtotvarkaService.id, { isHidden: false })
+  .add(gamtotvarkaService.id)
   .add(gamtotvarkaNatura2000.id, { isHidden: true })
   .add(gamtotvarkaStvkService.id, { isHidden: true })
   .add(geoportalForests.id, { isHidden: true })
   .add(geoportalKvr.id, { isHidden: true })
   .add(municipalitiesService.id, { isHidden: true })
   .add(inspireParcelService.id, { isHidden: true })
+  .add(invaService.id, { isHidden: true })
   .click(async ({ coordinate }: any) => {
     selectedFeatures.value = [];
     eventBus.emit('uiSidebar', { open: false });
