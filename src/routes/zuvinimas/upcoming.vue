@@ -1,6 +1,11 @@
 <template>
   <div>
-    <UiMap :show-scale-line="true" :projection="projection3857">
+    <UiMap
+      :show-scale-line="true"
+      :projection="projection3857"
+      :show-search="true"
+      @search="filtersStore.search = $event"
+    >
       <template #sidebar>
         <UiSidebarFeatures
           :features="selectedFeatures"
@@ -8,6 +13,15 @@
           :title="selectedFeatures?.[0]?.munipality?.name"
           type="zvejyba"
           @close="selectFeatures"
+        />
+      </template>
+
+      <template v-if="filtersStore.active" #filtersContent>
+        <Search
+          v-if="filtersStore.isActive('search')"
+          :value="filtersStore.search"
+          :types="['uetk']"
+          @select="filtersStore.hide()"
         />
       </template>
     </UiMap>
@@ -38,6 +52,8 @@
 import { inject, ref } from "vue";
 import { projection3857, geoportalTopo3857, zuvinimasServiceVT } from "@/utils";
 import moment from "moment";
+import { useFiltersStore } from "@/stores/filters";
+const filtersStore = useFiltersStore();
 
 const mapLayers: any = inject("mapLayers");
 const events: any = inject("events");

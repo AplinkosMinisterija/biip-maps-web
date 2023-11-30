@@ -1,6 +1,11 @@
 <template>
   <div>
-    <UiMap :show-scale-line="true" :projection="projection3857">
+    <UiMap
+      :show-scale-line="true"
+      :projection="projection3857"
+      :show-search="true"
+      @search="filtersStore.search = $event"
+    >
       <template #filters>
         <UiButtonIcon icon="filter" @click="filtersStore.toggle('filters')" />
       </template>
@@ -8,6 +13,12 @@
         <ZuvinimasFilters
           v-if="filtersStore.isActive('filters')"
           @change.filters="onFiltersChange"
+        />
+        <Search
+          v-else-if="filtersStore.isActive('search')"
+          :value="filtersStore.search"
+          :types="['uetk']"
+          @select="filtersStore.hide()"
         />
       </template>
       <template #sidebar>
