@@ -62,6 +62,7 @@ import {
   uetkService,
   geoportalGrpk,
   geoportalForests,
+gamtotvarkaService,
 } from "@/utils";
 
 import { useConfigStore } from "@/stores/config";
@@ -159,6 +160,7 @@ const toggleLayers = [
   municipalitiesService,
   geoportalGrpk,
   geoportalForests,
+  gamtotvarkaService
 ];
 
 const filterById = (key: string, id: any) => {
@@ -170,11 +172,11 @@ const filterById = (key: string, id: any) => {
 if (query.place) filterById("id", query.place);
 if (query.kingdom) {
   filterById("kingdomId", query.kingdom);
-  filtersSrisInformational.value.set("kingdomId", query.species)
+  filtersSrisInformational.value.set("kingdomId", query.species);
 }
 if (query.species) {
   filterById("speciesId", query.species);
-  filtersSrisInformational.value.set("speciesId", query.species)
+  filtersSrisInformational.value.set("speciesId", query.species);
 }
 if (query.informationalForm) {
   filtersSrisInformational.value.set("id", query.informationalForm);
@@ -249,6 +251,7 @@ mapLayers
   .add(geoportalGrpk.id, { isHidden: true })
   .add(uetkService.id, { isHidden: true })
   .add(municipalitiesService.id, { isHidden: true })
+  .add(gamtotvarkaService.id, { isHidden: true })
   .add(rusysService.id)
   .click(async ({ coordinate }: any) => {
     selectedFeatures.value = [];
