@@ -6,6 +6,7 @@ export const uetkApiHost = `${apiServerHost}/uetk`;
 export const rusysApiHost = `${apiServerHost}/rusys`;
 export const gyvunaiApiHost = `${apiServerHost}/gyvunai`;
 export const zvejybaApiHost = `${apiServerHost}/zvejyba`;
+export const zuvinimasApiHost = `${apiServerHost}/zuvinimasnew`;
 export const medziokleApiHost = `${apiServerHost}/medziokle`;
 export const qgisServerUrl = `${qgisServerHost}/qgisserver`;
 export const qgisApiUrl = `${qgisServerHost}/api`;
