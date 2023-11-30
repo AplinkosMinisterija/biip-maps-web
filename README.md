@@ -29,6 +29,7 @@ Ministerija.
   - [UETK](#uetk)
   - [Zuvinimas](#zuvinimas)
   - [Zuvinimas Draw](#zuvinimas-draw)
+  - [Zuvinimas Upcoming](#zuvinimas-upcoming)
   - [Types](#types)
 
 ## About the Project
@@ -381,6 +382,19 @@ https://maps.biip.lt/zuvinimas/draw
 | Name          | Desciption              | Type               |
 | ------------- | ----------------------- | ------------------ |
 | `userObjects` | Provides drawn features | Feature collection |
+
+## Zuvinimas Upcoming
+
+```
+https://maps.biip.lt/zuvinimas/upcoming
+```
+
+### Events
+
+**Listens:**
+| Name | Desciption | Type |
+| ------ | --------------------------------- | ------------------ |
+| `zoom` | Zooms to provided feature collection | Feature collection |
 
 ## Types
 

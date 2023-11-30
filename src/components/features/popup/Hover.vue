@@ -68,6 +68,16 @@ mapLayers.hover(({ features }: any) => {
     hoverFeatureData.value = feature.getProperties() || {};
   }
 
+  if (hoverFeatureData.value) {
+    Object.keys(hoverFeatureData.value || {}).forEach((key) => {
+      if (typeof hoverFeatureData.value[key] === "string") {
+        try {
+          hoverFeatureData.value[key] = JSON.parse(hoverFeatureData.value[key]);
+        } catch (err) { /* empty */ }
+      }
+    });
+  }
+
   const center = mapLayers.getCenter(feature);
   if (!center) return togglePopup();
 
@@ -87,6 +97,7 @@ mapLayers.click(({ features }: any) => {
   } else if (feature?.get("layer").includes("uetk_merged")) {
     properties.uetk = getFeatureData();
   }
+
   emit("click", properties);
 });
 </script>
