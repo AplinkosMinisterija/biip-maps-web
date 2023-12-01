@@ -333,7 +333,7 @@ export const srisService = {
 
 export const invaService = {
   id: 'invaService',
-  title: 'INVA',
+  title: 'Invazinės rūšys',
   queryKey: 'inva',
   description: biipCopyright,
   layer: getWMSImageLayer(
