@@ -62,7 +62,8 @@ import {
   uetkService,
   geoportalGrpk,
   geoportalForests,
-gamtotvarkaService,
+  gamtotvarkaService,
+  highlightLayerRusys,
 } from "@/utils";
 
 import { useConfigStore } from "@/stores/config";
@@ -160,7 +161,7 @@ const toggleLayers = [
   municipalitiesService,
   geoportalGrpk,
   geoportalForests,
-  gamtotvarkaService
+  gamtotvarkaService,
 ];
 
 const filterById = (key: string, id: any) => {
@@ -242,6 +243,8 @@ function togglePrivateSrisService(show: boolean) {
   mapLayers.toggleVisibility(srisPrivateService.id, show);
 }
 
+const highlightLayerName = highlightLayerRusys.id;
+
 mapLayers
   .addBaseLayer(geoportalTopoGray.id)
   .addBaseLayer(geoportalTopo.id)
@@ -256,10 +259,19 @@ mapLayers
   .click(async ({ coordinate }: any) => {
     selectedFeatures.value = [];
     eventBus.emit("uiSidebar", { open: false });
-    mapLayers.getFeatureInfo(rusysService.id, coordinate, ({ properties }: any) => {
-      selectedFeatures.value.push(...properties);
-      eventBus.emit("uiSidebar", { open: !!selectedFeatures.value.length });
-    });
+    mapLayers.highlightFeatures(null, { layer: highlightLayerName });
+    mapLayers.getFeatureInfo(
+      rusysService.id,
+      coordinate,
+      ({ properties, geometries }: any) => {
+        selectedFeatures.value.push(...properties);
+        mapLayers.highlightFeatures(geometries, {
+          merge: true,
+          layer: highlightLayerName,
+        });
+        eventBus.emit("uiSidebar", { open: !!selectedFeatures.value.length });
+      }
+    );
   })
   .toggleVisibility(srisAccessService.id, !!query.amateur);
 

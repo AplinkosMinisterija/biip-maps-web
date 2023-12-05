@@ -132,43 +132,54 @@ export function parseRouteParams(params: any, items: string[]) {
   return parsed;
 }
 
+function toPointCoordsByExtent(geometry: Geometry) {
+  const extent = geometry?.getExtent();
+  let coords = getCenter(extent as any);
+  if (Array.isArray(coords?.[0])) {
+    coords = coords[0];
+  }
+  return coords;
+}
+
+function toPointByLineCenter(lineString: Geometry) {
+  let coords = (lineString as LineString).getCoordinateAt(0.5);
+  if (Array.isArray(coords?.[0])) {
+    coords = coords[0];
+  }
+  return coords;
+}
+
+export function featureToPoint(feature: Feature) {
+  const geometry = feature?.getGeometry();
+  const type = geometry?.getType() || '';
+
+  if (!geometry || !type) return;
+
+  if (['Polygon', 'MultiPolygon', 'MultiPoint'].includes(type)) {
+    return new Point(toPointCoordsByExtent(geometry));
+  } else if (['LineString', 'MultiLineString'].includes(type)) {
+    return new Point(toPointByLineCenter(geometry));
+  }
+}
+
 export function convertFeaturesToPoints(features: Feature[], types?: string[]) {
   const resultFeatures: Feature[] = [];
 
   if (!types?.length) return features;
 
-  function toPointCoordsByExtent(geometry: Geometry) {
-    const extent = geometry?.getExtent();
-    let coords = getCenter(extent as any);
-    if (Array.isArray(coords?.[0])) {
-      coords = coords[0];
-    }
-    return coords;
-  }
-
-  function toPointByLineCenter(lineString: Geometry) {
-    let coords = (lineString as LineString).getCoordinateAt(0.5);
-    if (Array.isArray(coords?.[0])) {
-      coords = coords[0];
-    }
-    return coords;
-  }
-
   for (const feature of features) {
-    const geometry = feature?.getGeometry();
-    const type = geometry?.getType() || '';
+    const type = feature?.getGeometry()?.getType() || '';
 
-    if (!geometry || !type) continue;
+    if (!type) continue;
 
     // for now - convert to points only!
     if (!types.includes(type) && types.includes('Point')) {
-      if (['Polygon', 'MultiPolygon', 'MultiPoint'].includes(type)) {
-        feature.setGeometry(new Point(toPointCoordsByExtent(geometry)));
-      } else if (['LineString', 'MultiLineString'].includes(type)) {
-        feature.setGeometry(new Point(toPointByLineCenter(geometry)));
-      } else {
+      const point = featureToPoint(feature);
+      if (!point) {
         throw new Error(`Geometry type ${type} is not supported`);
       }
+
+      feature.setGeometry(point);
     }
 
     resultFeatures.push(feature);

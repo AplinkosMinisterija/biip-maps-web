@@ -707,9 +707,18 @@ export class MapLayers extends Queues {
     options: {
       dataProjection?: string;
       layer?: string;
+      merge?: boolean;
     } = {},
   ) {
-    if (!data || !this.map) return;
+    if (!this.map) return;
+
+    const layerName = options?.layer || highlightLayerId;
+
+    if (!data && !options?.merge) {
+      this.getVectorLayer(layerName).setSource();
+      return;
+    }
+
     data = dataToFeatureCollection(data);
     data = convertCoordinatesToProjection(
       data,
@@ -722,7 +731,14 @@ export class MapLayers extends Queues {
       options?.dataProjection,
     );
 
-    this.getVectorLayer(options?.layer || highlightLayerId).setSource(source);
+    const layer = this.getVectorLayer(layerName);
+    const oldSource = layer.getSource();
+
+    if (oldSource && options?.merge) {
+      source.addFeatures(oldSource.getFeatures());
+    }
+
+    layer.setSource(source);
   }
 
   getSublayers(id: string) {
