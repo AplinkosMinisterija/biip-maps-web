@@ -7,6 +7,7 @@ import VectorSource from 'ol/source/Vector';
 import { GeoJSON } from 'ol/format';
 import { projection } from '../constants';
 import { renderIconHtml } from '../utils';
+import { vectorLayerStyles } from './styling';
 
 const color = 'rgba(0,70,80,0.8)';
 const colorFill = 'rgba(0,70,80,0.2)';
@@ -74,16 +75,17 @@ export function getLayerStyles(opts: {
 
   return styles;
 }
+
 export const highlightLayer = {
   id: 'highlightLayer',
   layer: new VectorLayer({
-    style: new Style({
-      stroke: stroke,
-      image: new Circle({
-        stroke,
-        radius: 7,
-      }),
-    }),
+    style: vectorLayerStyles('highlightLayer', { color: '#004650' }),
+  }),
+};
+export const highlightLayerRusys = {
+  id: 'highlightLayerRusys',
+  layer: new VectorLayer({
+    style: vectorLayerStyles('highlightLayerRusys', { color: '#004650' }),
   }),
 };
 
@@ -152,6 +154,7 @@ export const vectorsLayer = {
       drawLayer.layer,
       highlightLayer.layer,
       markerLayer.layer,
+      highlightLayerRusys.layer,
     ],
   }),
 };

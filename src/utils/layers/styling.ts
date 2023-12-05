@@ -1,7 +1,11 @@
-import type { Feature } from 'ol';
+import { Feature } from 'ol';
 import { Fill, Stroke, Text, Circle, Icon } from 'ol/style';
 import Style from 'ol/style/Style';
 import { renderIconHtml } from '../utils';
+import type { Polygon } from 'ol/geom';
+import { getPointResolution } from 'ol/proj';
+import { projection } from '../constants';
+import { featureToPoint } from '../map';
 
 const LAYER_TYPE = {
   BOUNDARIES_MUNICIPALITIES: 'boundaries.municipalities',
@@ -169,6 +173,95 @@ export function vectorTileStyles(options?: { layerPrefix: string }): any {
         status === 'ONGOING' ? 'pin-water-green' : 'pin-water',
         { align: 'top' },
       );
+    }
+
+    styles.length = length;
+    return styles;
+  };
+}
+
+function getScale(resolution: number, center: number[]) {
+  const res = getPointResolution(projection, resolution, center, 'm');
+  const dpi = 25.4 / 0.28;
+  const inchesPerMeter = 1000 / 25.4;
+  return res * inchesPerMeter * dpi;
+}
+
+export function vectorLayerStyles(
+  layer: string,
+  options: { color: string },
+): any {
+  const fill = new Fill({ color: getColorWithOpacity(options?.color, 0.2) });
+  const stroke = new Stroke({
+    color: getColorWithOpacity(options?.color, 0.8),
+    width: 1,
+  });
+  const circle = new Circle({
+    fill,
+    stroke,
+    radius: 4,
+  });
+  const polygon = new Style({ fill });
+  const strokedPolygon = new Style({ fill, stroke });
+  const line = new Style({ stroke });
+  const point = new Style({
+    image: circle,
+    stroke,
+    fill,
+    geometry: function (feature: any) {
+      const geometry = feature.getGeometry();
+      const geometryType = geometry.getType();
+
+      if (geometryType === 'Polygon') {
+        return featureToPoint(feature);
+      } else if (geometryType === 'MultiPolygon') {
+        const newFeature = new Feature();
+        newFeature.setGeometry(geometry.getPolygon(0));
+        return featureToPoint(newFeature);
+      }
+
+      return geometry;
+    },
+  });
+
+  const styles: any[] = [];
+
+  return (feature: Feature, resolution: number) => {
+    let length = 0;
+
+    const geometry = feature.getGeometry();
+    const type = geometry?.getType() as string;
+
+    if (['highlightLayerRusys'].includes(layer)) {
+      const centerCoords = featureToPoint(
+        feature,
+      )?.getCoordinates() as number[];
+      const scale = getScale(resolution, centerCoords);
+
+      if (['Polygon', 'MultiPolygon'].includes(type)) {
+        const area = (geometry as Polygon)?.getArea?.() / 10000;
+
+        if (
+          (scale > 1000001 && area < 50) ||
+          (scale > 250001 && area < 25) ||
+          (scale > 100001 && area < 5) ||
+          (scale > 50001 && area < 1) ||
+          (scale > 25001 && area < 0.1) ||
+          (scale > 501 && area < 0.05)
+        ) {
+          styles[length++] = point;
+        } else {
+          styles[length++] = strokedPolygon;
+        }
+      } else {
+        styles[length++] = strokedPolygon;
+      }
+    } else if (['Polygon', 'MultiPolygon'].includes(type)) {
+      styles[length++] = strokedPolygon;
+    } else if (['LineString', 'MultiLineString'].includes(type)) {
+      styles[length++] = line;
+    } else if (['Point', 'MultiPoint'].includes(type)) {
+      styles[length++] = point;
     }
 
     styles.length = length;
