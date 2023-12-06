@@ -106,6 +106,8 @@ const statsByType = {
 
 export const useStatsStore = defineStore('stats', () => {
   const stats = ref({} as any);
+  const statsById = ref({} as any);
+  const maxValueByType = ref({} as any);
 
   function getStats(type: string) {
     return _.get(stats.value, type);
@@ -152,19 +154,24 @@ export const useStatsStore = defineStore('stats', () => {
       );
 
     _.set(stats.value, type, data);
+
+    const byId = data?.reduce((acc: any, value: any) => {
+      const id = _.get(value, options.idProperty);
+      acc[id] = value;
+      return acc;
+    }, {});
+
+    const maxValue = Math.max(...data.map((item: any) => item.count));
+
+    _.set(statsById.value, type, byId);
+    _.set(maxValueByType.value, type, maxValue);
   }
 
   function getStatsById(type: string, id: string | number) {
-    const options = _.get(statsByType, type);
+    const stats = _.get(statsById.value, type) || {};
 
-    if (!options) return {};
-
-    const stats = getStats(type) || [];
-
-    const maxValue = Math.max(...stats.map((item: any) => item.count));
-    const matchingConfig = stats.find(
-      (s: any) => _.get(s, options.idProperty) == id,
-    );
+    const matchingConfig = stats[id] || {};
+    const maxValue = _.get(maxValueByType.value, type);
 
     return {
       maxValue,
