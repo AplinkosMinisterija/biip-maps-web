@@ -107,7 +107,7 @@ const statsByType = {
 export const useStatsStore = defineStore('stats', () => {
   const stats = ref({} as any);
   const statsById = ref({} as any);
-  const maxValue = ref(null as any);
+  const maxValueByType = ref({} as any);
 
   function getStats(type: string) {
     return _.get(stats.value, type);
@@ -161,17 +161,20 @@ export const useStatsStore = defineStore('stats', () => {
       return acc;
     }, {});
 
+    const maxValue = Math.max(...data.map((item: any) => item.count));
+
     _.set(statsById.value, type, byId);
-    maxValue.value = Math.max(...data.map((item: any) => item.count));
+    _.set(maxValueByType.value, type, maxValue);
   }
 
   function getStatsById(type: string, id: string | number) {
     const stats = _.get(statsById.value, type) || {};
 
     const matchingConfig = stats[id] || {};
+    const maxValue = _.get(maxValueByType.value, type);
 
     return {
-      maxValue: maxValue.value,
+      maxValue,
       count: matchingConfig?.count || 0,
       properties: matchingConfig || {},
     };
