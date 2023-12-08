@@ -14,15 +14,15 @@
 defineProps({
   icon: {
     type: String,
-    default: ''
+    default: '',
   },
   title: {
     type: String,
-    default: ''
+    default: '',
   },
   children: {
     type: Array<any>,
-    default: []
-  }
+    default: [],
+  },
 });
 </script>

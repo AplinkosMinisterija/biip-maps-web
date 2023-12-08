@@ -11,10 +11,7 @@
         <UiButtonIcon icon="layers" @click="filtersStore.toggle('layers')" />
       </template>
       <template v-if="filtersStore.active" #filtersContent>
-        <UiMapLayerToggle
-          v-if="filtersStore.isActive('layers')"
-          :layers="toggleLayers"
-        />
+        <UiMapLayerToggle v-if="filtersStore.isActive('layers')" :layers="toggleLayers" />
         <Search
           v-else-if="filtersStore.isActive('search')"
           :value="filtersStore.search"
@@ -55,12 +52,7 @@ const $route = useRoute();
 const query = parseRouteParams($route.query, ['preview']);
 const isPreview = ref(!!query.preview);
 
-const toggleLayers = [
-  tourismService,
-  gamtotvarkaStvkService,
-  geoportalKvr,
-  municipalitiesService,
-];
+const toggleLayers = [tourismService, gamtotvarkaStvkService, geoportalKvr, municipalitiesService];
 
 mapLayers
   .addBaseLayer(geoportalTopoGray.id)
@@ -74,14 +66,10 @@ mapLayers
   .click(async ({ coordinate }: any) => {
     selectedFeatures.value = [];
     eventBus.emit('uiSidebar', { open: false });
-    mapLayers.getFeatureInfo(
-      tourismService.id,
-      coordinate,
-      ({ geometries, properties }: any) => {
-        mapLayers.highlightFeatures(geometries);
-        selectedFeatures.value.push(...properties);
-        eventBus.emit('uiSidebar', { open: !!selectedFeatures.value.length });
-      },
-    );
+    mapLayers.getFeatureInfo(tourismService.id, coordinate, ({ geometries, properties }: any) => {
+      mapLayers.highlightFeatures(geometries);
+      selectedFeatures.value.push(...properties);
+      eventBus.emit('uiSidebar', { open: !!selectedFeatures.value.length });
+    });
   });
 </script>

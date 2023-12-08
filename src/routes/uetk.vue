@@ -15,10 +15,7 @@
         <UiButtonIcon icon="legend" @click="filtersStore.toggle('legend')" />
       </template>
       <template v-if="filtersStore.active" #filtersContent>
-        <UiMapLayerToggle
-          v-if="filtersStore.isActive('layers')"
-          :layers="toggleLayers"
-        />
+        <UiMapLayerToggle v-if="filtersStore.isActive('layers')" :layers="toggleLayers" />
         <Search
           v-else-if="filtersStore.isActive('search')"
           :value="filtersStore.search"
@@ -30,10 +27,7 @@
             { type: 'upė', weight: 2 },
           ]"
         />
-        <UiMapLegend
-          v-if="filtersStore.isActive('legend')"
-          :layer="uetkService.id"
-        />
+        <UiMapLegend v-if="filtersStore.isActive('legend')" :layer="uetkService.id" />
       </template>
       <template #sidebar>
         <UiSidebarFeatures
@@ -76,11 +70,7 @@ const mapLayers: any = inject('mapLayers');
 const selectedFeatures = ref([] as any[]);
 const $route = useRoute();
 
-const query = parseRouteParams($route.query, [
-  'cadastralId',
-  'preview',
-  'screenshot',
-]);
+const query = parseRouteParams($route.query, ['cadastralId', 'preview', 'screenshot']);
 
 const isPreview = ref(!!query.preview);
 const isScreenshot = ref(!!query.screenshot);
@@ -129,14 +119,10 @@ mapLayers
   .add(inspireParcelService.id, { isHidden: true })
   .add(uetkService.id)
   .click(async ({ coordinate }: any) => {
-    mapLayers.getFeatureInfo(
-      uetkService.id,
-      coordinate,
-      ({ geometries, properties }: any) => {
-        mapLayers.highlightFeatures(geometries);
-        selectedFeatures.value = properties;
-      },
-    );
+    mapLayers.getFeatureInfo(uetkService.id, coordinate, ({ geometries, properties }: any) => {
+      mapLayers.highlightFeatures(geometries);
+      selectedFeatures.value = properties;
+    });
   });
 
 if (query.cadastralId) {
@@ -144,9 +130,7 @@ if (query.cadastralId) {
     .getAllSublayers(uetkService.id)
     .filter(
       (item: string) =>
-        !['upiu_pabaseiniai', 'upiu_baseinu_rajonai', 'upiu_baseinai'].includes(
-          item,
-        ),
+        !['upiu_pabaseiniai', 'upiu_baseinu_rajonai', 'upiu_baseinai'].includes(item),
     );
   const filters = new MapFilters();
 

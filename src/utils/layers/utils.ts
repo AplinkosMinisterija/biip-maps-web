@@ -30,12 +30,7 @@ export function getVectorLayer(
 
   const setFeaturesFn = (data: any) => layer.getSource()?.addFeatures(data);
   const source = new VectorSource({
-    loader: geosjonLoaderFn(
-      url,
-      setFeaturesFn,
-      opts?.queryOptions,
-      opts?.dataProjection,
-    ),
+    loader: geosjonLoaderFn(url, setFeaturesFn, opts?.queryOptions, opts?.dataProjection),
     format: new GeoJSON({
       dataProjection: projection,
     }),
@@ -44,14 +39,7 @@ export function getVectorLayer(
   layer.on('propertychange', (event) => {
     if (event?.key !== 'url') return;
     const url = layer.get('url');
-    source.setLoader(
-      geosjonLoaderFn(
-        url,
-        setFeaturesFn,
-        opts?.queryOptions,
-        opts?.dataProjection,
-      ),
-    );
+    source.setLoader(geosjonLoaderFn(url, setFeaturesFn, opts?.queryOptions, opts?.dataProjection));
     layer.setVisible(!!opts?.showOnUrlChange && !!url);
   });
 

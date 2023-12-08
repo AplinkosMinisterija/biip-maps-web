@@ -1,34 +1,29 @@
 {
-    "root": true,
-    "env": {
-        "browser": true,
-        "es2021": true,
-        "node": true
-    },
-    "extends": [
-      "plugin:vue/vue3-recommended",
-      "eslint:recommended",
-      "@vue/typescript/recommended"
-    ],
-    "parserOptions": {
-        "ecmaVersion": 2021
-    },
-    "plugins": [
-    ],
-    "rules": {
-        "@typescript-eslint/no-explicit-any": "off",
-        "@typescript-eslint/ban-types": "off",
-        "vue/multi-word-component-names": "off",
-        "vue/max-attributes-per-line": "off",
-        "vue/no-v-html": "off",
-        "vue/no-v-text-v-html-on-component": "off",
-        "vue/html-self-closing": "off",
-        "vue/no-use-v-if-with-v-for": "off",
-        "vue/no-setup-props-destructure": "off",
-        "no-async-promise-executor": "off",
-        "no-prototype-builtins": "off",
-        "@typescript-eslint/no-this-alias": "off",
-        "vue/singleline-html-element-content-newline": "off",
-        "@typescript-eslint/no-unused-vars": "warn"
-    }
+  "root": true,
+  "env": {
+    "browser": true,
+    "es2021": true,
+    "node": true
+  },
+  "extends": ["plugin:vue/vue3-recommended", "eslint:recommended", "@vue/typescript/recommended"],
+  "parserOptions": {
+    "ecmaVersion": 2021
+  },
+  "plugins": [],
+  "rules": {
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/ban-types": "off",
+    "vue/multi-word-component-names": "off",
+    "vue/max-attributes-per-line": "off",
+    "vue/no-v-html": "off",
+    "vue/no-v-text-v-html-on-component": "off",
+    "vue/html-self-closing": "off",
+    "vue/no-use-v-if-with-v-for": "off",
+    "vue/no-setup-props-destructure": "off",
+    "no-async-promise-executor": "off",
+    "no-prototype-builtins": "off",
+    "@typescript-eslint/no-this-alias": "off",
+    "vue/singleline-html-element-content-newline": "off",
+    "@typescript-eslint/no-unused-vars": "warn"
   }
+}

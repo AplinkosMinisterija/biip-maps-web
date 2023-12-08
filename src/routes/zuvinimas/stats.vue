@@ -34,7 +34,7 @@
 
     <FeaturesPopupHover :check-stats="true" @click="selectFeatures">
       <template #title="{ feature }">
-        {{ feature?.get("name") }} ({{ feature?.get("municipality") }})
+        {{ feature?.get('name') }} ({{ feature?.get('municipality') }})
       </template>
       <template #content="{ data }">
         <div class="text-xs">Bendras kiekis: {{ data.count || 0 }} vnt.</div>
@@ -43,14 +43,14 @@
   </div>
 </template>
 <script setup lang="ts">
-import { inject, ref } from "vue";
-import { projection3857, geoportalTopo3857, uetkMergedCentroidServiceVT } from "@/utils";
-import { useStatsStore } from "@/stores/stats";
-import { useFiltersStore } from "@/stores/filters";
+import { inject, ref } from 'vue';
+import { projection3857, geoportalTopo3857, uetkMergedCentroidServiceVT } from '@/utils';
+import { useStatsStore } from '@/stores/stats';
+import { useFiltersStore } from '@/stores/filters';
 const statsStore = useStatsStore();
 const filtersStore = useFiltersStore();
 
-const mapLayers: any = inject("mapLayers");
+const mapLayers: any = inject('mapLayers');
 
 const selectedFeatures = ref([] as any);
 
@@ -62,15 +62,15 @@ function selectFeatures(feature: any) {
   }
 }
 
-const statsKey = "zuvinimas.uetk";
+const statsKey = 'zuvinimas.uetk';
 mapLayers.addBaseLayer(geoportalTopo3857.id).add(uetkMergedCentroidServiceVT.id);
 
-uetkMergedCentroidServiceVT.layer.getSource()?.on("tileloadend", ({ tile }: any) => {
+uetkMergedCentroidServiceVT.layer.getSource()?.on('tileloadend', ({ tile }: any) => {
   tile?.getFeatures()?.forEach((feature: any) => {
-    feature.set("statsFn", () => ({
+    feature.set('statsFn', () => ({
       ...statsStore.getStatsById(statsKey, feature.getId()),
-      type: "icon",
-      icon: { name: "pin-water", opts: { align: "top" } },
+      type: 'icon',
+      icon: { name: 'pin-water', opts: { align: 'top' } },
       hideEmpty: true,
     }));
   });

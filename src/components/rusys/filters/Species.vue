@@ -20,12 +20,12 @@
 </template>
 
 <script lang="ts" setup>
-import { searchRusys, searchInObject } from "@/utils";
-import { useConfigStore } from "@/stores/config";
-import { computed, ref } from "vue";
+import { searchRusys, searchInObject } from '@/utils';
+import { useConfigStore } from '@/stores/config';
+import { computed, ref } from 'vue';
 
 const config = useConfigStore();
-const speciesTypes = ref(["INVASIVE", "ENDANGERED", "INTRODUCED"]);
+const speciesTypes = ref(['INVASIVE', 'ENDANGERED', 'INTRODUCED']);
 const props = defineProps({
   value: {
     type: Array,
@@ -33,21 +33,21 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(["change"]);
+const emit = defineEmits(['change']);
 
 const species = computed({
   get: () => props.value || [],
   set: (value) => {
-    emit("change", value);
+    emit('change', value);
   },
 });
 
 async function loadOptions(query: string) {
-  const data = await searchRusys(query || "", {
+  const data = await searchRusys(query || '', {
     query: {
       speciesType: {
         $in: speciesTypes.value.filter((item) => {
-          if (item !== "INTRODUCED") return true;
+          if (item !== 'INTRODUCED') return true;
           return !!(config.user.isExpert || config.user.isAdmin);
         }),
       },
@@ -58,7 +58,7 @@ async function loadOptions(query: string) {
 }
 
 function searchFilter(option: any, query: string) {
-  const { found } = searchInObject(query, option, ["name", "nameLatin"]);
+  const { found } = searchInObject(query, option, ['name', 'nameLatin']);
   return found;
 }
 </script>

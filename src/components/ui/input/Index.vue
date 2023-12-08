@@ -13,33 +13,29 @@
         @blur="emit('blur')"
       />
       <div @click="emit('clickIcon')">
-        <UiIcon
-          v-if="icon"
-          :name="icon"
-          class="absolute top-1/2 left-2 -translate-y-1/2"
-        />
+        <UiIcon v-if="icon" :name="icon" class="absolute top-1/2 left-2 -translate-y-1/2" />
       </div>
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { computed } from "vue";
+import { computed } from 'vue';
 
 const props = defineProps({
-  modelValue: { type: String, default: "" },
-  placeholder: { type: String, default: "" },
-  label: { type: String, default: "" },
-  icon: { type: String, default: "" },
+  modelValue: { type: String, default: '' },
+  placeholder: { type: String, default: '' },
+  label: { type: String, default: '' },
+  icon: { type: String, default: '' },
   hideBorder: { type: Boolean },
 });
 
-const emit = defineEmits(["update:modelValue", "change", "focus", "blur", "clickIcon"]);
+const emit = defineEmits(['update:modelValue', 'change', 'focus', 'blur', 'clickIcon']);
 const value = computed({
   get: () => props.modelValue,
   set: (value) => {
-    emit("update:modelValue", value);
-    emit("change", value);
+    emit('update:modelValue', value);
+    emit('change', value);
   },
 });
 </script>

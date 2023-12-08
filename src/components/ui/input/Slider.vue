@@ -15,23 +15,23 @@
 </template>
 
 <script lang="ts" setup>
-import { computed } from "vue";
+import { computed } from 'vue';
 
 const props = defineProps({
   modelValue: { type: Number, default: 0 },
-  value: { type: String, default: "" },
-  label: { type: String, default: "" },
+  value: { type: String, default: '' },
+  label: { type: String, default: '' },
   min: { type: Number, default: 0 },
   max: { type: Number, default: 10 },
   step: { type: Number, default: 1 },
 });
 
-const emit = defineEmits(["update:modelValue", "change"]);
+const emit = defineEmits(['update:modelValue', 'change']);
 const modelValue = computed({
   get: () => props.modelValue || props.value,
   set: (value) => {
-    emit("update:modelValue", value);
-    emit("change", value);
+    emit('update:modelValue', value);
+    emit('change', value);
   },
 });
 </script>

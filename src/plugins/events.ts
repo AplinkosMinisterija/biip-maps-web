@@ -64,10 +64,7 @@ class EventListener {
   }
 
   _listener(eventData: any) {
-    if (
-      this._messageListenerAll &&
-      typeof this._messageListenerAll === 'function'
-    ) {
+    if (this._messageListenerAll && typeof this._messageListenerAll === 'function') {
       this._messageListenerAll(eventData);
     }
 

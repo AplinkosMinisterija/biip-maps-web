@@ -18,11 +18,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, ref, watch } from "vue";
-import { useRoute } from "vue-router";
-import { canvasToImage } from "@/utils";
-const events: any = inject("events");
-const mapLayers: any = inject("mapLayers");
+import { computed, inject, ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
+import { canvasToImage } from '@/utils';
+const events: any = inject('events');
+const mapLayers: any = inject('mapLayers');
 
 const isLoadedSuspense = ref(false);
 const isLoadedMap = ref(false);
@@ -44,6 +44,6 @@ watch(
     if (!value || !$route?.query?.screenshot) return;
     canvasToImage();
   },
-  { immediate: true }
+  { immediate: true },
 );
 </script>

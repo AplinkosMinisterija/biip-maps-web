@@ -14,9 +14,7 @@ export const Adapters: any = {
 export function getByName(name: string) {
   if (!name) return null;
 
-  const n = Object.keys(Adapters).find(
-    (n) => n.toLowerCase() == name.toLowerCase(),
-  );
+  const n = Object.keys(Adapters).find((n) => n.toLowerCase() == name.toLowerCase());
   if (n) return Adapters[n];
 }
 

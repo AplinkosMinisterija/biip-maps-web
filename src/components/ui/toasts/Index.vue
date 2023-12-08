@@ -14,8 +14,8 @@
 </template>
 
 <script setup lang="ts">
-import { inject, ref } from "vue";
-const eventBus: any = inject("eventBus");
+import { inject, ref } from 'vue';
+const eventBus: any = inject('eventBus');
 
 const toasts = ref([] as any);
 
@@ -24,7 +24,7 @@ function remove(toast: any) {
   toasts.value.splice(index, 1);
 }
 
-eventBus.on("uiToast", (data: any) => {
+eventBus.on('uiToast', (data: any) => {
   toasts.value.push(data);
 });
 </script>

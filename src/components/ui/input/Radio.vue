@@ -8,16 +8,16 @@
 </template>
 
 <script lang="ts" setup>
-import { computed } from "vue";
+import { computed } from 'vue';
 
 const props = defineProps({
-  modelValue: { type: String, default: "" },
-  value: { type: String, default: "" },
+  modelValue: { type: String, default: '' },
+  value: { type: String, default: '' },
 });
 
-const emit = defineEmits(["update:modelValue"]);
+const emit = defineEmits(['update:modelValue']);
 const modelValue = computed({
   get: () => props.modelValue,
-  set: (value) => emit("update:modelValue", value),
+  set: (value) => emit('update:modelValue', value),
 });
 </script>

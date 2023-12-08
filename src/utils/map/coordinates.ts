@@ -14,10 +14,7 @@ const joinCoordsPattern = '\\s*[,\\s]\\s*';
 const coordPairPattern = `${singleCoordPattern}${joinCoordsPattern}${singleCoordPattern}`;
 
 const coordPatternRegex = new RegExp(`^${coordPairPattern}$`, 'gi');
-const coordPatternMultiRegex = new RegExp(
-  `^(${coordPairPattern}(${joinCoordsPattern})?)+$`,
-  'gi',
-);
+const coordPatternMultiRegex = new RegExp(`^(${coordPairPattern}(${joinCoordsPattern})?)+$`, 'gi');
 const coordPairRegex = new RegExp(coordPairPattern, 'gi');
 
 const fixCoordinatesText = (text: string) => {
@@ -47,17 +44,11 @@ export function convertCoordinatesToProjection(
       options.dataProjection = dataProjection;
     }
 
-    if (
-      coordinates.bbox?.length &&
-      !isWGSCoordinates(coordinates.bbox[0], coordinates.bbox[1])
-    ) {
+    if (coordinates.bbox?.length && !isWGSCoordinates(coordinates.bbox[0], coordinates.bbox[1])) {
       options.featureProjection = featureProjection;
     }
 
-    const features = new GeoJSON().readFeatures(
-      _.cloneDeep(coordinates),
-      options,
-    );
+    const features = new GeoJSON().readFeatures(_.cloneDeep(coordinates), options);
 
     try {
       const transformedCoordinates = JSON.parse(
@@ -140,10 +131,7 @@ export function getElementFromCoordinates(
     transformedCoordinates = [coordinates];
     item = new Point(coordinates);
   } else if (type === 'Polygon') {
-    transformedCoordinates = coordinates.reduce(
-      (acc, item) => [...acc, ...item],
-      [],
-    );
+    transformedCoordinates = coordinates.reduce((acc, item) => [...acc, ...item], []);
     item = new Polygon(coordinates);
   } else {
     transformedCoordinates = coordinates;
@@ -197,8 +185,7 @@ export function isCoordinate(input: string, multi: boolean = false) {
 }
 
 export function isWGSCoordinates(x: number, y: number) {
-  const coordLength = (coordinate: number) =>
-    Math.floor(coordinate).toString().length;
+  const coordLength = (coordinate: number) => Math.floor(coordinate).toString().length;
 
   return coordLength(x) == 6 && coordLength(y) == 7;
 }
@@ -215,9 +202,7 @@ export function parseCoordinates(input: string) {
           .filter((item) => !!item)
           .map((item) => parseFloat(item)),
       )
-      .map((item) =>
-        !isWGSCoordinates(item[0], item[1]) ? [item[1], item[0]] : item,
-      ) || [];
+      .map((item) => (!isWGSCoordinates(item[0], item[1]) ? [item[1], item[0]] : item)) || [];
 
   if (!coordinates.length) return [];
 
@@ -246,9 +231,7 @@ export function parseGeomFromString(input: string) {
           .filter((item) => !!item)
           .map((item) => parseFloat(item)),
       )
-      .map((item) =>
-        !isWGSCoordinates(item[0], item[1]) ? [item[1], item[0]] : item,
-      ) || [];
+      .map((item) => (!isWGSCoordinates(item[0], item[1]) ? [item[1], item[0]] : item)) || [];
 
   const results: Array<{
     type: 'LineString' | 'Point' | 'Polygon';
@@ -296,8 +279,7 @@ export function parseGeomFromString(input: string) {
       center,
     } = getElementFromCoordinates('LineString', coordinatesPairs);
 
-    const startMatchEnd =
-      coordinatesPairs[0] === coordinatesPairs[coordinatesPairs.length - 1];
+    const startMatchEnd = coordinatesPairs[0] === coordinatesPairs[coordinatesPairs.length - 1];
 
     if (!startMatchEnd) {
       results.push({

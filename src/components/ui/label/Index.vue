@@ -13,19 +13,19 @@
 
 <script setup lang="ts">
 defineProps({
-  type: { type: String, default: "default" },
-  size: { type: String, default: "default" },
+  type: { type: String, default: 'default' },
+  size: { type: String, default: 'default' },
   alignColumn: Boolean,
 });
 
 const types: any = {
-  default: "",
-  light: "text-gray-600",
+  default: '',
+  light: 'text-gray-600',
 };
 const sizes: any = {
-  default: "",
-  sm: "text-sm gap-2",
-  xs: "text-xs gap-1",
-  xxs: "text-xxs",
+  default: '',
+  sm: 'text-sm gap-2',
+  xs: 'text-xs gap-1',
+  xxs: 'text-xxs',
 };
 </script>

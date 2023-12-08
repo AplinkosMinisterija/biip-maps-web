@@ -5,7 +5,11 @@
     </template>
     <div class="text-xs max-w-[10rem]">
       <UiPopupContentItem v-if="layer.download" icon="download" label="Atsisiųsti" />
-      <UiPopupContentItem v-if="layer.layer" icon="visible" :label="`Ryškumas (${opacityValue * 100}%)`">
+      <UiPopupContentItem
+        v-if="layer.layer"
+        icon="visible"
+        :label="`Ryškumas (${opacityValue * 100}%)`"
+      >
         <UiInputRange
           v-model="opacityValue"
           :min="0"
@@ -25,9 +29,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, ref } from "vue";
-import { merge } from "lodash";
-const mapLayers: any = inject("mapLayers");
+import { computed, inject, ref } from 'vue';
+import { merge } from 'lodash';
+const mapLayers: any = inject('mapLayers');
 const props = defineProps({
   layer: {
     type: Object,
@@ -54,7 +58,7 @@ const description = computed(() => {
 
 const opacityValue = ref(0);
 
-mapLayers.onChange(layer.value.id, "opacity", ({ value }: any) => {
+mapLayers.onChange(layer.value.id, 'opacity', ({ value }: any) => {
   opacityValue.value = value;
 });
 

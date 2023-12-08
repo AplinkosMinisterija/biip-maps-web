@@ -16,7 +16,7 @@
     "esModuleInterop": true,
     "noImplicitAny": true,
     "removeComments": true,
-    "preserveConstEnums": true,
+    "preserveConstEnums": true
   },
   "exclude": ["node_modules/**/*"],
   "references": [

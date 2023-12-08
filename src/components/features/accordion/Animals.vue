@@ -35,7 +35,6 @@
 </template>
 
 <script setup lang="ts">
-
 defineProps({
   features: {
     type: Array<any>,
@@ -44,23 +43,31 @@ defineProps({
 });
 
 const rows: any[] = [
-  {key: 'municipality', translate: 'Savivaldybė', fn: (municipality: any) => municipality.name},
-  {key: 'count', translate: 'Individų skaičius'},
-  {key: 'permitsCount', translate: 'Viso išduotų leidimų'},
-  {key: 'zoosCount', translate: 'Zoologijos sodų'},
-  {key: 'aviariesCount', translate: 'Aptvarų / Voljerų statinių'},
-  {key: 'forestsCount', translate: 'Aptvarų / Voljerų statinių esančių miško teritorijoje'},
-  {key: 'protectedTerritoriesCount', translate: 'Aptvarų / Voljerų statinių esančių saugomoje teritorijoje'},
-  {key: 'fencedAreaSum', translate: 'Aptvertas plotas'},
-  {key: 'speciesClassifier', translate: '', subitemsFn: (items: any) => items.map((i: any) => ({
-    name: `${i.name} (lot. <i>${i.nameLatin}</i>)`,
-    value: i.count || 0
-  }))},
-]
+  { key: 'municipality', translate: 'Savivaldybė', fn: (municipality: any) => municipality.name },
+  { key: 'count', translate: 'Individų skaičius' },
+  { key: 'permitsCount', translate: 'Viso išduotų leidimų' },
+  { key: 'zoosCount', translate: 'Zoologijos sodų' },
+  { key: 'aviariesCount', translate: 'Aptvarų / Voljerų statinių' },
+  { key: 'forestsCount', translate: 'Aptvarų / Voljerų statinių esančių miško teritorijoje' },
+  {
+    key: 'protectedTerritoriesCount',
+    translate: 'Aptvarų / Voljerų statinių esančių saugomoje teritorijoje',
+  },
+  { key: 'fencedAreaSum', translate: 'Aptvertas plotas' },
+  {
+    key: 'speciesClassifier',
+    translate: '',
+    subitemsFn: (items: any) =>
+      items.map((i: any) => ({
+        name: `${i.name} (lot. <i>${i.nameLatin}</i>)`,
+        value: i.count || 0,
+      })),
+  },
+];
 
 const filteredRows = (feature: any) => {
   return rows.filter((r) => {
-    return typeof feature[r.key] !== "undefined";
+    return typeof feature[r.key] !== 'undefined';
   });
 };
 </script>

@@ -16,35 +16,19 @@
         class="bg-white relative z-50 border border-gray-100 max-h-full flex flex-col"
         :class="[sizing[size || 'default']]"
       >
-        <div
-          class="flex justify-between items-center p-6 border-b border-gray-100"
-        >
+        <div class="flex justify-between items-center p-6 border-b border-gray-100">
           <div>
             <h3>{{ title }}</h3>
           </div>
 
-          <UiButton
-            icon="close"
-            type="ghost"
-            @click="close"
-          />
+          <UiButton icon="close" type="ghost" @click="close" />
         </div>
-        <div
-          v-if="$slots.default"
-          class="w-full h-full p-6 overflow-y-auto"
-        >
+        <div v-if="$slots.default" class="w-full h-full p-6 overflow-y-auto">
           <slot />
         </div>
-        <div
-          class="p-6 flex items-center justify-end border-t border-gray-100 pt-6"
-        >
+        <div class="p-6 flex items-center justify-end border-t border-gray-100 pt-6">
           <UiButtonRow>
-            <UiButton
-              type="ghost"
-              @click="close"
-            >
-              Close
-            </UiButton>
+            <UiButton type="ghost" @click="close"> Close </UiButton>
             <slot name="footer" />
           </UiButtonRow>
         </div>
@@ -54,11 +38,11 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from "vue";
+import { ref } from 'vue';
 
 defineProps({
-  title: { type: String, default: "" },
-  size: { type: String, default: "" },
+  title: { type: String, default: '' },
+  size: { type: String, default: '' },
 });
 const isOpen = ref(false);
 const open = () => {
@@ -72,8 +56,8 @@ const close = () => {
 defineExpose({ close, open });
 
 const sizing: any = {
-  default: "max-w-3xl rounded",
-  sm: "w-full md:max-w-2xl w-full rounded",
-  xs: "w-full max-w-md w-full rounded",
+  default: 'max-w-3xl rounded',
+  sm: 'w-full md:max-w-2xl w-full rounded',
+  xs: 'w-full max-w-md w-full rounded',
 };
 </script>

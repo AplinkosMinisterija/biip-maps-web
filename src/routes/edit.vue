@@ -55,7 +55,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed, inject, ref } from "vue";
+import { computed, inject, ref } from 'vue';
 import {
   geoportalTopo,
   geoportalOrto,
@@ -73,24 +73,22 @@ import {
   geoportalOrto2005,
   geoportalOrto1995,
   inspireParcelService,
-} from "@/utils";
-import { useFiltersStore } from "@/stores/filters";
-import { useRoute } from "vue-router";
+} from '@/utils';
+import { useFiltersStore } from '@/stores/filters';
+import { useRoute } from 'vue-router';
 const $route = useRoute();
-const events: any = inject("events");
+const events: any = inject('events');
 
-const mapLayers: any = inject("mapLayers");
-const postMessage: any = inject("postMessage");
+const mapLayers: any = inject('mapLayers');
+const postMessage: any = inject('postMessage');
 
-const query = parseRouteParams($route.query, ["multi", "buffer", "preview", "types"]);
+const query = parseRouteParams($route.query, ['multi', 'buffer', 'preview', 'types']);
 const isPreview = !!query.preview;
 
 const activeDrawType = computed(() => mapDraw.value.activeType);
 const selectedFeature = ref({} as any);
 const showBufferChangeBox = computed(
-  () =>
-    query.buffer &&
-    ["Point", "LineString"].includes(selectedFeature.value?.geometry?.type)
+  () => query.buffer && ['Point', 'LineString'].includes(selectedFeature.value?.geometry?.type),
 );
 
 const toggleLayers = [
@@ -110,13 +108,13 @@ const toggleLayers = [
 
 const mapDraw = computed(() => mapLayers.getDraw());
 const defaultDrawElements = [
-  { icon: "point", type: "Point", name: "Taškas", el: "point" },
-  { icon: "line", type: "LineString", name: "Linija", el: "line" },
-  { icon: "polygon", type: "Polygon", name: "Plotas", el: "polygon" },
+  { icon: 'point', type: 'Point', name: 'Taškas', el: 'point' },
+  { icon: 'line', type: 'LineString', name: 'Linija', el: 'line' },
+  { icon: 'polygon', type: 'Polygon', name: 'Plotas', el: 'polygon' },
 ];
 
 const drawTypes = computed(() => {
-  let types = ["point", "line", "polygon"];
+  let types = ['point', 'line', 'polygon'];
   if (query.types) {
     if (Array.isArray(query.types)) {
       types = query.types;
@@ -143,7 +141,7 @@ const featureBufferSize = computed({
   get() {
     if (!selectedFeature.value?.feature) return;
     const bufferSize = Number(
-      mapDraw.value.getProperties(selectedFeature.value?.feature, "bufferSize")
+      mapDraw.value.getProperties(selectedFeature.value?.feature, 'bufferSize'),
     );
     return bufferSize || 1;
   },
@@ -193,20 +191,20 @@ mapDraw.value
   .setMulti(!!query.multi)
   .enableBufferSize(!!query.buffer)
   .enableContinuousDraw(drawTypes.value.length === 1 && !query.multi && !query.buffer)
-  .on(["change", "remove"], ({ features }: any) => {
-    postMessage("data", features);
+  .on(['change', 'remove'], ({ features }: any) => {
+    postMessage('data', features);
   })
-  .on("select", ({ featureObj, feature }: any) => {
+  .on('select', ({ featureObj, feature }: any) => {
     selectedFeature.value = {
       ...feature,
       feature: featureObj,
     };
   });
 
-events.on("geom", (data: any) => {
+events.on('geom', (data: any) => {
   let geom = data.geom || data;
 
-  if (typeof geom === "string") {
+  if (typeof geom === 'string') {
     try {
       geom = JSON.parse(geom);
     } catch (err) {

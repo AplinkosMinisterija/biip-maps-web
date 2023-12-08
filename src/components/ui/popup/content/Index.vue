@@ -28,13 +28,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref } from 'vue';
 
 const el = ref();
 defineProps({
-  title: { type: String, default: "" },
-  size: { type: String, default: "" },
-  position: { type: String, default: "" },
+  title: { type: String, default: '' },
+  size: { type: String, default: '' },
+  position: { type: String, default: '' },
   showArrow: {
     type: Boolean,
     default: false,
@@ -48,11 +48,11 @@ defineProps({
     default: true,
   },
 });
-const emit = defineEmits(["close"]);
+const emit = defineEmits(['close']);
 
 const positions = ref({
-  "top-left": "top-full left-0 mt-2",
-  "top-right": "top-full right-0 mt-2",
+  'top-left': 'top-full left-0 mt-2',
+  'top-right': 'top-full right-0 mt-2',
 } as any);
 
 const getElement = () => {};
@@ -62,6 +62,6 @@ defineExpose({ el, getElement });
 <style>
 .display-arrow:before {
   @apply rotate-180 border-transparent border-solid h-0 w-0 absolute -top-6 pointer-events-none border-t-[1rem] border-[0.75rem] left-1.5 border-t-white;
-  content: " ";
+  content: ' ';
 }
 </style>
