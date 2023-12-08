@@ -22,18 +22,19 @@ export function getLayerStyles(opts: {
   icon?: string;
   opts?: any;
 }) {
-  const width = opts?.width || 3;
   const primaryColor = opts?.colors?.primary || '#326a72';
   const secondaryColor = opts?.colors?.secondary || '#002a30';
   function getStyle(
     color: string,
     icon?: string,
-    opts?: {
+    options?: {
       align?: 'top';
+      width?: number;
     },
   ) {
     const brightColor = `${color}bb`;
     const lightColor = `${color}33`;
+    const width = options?.width || opts?.width || 3;
 
     const stroke = new Stroke({ color: brightColor, width });
     const fill = new Fill({ color: lightColor });
@@ -49,7 +50,7 @@ export function getLayerStyles(opts: {
       });
 
       let anchor = [0.5, 0.5];
-      if (opts?.align === 'top') {
+      if (options?.align === 'top') {
         anchor = [0.5, 1];
       }
       image = new Icon({
@@ -67,10 +68,24 @@ export function getLayerStyles(opts: {
     });
   }
 
+  const primaryStyle = getStyle(primaryColor, opts?.icon, opts?.opts);
+  const secondaryStyle = getStyle(secondaryColor, opts?.icon, opts?.opts);
+
+  function getStyleByFeature(defaultStyle: Style) {
+    return function (feature: any) {
+      const color = feature.get('color');
+      const radius = feature.get('radius');
+      const icon = feature.get('icon');
+      if (color) {
+        return getStyle(color, icon, { ...(opts?.opts || {}), width: radius });
+      }
+      return defaultStyle;
+    };
+  }
   const styles: any = {
     opts,
-    primary: getStyle(primaryColor, opts?.icon, opts?.opts),
-    secondary: getStyle(secondaryColor, opts?.icon, opts?.opts),
+    primary: getStyleByFeature(primaryStyle),
+    secondary: getStyleByFeature(secondaryStyle),
   };
 
   return styles;
