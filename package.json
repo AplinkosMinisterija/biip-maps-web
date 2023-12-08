@@ -2,6 +2,7 @@
   "name": "biip-maps-web",
   "version": "1.0.0",
   "private": true,
+  "prettier": "@aplinkosministerija/biip-prettier-config",
   "scripts": {
     "dev": "vite",
     "build": "run-p type-check build-only",
@@ -31,6 +32,7 @@
     ]
   },
   "devDependencies": {
+    "@aplinkosministerija/biip-prettier-config": "^1.1.0",
     "@microsoft/eslint-formatter-sarif": "^3.0.0",
     "@types/lodash": "^4.14.192",
     "@types/node": "^18.15.11",
