@@ -62,7 +62,6 @@ function parsePoints(data: any[]) {
       coordinates: convertCoordinatesToProjection([item.x, item.y]),
       properties: {
         color: colors[item.type] || colors.current,
-        radius: 5,
         ...item,
       },
     }))
@@ -80,7 +79,7 @@ mapDraw.value
     postMessage("selected", feature);
   })
   .on("change", ({ features }: any) => {
-    postMessage("data", features);
+        postMessage("data", features);
   });
 
 if (query.points) {
