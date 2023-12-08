@@ -13,11 +13,7 @@
               {{ item.translate }}
             </UiTableCell>
             <UiTableCell class="w-1/2">
-              {{
-                item.fn
-                  ? item.fn(_.get(feature, item.key), feature)
-                  : _.get(feature, item.key)
-              }}
+              {{ item.fn ? item.fn(_.get(feature, item.key), feature) : _.get(feature, item.key) }}
             </UiTableCell>
           </UiTableRow>
 
@@ -39,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import _ from 'lodash'
+import _ from 'lodash';
 
 defineProps({
   features: {
@@ -49,17 +45,22 @@ defineProps({
 });
 
 const rows: any[] = [
-  {key: 'uetk.municipality', translate: 'Savivaldybė'},
-  {key: 'count', translate: 'Bendras svoris', fn: (value: any) => `${value} kg`},
-  {key: 'byFishes', translate: '', subitemsFn: (items: any) => items.map((i: any) => ({
-    name: i.fish.label,
-    value: `${i.count || 0} kg`
-  }))},
-]
+  { key: 'uetk.municipality', translate: 'Savivaldybė' },
+  { key: 'count', translate: 'Bendras svoris', fn: (value: any) => `${value} kg` },
+  {
+    key: 'byFishes',
+    translate: '',
+    subitemsFn: (items: any) =>
+      items.map((i: any) => ({
+        name: i.fish.label,
+        value: `${i.count || 0} kg`,
+      })),
+  },
+];
 
 const filteredRows = (feature: any) => {
   return rows.filter((r) => {
-    return typeof _.get(feature, r.key) !== "undefined";
+    return typeof _.get(feature, r.key) !== 'undefined';
   });
 };
 </script>

@@ -1,11 +1,6 @@
 import { Overlay, type Map, Feature, Geolocation } from 'ol';
 import { MapFilters } from './filters';
-import {
-  checkAuth,
-  loadWFSLayer,
-  loadWMSLayer,
-  splitUrlIfNeeded,
-} from '../requests';
+import { checkAuth, loadWFSLayer, loadWMSLayer, splitUrlIfNeeded } from '../requests';
 import { MapDraw } from '.';
 import { projection } from '../constants';
 import _ from 'lodash';
@@ -18,10 +13,7 @@ import {
   WMSLegendRequest,
 } from './utils';
 import LayerGroup from 'ol/layer/Group';
-import {
-  convertCoordinates,
-  convertCoordinatesToProjection,
-} from './coordinates';
+import { convertCoordinates, convertCoordinatesToProjection } from './coordinates';
 import { getCenter } from 'ol/extent';
 import { Queues } from './queues';
 
@@ -175,20 +167,12 @@ export class MapLayers extends Queues {
 
     let query: any;
     if (type === LayerType.WMS) {
-      query = WMSLegendRequest(
-        sublayers,
-        this.map?.getView().getProjection().getCode(),
-      );
+      query = WMSLegendRequest(sublayers, this.map?.getView().getProjection().getCode());
     }
 
     if (!query) return;
 
-    const {
-      method,
-      body,
-      headers,
-      url: requestUrl,
-    } = splitUrlIfNeeded(`${url}?${query}`);
+    const { method, body, headers, url: requestUrl } = splitUrlIfNeeded(`${url}?${query}`);
 
     function mapItems(items: any[]): any[] {
       return items.map((i) => ({
@@ -209,11 +193,7 @@ export class MapLayers extends Queues {
       .then(mapItems);
   }
 
-  updateLayerQuery(
-    id: string,
-    parentFilter?: MapFilters,
-    fieldsToSet?: string[],
-  ): any {
+  updateLayerQuery(id: string, parentFilter?: MapFilters, fieldsToSet?: string[]): any {
     const layer = this.getLayer(id);
     if (!layer) return;
 
@@ -244,12 +224,10 @@ export class MapLayers extends Queues {
       });
     } else if (type === LayerType.WFS) {
       const url = layer.getSource().getUrl();
-      loadWFSLayer(url, filter.toWFS(), this._getRequestOptions(id)).then(
-        (data) => {
-          if (!this.map) return;
-          this.highlightFeatures(data);
-        },
-      );
+      loadWFSLayer(url, filter.toWFS(), this._getRequestOptions(id)).then((data) => {
+        if (!this.map) return;
+        this.highlightFeatures(data);
+      });
     }
   }
 
@@ -410,9 +388,7 @@ export class MapLayers extends Queues {
     const source = layer.layer.getSource();
 
     const filters = (filter || this.filters(id)).toQuery();
-    const { method, body, url, headers } = splitUrlIfNeeded(
-      `${layer.stats.url}?${filters}`,
-    );
+    const { method, body, url, headers } = splitUrlIfNeeded(`${layer.stats.url}?${filters}`);
 
     const options = _.merge({}, this._getRequestOptions(id), {
       headers,
@@ -430,9 +406,7 @@ export class MapLayers extends Queues {
           matchingConfig = layer.stats.applyToFeatureFn(data, feature);
         } else {
           if (!Array.isArray(data)) return;
-          matchingConfig = data.find(
-            (data: any) => data.id === feature.get('id'),
-          );
+          matchingConfig = data.find((data: any) => data.id === feature.get('id'));
         }
         feature.set('stats', matchingConfig || {});
         feature.setStyle(styleFn);
@@ -462,11 +436,7 @@ export class MapLayers extends Queues {
     visibleLayersFromLevel: string | string[], // level --> +Infinity
     level?: number, // if not defined - both layer groups will be visible
   ) {
-    const applyZoomLevelForLayers = (
-      layers: string | string[],
-      max?: number,
-      min?: number,
-    ) => {
+    const applyZoomLevelForLayers = (layers: string | string[], max?: number, min?: number) => {
       layers = Array.isArray(layers) ? layers : [layers];
       layers
         .map((id) => this.get(id))
@@ -516,9 +486,7 @@ export class MapLayers extends Queues {
 
     if (this._isGroup(layer)) {
       return Promise.all(
-        this.all(layer).map((layer: any) =>
-          this.zoomNew(layer.get('id'), options),
-        ),
+        this.all(layer).map((layer: any) => this.zoomNew(layer.get('id'), options)),
       );
     }
 
@@ -566,9 +534,7 @@ export class MapLayers extends Queues {
     if (this._isGroup(layer)) {
       const layerOptions: any = _.cloneDeep(options);
       layerOptions.filters = filters;
-      layer
-        .getLayers()
-        .forEach((layer: any) => this.zoom(layer.get('id'), layerOptions));
+      layer.getLayers().forEach((layer: any) => this.zoom(layer.get('id'), layerOptions));
 
       return this;
     }
@@ -601,9 +567,7 @@ export class MapLayers extends Queues {
     if (this._isGroup(layer)) {
       layer
         .getLayers()
-        .forEach(async (layer: any) =>
-          this.getFeatureInfo(layer.get('id'), coordinate, cb, id),
-        );
+        .forEach(async (layer: any) => this.getFeatureInfo(layer.get('id'), coordinate, cb, id));
     }
 
     const result = await this._getFeatureInfoRequest(id, coordinate, filters);
@@ -686,10 +650,7 @@ export class MapLayers extends Queues {
     data = dataToFeatureCollection(data);
     data = convertCoordinatesToProjection(data);
 
-    const { extent } = featureCollectionToExtent(
-      data,
-      this.map.getView().getProjection(),
-    );
+    const { extent } = featureCollectionToExtent(data, this.map.getView().getProjection());
 
     if (addStroke) {
       this.highlightFeatures(data, { layer: fixedHighlightLayerId });
@@ -803,9 +764,7 @@ export class MapLayers extends Queues {
     if (!layer) return;
 
     if (this._isGroup(layer)) {
-      return layer
-        .getLayers()
-        .forEach((layer: any) => this.setSublayers(layer.get('id'), layers));
+      return layer.getLayers().forEach((layer: any) => this.setSublayers(layer.get('id'), layers));
     }
     const type = layer.get('type');
 
@@ -843,11 +802,7 @@ export class MapLayers extends Queues {
 
     if (!layer) return {};
 
-    if (
-      layer?.sublayers?.length &&
-      layer?.layer?.getVisible &&
-      !layer.layer.getVisible()
-    ) {
+    if (layer?.sublayers?.length && layer?.layer?.getVisible && !layer.layer.getVisible()) {
       return {};
     }
 
@@ -856,8 +811,7 @@ export class MapLayers extends Queues {
         .getLayers()
         .getArray()
         .reduce(
-          (acc: any, layer: any) =>
-            _.merge(acc, this.getInnerVisibleLayers(layer.get('id'))),
+          (acc: any, layer: any) => _.merge(acc, this.getInnerVisibleLayers(layer.get('id'))),
           {},
         );
     }
@@ -932,11 +886,7 @@ export class MapLayers extends Queues {
     }
   }
 
-  private _getFeatureInfoRequest(
-    id: string,
-    coordinate: number[],
-    filters?: MapFilters,
-  ) {
+  private _getFeatureInfoRequest(id: string, coordinate: number[], filters?: MapFilters) {
     if (!this.map) return;
 
     const layer = this.getLayer(id);

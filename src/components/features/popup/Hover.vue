@@ -12,7 +12,7 @@
 </template>
 
 <script setup lang="ts">
-import { inject, ref, watch } from "vue";
+import { inject, ref, watch } from 'vue';
 
 const props = defineProps({
   checkStats: {
@@ -21,9 +21,9 @@ const props = defineProps({
   },
 });
 
-const mapLayers: any = inject("mapLayers");
+const mapLayers: any = inject('mapLayers');
 
-const emit = defineEmits(["click"]);
+const emit = defineEmits(['click']);
 
 const overlayLayer = ref();
 const hoverFeatureData = ref({} as any);
@@ -44,12 +44,12 @@ function getFromFeatures(features: any[]) {
 
   if (!features?.length || !features[0]) return {};
   const feature = features[0];
-  const statsFn = feature.get("statsFn") || {};
+  const statsFn = feature.get('statsFn') || {};
 
   return {
     feature,
     features,
-    stats: typeof statsFn === "function" ? statsFn() : {},
+    stats: typeof statsFn === 'function' ? statsFn() : {},
   };
 }
 
@@ -70,10 +70,12 @@ mapLayers.hover(({ features }: any) => {
 
   if (hoverFeatureData.value) {
     Object.keys(hoverFeatureData.value || {}).forEach((key) => {
-      if (typeof hoverFeatureData.value[key] === "string") {
+      if (typeof hoverFeatureData.value[key] === 'string') {
         try {
           hoverFeatureData.value[key] = JSON.parse(hoverFeatureData.value[key]);
-        } catch (err) { /* empty */ }
+        } catch (err) {
+          /* empty */
+        }
       }
     });
   }
@@ -92,12 +94,12 @@ mapLayers.click(({ features }: any) => {
   function getFeatureData() {
     return { ...feature.getProperties(), id: feature.getId() };
   }
-  if (feature?.get("layer") === "municipalities") {
+  if (feature?.get('layer') === 'municipalities') {
     properties.municipality = getFeatureData();
-  } else if (feature?.get("layer").includes("uetk_merged")) {
+  } else if (feature?.get('layer').includes('uetk_merged')) {
     properties.uetk = getFeatureData();
   }
 
-  emit("click", properties);
+  emit('click', properties);
 });
 </script>

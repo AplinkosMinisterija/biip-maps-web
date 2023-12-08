@@ -4,8 +4,8 @@
   </div>
 </template>
 <script setup lang="ts">
-import { inject } from "vue";
-import { useRoute } from "vue-router";
+import { inject } from 'vue';
+import { useRoute } from 'vue-router';
 import {
   geoportalTopo,
   geoportalOrto,
@@ -14,19 +14,19 @@ import {
   huntingTracksService,
   objectPropsToCamel,
   parseRouteParams,
-} from "@/utils";
+} from '@/utils';
 
-const mapLayers: any = inject("mapLayers");
-const postMessage: any = inject("postMessage");
+const mapLayers: any = inject('mapLayers');
+const postMessage: any = inject('postMessage');
 const $route = useRoute();
 
-const query = parseRouteParams($route.query, ["mpv_id"]);
+const query = parseRouteParams($route.query, ['mpv_id']);
 const huntingServiceFilters = mapLayers.filters(huntingService.id);
 const huntingTracksServiceFilters = mapLayers.filters(huntingTracksService.id);
 
 if (query.mpv_id) {
-  huntingServiceFilters.on("mpv_info_geom").set("mpv_id", query.mpv_id);
-  huntingTracksServiceFilters.on("footprint_tracks").set("mpv_id", query.mpv_id);
+  huntingServiceFilters.on('mpv_info_geom').set('mpv_id', query.mpv_id);
+  huntingTracksServiceFilters.on('footprint_tracks').set('mpv_id', query.mpv_id);
 }
 
 await mapLayers
@@ -41,8 +41,8 @@ await mapLayers
       coordinate,
       ({ geometries, properties }: any) => {
         mapLayers.highlightFeatures(geometries);
-        postMessage("click", objectPropsToCamel(properties));
-      }
+        postMessage('click', objectPropsToCamel(properties));
+      },
     );
   })
   .zoomNew(huntingService.id, { addStroke: true });

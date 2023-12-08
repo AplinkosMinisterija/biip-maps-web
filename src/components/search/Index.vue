@@ -1,31 +1,15 @@
 <template>
-  <div
-    v-for="item in matchCoordinates"
-    v-if="!!matchCoordinates.length"
-    :key="item.id"
-  >
-    <SearchBox
-      :name="item.name"
-      :description="item.description"
-      @click="zoomToMatch(item)"
-    >
+  <div v-for="item in matchCoordinates" v-if="!!matchCoordinates.length" :key="item.id">
+    <SearchBox :name="item.name" :description="item.description" @click="zoomToMatch(item)">
       <template v-if="item.content">
         {{ item.content }}
       </template>
     </SearchBox>
   </div>
-  <UiTabs
-    v-else-if="tabs.length"
-    :tabs="tabs"
-    :active="tabs[0].type"
-    :hide-on-one="true"
-  >
+  <UiTabs v-else-if="tabs.length" :tabs="tabs" :active="tabs[0].type" :hide-on-one="true">
     <template #default="{ activeTab }">
       <UiLoader v-if="matchesByType[activeTab]?.loading" />
-      <div
-        v-else-if="!matchesByType[activeTab]?.rows?.length"
-        class="text-sm my-2"
-      >
+      <div v-else-if="!matchesByType[activeTab]?.rows?.length" class="text-sm my-2">
         Pagal pateiktą užklausą rezultatų nerasta
       </div>
       <SearchBox
@@ -38,10 +22,7 @@
       />
     </template>
   </UiTabs>
-  <div
-    v-else
-    class="text-sm my-2"
-  >
+  <div v-else class="text-sm my-2">
     Pagal pateiktą užklausą
     <span class="font-semibold">"{{ value }}"</span>
     rezultatų nerasta
@@ -87,11 +68,11 @@ const props = defineProps({
       type: string;
       weight: number;
     }>,
-    default: []
+    default: [],
   },
   addStroke: {
     type: Boolean,
-    default: false
+    default: false,
   },
   value: {
     type: String,
@@ -137,23 +118,25 @@ const applySearch = () => {
       translates.Point = 'Koordinatės';
     }
 
-    matchCoordinates.value = results.filter(item =>
-      (item.type === 'Point' && props.searchPoint) ||
-      (item.type === 'LineString' && props.searchLine) ||
-      (item.type === 'Polygon' && props.searchPolygon)
-    ).map((item, index) => ({
-      id: index + 1,
-      x: item.center[0],
-      y: item.center[1],
-      name: translates[item.type],
-      content: item.content || '',
-      description:
-        item.properties?.area || item.properties?.distance || search.value,
-      geometry: item.geometry,
-      geom: item.geom,
-      cleanOnSelect: true,
-      extent: item.extent
-    }));
+    matchCoordinates.value = results
+      .filter(
+        (item) =>
+          (item.type === 'Point' && props.searchPoint) ||
+          (item.type === 'LineString' && props.searchLine) ||
+          (item.type === 'Polygon' && props.searchPolygon),
+      )
+      .map((item, index) => ({
+        id: index + 1,
+        x: item.center[0],
+        y: item.center[1],
+        name: translates[item.type],
+        content: item.content || '',
+        description: item.properties?.area || item.properties?.distance || search.value,
+        geometry: item.geometry,
+        geom: item.geom,
+        cleanOnSelect: true,
+        extent: item.extent,
+      }));
 
     return;
   } else {
@@ -235,6 +218,6 @@ watch(
   },
   {
     immediate: true,
-  }
+  },
 );
 </script>

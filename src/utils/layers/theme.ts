@@ -4,7 +4,7 @@ import LayerGroup from 'ol/layer/Group';
 import { Text, Fill } from 'ol/style';
 import { useConfigStore } from '@/stores/config';
 import { getCopyrightLabel } from '../utils';
-import { qgisApiUrl, qgisServerUrl, rusysApiHost } from '../../config';
+import { qgisServerUrl, rusysApiHost } from '../../config';
 import { getVectorLayer, getWMSImageLayer } from './utils';
 
 const config = () => {
@@ -15,10 +15,7 @@ const biipCopyright = getCopyrightLabel(
   'Biologinės įvairovės informacinė platforma',
   'https://www.biip.lt',
 );
-const aaaCopyright = getCopyrightLabel(
-  'Aplinkos apsaugos agentūra',
-  'https://aaa.lrv.lt',
-);
+const aaaCopyright = getCopyrightLabel('Aplinkos apsaugos agentūra', 'https://aaa.lrv.lt');
 const vsttCopyright = getCopyrightLabel(
   'Valstybinė saugomų teritorijų tarnyba',
   'https://vstt.lrv.lt',
@@ -46,11 +43,7 @@ export const administrativeBoundariesService = {
   id: 'administrativeBoundariesService',
   name: 'Administracinės ribos',
   description: biipCopyright,
-  layer: getWMSImageLayer(
-    `${qgisServerUrl}/administrative_boundaries`,
-    '',
-    biipCopyright,
-  ),
+  layer: getWMSImageLayer(`${qgisServerUrl}/administrative_boundaries`, '', biipCopyright),
   sublayers: [
     {
       value: 'municipalities',
@@ -75,11 +68,7 @@ export const administrativeBoundariesLabelsService = {
   id: 'administrativeBoundariesLabelsService',
   name: 'Administracinės ribos',
   description: biipCopyright,
-  layer: getWMSImageLayer(
-    `${qgisServerUrl}/administrative_boundaries`,
-    '',
-    biipCopyright,
-  ),
+  layer: getWMSImageLayer(`${qgisServerUrl}/administrative_boundaries`, '', biipCopyright),
   sublayers: [
     {
       value: 'residential_areas_labels',
@@ -113,11 +102,7 @@ export const huntingTracksService = {
 export const zuvinimasService = {
   id: 'zuvinimasService',
   description: biipCopyright,
-  layer: getWMSImageLayer(
-    `${qgisServerUrl}/zuvinimas`,
-    'fish_stockings',
-    biipCopyright,
-  ),
+  layer: getWMSImageLayer(`${qgisServerUrl}/zuvinimas`, 'fish_stockings', biipCopyright),
 };
 
 export const uetkService = {
@@ -204,11 +189,7 @@ export const municipalitiesService = {
   id: 'municipalitiesService',
   description: rcCopyright,
   title: 'Savivaldybės (Adresų registras)',
-  layer: getWMSImageLayer(
-    `${qgisServerUrl}/uetk_zuvinimas`,
-    'municipalities',
-    rcCopyright,
-  ),
+  layer: getWMSImageLayer(`${qgisServerUrl}/uetk_zuvinimas`, 'municipalities', rcCopyright),
 };
 
 const srisPrivateServiceImageLayer = getWMSImageLayer(
@@ -253,9 +234,7 @@ export const rusysGridService = {
 
         const count = matchingConfig?.count || 0;
         if (count) {
-          const colorIndex = Math.round(
-            (count / maxValue) * (colorPalette.length - 1),
-          );
+          const colorIndex = Math.round((count / maxValue) * (colorPalette.length - 1));
           featureFillColor = colorPalette[colorIndex];
         }
 
@@ -336,11 +315,7 @@ export const invaService = {
   title: 'Invazinės rūšys',
   queryKey: 'inva',
   description: biipCopyright,
-  layer: getWMSImageLayer(
-    `${qgisServerUrl}/inva`,
-    'radavietes_invazines',
-    biipCopyright,
-  ),
+  layer: getWMSImageLayer(`${qgisServerUrl}/inva`, 'radavietes_invazines', biipCopyright),
   sublayers: [
     {
       name: 'Radavietės',
@@ -530,10 +505,7 @@ export const gamtotvarkaProgramuTeritorijos = {
     vsttCopyright,
   ),
 };
-gamtotvarkaProgramuTeritorijos.layer.set(
-  'id',
-  'gamtotvarkaProgramuTeritorijos',
-);
+gamtotvarkaProgramuTeritorijos.layer.set('id', 'gamtotvarkaProgramuTeritorijos');
 
 export const gamtotvarkaTvarkymoProgramos = {
   id: 'gamtotvarkaTvarkymoProgramos',
@@ -551,10 +523,7 @@ export const gamtotvarkaTvarkymoProgramos = {
     },
   ],
   layer: new LayerGroup({
-    layers: [
-      gamtotvarkaProgramuTeritorijos.layer,
-      gamtotvarkaProgramuPlotai.layer,
-    ],
+    layers: [gamtotvarkaProgramuTeritorijos.layer, gamtotvarkaProgramuPlotai.layer],
   }),
 };
 gamtotvarkaTvarkymoProgramos.layer.setVisible(false);
@@ -583,10 +552,7 @@ export const gamtotvarkaTiksliniuProgramuPlotai = {
     vsttCopyright,
   ),
 };
-gamtotvarkaTiksliniuProgramuPlotai.layer.set(
-  'id',
-  'gamtotvarkaTiksliniuProgramuPlotai',
-);
+gamtotvarkaTiksliniuProgramuPlotai.layer.set('id', 'gamtotvarkaTiksliniuProgramuPlotai');
 
 export const gamtotvarkaTiksliniuProgramuTeritorijos = {
   id: 'gamtotvarkaTiksliniuProgramuTeritorijos',
@@ -611,10 +577,7 @@ export const gamtotvarkaTiksliniuProgramuTeritorijos = {
     vsttCopyright,
   ),
 };
-gamtotvarkaTiksliniuProgramuTeritorijos.layer.set(
-  'id',
-  'gamtotvarkaTiksliniuProgramuTeritorijos',
-);
+gamtotvarkaTiksliniuProgramuTeritorijos.layer.set('id', 'gamtotvarkaTiksliniuProgramuTeritorijos');
 
 export const gamtotvarkaTikslinesProgramos = {
   id: 'gamtotvarkaTikslinesProgramos',
@@ -689,10 +652,7 @@ export const gamtotvarkaVeiksmuPlanuTeritorijos = {
     vsttCopyright,
   ),
 };
-gamtotvarkaVeiksmuPlanuTeritorijos.layer.set(
-  'id',
-  'gamtotvarkaVeiksmuPlanuTeritorijos',
-);
+gamtotvarkaVeiksmuPlanuTeritorijos.layer.set('id', 'gamtotvarkaVeiksmuPlanuTeritorijos');
 
 export const gamtotvarkaVeiksmuPlanai = {
   id: 'gamtotvarkaVeiksmuPlanai',
@@ -710,10 +670,7 @@ export const gamtotvarkaVeiksmuPlanai = {
     },
   ],
   layer: new LayerGroup({
-    layers: [
-      gamtotvarkaVeiksmuPlanuTeritorijos.layer,
-      gamtotvarkaVeiksmuPlanuPlotai.layer,
-    ],
+    layers: [gamtotvarkaVeiksmuPlanuTeritorijos.layer, gamtotvarkaVeiksmuPlanuPlotai.layer],
   }),
 };
 gamtotvarkaVeiksmuPlanai.layer.setVisible(false);
@@ -742,10 +699,7 @@ export const gamtotvarkaStTvarkymoPlanuPlotai = {
     vsttCopyright,
   ),
 };
-gamtotvarkaStTvarkymoPlanuPlotai.layer.set(
-  'id',
-  'gamtotvarkaStTvarkymoPlanuPlotai',
-);
+gamtotvarkaStTvarkymoPlanuPlotai.layer.set('id', 'gamtotvarkaStTvarkymoPlanuPlotai');
 
 export const gamtotvarkaStTvarkymoPlanuTeritorijos = {
   id: 'gamtotvarkaStTvarkymoPlanuTeritorijos',
@@ -770,10 +724,7 @@ export const gamtotvarkaStTvarkymoPlanuTeritorijos = {
     vsttCopyright,
   ),
 };
-gamtotvarkaStTvarkymoPlanuTeritorijos.layer.set(
-  'id',
-  'gamtotvarkaStTvarkymoPlanuTeritorijos',
-);
+gamtotvarkaStTvarkymoPlanuTeritorijos.layer.set('id', 'gamtotvarkaStTvarkymoPlanuTeritorijos');
 
 export const gamtotvarkaStTvarkymoPlanai = {
   id: 'gamtotvarkaStTvarkymoPlanai',
@@ -791,10 +742,7 @@ export const gamtotvarkaStTvarkymoPlanai = {
     },
   ],
   layer: new LayerGroup({
-    layers: [
-      gamtotvarkaStTvarkymoPlanuTeritorijos.layer,
-      gamtotvarkaStTvarkymoPlanuPlotai.layer,
-    ],
+    layers: [gamtotvarkaStTvarkymoPlanuTeritorijos.layer, gamtotvarkaStTvarkymoPlanuPlotai.layer],
   }),
 };
 gamtotvarkaStTvarkymoPlanai.layer.setVisible(false);
@@ -823,10 +771,7 @@ export const gamtotvarkaInvaVeiksmuPlanuPlotai = {
     vsttCopyright,
   ),
 };
-gamtotvarkaInvaVeiksmuPlanuPlotai.layer.set(
-  'id',
-  'gamtotvarkaInvaVeiksmuPlanuPlotai',
-);
+gamtotvarkaInvaVeiksmuPlanuPlotai.layer.set('id', 'gamtotvarkaInvaVeiksmuPlanuPlotai');
 
 export const gamtotvarkaInvaVeiksmuPlanuTeritorijos = {
   id: 'gamtotvarkaInvaVeiksmuPlanuTeritorijos',
@@ -851,10 +796,7 @@ export const gamtotvarkaInvaVeiksmuPlanuTeritorijos = {
     vsttCopyright,
   ),
 };
-gamtotvarkaInvaVeiksmuPlanuTeritorijos.layer.set(
-  'id',
-  'gamtotvarkaInvaVeiksmuPlanuTeritorijos',
-);
+gamtotvarkaInvaVeiksmuPlanuTeritorijos.layer.set('id', 'gamtotvarkaInvaVeiksmuPlanuTeritorijos');
 
 export const gamtotvarkaInvaVeiksmuPlanai = {
   id: 'gamtotvarkaInvaVeiksmuPlanai',
@@ -872,10 +814,7 @@ export const gamtotvarkaInvaVeiksmuPlanai = {
     },
   ],
   layer: new LayerGroup({
-    layers: [
-      gamtotvarkaInvaVeiksmuPlanuTeritorijos.layer,
-      gamtotvarkaInvaVeiksmuPlanuPlotai.layer,
-    ],
+    layers: [gamtotvarkaInvaVeiksmuPlanuTeritorijos.layer, gamtotvarkaInvaVeiksmuPlanuPlotai.layer],
   }),
 };
 gamtotvarkaInvaVeiksmuPlanai.layer.setVisible(false);
@@ -1094,10 +1033,7 @@ export const stvkAtkuriamiejiSklypaiService = {
     vsttCopyright,
   ),
 };
-stvkAtkuriamiejiSklypaiService.layer.set(
-  'id',
-  'stvkAtkuriamiejiSklypaiService',
-);
+stvkAtkuriamiejiSklypaiService.layer.set('id', 'stvkAtkuriamiejiSklypaiService');
 
 export const stvkBufApsZonosService = {
   id: 'stvkBufApsZonosService',
@@ -1125,11 +1061,7 @@ export const stvkNatura2000Service = {
       name: 'Buveinių apsaugai svarbios teritorijos',
     },
   ],
-  layer: getWMSImageLayer(
-    'https://services.stvk.lt/wms/stvk-services',
-    'past,bast',
-    vsttCopyright,
-  ),
+  layer: getWMSImageLayer('https://services.stvk.lt/wms/stvk-services', 'past,bast', vsttCopyright),
 };
 stvkNatura2000Service.layer.set('id', 'stvkNatura2000Service');
 
@@ -1137,11 +1069,7 @@ export const stvkPajurioJuostaService = {
   id: 'stvkPajurioJuostaService',
   description: vsttCopyright,
   title: 'Pajūrio juosta',
-  layer: getWMSImageLayer(
-    'https://services.stvk.lt/wms/stvk-services',
-    'pajurio',
-    vsttCopyright,
-  ),
+  layer: getWMSImageLayer('https://services.stvk.lt/wms/stvk-services', 'pajurio', vsttCopyright),
 };
 stvkPajurioJuostaService.layer.set('id', 'stvkPajurioJuostaService');
 

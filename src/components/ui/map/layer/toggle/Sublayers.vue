@@ -1,7 +1,7 @@
 <template>
   <div v-if="layers?.length">
     <UiMapLayerToggleItem
-      v-for="layer in (layers.slice().reverse() as any[])"
+      v-for="layer in layers.slice().reverse() as any[]"
       :key="layer.value"
       class="pl-2"
       :layer="layer"

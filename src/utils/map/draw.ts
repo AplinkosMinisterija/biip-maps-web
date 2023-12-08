@@ -243,9 +243,7 @@ export class MapDraw extends Queues {
         coordinates: this.map?.getView().getCenter(),
       });
 
-      const feature = new GeoJSON().readFeature(
-        getFeatures(featureCollection)[0],
-      );
+      const feature = new GeoJSON().readFeature(getFeatures(featureCollection)[0]);
 
       this._triggerCallbacks('change', {
         feature,
@@ -408,9 +406,7 @@ export class MapDraw extends Queues {
         ? event.features
         : new GeoJSON().writeFeatures(this._source.getFeatures());
 
-      const feature = event?.feature
-        ? new GeoJSON().writeFeatureObject(event.feature)
-        : null;
+      const feature = event?.feature ? new GeoJSON().writeFeatureObject(event.feature) : null;
 
       (types as CallbackType[]).forEach((type: CallbackType) => {
         this._callbacks[type]?.forEach((cb) => {

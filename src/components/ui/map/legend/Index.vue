@@ -7,17 +7,17 @@
 </template>
 
 <script lang="ts" setup>
-import { inject, ref } from "vue";
+import { inject, ref } from 'vue';
 
 const props = defineProps({
   layer: {
     type: String,
-    default: "",
+    default: '',
     required: true,
   },
 });
 
-const mapLayers: any = inject("mapLayers");
+const mapLayers: any = inject('mapLayers');
 
 const legendData = ref([] as any);
 

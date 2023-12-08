@@ -1,11 +1,6 @@
 import { ref } from 'vue';
 import { defineStore } from 'pinia';
-import {
-  gyvunaiApiHost,
-  medziokleApiHost,
-  zuvinimasApiHost,
-  zvejybaApiHost,
-} from '@/config';
+import { gyvunaiApiHost, medziokleApiHost, zuvinimasApiHost, zvejybaApiHost } from '@/config';
 import _ from 'lodash';
 import { serializeQuery } from '@/utils';
 

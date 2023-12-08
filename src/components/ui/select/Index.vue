@@ -16,15 +16,13 @@
         'h-full mx-auto w-full flex items-center justify-end cursor-pointer outline-none gap-1',
       singleLabel:
         'flex items-center h-full max-w-full absolute left-0 top-0 pointer-events-none bg-transparent leading-snug pl-3.5 pr-16 text-sm',
-      singleLabelText:
-        'overflow-ellipsis overflow-hidden block whitespace-nowrap max-w-full',
+      singleLabelText: 'overflow-ellipsis overflow-hidden block whitespace-nowrap max-w-full',
       multipleLabel:
         'flex items-center h-full absolute left-0 top-0 pointer-events-none bg-transparent leading-snug pl-3.5',
       search:
         'w-full absolute inset-0 outline-none focus:ring-0 appearance-none box-border border-0 text-base font-sans bg-white rounded pl-3.5',
       tags: 'flex-grow flex-shrink flex flex-wrap gap-2 items-center',
-      tag:
-        'bg-gray-100 text-xs py-0.5 pl-2 rounded flex items-center whitespace-nowrap min-width-[0px]',
+      tag: 'bg-gray-100 text-xs py-0.5 pl-2 rounded flex items-center whitespace-nowrap min-width-[0px]',
       tagDisabled: 'pr-2 opacity-50',
       tagWrapper: 'whitespace-nowrap overflow-hidden overflow-ellipsis',
       tagWrapperBreak: 'whitespace-normal break-all',
@@ -44,8 +42,7 @@
       caretOpen: 'rotate-180 pointer-events-auto',
       clear:
         'pr-3.5 relative z-10 opacity-40 transition duration-300 flex-shrink-0 flex-grow-0 flex hover:opacity-80',
-      clearIcon:
-        'bg-red-500 bg-center bg-no-repeat w-2.5 h-4 py-px box-content inline-block',
+      clearIcon: 'bg-red-500 bg-center bg-no-repeat w-2.5 h-4 py-px box-content inline-block',
       spinner:
         'bg-multiselect-spinner bg-center bg-no-repeat w-4 h-4 z-10 mr-3.5 animate-spin flex-shrink-0 flex-grow-0',
       infinite: 'flex items-center justify-center w-full',
@@ -65,8 +62,7 @@
       groupLabelSelected: 'bg-green-600 text-white',
       groupLabelDisabled: 'bg-gray-100 text-gray-300 cursor-not-allowed',
       groupLabelSelectedPointed: 'bg-green-600 text-white opacity-90',
-      groupLabelSelectedDisabled:
-        'text-green-100 bg-green-600 bg-opacity-50 cursor-not-allowed',
+      groupLabelSelectedDisabled: 'text-green-100 bg-green-600 bg-opacity-50 cursor-not-allowed',
       groupOptions: 'p-0 m-0',
       option:
         'flex items-center justify-start box-border text-left cursor-pointer leading-snug py-2 px-3',
@@ -111,11 +107,7 @@
     <template #option="{ option }: any">
       <div class="flex flex-col">
         <span class="text-sm" v-html="option[labelProp || 'label']"></span>
-        <span
-          v-if="option.subtitle"
-          class="text-xxs text-gray-600"
-          v-html="option.subtitle"
-        ></span>
+        <span v-if="option.subtitle" class="text-xxs text-gray-600" v-html="option.subtitle"></span>
         <span
           v-if="option?.description"
           class="text-xxxs text-gray-600"
@@ -127,16 +119,16 @@
 </template>
 
 <script setup lang="ts">
-import Multiselect from "@vueform/multiselect";
+import Multiselect from '@vueform/multiselect';
 
 defineProps({
   labelProp: {
     type: String,
-    default: "label",
+    default: 'label',
   },
   label: {
     type: String,
-    default: "",
+    default: '',
   },
 });
 </script>

@@ -23,17 +23,13 @@
         />
       </template>
       <template #sidebar>
-        <UiSidebarFeatures
-          :features="selectedFeatures"
-          type="hunting"
-          @close="selectFeatures"
-        />
+        <UiSidebarFeatures :features="selectedFeatures" type="hunting" @close="selectFeatures" />
       </template>
     </UiMap>
 
     <FeaturesPopupHover :check-stats="true" @click="selectFeatures">
       <template #title="{ feature }">
-        {{ feature?.get("name") }}
+        {{ feature?.get('name') }}
       </template>
       <template #content="{ data }">
         <div class="text-xs">{{ countTranslation }}: {{ data.count }}</div>
@@ -42,7 +38,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed, inject, ref, watch } from "vue";
+import { computed, inject, ref, watch } from 'vue';
 import {
   municipalitiesServiceVT,
   projection3857,
@@ -50,14 +46,14 @@ import {
   huntingPublicService,
   stvkService,
   inspireParcelService,
-} from "@/utils";
-import { useStatsStore } from "@/stores/stats";
-import { useFiltersStore } from "@/stores/filters";
+} from '@/utils';
+import { useStatsStore } from '@/stores/stats';
+import { useFiltersStore } from '@/stores/filters';
 
 const statsStore = useStatsStore();
 const filtersStore = useFiltersStore();
-const mapLayers: any = inject("mapLayers");
-const eventBus: any = inject("eventBus");
+const mapLayers: any = inject('mapLayers');
+const eventBus: any = inject('eventBus');
 
 const selectedFeatures = ref([] as any);
 
@@ -68,18 +64,18 @@ function selectFeatures(feature: any) {
     selectedFeatures.value = [feature];
   }
 
-  eventBus.emit("uiSidebar", { open: !!selectedFeatures.value.length });
+  eventBus.emit('uiSidebar', { open: !!selectedFeatures.value.length });
 }
 const allLayers = [
   {
-    key: "medziokle.limits",
-    title: "Limitai",
-    countTranslate: "Suteikta limitų",
+    key: 'medziokle.limits',
+    title: 'Limitai',
+    countTranslate: 'Suteikta limitų',
   },
   {
-    key: "medziokle.loots",
-    title: "Laimikiai",
-    countTranslate: "Viso laimikių",
+    key: 'medziokle.loots',
+    title: 'Laimikiai',
+    countTranslate: 'Viso laimikių',
   },
 ];
 const visibleLayer = ref(allLayers[0].key);
@@ -92,11 +88,9 @@ watch(visibleLayer, () => {
   municipalitiesServiceVT.layer?.getSource()?.changed();
 });
 
-municipalitiesServiceVT.layer.getSource()?.on("tileloadend", ({ tile }: any) => {
+municipalitiesServiceVT.layer.getSource()?.on('tileloadend', ({ tile }: any) => {
   tile?.getFeatures()?.forEach((feature: any) => {
-    feature.set("statsFn", () =>
-      statsStore.getStatsById(visibleLayer.value, feature.getId())
-    );
+    feature.set('statsFn', () => statsStore.getStatsById(visibleLayer.value, feature.getId()));
   });
 });
 await statsStore.preloadStats(allLayers.map((l) => l.key));
@@ -122,7 +116,7 @@ const toggleLayers = [huntingPublicService, inspireParcelService, stvkService];
 const setVisible = (layer: any, value: boolean) => {
   if (visibleLayer.value === layer.value && !value) {
     municipalitiesServiceVT.layer.setVisible(false);
-    visibleLayer.value = "";
+    visibleLayer.value = '';
   } else if (value) {
     visibleLayer.value = layer.value;
     municipalitiesServiceVT.layer.setVisible(true);
@@ -141,7 +135,7 @@ allLayers
         virtual: true,
         isVisible,
         setVisible,
-      } as any)
+      }) as any,
   )
   .forEach((layer) => huntingPublicService.sublayers.unshift(layer));
 
@@ -161,8 +155,8 @@ mapLayers
           dataProjection: projection3857,
         });
         selectedFeatures.value.push(...properties);
-        eventBus.emit("uiSidebar", { open: !!selectedFeatures.value.length });
-      }
+        eventBus.emit('uiSidebar', { open: !!selectedFeatures.value.length });
+      },
     );
   });
 </script>

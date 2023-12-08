@@ -17,32 +17,32 @@
 </template>
 
 <script lang="ts" setup>
-import { computed } from "vue";
+import { computed } from 'vue';
 
 const props = defineProps({
   modelValue: { type: Boolean },
   value: { type: Boolean },
   size: {
     type: String,
-    default: "default",
+    default: 'default',
   },
 });
 
-const emit = defineEmits(["update:modelValue", "change"]);
+const emit = defineEmits(['update:modelValue', 'change']);
 const modelValue = computed({
   get: () => props.modelValue || props.value,
   set: (value) => {
-    emit("update:modelValue", value);
-    emit("change", value);
+    emit('update:modelValue', value);
+    emit('change', value);
   },
 });
 
 const sizes: any = {
-  default: "w-11 h-6",
-  sm: "w-8 h-4",
+  default: 'w-11 h-6',
+  sm: 'w-8 h-4',
 };
 const iconSize: any = {
-  default: "h-5 w-5",
-  sm: "h-3 w-3",
+  default: 'h-5 w-5',
+  sm: 'h-3 w-3',
 };
 </script>

@@ -14,9 +14,7 @@
             </UiTableCell>
             <UiTableCell class="w-1/2">
               <template
-                v-if="
-                  ['Sukurta', 'Laikas', 'Atnaujinta'].includes(item.name) && item.value
-                "
+                v-if="['Sukurta', 'Laikas', 'Atnaujinta'].includes(item.name) && item.value"
               >
                 {{ formatTime(item.value) }}
               </template>
@@ -42,9 +40,7 @@
       </UiTable>
       <div v-if="['Stebėti gyvūnai', 'Padaryta žala'].includes(getTitle(feature))">
         <UiButton class="mt-2" size="sm">
-          <a target="_blank" :href="getLink(feature) + feature.Id">
-            Peržiūrėti visus duomenis
-          </a>
+          <a target="_blank" :href="getLink(feature) + feature.Id"> Peržiūrėti visus duomenis </a>
         </UiButton>
       </div>
     </UiAccordionItem>
@@ -68,10 +64,11 @@ defineProps({
 });
 
 function hasFeatureId(feature: any) {
-  return !!feature?.featureId
+  return !!feature?.featureId;
 }
 
-function getTranslate(key?: string) {  const translates: any = {
+function getTranslate(key?: string) {
+  const translates: any = {
     observations: 'Stebėti gyvūnai',
     wolfs: 'Sumedžioti vilkai',
     damages: 'Padaryta žala',
@@ -79,15 +76,14 @@ function getTranslate(key?: string) {  const translates: any = {
     municipality: 'Savivaldybė',
   };
 
+  if (!key) return;
 
-  if (!key) return
-
-  return translates[key] || key
+  return translates[key] || key;
 }
 
 function getTitle(feature: any) {
   if (!hasFeatureId(feature)) {
-    return feature.municipality.name
+    return feature.municipality.name;
   }
 
   const objectType = getTranslate(feature?.featureId?.split('.')?.[0]);
@@ -124,6 +120,8 @@ const getSorted = (properties: any) => {
       if (isInteger(a.id)) return a.id - b.id;
       return a.id.localeCompare(b.id);
     })
-    .filter((item: any) => !['featureId', '_layerTitle', 'municipalityId', 'seasons'].includes(item.name));
+    .filter(
+      (item: any) => !['featureId', '_layerTitle', 'municipalityId', 'seasons'].includes(item.name),
+    );
 };
 </script>

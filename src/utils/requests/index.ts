@@ -114,9 +114,7 @@ export function serializeQuery(obj: any) {
 
   for (const p in obj) {
     if (obj.hasOwnProperty(p)) {
-      str.push(
-        encodeURIComponent(p) + '=' + encodeURIComponent(convertValue(obj[p])),
-      );
+      str.push(encodeURIComponent(p) + '=' + encodeURIComponent(convertValue(obj[p])));
     }
   }
   const result = str.join('&');
@@ -125,12 +123,7 @@ export function serializeQuery(obj: any) {
 
 export function wmsImageLoaderFn(headers?: any) {
   return function (image: any, src: string) {
-    const {
-      method,
-      body,
-      headers: requestHeaders,
-      url,
-    } = splitUrlIfNeeded(src, headers);
+    const { method, body, headers: requestHeaders, url } = splitUrlIfNeeded(src, headers);
 
     fetch(url, {
       method,
@@ -151,13 +144,7 @@ export function geosjonLoaderFn(
   queryOptions: Function = () => ({}),
   dataProjection?: string,
 ) {
-  return function (
-    extent: any,
-    resolution: any,
-    projection: any,
-    success: any,
-    failure: any,
-  ) {
+  return function (extent: any, resolution: any, projection: any, success: any, failure: any) {
     if (!url) {
       return success();
     }

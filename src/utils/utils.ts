@@ -54,13 +54,7 @@ export function canvasToImage() {
       image.src = dataUrl;
       image.id = `image-canvas-${index}`;
 
-      const properties = [
-        'width',
-        'height',
-        'position',
-        'left',
-        'top',
-      ] as const;
+      const properties = ['width', 'height', 'position', 'left', 'top'] as const;
       properties.forEach((key) => (image.style[key] = element.style[key]));
       image.className = element.className;
 
@@ -70,15 +64,8 @@ export function canvasToImage() {
   );
 }
 
-export function searchInObject(
-  search: string,
-  obj: { [key: string]: any },
-  fields: string[],
-) {
-  const regex = new RegExp(
-    search.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'),
-    'i',
-  );
+export function searchInObject(search: string, obj: { [key: string]: any }, fields: string[]) {
+  const regex = new RegExp(search.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'), 'i');
 
   const testValue = (value: string | string[]) => {
     if (!value) return false;

@@ -29,10 +29,7 @@ export function getGeometriesFromFeaturesArray(data: any[]) {
   return data.map((item) => item.geometry).filter((item) => !!item);
 }
 
-export function getPropertiesFromFeaturesArray(
-  data: any[],
-  _layerTitle?: string,
-) {
+export function getPropertiesFromFeaturesArray(data: any[], _layerTitle?: string) {
   return data
     .map((item) => ({ ...item.properties, featureId: item.id, _layerTitle }))
     .filter((item) => !!item);
@@ -79,10 +76,7 @@ export function WMSFeatureQuery(query: string, layers: string | string[]) {
   });
 }
 
-export function WMSLegendRequest(
-  layers: string | string[],
-  proj: string = projection,
-) {
+export function WMSLegendRequest(layers: string | string[], proj: string = projection) {
   if (Array.isArray(layers)) {
     layers = layers.join(',');
   }

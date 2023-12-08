@@ -4,10 +4,7 @@ import { rusysApiHost, uetkApiHost } from '../../config';
 import { getElementFromCoordinates } from '../map';
 import { SpeciesTypes } from '../utils';
 
-export function searchUETK(
-  value: string,
-  options?: SearchOptions,
-): Promise<SearchResults> {
+export function searchUETK(value: string, options?: SearchOptions): Promise<SearchResults> {
   const searchParams = new URLSearchParams({
     populate: 'geom',
     search: value,
@@ -15,11 +12,7 @@ export function searchUETK(
 
   searchParams.append('searchFields[]', 'name');
   searchParams.append('searchFields[]', 'cadastral_id');
-  return fetch(
-    `${uetkApiHost}/objects?${searchParams.toString()}${serializeQuery(
-      options,
-    )}`,
-  )
+  return fetch(`${uetkApiHost}/objects?${searchParams.toString()}${serializeQuery(options)}`)
     .then((data) => data.json())
     .then((data) => {
       return {
@@ -33,15 +26,8 @@ export function searchUETK(
       };
     });
 }
-export function searchRusys(
-  value: string,
-  options?: SearchOptions,
-): Promise<SearchResults> {
-  return fetch(
-    `${rusysApiHost}/taxonomies/search?search=${value}&${serializeQuery(
-      options,
-    )}`,
-  )
+export function searchRusys(value: string, options?: SearchOptions): Promise<SearchResults> {
+  return fetch(`${rusysApiHost}/taxonomies/search?search=${value}&${serializeQuery(options)}`)
     .then((data) => data.json())
     .then((data) => {
       return {
@@ -49,9 +35,7 @@ export function searchRusys(
           id: item?.speciesId,
           name: item?.speciesName,
           nameLatin: item?.speciesNameLatin,
-          subtitle: `<i>lot. ${item?.speciesNameLatin}</i> (${
-            SpeciesTypes[item.speciesType]
-          })`,
+          subtitle: `<i>lot. ${item?.speciesNameLatin}</i> (${SpeciesTypes[item.speciesType]})`,
           description: `${item.kingdomName} > ${item.phylumName} > ${item.className}`,
         })),
         total: data.total,
@@ -121,10 +105,7 @@ export function searchGeoportal(
         const source = item._source || {};
         let data: any = {};
         if (source?.geometry?.coordinates?.length) {
-          data = getElementFromCoordinates(
-            source?.geometry?.type,
-            source?.geometry?.coordinates,
-          );
+          data = getElementFromCoordinates(source?.geometry?.type, source?.geometry?.coordinates);
         }
         return {
           id: item._id,

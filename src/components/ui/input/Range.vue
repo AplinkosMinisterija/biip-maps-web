@@ -15,7 +15,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed } from "vue";
+import { computed } from 'vue';
 
 const props = defineProps({
   modelValue: { type: Number, default: 0 },
@@ -25,35 +25,35 @@ const props = defineProps({
   step: { type: Number, default: 1 },
 });
 
-const emit = defineEmits(["update:modelValue", "change"]);
+const emit = defineEmits(['update:modelValue', 'change']);
 const modelValue = computed({
   get: () => Number(props.modelValue || props.value || props.min),
   set: (value) => {
     value = Number(value);
-    emit("update:modelValue", value);
-    emit("change", value);
+    emit('update:modelValue', value);
+    emit('change', value);
   },
 });
 </script>
 
 <style>
-input[type="range"],
-input[type="range"]:focus {
+input[type='range'],
+input[type='range']:focus {
   -webkit-appearance: none;
 }
 
-input[type="range"]::-webkit-slider-runnable-track,
-input[type="range"]::-moz-range-track {
+input[type='range']::-webkit-slider-runnable-track,
+input[type='range']::-moz-range-track {
   @apply bg-blue-100 h-1 rounded-full;
 }
 
 /* slider thumb */
-input[type="range"]::-webkit-slider-thumb,
-input[type="range"]:focus::-webkit-slider-thumb {
+input[type='range']::-webkit-slider-thumb,
+input[type='range']:focus::-webkit-slider-thumb {
   @apply appearance-none -mt-0.5 bg-blue-800 h-3 w-3 rounded-full;
 }
-input[type="range"]::-moz-range-thumb,
-input[type="range"]:focus::-moz-range-thumb {
+input[type='range']::-moz-range-thumb,
+input[type='range']:focus::-moz-range-thumb {
   @apply appearance-none -mt-0.5 bg-blue-800 h-3 w-3 rounded-full;
 }
 </style>

@@ -21,7 +21,7 @@
           <UiTableCell>{{ r.name }}</UiTableCell>
           <UiTableCell v-if="r.fn" v-html="r.fn(feature, ...(r.fnParams || [])) || ''" />
           <UiTableCell v-else>
-            {{ feature[r.prop] || "" }}
+            {{ feature[r.prop] || '' }}
           </UiTableCell>
         </UiTableRow>
       </UiTable>
@@ -32,16 +32,16 @@
 <script setup lang="ts">
 import { SpeciesTypes } from '@/utils';
 import moment from 'moment';
-import { useConfigStore } from "@/stores/config";
+import { useConfigStore } from '@/stores/config';
 import { computed, inject } from 'vue';
 const props = defineProps({
   features: {
     type: Array<any>,
-    default: []
+    default: [],
   },
 });
 const config = useConfigStore();
-const postMessage: any = inject("postMessage");
+const postMessage: any = inject('postMessage');
 
 const radavietesFeatureIds = ['radavietes', 'radavietes_invazines', 'radavietes_svetimzemes'];
 const interpretuojamiStebejimaiFeatureId = 'stebejimai_interpretuojami';
@@ -54,27 +54,27 @@ const getFeatureId = (feature: any) => {
 };
 
 const getSubtitle = (feature: any) => {
-  const latinName = getValue(feature, ['species_name_latin','Rūšies mokslinis pavadinimas'])
-  const text =`<i>lot. ${latinName}</i>`;
+  const latinName = getValue(feature, ['species_name_latin', 'Rūšies mokslinis pavadinimas']);
+  const text = `<i>lot. ${latinName}</i>`;
   return text;
-}
+};
 
 function isFeaturePlace(feature: any) {
   const featureName = getFeatureName(feature);
 
-  return radavietesFeatureIds.includes(featureName)
+  return radavietesFeatureIds.includes(featureName);
 }
 function isFeatureForm(feature: any) {
   const featureName = getFeatureName(feature);
 
-  return [interpretuojamiStebejimaiFeatureId].includes(featureName)
+  return [interpretuojamiStebejimaiFeatureId].includes(featureName);
 }
 
 const getDescription = (feature: any) => {
   if (isFeaturePlace(feature)) {
     const text = `${feature?.['Radavietės kodas']}`;
-    const type = getValue(feature, ['Apsaugos grupė', 'species_type'], SpeciesTypes)
-    return `${text} (${type} radavietė)`
+    const type = getValue(feature, ['Apsaugos grupė', 'species_type'], SpeciesTypes);
+    return `${text} (${type} radavietė)`;
   } else if (isFeatureForm(feature)) {
     return 'Radavietė (pavienis stebėjimas)';
   }
@@ -91,7 +91,11 @@ const getTextFromProps = (item: any, type: string) => {
   const propsByType: any = {
     kingdom: {
       name: ['Karalystė', 'kingdom_name'],
-      latin: ['Karalystės lotyniškas pavadinimas', 'kingdom_name_latin', 'Karalystės mokslinis pavadinimas'],
+      latin: [
+        'Karalystės lotyniškas pavadinimas',
+        'kingdom_name_latin',
+        'Karalystės mokslinis pavadinimas',
+      ],
     },
     class: {
       name: ['Klasė', 'class_name'],
@@ -119,17 +123,17 @@ const getDate = (item: any, prop: string) => {
 
 const getValue = (item: any, props: string | string[], translates?: any) => {
   if (!Array.isArray(props)) {
-    props = [props]
+    props = [props];
   }
 
-  const prop = props.find(p => !!item[p])
-  if (!prop) return ''
+  const prop = props.find((p) => !!item[p]);
+  if (!prop) return '';
 
-  const value = item[prop]
-  if (!value) return ''
+  const value = item[prop];
+  if (!value) return '';
 
   if (translates) {
-    return translates[value] || ''
+    return translates[value] || '';
   }
 
   return value;
@@ -173,7 +177,7 @@ const rows: any[] = [
     show: checkFeatureId(radavietesFeatureIds),
     fnParams: ['Radavietės statusas'],
   },
-  { name: 'Karalystė', fn: getTextFromProps, fnParams: ['kingdom',] },
+  { name: 'Karalystė', fn: getTextFromProps, fnParams: ['kingdom'] },
   { name: 'Tipas', fn: getTextFromProps, fnParams: ['phylum'] },
   { name: 'Klasė', fn: getTextFromProps, fnParams: ['class'] },
   {
@@ -217,9 +221,9 @@ function selectFeature(feature: any) {
   const id = getFeatureId(feature);
 
   if (isFeaturePlace(feature)) {
-    postMessage('selectedPlace', id)
+    postMessage('selectedPlace', id);
   } else if (isFeatureForm(feature)) {
-    postMessage('selectedForm', id)
+    postMessage('selectedForm', id);
   }
 }
 </script>

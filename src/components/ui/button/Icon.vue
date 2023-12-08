@@ -12,8 +12,8 @@
 
 <script lang="ts" setup>
 defineProps({
-  icon: { type: String, default: "" },
-  size: { type: String, default: "icon" },
+  icon: { type: String, default: '' },
+  size: { type: String, default: 'icon' },
 });
-const emit = defineEmits(["click"]);
+const emit = defineEmits(['click']);
 </script>

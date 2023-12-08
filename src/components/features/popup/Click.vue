@@ -19,29 +19,29 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, ref, watch } from "vue";
-const mapLayers: any = inject("mapLayers");
+import { computed, inject, ref, watch } from 'vue';
+const mapLayers: any = inject('mapLayers');
 
 const rows = ref([
   {
-    title: "saugomų rūšių radavietės",
-    titleOne: "saugomų rūšių radavietė",
-    key: "srisPlaces",
+    title: 'saugomų rūšių radavietės',
+    titleOne: 'saugomų rūšių radavietė',
+    key: 'srisPlaces',
   },
   {
-    title: "saugomų rūšių radavietės (pavieniai stebėjimai)",
-    titleOne: "saugomų rūšių radavietė (pavienis stebėjimas)",
-    key: "srisInformationalForms",
+    title: 'saugomų rūšių radavietės (pavieniai stebėjimai)',
+    titleOne: 'saugomų rūšių radavietė (pavienis stebėjimas)',
+    key: 'srisInformationalForms',
   },
   {
-    title: "invazinių rūšių radavietės",
-    titleOne: "invazinių rūšių radavietė",
-    key: "invaPlaces",
+    title: 'invazinių rūšių radavietės',
+    titleOne: 'invazinių rūšių radavietė',
+    key: 'invaPlaces',
   },
   {
-    title: "svetimžemių rūšių radavietės",
-    titleOne: "svetimžemių rūšių radavietė",
-    key: "invaIntroducedPlaces",
+    title: 'svetimžemių rūšių radavietės',
+    titleOne: 'svetimžemių rūšių radavietė',
+    key: 'invaIntroducedPlaces',
   },
 ] as any[]);
 
@@ -70,7 +70,7 @@ mapLayers.click(({ features }: any) => {
 
   const feature = features[0];
   const center = mapLayers.getCenter(feature);
-  hoverFeatureData.value = feature.get("stats") || {};
+  hoverFeatureData.value = feature.get('stats') || {};
 
   if (!center || !hoverFeatureData.value?.count) return togglePopup();
 

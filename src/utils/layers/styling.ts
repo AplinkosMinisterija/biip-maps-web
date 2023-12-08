@@ -29,11 +29,7 @@ const COLORS = {
   BLACK: '#000000',
 };
 
-function getFont(
-  size: number,
-  type: 'normal' | 'bold' = 'bold',
-  fontFamily: string = FONT_FAMILY,
-) {
+function getFont(size: number, type: 'normal' | 'bold' = 'bold', fontFamily: string = FONT_FAMILY) {
   return `${type ? `${type} ` : ''}${size}px ${fontFamily}`;
 }
 
@@ -128,15 +124,10 @@ export function vectorTileStyles(options?: { layerPrefix: string }): any {
       const stats = statsFn();
       if (!stats?.hideEmpty || stats?.count > 0) {
         if (stats?.type === 'icon') {
-          styles[length++] = getIcon(
-            stats.icon?.name || '',
-            stats.icon?.opts || {},
-          );
+          styles[length++] = getIcon(stats.icon?.name || '', stats.icon?.opts || {});
         } else {
           stroke.setColor(getColorWithOpacity(COLORS.GRAY, 0.3));
-          fill.setColor(
-            getFillColorByStats(stats?.count, stats?.maxValue || 0),
-          );
+          fill.setColor(getFillColorByStats(stats?.count, stats?.maxValue || 0));
 
           styles[length++] = strokedPolygon;
         }
@@ -169,10 +160,9 @@ export function vectorTileStyles(options?: { layerPrefix: string }): any {
     } else if ([LAYER_TYPE.ZUVINIMAS_FISH_STOCKINGS].includes(layer)) {
       const status = feature?.get('status');
 
-      styles[length++] = getIcon(
-        status === 'ONGOING' ? 'pin-water-green' : 'pin-water',
-        { align: 'top' },
-      );
+      styles[length++] = getIcon(status === 'ONGOING' ? 'pin-water-green' : 'pin-water', {
+        align: 'top',
+      });
     }
 
     styles.length = length;
@@ -187,10 +177,7 @@ function getScale(resolution: number, center: number[]) {
   return res * inchesPerMeter * dpi;
 }
 
-export function vectorLayerStyles(
-  layer: string,
-  options: { color: string },
-): any {
+export function vectorLayerStyles(layer: string, options: { color: string }): any {
   const fill = new Fill({ color: getColorWithOpacity(options?.color, 0.2) });
   const stroke = new Stroke({
     color: getColorWithOpacity(options?.color, 0.8),
@@ -233,9 +220,7 @@ export function vectorLayerStyles(
     const type = geometry?.getType() as string;
 
     if (['highlightLayerRusys'].includes(layer)) {
-      const centerCoords = featureToPoint(
-        feature,
-      )?.getCoordinates() as number[];
+      const centerCoords = featureToPoint(feature)?.getCoordinates() as number[];
       const scale = getScale(resolution, centerCoords);
 
       if (['Polygon', 'MultiPolygon'].includes(type)) {

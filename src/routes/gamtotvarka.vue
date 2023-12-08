@@ -12,10 +12,7 @@
         <UiButtonIcon icon="filter" @click="filtersStore.toggle('filters')" />
       </template>
       <template v-if="filtersStore.active" #filtersContent>
-        <UiMapLayerToggle
-          v-if="filtersStore.isActive('layers')"
-          :layers="toggleLayers"
-        />
+        <UiMapLayerToggle v-if="filtersStore.isActive('layers')" :layers="toggleLayers" />
         <GamtotvarkaFilters
           v-else-if="filtersStore.isActive('filters')"
           :selected-year="selectedYear"
@@ -54,7 +51,7 @@ import {
   geoportalForests,
   geoportalKvr,
   parseRouteParams,
-invaService,
+  invaService,
 } from '@/utils';
 import { useRoute } from 'vue-router';
 import moment from 'moment';
@@ -65,10 +62,7 @@ const mapLayers: any = inject('mapLayers');
 const selectedFeatures = ref([] as any[]);
 const $route = useRoute();
 
-const query = parseRouteParams($route.query, [
-  'preview',
-  'gamtotvarkos_planas',
-]);
+const query = parseRouteParams($route.query, ['preview', 'gamtotvarkos_planas']);
 const isPreview = ref(!!query.preview);
 
 const toggleLayers = [
@@ -80,7 +74,7 @@ const toggleLayers = [
   inspireParcelService,
   municipalitiesService,
   geoportalGrpk,
-  invaService
+  invaService,
 ];
 
 const gamtotvarkaServiceFilters = mapLayers.filters(gamtotvarkaService.id);
@@ -150,16 +144,11 @@ mapLayers
 
 if (query.gamtotvarkos_planas) {
   gamtotvarkaPlanaiFilters
-    .onAll([
-      'gamtotvarkos_plotai_patvirtintas',
-      'gamtotvarkos_teritorijos_patvirtintas',
-    ])
+    .onAll(['gamtotvarkos_plotai_patvirtintas', 'gamtotvarkos_teritorijos_patvirtintas'])
     .set('tvark_ter_uuid', query.gamtotvarkos_planas);
-  await mapLayers
-    .toggleVisibility(gamtotvarkaPlanai.id, true)
-    .zoomNew(gamtotvarkaPlanai.id, {
-      addStroke: false,
-      filters: gamtotvarkaPlanaiFilters,
-    });
+  await mapLayers.toggleVisibility(gamtotvarkaPlanai.id, true).zoomNew(gamtotvarkaPlanai.id, {
+    addStroke: false,
+    filters: gamtotvarkaPlanaiFilters,
+  });
 }
 </script>

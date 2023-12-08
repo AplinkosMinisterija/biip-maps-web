@@ -4,10 +4,7 @@
   >
     <div class="flex flex-row items-center gap-2">
       <span class="text-sm">{{ name }}</span>
-      <span
-        class="text-xxs text-gray-500 whitespace-nowrap truncate"
-        v-html="description"
-      />
+      <span class="text-xxs text-gray-500 whitespace-nowrap truncate" v-html="description" />
     </div>
     <div v-if="$slots.default" class="text-xxs text-gray-700 whitespace-nowrap truncate">
       <slot />
@@ -19,11 +16,11 @@
 defineProps({
   name: {
     type: String,
-    default: "",
+    default: '',
   },
   description: {
     type: String,
-    default: "",
+    default: '',
   },
 });
 </script>

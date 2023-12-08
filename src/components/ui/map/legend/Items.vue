@@ -10,7 +10,7 @@
 defineProps({
   items: {
     type: Array<any>,
-    default: []
-  }
+    default: [],
+  },
 });
 </script>

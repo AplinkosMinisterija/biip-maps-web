@@ -26,9 +26,7 @@ export class BaseAdapter extends BaseAdapterKeys {
 
         if (['$or', '$nor', '$and'].includes(key)) {
           if (value.length < 2) {
-            throw new Error(
-              `Array should have at least 2 items - ${value} (${key})`,
-            );
+            throw new Error(`Array should have at least 2 items - ${value} (${key})`);
           }
 
           value = value.map((query) => this._processQuery(query, field));

@@ -231,14 +231,11 @@ export class MapFilters {
   }
 
   toJson(withKeys: boolean = false) {
-    return Object.entries(this._layers).reduce(
-      (acc: any, [key, value]: any[]) => {
-        if (!withKeys) return { ...acc, ...value.toJson() };
+    return Object.entries(this._layers).reduce((acc: any, [key, value]: any[]) => {
+      if (!withKeys) return { ...acc, ...value.toJson() };
 
-        return { ...acc, [key]: value.toJson() };
-      },
-      {},
-    );
+      return { ...acc, [key]: value.toJson() };
+    }, {});
   }
 
   toQuery() {
@@ -249,11 +246,7 @@ export class MapFilters {
     return Object.values(this._layers).map((value: any) => value.clear());
   }
 
-  setJson(
-    data: { [key: string]: any },
-    merge: boolean = false,
-    fieldsToSet: string[] = [],
-  ) {
+  setJson(data: { [key: string]: any }, merge: boolean = false, fieldsToSet: string[] = []) {
     Object.keys(data).forEach((key) => {
       this.on(key).setJson(data[key], merge, fieldsToSet);
     });
