@@ -261,8 +261,8 @@ export class MapDraw extends Queues {
   }
 
   private _styleFn(type: string = 'primary') {
-    return () => {
-      return this._styles[type] || this._styles.primary;
+    return (...args: any) => {
+      return this._styles[type]?.(...args) || this._styles.primary?.(...args);
     };
   }
 
