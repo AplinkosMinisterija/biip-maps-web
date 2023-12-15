@@ -77,7 +77,7 @@ const toggleLayers = [
 
 const $route = useRoute();
 
-const query = parseRouteParams($route.query, ['cadastral_id', 'show_search', 'info_window_enabled']);
+const query = parseRouteParams($route.query, ['cadastral_id', 'show_search', 'preview']);
 if (query.cadastral_id) {
   const uetkServiceFilters = mapLayers.filters(uetkService.id);
 
@@ -114,7 +114,7 @@ mapLayers
   .add(uetkService.id)
   .click(async ({ coordinate }: any) => {
     mapLayers.getFeatureInfo(uetkService.id, coordinate, ({ geometries, properties }: any) => {
-      if (query.info_window_enabled) {
+      if (query.preview) {
         mapLayers.highlightFeatures(geometries);
         selectedFeatures.value = properties;
       }
