@@ -27,7 +27,7 @@
             { type: 'upė', weight: 2 },
           ]"
         />
-        <UiMapLegend v-if="filtersStore.isActive('legend')" :layer="uetkService.id" />
+        <UiMapLegend v-if="filtersStore.isActive('legend')" :layer="uetkService.id" title="Sutartiniai ženklai"/>
       </template>
       <template #sidebar>
         <UiSidebarFeatures

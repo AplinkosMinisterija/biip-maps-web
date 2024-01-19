@@ -120,6 +120,7 @@ https://maps.biip.lt/alis/fishing
 | -------------- | ------------------------------------- | --------- | ------- |
 | `cadastral_id` | Filters and highlighs by cadastral ID | `Filter`  | -       |
 | `show_search`  | Enables search                        | `Boolean` | `false` |
+| `preview`      | Enables feature sidebar               | `Boolean` | `false` |
 
 ### Events
 
