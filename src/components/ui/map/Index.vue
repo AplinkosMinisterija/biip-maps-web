@@ -8,6 +8,7 @@
         showScaleLine: showScaleLine,
         showCoordinates: showCoordinates && !isPreview,
         projection: projection,
+        constrainResolution: constrainResolution
       }"
     />
     <div
@@ -158,6 +159,10 @@ defineProps({
   projection: {
     type: String,
     default: '',
+  },
+  constrainResolution: {
+    type: Boolean,
+    default: true,
   },
 });
 

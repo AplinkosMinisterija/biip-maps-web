@@ -623,6 +623,16 @@ export class MapLayers extends Queues {
 
   zoomToExtent(extent: any, padding: number = 50) {
     if (!extent || !this.map) return;
+
+    const width = this.map.getViewport().clientWidth;
+
+    if (padding === 50) {
+      if (width < 480) padding = 10;
+      else if (width < 640) padding = 15;
+      else if (width < 768) padding = 25;
+      else if (width < 1280) padding = 40;
+    }
+
     this.map.getView().fit(extent, {
       padding: [padding, padding, padding, padding],
       maxZoom: this._getZoomLevel(),
