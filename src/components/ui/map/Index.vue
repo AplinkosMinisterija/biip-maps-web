@@ -4,11 +4,11 @@
       v-map="{
         showZoom: showZoom && !isPreview,
         showAttribution: showAttribution && (!isPreview || attributionOptions),
-        attributionOptions: attributionOptions,
-        showScaleLine: showScaleLine,
+        attributionOptions,
+        showScaleLine,
         showCoordinates: showCoordinates && !isPreview,
-        projection: projection,
-        constrainResolution: constrainResolution
+        projection,
+        constrainResolution,
       }"
     />
     <div
