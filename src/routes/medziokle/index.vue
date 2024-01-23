@@ -1,12 +1,16 @@
 <template>
   <div>
-    <UiMap :show-scale-line="true" :mark-center="!!query.draw" />
+    <UiMap
+      :show-scale-line="true"
+      :mark-center="!!query.draw"
+      :constrain-resolution="false"
+    />
   </div>
 </template>
 <script setup lang="ts">
-import { computed, inject } from 'vue';
-import { useRoute } from 'vue-router';
-import { parse, GeometryType } from 'geojsonjs';
+import { computed, inject } from "vue";
+import { useRoute } from "vue-router";
+import { parse, GeometryType } from "geojsonjs";
 import {
   geoportalTopo,
   geoportalOrto,
@@ -14,23 +18,23 @@ import {
   huntingService,
   parseRouteParams,
   convertCoordinatesToProjection,
-} from '@/utils';
+} from "@/utils";
 
-const mapLayers: any = inject('mapLayers');
-const events: any = inject('events');
-const postMessage: any = inject('postMessage');
+const mapLayers: any = inject("mapLayers");
+const events: any = inject("events");
+const postMessage: any = inject("postMessage");
 const $route = useRoute();
 
-const query = parseRouteParams($route.query, ['mpvId', 'draw', 'zoom', 'points']);
+const query = parseRouteParams($route.query, ["mpvId", "draw", "zoom", "points"]);
 const huntingServiceFilters = mapLayers.filters(huntingService.id);
 
 if (query.mpvId) {
-  huntingServiceFilters.on('mpv_info_geom').set('mpv_id', query.mpvId);
+  huntingServiceFilters.on("mpv_info_geom").set("mpv_id", query.mpvId);
 }
 
 const colors: any = {
-  current: '#004650',
-  other: '#A5B9C0',
+  current: "#004650",
+  other: "#A5B9C0",
 };
 
 function zoomToCoordinate(data: any) {
@@ -64,22 +68,22 @@ function parsePoints(data: any[]) {
         color: colors[item.type] || colors.current,
         ...item,
       },
-    })),
+    }))
   );
 
   mapDraw.value.setFeatures(featureCollection).edit();
 }
 
-events.on('points', parsePoints).on('zoom', zoomToCoordinate);
+events.on("points", parsePoints).on("zoom", zoomToCoordinate);
 
 mapDraw.value
   .enableSelect()
   .enablePan(!!query.draw)
-  .on('select', ({ feature }: any) => {
-    postMessage('selected', feature);
+  .on("select", ({ feature }: any) => {
+    postMessage("selected", feature);
   })
-  .on('change', ({ features }: any) => {
-    postMessage('data', features);
+  .on("change", ({ features }: any) => {
+    postMessage("data", features);
   });
 
 if (query.points) {

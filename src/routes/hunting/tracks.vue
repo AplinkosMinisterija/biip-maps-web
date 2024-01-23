@@ -1,6 +1,6 @@
 <template>
   <div>
-    <UiMap :show-scale-line="true" :show-coordinates="true" />
+    <UiMap :show-scale-line="true" :show-coordinates="true" :constrain-resolution="false"/>
   </div>
 </template>
 <script setup lang="ts">
