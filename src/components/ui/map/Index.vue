@@ -4,10 +4,11 @@
       v-map="{
         showZoom: showZoom && !isPreview,
         showAttribution: showAttribution && (!isPreview || attributionOptions),
-        attributionOptions: attributionOptions,
-        showScaleLine: showScaleLine,
+        attributionOptions,
+        showScaleLine,
         showCoordinates: showCoordinates && !isPreview,
-        projection: projection,
+        projection,
+        constrainResolution,
       }"
     />
     <div
@@ -158,6 +159,10 @@ defineProps({
   projection: {
     type: String,
     default: '',
+  },
+  constrainResolution: {
+    type: Boolean,
+    default: true,
   },
 });
 

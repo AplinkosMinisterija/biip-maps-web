@@ -23,6 +23,7 @@ export function createMap(
     centerView?: number[];
     zoomView?: number;
     projection?: string;
+    constrainResolution?: boolean;
   },
 ) {
   const proj = get(options?.projection || projection);
@@ -33,7 +34,7 @@ export function createMap(
       center: options?.centerView || [495074.61, 6116454.53],
       projection: proj as Projection,
       zoom: options?.zoomView || 9,
-      constrainResolution: true,
+      constrainResolution: options?.constrainResolution,
     }),
     controls: defaults({
       attribution: !!options?.showAttribution,
