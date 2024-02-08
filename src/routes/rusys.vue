@@ -10,7 +10,7 @@
             Rodyti visas radavietes
           </UiInputCheckbox>
         </UiBox>
-        <UiBox v-if="config.user.isAdmin || config.user.isExpert">
+        <UiBox v-if="config.user.isAdmin || config.user.isExpert || !isVisibleSrisLayer">
           <UiInputCheckbox @change="toggleGrid">Išjungti gardelę</UiInputCheckbox>
         </UiBox>
       </template>
