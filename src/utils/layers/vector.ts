@@ -40,14 +40,9 @@ export function getLayerStyles(opts: {
     const stroke = new Stroke({ color: brightColor, width });
     const fill = new Fill({ color: lightColor });
 
-    const bufferStroke = options?.bufferWidth
-      ? new Stroke({ color: lightColor, width: options?.bufferWidth })
-      : undefined;
-
     let image: any = new Circle({
       radius: width * 2,
       fill: new Fill({ color: brightColor }),
-      stroke: bufferStroke,
     });
 
     if (icon) {
