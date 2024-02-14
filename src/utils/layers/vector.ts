@@ -30,7 +30,6 @@ export function getLayerStyles(opts: {
     options?: {
       align?: 'top';
       width?: number;
-      bufferWidth: number;
     },
   ) {
     const brightColor = `${color}bb`;
