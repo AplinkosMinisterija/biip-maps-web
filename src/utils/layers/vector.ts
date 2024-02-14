@@ -87,9 +87,13 @@ export function getLayerStyles(opts: {
         const circle = styleClone.getImage() as Circle;
         const lightColor = styleClone.getFill().getColor()?.toString();
 
+        const width = (bufferSize * 2) / resolution;
+
+        if (width > 4000) return styleClone;
+
         const bufferStroke = new Stroke({
           color: lightColor,
-          width: (bufferSize * 2) / resolution,
+          width,
         });
 
         circle.setStroke(bufferStroke);
@@ -136,6 +140,7 @@ export const fixedHighlightLayer = {
 export const drawLayer = {
   id: 'drawLayer',
   layer: new VectorLayer({
+    renderBuffer: 2000,
     style: function (feature) {
       const color = feature.get('color');
       const radius = feature.get('radius') || 3;
