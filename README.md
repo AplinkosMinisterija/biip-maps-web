@@ -171,12 +171,12 @@ https://maps.biip.lt/edit
 
 ### Parameters
 
-| Name      | Desciption                  | Type       | Default                        |
-| --------- | --------------------------- | ---------- | ------------------------------ |
-| `multi`   | Enables multi geometry      | `Boolean`  | false                          |
-| `buffer`  | Enables buffers to geometry | `Boolean`  | false                          |
-| `preview` | Disables editing            | `Boolean`  | false                          |
-| `types`   | Enables specific draw types | `String[]` | `['point', 'polygon', 'line']` |
+| Name      | Desciption                  | Type                  | Default                                                                     |
+| --------- | --------------------------- | --------------------- | --------------------------------------------------------------------------- |
+| `multi`   | Enables multi geometry      | `Boolean`             | false                                                                       |
+| `buffer`  | Enables buffers to geometry | `Boolean` \| `String` | false. Possible - `xs` (default if boolean), `sm`, `md`, `lg`, `xl` values. |
+| `preview` | Disables editing            | `Boolean`             | false                                                                       |
+| `types`   | Enables specific draw types | `String[]`            | `['point', 'polygon', 'line']`                                              |
 
 ### Events
 

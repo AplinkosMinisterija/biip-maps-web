@@ -137,14 +137,15 @@ const hasDrawType = (type: string) => {
 const filtersStore = useFiltersStore();
 
 const bufferSizes: any = {
-  default: { min: 1, max: 5, step: 1 },
+  xs: { min: 1, max: 5, step: 1 },
+  sm: { min: 10, max: 100, step: 10 },
   md: { min: 100, max: 1000, step: 100 },
   lg: { min: 500, max: 5000, step: 500 },
   xl: { min: 1000, max: 10000, step: 1000 },
 };
 
 const bufferSizeKey =
-  query.buffer && bufferSizes[query.buffer] ? query.buffer : "default";
+  query.buffer && bufferSizes[query.buffer] ? query.buffer : "xs";
 
 const bufferSizeLabel = computed(() => {
   const text = `Buferio dydis`;
