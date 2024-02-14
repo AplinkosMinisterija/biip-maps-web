@@ -45,9 +45,10 @@
         <div v-else-if="showBufferChangeBox" class="flex flex-col gap-3">
           <UiInputSlider
             v-model="featureBufferSize"
-            :min="1"
-            :max="5"
-            :label="`Buferio dydis ${featureBufferSize} m.`"
+            :min="bufferSizes[bufferSizeKey].min"
+            :max="bufferSizes[bufferSizeKey].max"
+            :step="bufferSizes[bufferSizeKey].step"
+            :label="bufferSizeLabel"
           />
         </div>
       </template>
@@ -55,7 +56,8 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed, inject, ref } from 'vue';
+import { computed, inject, ref } from "vue";
+import _ from "lodash";
 import {
   geoportalTopo,
   geoportalOrto,
@@ -73,22 +75,24 @@ import {
   geoportalOrto2005,
   geoportalOrto1995,
   inspireParcelService,
-} from '@/utils';
-import { useFiltersStore } from '@/stores/filters';
-import { useRoute } from 'vue-router';
+} from "@/utils";
+import { useFiltersStore } from "@/stores/filters";
+import { useRoute } from "vue-router";
 const $route = useRoute();
-const events: any = inject('events');
+const events: any = inject("events");
 
-const mapLayers: any = inject('mapLayers');
-const postMessage: any = inject('postMessage');
+const mapLayers: any = inject("mapLayers");
+const postMessage: any = inject("postMessage");
 
-const query = parseRouteParams($route.query, ['multi', 'buffer', 'preview', 'types']);
+const query = parseRouteParams($route.query, ["multi", "buffer", "preview", "types"]);
 const isPreview = !!query.preview;
 
 const activeDrawType = computed(() => mapDraw.value.activeType);
 const selectedFeature = ref({} as any);
 const showBufferChangeBox = computed(
-  () => query.buffer && ['Point', 'LineString'].includes(selectedFeature.value?.geometry?.type),
+  () =>
+    !!query.buffer &&
+    ["Point", "LineString"].includes(selectedFeature.value?.geometry?.type)
 );
 
 const toggleLayers = [
@@ -108,13 +112,13 @@ const toggleLayers = [
 
 const mapDraw = computed(() => mapLayers.getDraw());
 const defaultDrawElements = [
-  { icon: 'point', type: 'Point', name: 'Taškas', el: 'point' },
-  { icon: 'line', type: 'LineString', name: 'Linija', el: 'line' },
-  { icon: 'polygon', type: 'Polygon', name: 'Plotas', el: 'polygon' },
+  { icon: "point", type: "Point", name: "Taškas", el: "point" },
+  { icon: "line", type: "LineString", name: "Linija", el: "line" },
+  { icon: "polygon", type: "Polygon", name: "Plotas", el: "polygon" },
 ];
 
 const drawTypes = computed(() => {
-  let types = ['point', 'line', 'polygon'];
+  let types = ["point", "line", "polygon"];
   if (query.types) {
     if (Array.isArray(query.types)) {
       types = query.types;
@@ -132,18 +136,40 @@ const hasDrawType = (type: string) => {
 
 const filtersStore = useFiltersStore();
 
+const bufferSizes: any = {
+  default: { min: 1, max: 5, step: 1 },
+  md: { min: 100, max: 1000, step: 100 },
+  lg: { min: 500, max: 5000, step: 500 },
+  xl: { min: 1000, max: 10000, step: 1000 },
+};
+
+const bufferSizeKey =
+  query.buffer && bufferSizes[query.buffer] ? query.buffer : "default";
+
+const bufferSizeLabel = computed(() => {
+  const text = `Buferio dydis`;
+
+  let size: number = featureBufferSize.value as number;
+
+  if (size < 1000) return `${text} ${size} m.`;
+
+  size = _.round(size / 1000, 2);
+
+  return `${text} ${size} km.`;
+});
+
 const featureBufferSize = computed({
   set(value) {
     mapDraw.value.setProperties(selectedFeature.value?.feature, {
       bufferSize: Number(value),
     });
   },
-  get() {
+  get(): number | undefined {
     if (!selectedFeature.value?.feature) return;
     const bufferSize = Number(
-      mapDraw.value.getProperties(selectedFeature.value?.feature, 'bufferSize'),
+      mapDraw.value.getProperties(selectedFeature.value?.feature, "bufferSize")
     );
-    return bufferSize || 1;
+    return bufferSize || bufferSizes[bufferSizeKey].min;
   },
 });
 
@@ -189,22 +215,22 @@ mapLayers
 
 mapDraw.value
   .setMulti(!!query.multi)
-  .enableBufferSize(!!query.buffer)
+  .enableBufferSize(!!query.buffer, bufferSizes[bufferSizeKey].min)
   .enableContinuousDraw(drawTypes.value.length === 1 && !query.multi && !query.buffer)
-  .on(['change', 'remove'], ({ features }: any) => {
-    postMessage('data', features);
+  .on(["change", "remove"], ({ features }: any) => {
+    postMessage("data", features);
   })
-  .on('select', ({ featureObj, feature }: any) => {
+  .on("select", ({ featureObj, feature }: any) => {
     selectedFeature.value = {
       ...feature,
       feature: featureObj,
     };
   });
 
-events.on('geom', (data: any) => {
+events.on("geom", (data: any) => {
   let geom = data.geom || data;
 
-  if (typeof geom === 'string') {
+  if (typeof geom === "string") {
     try {
       geom = JSON.parse(geom);
     } catch (err) {

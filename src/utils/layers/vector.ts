@@ -30,6 +30,7 @@ export function getLayerStyles(opts: {
     options?: {
       align?: 'top';
       width?: number;
+      bufferWidth: number;
     },
   ) {
     const brightColor = `${color}bb`;
@@ -39,9 +40,14 @@ export function getLayerStyles(opts: {
     const stroke = new Stroke({ color: brightColor, width });
     const fill = new Fill({ color: lightColor });
 
+    const bufferStroke = options?.bufferWidth
+      ? new Stroke({ color: lightColor, width: options?.bufferWidth })
+      : undefined;
+
     let image: any = new Circle({
       radius: width * 2,
       fill: new Fill({ color: brightColor }),
+      stroke: bufferStroke,
     });
 
     if (icon) {
@@ -72,12 +78,28 @@ export function getLayerStyles(opts: {
   const secondaryStyle = getStyle(secondaryColor, opts?.icon, opts?.opts);
 
   function getStyleByFeature(defaultStyle: Style) {
-    return function (feature: any) {
+    return function (feature: any, resolution: number) {
       const color = feature.get('color');
       const radius = feature.get('radius');
       const icon = feature.get('icon');
+      const bufferSize = feature.get('bufferSize');
+
       if (color) {
         return getStyle(color, icon, { ...(opts?.opts || {}), width: radius });
+      }
+
+      if (bufferSize) {
+        const styleClone = defaultStyle.clone();
+        const circle = styleClone.getImage() as Circle;
+        const lightColor = styleClone.getFill().getColor()?.toString();
+
+        const bufferStroke = new Stroke({
+          color: lightColor,
+          width: (bufferSize * 2) / resolution,
+        });
+
+        circle.setStroke(bufferStroke);
+        return styleClone;
       }
       return defaultStyle;
     };
