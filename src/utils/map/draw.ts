@@ -25,6 +25,7 @@ export class MapDraw extends Queues {
   };
   private _enabledContinuousDraw: boolean = false;
   private _enabledBufferSize: boolean = false;
+  private _defaultBufferSizeValue: number = 1;
   private _source = new VectorSource({
     wrapX: false,
     format: new GeoJSON({
@@ -148,8 +149,9 @@ export class MapDraw extends Queues {
     return this;
   }
 
-  enableBufferSize(value: boolean = false) {
+  enableBufferSize(value: boolean = false, defaultValue: number = 1) {
     this._enabledBufferSize = !!value;
+    this._defaultBufferSizeValue = defaultValue;
     return this;
   }
 
@@ -361,7 +363,8 @@ export class MapDraw extends Queues {
       if (!feature) return;
 
       if (this._enabledBufferSize) {
-        const bufferSize = this.getProperties(feature, 'bufferSize') || 1;
+        const bufferSize =
+          this.getProperties(feature, 'bufferSize') || this._defaultBufferSizeValue;
         this.setProperties(feature, { bufferSize });
       }
 

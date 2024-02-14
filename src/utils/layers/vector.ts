@@ -72,12 +72,32 @@ export function getLayerStyles(opts: {
   const secondaryStyle = getStyle(secondaryColor, opts?.icon, opts?.opts);
 
   function getStyleByFeature(defaultStyle: Style) {
-    return function (feature: any) {
+    return function (feature: any, resolution: number) {
       const color = feature.get('color');
       const radius = feature.get('radius');
       const icon = feature.get('icon');
+      const bufferSize = feature.get('bufferSize');
+
       if (color) {
         return getStyle(color, icon, { ...(opts?.opts || {}), width: radius });
+      }
+
+      if (bufferSize) {
+        const styleClone = defaultStyle.clone();
+        const circle = styleClone.getImage() as Circle;
+        const lightColor = styleClone.getFill().getColor()?.toString();
+
+        const width = (bufferSize * 2) / resolution;
+
+        if (width > 4000) return styleClone;
+
+        const bufferStroke = new Stroke({
+          color: lightColor,
+          width,
+        });
+
+        circle.setStroke(bufferStroke);
+        return styleClone;
       }
       return defaultStyle;
     };
@@ -120,6 +140,7 @@ export const fixedHighlightLayer = {
 export const drawLayer = {
   id: 'drawLayer',
   layer: new VectorLayer({
+    renderBuffer: 2000,
     style: function (feature) {
       const color = feature.get('color');
       const radius = feature.get('radius') || 3;
