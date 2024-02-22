@@ -14,8 +14,9 @@ function getVectorTilesUrl(type: string, source: string) {
 function getVectorTileLayer(
   type: string,
   source: string,
-  opts?: { idProperty?: string; declutter?: boolean },
+  opts?: { idProperty?: string; declutter?: boolean; tileSize?: number },
 ) {
+  const tileSize = opts?.tileSize || 512;
   return new VectorTileLayer({
     renderMode: 'vector',
     declutter: !!opts?.declutter,
@@ -27,7 +28,7 @@ function getVectorTileLayer(
         idProperty: opts?.idProperty,
       }),
 
-      tileSize: [512, 512],
+      tileSize: [tileSize, tileSize],
       url: getVectorTilesUrl(type, source),
     }),
     style: vectorTileStyles({ layerPrefix: type }),
@@ -97,6 +98,14 @@ export const zuvinimasServiceVT = {
   id: 'zuvinimasServiceVT',
   name: 'Įžuvinimas',
   layer: getVectorTileLayer('zuvinimas', 'fish_stockings', {
+    idProperty: 'id',
+  }),
+};
+
+export const smalsuolisServiceVT = {
+  id: 'smalsuolisServiceVT',
+  name: 'Smalsuolis',
+  layer: getVectorTileLayer('smalsuolis', 'events', {
     idProperty: 'id',
   }),
 };
