@@ -11,14 +11,20 @@
     <FeaturesPopupClickMulti>
       <template #title="{ current }">
         <template v-if="current?.name">
-          <div class="text-xxxs text-gray-600">
-            {{ moment(current.start_at).format("YYYY-MM-DD") }}
+          <div class="flex gap-1 mb-1">
+            <div class="text-xxxs text-gray-600">
+              {{ moment(current.start_at).format("YYYY-MM-DD") }}
+            </div>
+            <span class="text-gray-500">·</span>
+            <UiBadge type="success">{{ current?.app_name }}</UiBadge>
           </div>
           <div>{{ current.name }}</div>
         </template>
       </template>
       <template #content="{ current }">
-        <div v-if="current?.body" class="text-xs">{{ current.body }}</div>
+        <div v-if="current?.body" class="text-xxs mt-2 text-gray-700">
+          <VueMarkdown :source="current.body" />
+        </div>
       </template>
     </FeaturesPopupClickMulti>
   </div>
@@ -27,6 +33,7 @@
 import { inject } from "vue";
 import { projection3857, geoportalTopo3857, smalsuolisServiceVT } from "@/utils";
 import { useFiltersStore } from "@/stores/filters";
+import VueMarkdown from "vue-markdown-render";
 import moment from "moment";
 const filtersStore = useFiltersStore();
 
