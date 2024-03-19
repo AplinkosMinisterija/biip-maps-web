@@ -5,6 +5,7 @@ import { getCopyrightLabel } from '../utils';
 import { projection, projection3857 } from '../constants';
 import ImageLayer from 'ol/layer/Image';
 import ImageArcGISRest from 'ol/source/ImageArcGISRest';
+import { MapboxVectorLayer } from 'ol-mapbox-style';
 
 const geoportalUrl = (type: string) => {
   return `https://www.geoportal.lt/mapproxy/${type}`;
@@ -30,6 +31,41 @@ const nztUrl = (type: string) => {
 const kpdCopyright = getCopyrightLabel('Kultūros paveldo departamentas', 'https://kvr.kpd.lt');
 
 const crossOrigin = 'Anonymous';
+
+export const vectorProtonLight = {
+  id: 'vectorProtonLight',
+  title: 'Vektorinis šviesus',
+  layer: new MapboxVectorLayer({
+    declutter: true,
+    styleUrl: 'https://cdn.biip.lt/tiles/proton/styles/light.json',
+  }),
+};
+
+export const vectorProtonDark = {
+  id: 'vectorProtonDark',
+  title: 'Vektorinis tamsus',
+  layer: new MapboxVectorLayer({
+    declutter: true,
+    styleUrl: 'https://cdn.biip.lt/tiles/proton/styles/dark.json',
+  }),
+};
+
+export const vectorProtonWhite = {
+  id: 'vectorProtonWhite',
+  title: 'Vektorinis baltas',
+  layer: new MapboxVectorLayer({
+    declutter: true,
+    styleUrl: 'https://cdn.biip.lt/tiles/proton/styles/white.json',
+  }),
+};
+export const vectorProtonBlack = {
+  id: 'vectorProtonBlack',
+  title: 'Vektorinis juodas',
+  layer: new MapboxVectorLayer({
+    declutter: true,
+    styleUrl: 'https://cdn.biip.lt/tiles/proton/styles/black.json',
+  }),
+};
 
 export const geoportalTopo = {
   id: 'geoportalTopo',

@@ -5,9 +5,9 @@
 </template>
 <script setup lang="ts">
 import { inject } from 'vue';
-import { municipalitiesServiceVT, projection3857, geoportalTopo3857 } from '@/utils';
+import { municipalitiesServiceVT, projection3857, vectorProtonLight } from '@/utils';
 
 const mapLayers: any = inject('mapLayers');
 
-mapLayers.addBaseLayer(geoportalTopo3857.id).add(municipalitiesServiceVT.id);
+mapLayers.addBaseLayer(vectorProtonLight.id).add(municipalitiesServiceVT.id);
 </script>
