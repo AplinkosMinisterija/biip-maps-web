@@ -5,9 +5,21 @@
 </template>
 <script setup lang="ts">
 import { inject } from 'vue';
-import { municipalitiesServiceVT, projection3857, vectorProtonLight } from '@/utils';
+import {
+  municipalitiesServiceVT,
+  projection3857,
+  vectorProtonBlack,
+  vectorProtonDark,
+  vectorProtonLight,
+  vectorProtonWhite,
+} from '@/utils';
 
 const mapLayers: any = inject('mapLayers');
 
-mapLayers.addBaseLayer(vectorProtonLight.id).add(municipalitiesServiceVT.id);
+mapLayers
+  .addBaseLayer(vectorProtonLight.id)
+  .addBaseLayer(vectorProtonDark.id)
+  .addBaseLayer(vectorProtonWhite.id)
+  .addBaseLayer(vectorProtonBlack.id)
+  .add(municipalitiesServiceVT.id);
 </script>
