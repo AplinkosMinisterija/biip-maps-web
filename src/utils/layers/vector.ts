@@ -168,12 +168,16 @@ export const drawLayer = {
 export const markerLayer = {
   id: 'markerLayer',
   layer: new VectorLayer({
-    style: new Style({
-      image: new Icon({
-        anchor: [0.5, 1],
-        src: '/icons/zuvinimas.png',
-      }),
-    }),
+    style: function () {
+      // default style
+      const markerIconHtml = renderIconHtml('pin-water');
+      return new Style({
+        image: new Icon({
+          anchor: [0.5, 1],
+          src: `data:image/svg+xml;utf8,${markerIconHtml}`,
+        }),
+      });
+    },
     source: new VectorSource({
       format: new GeoJSON({
         dataProjection: projection,
