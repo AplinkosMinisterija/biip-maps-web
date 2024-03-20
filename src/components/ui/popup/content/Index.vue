@@ -1,13 +1,13 @@
 <template>
   <div
     ref="el"
-    class="bg-white px-4 py-2 rounded shadow-md min-w-max max-w-xl overflow-y-auto max-h-96"
+    class="bg-white px-4 py-2 rounded shadow-md w-full overflow-y-auto max-h-96 max-w-xs lg:max-w-sm"
     :class="[(position && positions[position]) || '', showArrow ? 'display-arrow' : '']"
   >
     <div class="w-full">
       <div
         v-if="title || $slots.title || showClose"
-        class="flex gap-3 items-center"
+        class="flex gap-3"
         :class="[title || $slots.title ? 'justify-between' : 'justify-end']"
       >
         <div v-if="title || $slots.title" class="text-sm font-semibold">
