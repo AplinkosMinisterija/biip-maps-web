@@ -8,6 +8,7 @@ import { inject } from 'vue';
 import {
   municipalitiesServiceVT,
   projection3857,
+  vectorGRPK,
   vectorProtonBlack,
   vectorProtonDark,
   vectorProtonLight,
@@ -17,6 +18,7 @@ import {
 const mapLayers: any = inject('mapLayers');
 
 mapLayers
+  .addBaseLayer(vectorGRPK.id)
   .addBaseLayer(vectorProtonLight.id)
   .addBaseLayer(vectorProtonDark.id)
   .addBaseLayer(vectorProtonWhite.id)

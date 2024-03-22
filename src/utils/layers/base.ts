@@ -32,6 +32,14 @@ const kpdCopyright = getCopyrightLabel('Kultūros paveldo departamentas', 'https
 
 const crossOrigin = 'Anonymous';
 
+export const vectorGRPK = {
+  id: 'vectorGRPK',
+  title: 'Vektorinis GRPK',
+  layer: new MapboxVectorLayer({
+    declutter: true,
+    styleUrl: 'https://cdn.biip.lt/tiles/grpk/styles/grpk.json',
+  }),
+};
 export const vectorProtonLight = {
   id: 'vectorProtonLight',
   title: 'Vektorinis šviesus',
