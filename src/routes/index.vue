@@ -5,9 +5,23 @@
 </template>
 <script setup lang="ts">
 import { inject } from 'vue';
-import { municipalitiesServiceVT, projection3857, geoportalTopo3857 } from '@/utils';
+import {
+  municipalitiesServiceVT,
+  projection3857,
+  vectorGRPK,
+  vectorProtonBlack,
+  vectorProtonDark,
+  vectorProtonLight,
+  vectorProtonWhite,
+} from '@/utils';
 
 const mapLayers: any = inject('mapLayers');
 
-mapLayers.addBaseLayer(geoportalTopo3857.id).add(municipalitiesServiceVT.id);
+mapLayers
+  .addBaseLayer(vectorGRPK.id)
+  .addBaseLayer(vectorProtonLight.id)
+  .addBaseLayer(vectorProtonDark.id)
+  .addBaseLayer(vectorProtonWhite.id)
+  .addBaseLayer(vectorProtonBlack.id)
+  .add(municipalitiesServiceVT.id);
 </script>
