@@ -11,6 +11,7 @@
         <template v-if="!isPreview">
           <UiButtonRow class="h-full" gap="lg">
             <UiButton
+              v-if="!hasOneDrawType"
               v-for="t in drawTypes"
               :key="t.type"
               :icon="t.icon"
@@ -56,27 +57,12 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed, inject, ref } from "vue";
-import _ from "lodash";
-import {
-  geoportalTopo,
-  geoportalOrto,
-  geoportalTopoGray,
-  parseRouteParams,
-  uetkService,
-  stvkService,
-  municipalitiesService,
-  geoportalGrpk,
-  geoportalForests,
-  geoportalOrto2018,
-  geoportalOrto2015,
-  geoportalOrto2012,
-  geoportalOrto2009,
-  geoportalOrto2005,
-  geoportalOrto1995,
-  inspireParcelService,
-} from "@/utils";
 import { useFiltersStore } from "@/stores/filters";
+import {
+geoportalForests, geoportalGrpk, geoportalOrto, geoportalOrto1995, geoportalOrto2005, geoportalOrto2009, geoportalOrto2012, geoportalOrto2015, geoportalOrto2018, geoportalTopo, geoportalTopoGray, inspireParcelService, municipalitiesService, parseRouteParams, stvkService, uetkService
+} from "@/utils";
+import _ from "lodash";
+import { computed, inject, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 const $route = useRoute();
 const events: any = inject("events");
@@ -130,9 +116,15 @@ const drawTypes = computed(() => {
   return defaultDrawElements.filter((type) => types.includes(type.el));
 });
 
+
 const hasDrawType = (type: string) => {
   return drawTypes.value.some((t) => t.el === type);
 };
+
+
+const hasOneDrawType = drawTypes.value.length ===1
+
+
 
 const filtersStore = useFiltersStore();
 
@@ -194,6 +186,15 @@ const toggleDrawType = (type: string) => {
   }
   mapDraw.value.start(type);
 };
+
+onMounted(() => {
+  if(hasOneDrawType){
+    toggleDrawType(drawTypes.value[0].type);
+  }
+});
+
+
+
 
 mapLayers
   .addBaseLayer(geoportalTopo.id)
