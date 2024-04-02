@@ -11,6 +11,7 @@
         <template v-if="!isPreview">
           <UiButtonRow class="h-full" gap="lg">
             <UiButton
+              v-if="!enableContinuousDraw"
               v-for="t in drawTypes"
               :key="t.type"
               :icon="t.icon"
@@ -56,27 +57,12 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed, inject, ref } from "vue";
-import _ from "lodash";
-import {
-  geoportalTopo,
-  geoportalOrto,
-  geoportalTopoGray,
-  parseRouteParams,
-  uetkService,
-  stvkService,
-  municipalitiesService,
-  geoportalGrpk,
-  geoportalForests,
-  geoportalOrto2018,
-  geoportalOrto2015,
-  geoportalOrto2012,
-  geoportalOrto2009,
-  geoportalOrto2005,
-  geoportalOrto1995,
-  inspireParcelService,
-} from "@/utils";
 import { useFiltersStore } from "@/stores/filters";
+import {
+geoportalForests, geoportalGrpk, geoportalOrto, geoportalOrto1995, geoportalOrto2005, geoportalOrto2009, geoportalOrto2012, geoportalOrto2015, geoportalOrto2018, geoportalTopo, geoportalTopoGray, inspireParcelService, municipalitiesService, parseRouteParams, stvkService, uetkService
+} from "@/utils";
+import _ from "lodash";
+import { computed, inject, ref } from "vue";
 import { useRoute } from "vue-router";
 const $route = useRoute();
 const events: any = inject("events");
@@ -130,9 +116,12 @@ const drawTypes = computed(() => {
   return defaultDrawElements.filter((type) => types.includes(type.el));
 });
 
+
 const hasDrawType = (type: string) => {
   return drawTypes.value.some((t) => t.el === type);
 };
+
+const enableContinuousDraw = drawTypes.value.length === 1 && !query.multi;
 
 const filtersStore = useFiltersStore();
 
@@ -217,7 +206,7 @@ mapLayers
 mapDraw.value
   .setMulti(!!query.multi)
   .enableBufferSize(!!query.buffer, bufferSizes[bufferSizeKey].min)
-  .enableContinuousDraw(drawTypes.value.length === 1 && !query.multi && !query.buffer)
+  .enableContinuousDraw(enableContinuousDraw)
   .on(["change", "remove"], ({ features }: any) => {
     postMessage("data", features);
   })
@@ -227,6 +216,11 @@ mapDraw.value
       feature: featureObj,
     };
   });
+
+
+if(enableContinuousDraw) {
+     toggleDrawType(drawTypes.value[0].type);
+   }
 
 events.on("geom", (data: any) => {
   let geom = data.geom || data;
