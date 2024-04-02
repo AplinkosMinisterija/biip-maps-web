@@ -11,7 +11,7 @@
         <template v-if="!isPreview">
           <UiButtonRow class="h-full" gap="lg">
             <UiButton
-              v-if="!hasOneDrawType"
+              v-if="!enableContinuousDraw"
               v-for="t in drawTypes"
               :key="t.type"
               :icon="t.icon"
@@ -121,7 +121,7 @@ const hasDrawType = (type: string) => {
   return drawTypes.value.some((t) => t.el === type);
 };
 
-const hasOneDrawType = drawTypes.value.length ===1;
+const enableContinuousDraw = drawTypes.value.length === 1 && !query.multi
 
 const filtersStore = useFiltersStore();
 
@@ -206,7 +206,7 @@ mapLayers
 mapDraw.value
   .setMulti(!!query.multi)
   .enableBufferSize(!!query.buffer, bufferSizes[bufferSizeKey].min)
-  .enableContinuousDraw(hasOneDrawType)
+  .enableContinuousDraw(enableContinuousDraw)
   .on(["change", "remove"], ({ features }: any) => {
     postMessage("data", features);
   })
@@ -218,7 +218,7 @@ mapDraw.value
   });
 
 
-if(hasOneDrawType){
+if(enableContinuousDraw){
      toggleDrawType(drawTypes.value[0].type);
    }
 
