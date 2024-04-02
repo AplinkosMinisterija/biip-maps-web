@@ -11,6 +11,15 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  server: {
+    proxy: {
+      '/proxy/alis': {
+        target: 'https://alisas.lt/api',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/proxy\/alis/, ''),
+      },
+    },
+  },
   envPrefix: 'VUE_APP',
   build: {
     sourcemap: true,

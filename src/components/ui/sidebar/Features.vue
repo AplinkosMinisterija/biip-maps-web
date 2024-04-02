@@ -17,7 +17,7 @@ import FeaturesAccordionAnimals from '@/components/features/accordion/Animals.vu
 import FeaturesAccordionTourism from '@/components/features/accordion/Tourism.vue';
 import FeaturesAccordionZvejyba from '@/components/features/accordion/Zvejyba.vue';
 import FeaturesAccordionZuvinimas from '@/components/features/accordion/Zuvinimas.vue';
-import FeaturesAccordionAlis from '@/components/features/accordion/Alis.vue';
+import FeaturesAccordionAlis from '@/components/features/accordion/alis/Index.vue';
 
 const emit = defineEmits(['close']);
 
