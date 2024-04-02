@@ -222,7 +222,6 @@ if(hasOneDrawType){
      toggleDrawType(drawTypes.value[0].type);
    }
 
-
 events.on("geom", (data: any) => {
   let geom = data.geom || data;
 
