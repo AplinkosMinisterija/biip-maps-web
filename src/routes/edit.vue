@@ -62,7 +62,7 @@ import {
 geoportalForests, geoportalGrpk, geoportalOrto, geoportalOrto1995, geoportalOrto2005, geoportalOrto2009, geoportalOrto2012, geoportalOrto2015, geoportalOrto2018, geoportalTopo, geoportalTopoGray, inspireParcelService, municipalitiesService, parseRouteParams, stvkService, uetkService
 } from "@/utils";
 import _ from "lodash";
-import { computed, inject, onMounted, ref } from "vue";
+import { computed, inject, ref } from "vue";
 import { useRoute } from "vue-router";
 const $route = useRoute();
 const events: any = inject("events");
@@ -186,12 +186,6 @@ const toggleDrawType = (type: string) => {
   mapDraw.value.start(type);
 };
 
-onMounted(() => {
-  if(hasOneDrawType){
-    toggleDrawType(drawTypes.value[0].type);
-  }
-});
-
 
 
 
@@ -217,7 +211,7 @@ mapLayers
 mapDraw.value
   .setMulti(!!query.multi)
   .enableBufferSize(!!query.buffer, bufferSizes[bufferSizeKey].min)
-  .enableContinuousDraw(drawTypes.value.length === 1 && !query.multi && !query.buffer)
+  .enableContinuousDraw(hasOneDrawType)
   .on(["change", "remove"], ({ features }: any) => {
     postMessage("data", features);
   })
@@ -227,6 +221,12 @@ mapDraw.value
       feature: featureObj,
     };
   });
+
+
+if(hasOneDrawType){
+     toggleDrawType(drawTypes.value[0].type);
+   }
+
 
 events.on("geom", (data: any) => {
   let geom = data.geom || data;
