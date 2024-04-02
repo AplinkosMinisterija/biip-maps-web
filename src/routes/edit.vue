@@ -121,8 +121,7 @@ const hasDrawType = (type: string) => {
   return drawTypes.value.some((t) => t.el === type);
 };
 
-
-const hasOneDrawType = drawTypes.value.length ===1
+const hasOneDrawType = drawTypes.value.length ===1;
 
 
 
