@@ -121,7 +121,7 @@ const hasDrawType = (type: string) => {
   return drawTypes.value.some((t) => t.el === type);
 };
 
-const enableContinuousDraw = drawTypes.value.length === 1 && !query.multi
+const enableContinuousDraw = drawTypes.value.length === 1 && !query.multi;
 
 const filtersStore = useFiltersStore();
 
@@ -218,7 +218,7 @@ mapDraw.value
   });
 
 
-if(enableContinuousDraw){
+if(enableContinuousDraw) {
      toggleDrawType(drawTypes.value[0].type);
    }
 
