@@ -123,8 +123,6 @@ const hasDrawType = (type: string) => {
 
 const hasOneDrawType = drawTypes.value.length ===1;
 
-
-
 const filtersStore = useFiltersStore();
 
 const bufferSizes: any = {
@@ -185,9 +183,6 @@ const toggleDrawType = (type: string) => {
   }
   mapDraw.value.start(type);
 };
-
-
-
 
 mapLayers
   .addBaseLayer(geoportalTopo.id)
