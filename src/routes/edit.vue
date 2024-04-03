@@ -59,7 +59,22 @@
 <script setup lang="ts">
 import { useFiltersStore } from "@/stores/filters";
 import {
-geoportalForests, geoportalGrpk, geoportalOrto, geoportalOrto1995, geoportalOrto2005, geoportalOrto2009, geoportalOrto2012, geoportalOrto2015, geoportalOrto2018, geoportalTopo, geoportalTopoGray, inspireParcelService, municipalitiesService, parseRouteParams, stvkService, uetkService
+  geoportalForests,
+  geoportalGrpk,
+  geoportalOrto,
+  geoportalOrto1995,
+  geoportalOrto2005,
+  geoportalOrto2009,
+  geoportalOrto2012,
+  geoportalOrto2015,
+  geoportalOrto2018,
+  geoportalTopo,
+  geoportalTopoGray,
+  inspireParcelService,
+  municipalitiesService,
+  parseRouteParams,
+  stvkService,
+  uetkService,
 } from "@/utils";
 import _ from "lodash";
 import { computed, inject, ref } from "vue";
@@ -116,7 +131,6 @@ const drawTypes = computed(() => {
   return defaultDrawElements.filter((type) => types.includes(type.el));
 });
 
-
 const hasDrawType = (type: string) => {
   return drawTypes.value.some((t) => t.el === type);
 };
@@ -133,8 +147,7 @@ const bufferSizes: any = {
   xl: { min: 1000, max: 10000, step: 1000 },
 };
 
-const bufferSizeKey =
-  query.buffer && bufferSizes[query.buffer] ? query.buffer : "xs";
+const bufferSizeKey = query.buffer && bufferSizes[query.buffer] ? query.buffer : "xs";
 
 const bufferSizeLabel = computed(() => {
   const text = `Buferio dydis`;
@@ -217,10 +230,9 @@ mapDraw.value
     };
   });
 
-
-if(enableContinuousDraw) {
-     toggleDrawType(drawTypes.value[0].type);
-   }
+if (enableContinuousDraw) {
+  toggleDrawType(drawTypes.value[0].type);
+}
 
 events.on("geom", (data: any) => {
   let geom = data.geom || data;
