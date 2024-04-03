@@ -71,10 +71,10 @@ export function applyBufferSizesToFeatureCollection(data: any, dataProjection: a
 export function featureCollectionToExtent(
   data: any,
   featureProjection?: any,
-  opts?: {
+  opts: {
     dataProjection?: any;
     applyBuffers?: boolean;
-  },
+  } = {},
 ) {
   opts.dataProjection = opts?.dataProjection || projection;
   if (opts?.applyBuffers) {
