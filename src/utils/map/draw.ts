@@ -87,6 +87,15 @@ export class MapDraw extends Queues {
       if (!options?.append) {
         this.remove();
       }
+
+      if (this._enabledBufferSize) {
+        data?.forEach((feature) => {
+          const bufferSize =
+            this.getProperties(feature, 'bufferSize') || this._defaultBufferSizeValue;
+          this.setProperties(feature, { bufferSize });
+        });
+      }
+
       this._source.addFeatures(data);
       this._triggerCallbacks('change');
     } catch (err) {
