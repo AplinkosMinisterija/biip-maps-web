@@ -85,7 +85,13 @@ const events: any = inject("events");
 const mapLayers: any = inject("mapLayers");
 const postMessage: any = inject("postMessage");
 
-const query = parseRouteParams($route.query, ["multi", "buffer", "preview", "types"]);
+const query = parseRouteParams($route.query, [
+  "multi",
+  "buffer",
+  "preview",
+  "types",
+  "autoZoom",
+]);
 const isPreview = !!query.preview;
 
 const activeDrawType = computed(() => mapDraw.value.activeType);
@@ -220,8 +226,11 @@ mapDraw.value
   .setMulti(!!query.multi)
   .enableBufferSize(!!query.buffer, bufferSizes[bufferSizeKey].min)
   .enableContinuousDraw(enableContinuousDraw)
-  .on(["change", "remove"], ({ features }: any) => {
+  .on(["change", "remove"], ({ features, featuresJSON }: any) => {
     postMessage("data", features);
+    if (!!query.autoZoom && !!featuresJSON?.features?.length) {
+      mapLayers.zoomToFeatureCollection(featuresJSON);
+    }
   })
   .on("select", ({ featureObj, feature }: any) => {
     selectedFeature.value = {
