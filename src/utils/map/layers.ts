@@ -660,7 +660,9 @@ export class MapLayers extends Queues {
     data = dataToFeatureCollection(data);
     data = convertCoordinatesToProjection(data);
 
-    const { extent } = featureCollectionToExtent(data, this.map.getView().getProjection());
+    const { extent } = featureCollectionToExtent(data, this.map.getView().getProjection(), {
+      applyBuffers: true,
+    });
 
     if (addStroke) {
       this.highlightFeatures(data, { layer: fixedHighlightLayerId });
@@ -696,11 +698,9 @@ export class MapLayers extends Queues {
       options?.dataProjection,
       this.map.getView()?.getProjection().getCode(),
     );
-    const { source } = featureCollectionToExtent(
-      data,
-      this.map.getView().getProjection(),
-      options?.dataProjection,
-    );
+    const { source } = featureCollectionToExtent(data, this.map.getView().getProjection(), {
+      dataProjection: options?.dataProjection,
+    });
 
     const layer = this.getVectorLayer(layerName);
     const oldSource = layer.getSource();

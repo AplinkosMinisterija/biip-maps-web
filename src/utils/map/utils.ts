@@ -71,13 +71,19 @@ export function applyBufferSizesToFeatureCollection(data: any, dataProjection: a
 export function featureCollectionToExtent(
   data: any,
   featureProjection?: any,
-  dataProjection = projection,
+  opts?: {
+    dataProjection?: any;
+    applyBuffers?: boolean;
+  },
 ) {
-  data = applyBufferSizesToFeatureCollection(data, dataProjection);
+  opts.dataProjection = opts?.dataProjection || projection;
+  if (opts?.applyBuffers) {
+    data = applyBufferSizesToFeatureCollection(data, opts?.dataProjection);
+  }
 
   const vectorSource = new VectorSource({
     features: new GeoJSON().readFeatures(data, {
-      dataProjection,
+      dataProjection: opts.dataProjection,
       featureProjection,
     }),
   });
