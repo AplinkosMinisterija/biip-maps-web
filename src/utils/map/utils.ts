@@ -1,10 +1,11 @@
 import { extend, getCenter } from 'ol/extent';
 import { GeoJSON } from 'ol/format';
 import VectorSource from 'ol/source/Vector';
-import { projection } from '../constants';
+import { projection, projection4326 } from '../constants';
 import { serializeQuery } from '../requests';
 import type { Feature } from 'ol';
 import { Geometry, LineString, Point } from 'ol/geom';
+import turfBuffer from '@turf/buffer';
 
 export function dataToFeatureCollection(data: any) {
   if (!data) return data;
@@ -35,14 +36,54 @@ export function getPropertiesFromFeaturesArray(data: any[], _layerTitle?: string
     .filter((item) => !!item);
 }
 
+export function applyBufferSizesToFeatureCollection(data: any, dataProjection: any) {
+  const hasBufferSizes = data?.features?.some((i: any) => i.properties.bufferSize) || false;
+  if (!data?.features?.length || !hasBufferSizes) return data;
+
+  // first we need to reproject feature collection to WGS84
+  const dataWGS84 = new GeoJSON().writeFeaturesObject(
+    new GeoJSON().readFeatures(data, {
+      dataProjection,
+      featureProjection: projection4326,
+    }),
+  );
+
+  // then we need to apply conversions (points/lines to polygons by buffer)
+  dataWGS84.features =
+    dataWGS84?.features?.map((f: any) => {
+      if (!f?.properties?.bufferSize) return f;
+
+      const data = turfBuffer(f, f?.properties?.bufferSize, {
+        units: 'meters',
+      });
+      return data;
+    }) || [];
+
+  // lastly - convert to feature collection by initial projection
+  return new GeoJSON().writeFeaturesObject(
+    new GeoJSON().readFeatures(dataWGS84, {
+      dataProjection: projection4326,
+      featureProjection: dataProjection,
+    }),
+  );
+}
+
 export function featureCollectionToExtent(
   data: any,
   featureProjection?: any,
-  dataProjection = projection,
+  opts: {
+    dataProjection?: any;
+    applyBuffers?: boolean;
+  } = {},
 ) {
+  opts.dataProjection = opts?.dataProjection || projection;
+  if (opts?.applyBuffers) {
+    data = applyBufferSizesToFeatureCollection(data, opts?.dataProjection);
+  }
+
   const vectorSource = new VectorSource({
     features: new GeoJSON().readFeatures(data, {
-      dataProjection,
+      dataProjection: opts.dataProjection,
       featureProjection,
     }),
   });
