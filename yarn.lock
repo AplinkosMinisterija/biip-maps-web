@@ -2395,10 +2395,10 @@ ol-mapbox-style@^10.1.0:
     mapbox-to-css-font "^2.4.1"
     ol "^7.3.0"
 
-ol-mapbox-style@^12.2.1:
-  version "12.2.1"
-  resolved "https://registry.yarnpkg.com/ol-mapbox-style/-/ol-mapbox-style-12.2.1.tgz#12b568f199a8448fd146191b817b93e075eac2f9"
-  integrity sha512-soh8x+8CwlA+e3fd8grotA4XXnm0DSWnpzu5Ef3aEQwpM1o2OfoGPSk/hpjhXL5kFUm79pEyiONTw+kdth2FEQ==
+ol-mapbox-style@^12.3.0:
+  version "12.3.0"
+  resolved "https://registry.yarnpkg.com/ol-mapbox-style/-/ol-mapbox-style-12.3.0.tgz#46984378e13584bc532694868e7192f92915f0b4"
+  integrity sha512-DPGWcEeC/XNejo0N10DpVOkMr2pRSzxOYWpe9RoOPiC9Ph34jiuyRpFQsLzlnJPrRo7pdQOYSYoM+mL8QF/HBA==
   dependencies:
     "@mapbox/mapbox-gl-style-spec" "^13.23.1"
     mapbox-to-css-font "^2.4.1"

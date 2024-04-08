@@ -31,7 +31,7 @@
 </template>
 <script setup lang="ts">
 import { inject } from "vue";
-import {projection3857, smalsuolisServiceVT, vectorProtonWhite, vectorProtonLight} from "@/utils";
+import {projection3857, smalsuolisServiceVT, vectorGRPKBright, vectorGRPKPositron} from "@/utils";
 import { useFiltersStore } from "@/stores/filters";
 import VueMarkdown from "vue-markdown-render";
 import moment from "moment";
@@ -39,5 +39,5 @@ const filtersStore = useFiltersStore();
 
 const mapLayers: any = inject("mapLayers");
 
-mapLayers.addBaseLayer(vectorProtonWhite.id).addBaseLayer(vectorProtonLight.id).add(smalsuolisServiceVT.id);
+mapLayers.addBaseLayer(vectorGRPKBright.id).addBaseLayer(vectorGRPKPositron.id).add(smalsuolisServiceVT.id);
 </script>

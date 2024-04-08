@@ -32,21 +32,18 @@ const kpdCopyright = getCopyrightLabel('Kultūros paveldo departamentas', 'https
 
 const crossOrigin = 'Anonymous';
 
-export const vectorProtonLight = {
-  id: 'vectorProtonLight',
-  title: 'Vektorinis šviesus',
+export const vectorGRPKBright = {
+  id: 'vectorGRPKBright',
+  title: 'GRPK ryškus',
   layer: new MapboxVectorLayer({
-    declutter: true,
-    styleUrl: 'https://cdn.biip.lt/tiles/osm/proton/styles/light.json',
+    styleUrl: 'https://cdn.biip.lt/tiles/grpk/styles/bright/style.json',
   }),
 };
-
-export const vectorProtonWhite = {
-  id: 'vectorProtonWhite',
-  title: 'Vektorinis baltas',
+export const vectorGRPKPositron = {
+  id: 'vectorGRPKPositron',
+  title: 'GRPK šviesus',
   layer: new MapboxVectorLayer({
-    declutter: true,
-    styleUrl: 'https://cdn.biip.lt/tiles/osm/proton/styles/white.json',
+    styleUrl: 'https://cdn.biip.lt/tiles/grpk/styles/positron/style.json',
   }),
 };
 

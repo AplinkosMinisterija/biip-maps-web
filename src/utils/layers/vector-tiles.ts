@@ -6,7 +6,6 @@ import { projection3857 } from '../constants';
 import { qgisTilesUrl } from '@/config';
 import { vectorTileStyles } from './styling';
 import LayerGroup from 'ol/layer/Group';
-import { MapboxVectorLayer } from 'ol-mapbox-style';
 
 function getVectorTilesUrl(type: string, source: string) {
   return `${qgisTilesUrl}/${type}/${source}/{z}/{x}/{y}`;
@@ -106,8 +105,7 @@ export const zuvinimasServiceVT = {
 export const smalsuolisServiceVT = {
   id: 'smalsuolisServiceVT',
   name: 'Smalsuolis',
-  layer: new MapboxVectorLayer({
-    declutter: true,
-    styleUrl: 'https://cdn.biip.lt/tiles/poc/smalsuolis/style.json',
+  layer: getVectorTileLayer('smalsuolis', 'events', {
+    idProperty: 'id',
   }),
 };
