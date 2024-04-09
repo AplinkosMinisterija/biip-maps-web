@@ -21,6 +21,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { getWaterBodyInfo } from "@/utils/requests/alis";
+import { convertCoordinates, projection, projection4326 } from "@/utils";
 
 const props = defineProps({
   feature: {
@@ -72,6 +73,14 @@ const basicInfo = [
     value: () => getFeatureProp("Centro Y koordinatė (LKS-94), m"),
   },
   {
+    key: "Žiočių X koordinatė (LKS-94), m",
+    value: () => getFeatureProp("Žiočių X koordinatė (LKS-94), m"),
+  },
+  {
+    key: "Žiočių Y koordinatė (LKS-94), m",
+    value: () => getFeatureProp("Žiočių Y koordinatė (LKS-94), m"),
+  },
+  {
     key: "Vandens paviršiaus be salų plotas, ha",
     value: () => getFeatureProp("Vandens paviršiaus be salų plotas, ha"),
   },
@@ -91,7 +100,18 @@ const basicInfo = [
   {
     key: "Google žemėlapis",
     link: true,
-    value: () => "https://www.google.com/maps/place/54.756697,24.669754",
+    value: () => {
+      const y =
+        getFeatureProp("Centro X koordinatė (LKS-94), m") ||
+        getFeatureProp("Žiočių X koordinatė (LKS-94), m");
+      const x =
+        getFeatureProp("Centro Y koordinatė (LKS-94), m") ||
+        getFeatureProp("Žiočių Y koordinatė (LKS-94), m");
+
+      if (!x || !y) return "";
+      const [newY, newX] = convertCoordinates([x, y], projection, projection4326);
+      return `https://www.google.com/maps/place/${newX},${newY}`;
+    },
   },
 ];
 
