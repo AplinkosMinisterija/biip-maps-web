@@ -7,7 +7,10 @@
             {{ item.key }}
           </UiTableCell>
           <UiTableCell class="w-1/2">
-            {{ item.value() }}
+            <template v-if="!item.link">
+              {{ item.value() }}
+            </template>
+            <a v-else :href="item.value()" target="_blank">Nuoroda į Google</a>
           </UiTableCell>
         </UiTableRow>
       </UiTable>
@@ -84,6 +87,11 @@ const basicInfo = [
   {
     key: "Limituota žvejyba?",
     value: () => (alisWaterBody.value?.licencija ? "Taip" : "Ne"),
+  },
+  {
+    key: "Google žemėlapis",
+    link: true,
+    value: () => "https://www.google.com/maps/place/54.756697,24.669754",
   },
 ];
 
