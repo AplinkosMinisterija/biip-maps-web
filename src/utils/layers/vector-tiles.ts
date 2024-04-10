@@ -90,7 +90,6 @@ export const uetkMergedCentroidServiceVT = {
   name: 'UETK',
   layer: getVectorTileLayer('uetk', 'uetk_merged.1', {
     idProperty: 'cadastral_id',
-    declutter: true,
   }),
 };
 
