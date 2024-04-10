@@ -25,16 +25,30 @@ export function createMap(
     zoomView?: number;
     projection?: string;
     constrainResolution?: boolean;
+    initialUrlParams: URLSearchParams;
   },
 ) {
   const proj = get(options?.projection || projection);
 
+  const initialUrlXString = options?.initialUrlParams?.get('x');
+  const initialUrlYString = options?.initialUrlParams?.get('y');
+
+  const initialUrlX = initialUrlXString ? parseFloat(initialUrlXString) : null;
+  const initialUrlY = initialUrlYString ? parseFloat(initialUrlYString) : null;
+
+  const initialUrlCenter = initialUrlX && initialUrlY ? [initialUrlX, initialUrlY] : null;
+
+  const initialUrlZoomString = options?.initialUrlParams?.get('z');
+  const initialUrlZoom = initialUrlZoomString ? parseInt(initialUrlZoomString) : null;
+
+  console.log({initialUrlCenter, initialUrlZoom})
+
   const map = new Map({
     target,
     view: new View({
-      center: options?.centerView || [495074.61, 6116454.53],
+      center: initialUrlCenter || options?.centerView || [495074.61, 6116454.53],
       projection: proj as Projection,
-      zoom: options?.zoomView || 9,
+      zoom: initialUrlZoom || options?.zoomView || 9,
       constrainResolution: options?.constrainResolution,
     }),
     controls: defaults({
@@ -74,7 +88,7 @@ export function createMap(
     map.addControl(scaleControl);
   }
 
-  const link = new Link({ replace: true });
+  const link = new Link({ replace: true, params: ['x', 'y', 'z'] });
   map.addInteraction(link);
 
   return map;

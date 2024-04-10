@@ -16,12 +16,15 @@ function getDiffKeys(obj1: any, obj2: any) {
 
 export default {
   install(app: any) {
+    const initialUrlParams = new URLSearchParams(window.location.search);
+
     const mapStore = useMapsStore();
     const { mapLayers } = mapStore;
     let unwatch: any;
     mapLayers.setLayers(allLayers);
     app.directive('map', (el: any, binding: any) => {
       const value = binding?.value || {};
+      value.initialUrlParams = initialUrlParams;
       el.style.height = value.height || '100vh';
       el.style.width = value.width || '100vw';
       el.style.background = value.background || '#ffffff';
