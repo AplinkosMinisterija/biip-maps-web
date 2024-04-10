@@ -30,9 +30,15 @@
 </template>
 <script setup lang="ts">
 import { inject, ref } from 'vue';
-import { projection3857, geoportalTopo3857, uetkMergedCentroidServiceVT } from '@/utils';
+import {
+  projection3857,
+  uetkMergedCentroidServiceVT,
+  vectorGRPKPositron,
+  vectorGRPKBright,
+} from '@/utils';
 import { useStatsStore } from '@/stores/stats';
 import { useFiltersStore } from '@/stores/filters';
+
 const statsStore = useStatsStore();
 const filtersStore = useFiltersStore();
 
@@ -49,7 +55,10 @@ function selectFeatures(feature: any) {
 }
 
 const statsKey = 'zvejyba.uetk';
-mapLayers.addBaseLayer(geoportalTopo3857.id).add(uetkMergedCentroidServiceVT.id);
+mapLayers
+  .addBaseLayer(vectorGRPKBright.id)
+  .addBaseLayer(vectorGRPKPositron.id)
+  .add(uetkMergedCentroidServiceVT.id);
 
 uetkMergedCentroidServiceVT.layer.getSource()?.on('tileloadend', ({ tile }: any) => {
   tile?.getFeatures()?.forEach((feature: any) => {

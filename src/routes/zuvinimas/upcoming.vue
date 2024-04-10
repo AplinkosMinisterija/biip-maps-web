@@ -61,9 +61,15 @@
 </template>
 <script setup lang="ts">
 import { inject, ref } from 'vue';
-import { projection3857, geoportalTopo3857, zuvinimasServiceVT } from '@/utils';
+import {
+  projection3857,
+  zuvinimasServiceVT,
+  vectorGRPKPositron,
+  vectorGRPKBright,
+} from '@/utils';
 import moment from 'moment';
 import { useFiltersStore } from '@/stores/filters';
+
 const filtersStore = useFiltersStore();
 
 const byStatus: any = {
@@ -94,5 +100,8 @@ events.on('zoom', (data: any) => {
   mapLayers.zoomToFeatureCollection(data);
 });
 
-mapLayers.addBaseLayer(geoportalTopo3857.id).add(zuvinimasServiceVT.id);
+mapLayers
+  .addBaseLayer(vectorGRPKBright.id)
+  .addBaseLayer(vectorGRPKPositron.id)
+  .add(zuvinimasServiceVT.id);
 </script>

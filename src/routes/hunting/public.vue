@@ -42,10 +42,11 @@ import { computed, inject, ref, watch } from 'vue';
 import {
   municipalitiesServiceVT,
   projection3857,
-  geoportalTopo3857,
   huntingPublicService,
   stvkService,
   inspireParcelService,
+  vectorGRPKPositron,
+  vectorGRPKBright,
 } from '@/utils';
 import { useStatsStore } from '@/stores/stats';
 import { useFiltersStore } from '@/stores/filters';
@@ -66,6 +67,7 @@ function selectFeatures(feature: any) {
 
   eventBus.emit('uiSidebar', { open: !!selectedFeatures.value.length });
 }
+
 const allLayers = [
   {
     key: 'medziokle.limits',
@@ -140,7 +142,8 @@ allLayers
   .forEach((layer) => huntingPublicService.sublayers.unshift(layer));
 
 mapLayers
-  .addBaseLayer(geoportalTopo3857.id)
+  .addBaseLayer(vectorGRPKPositron.id)
+  .addBaseLayer(vectorGRPKBright.id)
   .add(municipalitiesServiceVT.id)
   .add(stvkService.id, { isHidden: true })
   .add(inspireParcelService.id, { isHidden: true })
