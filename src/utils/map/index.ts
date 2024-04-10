@@ -5,6 +5,7 @@ import { format } from 'ol/coordinate';
 import Map from 'ol/Map';
 import { get, Projection } from 'ol/proj';
 import { projection } from '../constants';
+import { Link } from 'ol/interaction';
 
 export * from './coordinates';
 export * from './draw';
@@ -72,6 +73,9 @@ export function createMap(
     });
     map.addControl(scaleControl);
   }
+
+  const link = new Link({ replace: true });
+  map.addInteraction(link);
 
   return map;
 }
