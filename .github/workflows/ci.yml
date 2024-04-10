@@ -28,7 +28,7 @@ jobs:
         env:
           NODE_ENV: development
           VUE_APP_QGIS_SERVER: https://dev-gis.biip.lt
-          VUE_APP_API_HOST: https://dev-internalapi.biip.lt
+          VUE_APP_PROXY_BASE_URL: https://dev-maps.biip.lt/proxy
 
       - uses: actions/upload-artifact@v4
         with:
