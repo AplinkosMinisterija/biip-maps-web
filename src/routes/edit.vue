@@ -59,7 +59,22 @@
 <script setup lang="ts">
 import { useFiltersStore } from "@/stores/filters";
 import {
-geoportalForests, geoportalGrpk, geoportalOrto, geoportalOrto1995, geoportalOrto2005, geoportalOrto2009, geoportalOrto2012, geoportalOrto2015, geoportalOrto2018, geoportalTopo, geoportalTopoGray, inspireParcelService, municipalitiesService, parseRouteParams, stvkService, uetkService
+  geoportalForests,
+  geoportalGrpk,
+  geoportalOrto,
+  geoportalOrto1995,
+  geoportalOrto2005,
+  geoportalOrto2009,
+  geoportalOrto2012,
+  geoportalOrto2015,
+  geoportalOrto2018,
+  geoportalTopo,
+  geoportalTopoGray,
+  inspireParcelService,
+  municipalitiesService,
+  parseRouteParams,
+  stvkService,
+  uetkService,
 } from "@/utils";
 import _ from "lodash";
 import { computed, inject, ref } from "vue";
@@ -70,7 +85,13 @@ const events: any = inject("events");
 const mapLayers: any = inject("mapLayers");
 const postMessage: any = inject("postMessage");
 
-const query = parseRouteParams($route.query, ["multi", "buffer", "preview", "types"]);
+const query = parseRouteParams($route.query, [
+  "multi",
+  "buffer",
+  "preview",
+  "types",
+  "autoZoom",
+]);
 const isPreview = !!query.preview;
 
 const activeDrawType = computed(() => mapDraw.value.activeType);
@@ -116,7 +137,6 @@ const drawTypes = computed(() => {
   return defaultDrawElements.filter((type) => types.includes(type.el));
 });
 
-
 const hasDrawType = (type: string) => {
   return drawTypes.value.some((t) => t.el === type);
 };
@@ -133,8 +153,7 @@ const bufferSizes: any = {
   xl: { min: 1000, max: 10000, step: 1000 },
 };
 
-const bufferSizeKey =
-  query.buffer && bufferSizes[query.buffer] ? query.buffer : "xs";
+const bufferSizeKey = query.buffer && bufferSizes[query.buffer] ? query.buffer : "xs";
 
 const bufferSizeLabel = computed(() => {
   const text = `Buferio dydis`;
@@ -207,8 +226,11 @@ mapDraw.value
   .setMulti(!!query.multi)
   .enableBufferSize(!!query.buffer, bufferSizes[bufferSizeKey].min)
   .enableContinuousDraw(enableContinuousDraw)
-  .on(["change", "remove"], ({ features }: any) => {
+  .on(["change", "remove"], ({ features, featuresJSON }: any) => {
     postMessage("data", features);
+    if (!!query.autoZoom && !!featuresJSON?.features?.length) {
+      mapLayers.zoomToFeatureCollection(featuresJSON);
+    }
   })
   .on("select", ({ featureObj, feature }: any) => {
     selectedFeature.value = {
@@ -217,10 +239,9 @@ mapDraw.value
     };
   });
 
-
-if(enableContinuousDraw) {
-     toggleDrawType(drawTypes.value[0].type);
-   }
+if (enableContinuousDraw) {
+  toggleDrawType(drawTypes.value[0].type);
+}
 
 events.on("geom", (data: any) => {
   let geom = data.geom || data;
