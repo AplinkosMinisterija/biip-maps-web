@@ -13,7 +13,7 @@ export function splitUrlIfNeeded(url: string, headers?: any) {
 
   headers = headers || {};
 
-  const src = new URL(url);
+  const src = new URL(url, window?.location?.href);
   if (url.length > 2000) {
     method = 'POST';
     body = src.search.slice(1);

@@ -151,9 +151,9 @@ export function vectorTileStyles(options?: { layerPrefix: string }): any {
         LAYER_TYPE.BOUNDARIES_RESIDENTIAL_AREAS_LABEL,
       ].includes(layer)
     ) {
-      text.getText().setText(feature.get('name'));
+      text.getText()?.setText(feature.get('name'));
       fill.setColor(COLORS.GRAY);
-      text.getText().setFont(getFont(11));
+      text.getText()?.setFont(getFont(11));
       stroke.setColor(getColorWithOpacity(COLORS.WHITE, 0.3));
       stroke.setWidth(2);
       styles[length++] = text;

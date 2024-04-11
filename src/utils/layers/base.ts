@@ -5,6 +5,7 @@ import { getCopyrightLabel } from '../utils';
 import { projection, projection3857 } from '../constants';
 import ImageLayer from 'ol/layer/Image';
 import ImageArcGISRest from 'ol/source/ImageArcGISRest';
+import { MapboxVectorLayer } from 'ol-mapbox-style';
 
 const geoportalUrl = (type: string) => {
   return `https://www.geoportal.lt/mapproxy/${type}`;
@@ -30,6 +31,21 @@ const nztUrl = (type: string) => {
 const kpdCopyright = getCopyrightLabel('Kultūros paveldo departamentas', 'https://kvr.kpd.lt');
 
 const crossOrigin = 'Anonymous';
+
+export const vectorGRPKBright = {
+  id: 'vectorGRPKBright',
+  title: 'Topografinis (šviesus)',
+  layer: new MapboxVectorLayer({
+    styleUrl: 'https://cdn.biip.lt/tiles/grpk/styles/bright/style.json',
+  }),
+};
+export const vectorGRPKPositron = {
+  id: 'vectorGRPKPositron',
+  title: 'Pilkas',
+  layer: new MapboxVectorLayer({
+    styleUrl: 'https://cdn.biip.lt/tiles/grpk/styles/positron/style.json',
+  }),
+};
 
 export const geoportalTopo = {
   id: 'geoportalTopo',
