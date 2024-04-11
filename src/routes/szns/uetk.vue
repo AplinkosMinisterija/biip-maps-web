@@ -12,7 +12,6 @@
     >
       <template #filters>
         <UiButtonIcon icon="layers" @click="filtersStore.toggle('layers')" />
-        <UiButtonIcon icon="legend" @click="filtersStore.toggle('legend')" />
       </template>
       <template v-if="filtersStore.active" #filtersContent>
         <UiMapLayerToggle v-if="filtersStore.isActive('layers')" :layers="toggleLayers" />
@@ -27,17 +26,12 @@
             { type: 'upė', weight: 2 },
           ]"
         />
-        <UiMapLegend
-          v-if="filtersStore.isActive('legend')"
-          :layer="uetkService.id"
-          title="Sutartiniai ženklai"
-        />
       </template>
       <template #sidebar>
         <UiSidebarFeatures
           :is-open="!!selectedFeatures.length"
           :features="selectedFeatures"
-          type="uetk"
+          type="szns"
           @close="selectedFeatures = []"
         />
       </template>
@@ -52,6 +46,7 @@ import {
   geoportalOrto,
   geoportalTopoGray,
   uetkService,
+  sznsUetkService,
   inspireParcelService,
   administrativeBoundariesLabelsService,
   geoportalHybrid,
@@ -85,6 +80,7 @@ function onSearch(search: string) {
 }
 
 const toggleLayers = [
+  sznsUetkService,
   uetkService,
   inspireParcelService,
   administrativeBoundariesLabelsService,
@@ -98,9 +94,14 @@ mapLayers
   .add(geoportalGrpk.id, { isHidden: true })
   .add(administrativeBoundariesLabelsService.id, { isHidden: true })
   .add(inspireParcelService.id, { isHidden: true })
-  .add(uetkService.id)
+  .add(uetkService.id, { isHidden: true })
+  .add(sznsUetkService.id)
   .click(async ({ coordinate }: any) => {
     mapLayers.getFeatureInfo(uetkService.id, coordinate, ({ geometries, properties }: any) => {
+      mapLayers.highlightFeatures(geometries);
+      selectedFeatures.value = properties;
+    });
+    mapLayers.getFeatureInfo(sznsUetkService.id, coordinate, ({ geometries, properties }: any) => {
       mapLayers.highlightFeatures(geometries);
       selectedFeatures.value = properties;
     });
@@ -119,6 +120,6 @@ if (query.cadastralId) {
     filters.on(item).set('kadastro_id', `${query.cadastralId}`);
   });
 
-  await mapLayers.zoomNew(uetkService.id, { addStroke: true, filters });
+  await mapLayers.zoomNew(sznsUetkService.id, { addStroke: true, filters });
 }
 </script>

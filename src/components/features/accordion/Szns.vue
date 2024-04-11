@@ -3,11 +3,8 @@
     <UiAccordionItem
       v-for="feature in features"
       :key="feature.featureId"
-      :title="
-        feature._layerTitle
-          ? feature._layerTitle
-          : feature.featureId.split('.')[0].replace(/_/g, ' ')
-      "
+      :title="feature['Paviršinio vandens telkinio pavadinimas']"
+      :subtitle="feature['Paviršinio vandens telkinio UETK kodas']"
     >
       <UiTable class="text-xs">
         <UiTableRow v-for="item in getSorted(feature)" :key="item.id">

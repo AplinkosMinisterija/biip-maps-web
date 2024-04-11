@@ -163,6 +163,13 @@ export const uetkService = {
   ),
 };
 
+export const sznsUetkService = {
+  id: 'sznsUetkService',
+  title: 'Paviršinių vandens telkinių apsaugos zonos ir juostos',
+  description: biipCopyright,
+  layer: getWMSImageLayer(`${qgisServerUrl}/uetk_szns`, 'szns_vand,apreptis', biipCopyright),
+};
+
 export const stvkService = {
   id: 'stvkService',
   description: vsttCopyright,
