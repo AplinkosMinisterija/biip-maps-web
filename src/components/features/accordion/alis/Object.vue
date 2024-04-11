@@ -1,19 +1,22 @@
 <template>
   <UiTabs v-if="tabs.length" :tabs="tabs" :active="tabs[0].type" :hide-on-one="true">
     <template #default="{ activeTab }">
-      <UiTable class="text-xs">
-        <UiTableRow v-for="item in tableContent(activeTab)" :key="item.key">
-          <UiTableCell class="w-1/2">
-            {{ item.key }}
-          </UiTableCell>
-          <UiTableCell class="w-1/2">
-            <template v-if="!item.link">
-              {{ item.value() }}
-            </template>
-            <a v-else :href="item.value()" target="_blank">Nuoroda į Google</a>
-          </UiTableCell>
-        </UiTableRow>
-      </UiTable>
+      <template v-for="group in tableContent(activeTab)" :key="group">
+        <div v-if="group" class="text-xs mb-1">{{ group.name }}</div>
+        <UiTable v-if="group.tableRows?.length" class="text-xs">
+          <UiTableRow v-for="item in group.tableRows" :key="item.key">
+            <UiTableCell class="w-1/2">
+              {{ item.key }}
+            </UiTableCell>
+            <UiTableCell class="w-1/2">
+              <template v-if="!item.link">
+                {{ item.value() }}
+              </template>
+              <a v-else :href="item.value()" target="_blank">Nuoroda į Google</a>
+            </UiTableCell>
+          </UiTableRow>
+        </UiTable>
+      </template>
     </template>
   </UiTabs>
 </template>
@@ -21,7 +24,10 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { getWaterBodyInfo } from "@/utils/requests/alis";
+import { getFishTypesInfoByYear } from "@/utils/requests/zuvinimas";
 import { convertCoordinates, projection, projection4326 } from "@/utils";
+
+import { upperFirst } from "lodash";
 
 const props = defineProps({
   feature: {
@@ -45,7 +51,12 @@ const props = defineProps({
 const feature = computed(() => props.feature);
 const cadastralId = computed(() => props.getCadastralId(feature.value));
 
-const alisWaterBody = ref(await getWaterBodyInfo(cadastralId.value));
+const alisWaterBody = ref(await getWaterBodyInfo(cadastralId.value).catch(() => ({})));
+const zuvinimasInfo = ref(
+  await getFishTypesInfoByYear({ cadastralId: cadastralId.value })
+    .then((data) => data[cadastralId.value] || {})
+    .catch(() => ({}))
+);
 
 const tabs = [
   { type: "info", name: "Bendra info" },
@@ -63,7 +74,7 @@ const basicInfo = [
     value: () => cadastralId.value,
   },
   { key: "Kategorija", value: () => props.getCategory(feature.value) },
-  { key: "Savivaldybė", value: () => alisWaterBody.value.savivaldybe?.pavadinimas },
+  { key: "Savivaldybė", value: () => alisWaterBody.value?.savivaldybe?.pavadinimas },
   {
     key: "Centro X koordinatė (LKS-94), m",
     value: () => getFeatureProp("Centro X koordinatė (LKS-94), m"),
@@ -115,16 +126,43 @@ const basicInfo = [
   },
 ];
 
-function tableContent(activeTab: string) {
+function tableContent(
+  activeTab: string
+): Array<{
+  name?: string;
+  tableRows?: any[];
+}> {
   if (activeTab === "info") {
-    return basicInfo.filter((i) => !!i.value());
+    return [{ tableRows: basicInfo.filter((i) => !!i.value()) }];
+  } else if (activeTab === "fishstocking") {
+    const noInfo = [{ name: "Nėra informacijos" }];
+    if (!zuvinimasInfo.value?.byYear) return noInfo;
+
+    const data = Object.keys(zuvinimasInfo.value.byYear)
+      .sort((a, b) => `${b}`.localeCompare(`${a}`))
+      .reduce((acc: any[], year: number | string) => {
+        const fishes = Object.values(zuvinimasInfo.value.byYear[year].byFish).map(
+          (i: any) => ({
+            key: `${upperFirst(i?.fishType?.label)}, vnt`,
+            value: () => i?.count,
+          })
+        );
+        acc.push({
+          name: `${year} m.`,
+          tableRows: [
+            { key: "Bendras kiekis, vnt", value: () => zuvinimasInfo.value?.count || 0 },
+            ...fishes,
+          ],
+        });
+
+        return acc;
+      }, []);
+
+    if (!data?.length) return noInfo;
+
+    return data;
   }
 
-  return [
-    {
-      key: "Ruošiama",
-      value: () => "Informacija ruošiama",
-    },
-  ];
+  return [];
 }
 </script>
