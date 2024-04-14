@@ -85,7 +85,7 @@ export function getLayerStyles(opts: {
       if (bufferSize) {
         const styleClone = defaultStyle.clone();
         const circle = styleClone.getImage() as Circle;
-        const lightColor = styleClone.getFill().getColor()?.toString();
+        const lightColor = styleClone.getFill()?.getColor()?.toString();
 
         const width = (bufferSize * 2) / resolution;
 
