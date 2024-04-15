@@ -37,8 +37,8 @@ import { computed, inject, ref, watch } from 'vue';
 import {
   municipalitiesServiceVT,
   projection3857,
-  vectorGRPKBright,
-  vectorGRPKPositron,
+  vectorBright,
+  vectorPositron,
 } from '@/utils';
 import { useStatsStore } from '@/stores/stats';
 
@@ -96,7 +96,7 @@ municipalitiesServiceVT.layer.getSource()?.on('tileloadend', ({ tile }: any) => 
 await statsStore.preloadStats(allLayers.map((l) => l.key));
 
 mapLayers
-  .addBaseLayer(vectorGRPKPositron.id)
-  .addBaseLayer(vectorGRPKBright.id)
+  .addBaseLayer(vectorPositron.id)
+  .addBaseLayer(vectorBright.id)
   .add(municipalitiesServiceVT.id);
 </script>
