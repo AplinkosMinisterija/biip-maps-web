@@ -17,6 +17,7 @@
     "@sentry/vue": "^7.60.1",
     "@turf/buffer": "^6.5.0",
     "@vueform/multiselect": "^2.6.3",
+    "@vueuse/core": "^10.9.0",
     "geojsonjs": "^0.1.2",
     "lodash": "^4.17.21",
     "mitt": "^3.0.0",

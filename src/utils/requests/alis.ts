@@ -1,5 +1,6 @@
-export async function getWaterBodyInfo(id: number) {
-  if (!id) return;
+import { alisApiHost } from '@/config';
 
-  return fetch(`/proxy/alis/public/v1/cl/vandensTelkiniai?kodas=${id}`).then((res) => res.json());
+export function getWaterBodyInfoUrl(id?: number) {
+  if (!id) return `${alisApiHost}/public/v1/cl/vandensTelkiniai`;
+  return `${alisApiHost}/public/v1/cl/vandensTelkiniai?kodas=${id}`;
 }

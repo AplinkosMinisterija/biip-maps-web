@@ -1,7 +1,8 @@
 <template>
   <UiTabs v-if="tabs.length" :tabs="tabs" :active="tabs[0].type" :hide-on-one="true">
     <template #default="{ activeTab }">
-      <template v-for="group in tableContent(activeTab)" :key="group">
+      <UiLoader v-if="isLoading(activeTab)" type="table" />
+      <template v-for="group in tableContent(activeTab)" v-else :key="group">
         <div v-if="group" class="text-xs mb-1">{{ group.name }}</div>
         <UiTable v-if="group.tableRows?.length" class="text-xs">
           <UiTableRow v-for="item in group.tableRows" :key="item.key">
@@ -12,7 +13,14 @@
               <template v-if="!item.link">
                 {{ item.value() }}
               </template>
-              <a v-else :href="item.value()" target="_blank">Nuoroda į Google</a>
+              <a
+                v-else
+                :href="item.value()"
+                target="_blank"
+                class="border-b border-b-transparent hover:border-b-black"
+              >
+                {{ item.link }}
+              </a>
             </UiTableCell>
           </UiTableRow>
         </UiTable>
@@ -22,10 +30,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
-import { getWaterBodyInfo } from "@/utils/requests/alis";
-import { getFishTypesInfoByYear } from "@/utils/requests/zuvinimas";
+import { computed } from "vue";
+import { getWaterBodyInfoUrl } from "@/utils/requests/alis";
+import { getFishTypesInfoByYearUrl } from "@/utils/requests/zuvinimas";
 import { convertCoordinates, projection, projection4326 } from "@/utils";
+import { useFetch } from "@vueuse/core";
 
 import { upperFirst } from "lodash";
 
@@ -50,20 +59,39 @@ const props = defineProps({
 
 const feature = computed(() => props.feature);
 const cadastralId = computed(() => props.getCadastralId(feature.value));
+const hasCadastralId = computed(() => !!cadastralId.value);
 
-const alisWaterBody = ref(await getWaterBodyInfo(cadastralId.value).catch(() => ({})));
-const zuvinimasInfo = ref(
-  await getFishTypesInfoByYear({ cadastralId: cadastralId.value })
-    .then((data) => data[cadastralId.value] || {})
-    .catch(() => ({}))
-);
+function isLoading(activeTab: string) {
+  if (activeTab === "info") {
+    return !!alisWaterBodyLoading.value;
+  } else if (activeTab === "fishstocking") {
+    return !!zuvinimasInfoLoading.value;
+  }
+
+  return false;
+}
+
+const { data: alisWaterBody, isFetching: alisWaterBodyLoading } = useFetch<any>(
+  getWaterBodyInfoUrl(cadastralId.value),
+  { immediate: hasCadastralId.value }
+).json();
+
+const { data: zuvinimasInfo, isFetching: zuvinimasInfoLoading } = useFetch<any>(
+  getFishTypesInfoByYearUrl({ cadastralId: cadastralId.value }),
+  {
+    immediate: hasCadastralId.value,
+    afterFetch(ctx: any) {
+      ctx.data = ctx.data[cadastralId.value] || {};
+      return ctx;
+    },
+  }
+).json();
 
 const tabs = [
   { type: "info", name: "Bendra info" },
   { type: "fishstocking", name: "Žuvų įveisimas" },
 ];
 
-getWaterBodyInfo;
 function getFeatureProp(name: string | string[]) {
   return props.getValue(feature.value, name);
 }
@@ -102,15 +130,18 @@ const basicInfo = [
   {
     key: "Statusas",
     value: () =>
-      `${alisWaterBody.value?.isnuomotas ? "Išnuomotas" : "Neišnuomotas"} telkinys`,
+      hasCadastralId.value
+        ? `${alisWaterBody.value?.isnuomotas ? "Išnuomotas" : "Neišnuomotas"} telkinys`
+        : "",
   },
   {
     key: "Limituota žvejyba?",
-    value: () => (alisWaterBody.value?.licencija ? "Taip" : "Ne"),
+    value: () =>
+      hasCadastralId.value ? (alisWaterBody.value?.licencija ? "Taip" : "Ne") : "",
   },
   {
     key: "Google žemėlapis",
-    link: true,
+    link: "Nuoroda į Google",
     value: () => {
       const y =
         getFeatureProp("Centro X koordinatė (LKS-94), m") ||

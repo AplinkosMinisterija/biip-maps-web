@@ -6,8 +6,6 @@ export async function getFishTypes() {
   return fetch(`${zuvinimasApiHost}/public/fishTypes`).then((res) => res.json());
 }
 
-export async function getFishTypesInfoByYear(options?: SearchOptions) {
-  return fetch(`${zuvinimasApiHost}/public/uetk/statistics/byYear?${serializeQuery(options)}`).then(
-    (res) => res.json(),
-  );
+export function getFishTypesInfoByYearUrl(options?: SearchOptions) {
+  return `${zuvinimasApiHost}/public/uetk/statistics/byYear?${serializeQuery(options)}`;
 }
