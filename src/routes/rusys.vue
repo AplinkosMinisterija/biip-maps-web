@@ -212,7 +212,7 @@ events.on('filter', ({ places, species, kingdoms, classes, phylums, zoom }: any)
   if (kingdoms) setData('kingdomId', kingdoms);
   if (classes) setData('classId', classes);
   if (phylums) setData('phylumId', phylums);
-  if (zoom) mapLayers.zoomNew(rusysService.id);
+  if (zoom) mapLayers.zoom(rusysService.id);
 });
 
 function togglePrivateSrisService(show: boolean) {
@@ -291,6 +291,6 @@ function onChangeSublayers(layer: any) {
 }
 
 if (query.place || query.informationalForm || query.request) {
-  await mapLayers.zoomNew(rusysService.id);
+  await mapLayers.zoom(rusysService.id);
 }
 </script>

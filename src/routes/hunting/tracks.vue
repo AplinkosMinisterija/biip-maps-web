@@ -51,5 +51,5 @@ await mapLayers
       }
     );
   })
-  .zoomNew(huntingService.id, { addStroke: true });
+  .zoom(huntingService.id, { addStroke: true });
 </script>

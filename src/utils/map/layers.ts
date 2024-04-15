@@ -473,7 +473,7 @@ export class MapLayers extends Queues {
     );
   }
 
-  async zoomNew(
+  async zoom(
     id: string,
     options: {
       addStroke?: boolean;
@@ -492,7 +492,7 @@ export class MapLayers extends Queues {
 
     if (this._isGroup(layer)) {
       return Promise.all(
-        this.all(layer).map((layer: any) => this.zoomNew(layer.get('id'), options)),
+        this.all(layer).map((layer: any) => this.zoom(layer.get('id'), options)),
       );
     }
 
