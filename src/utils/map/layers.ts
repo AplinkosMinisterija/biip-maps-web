@@ -653,7 +653,6 @@ export class MapLayers extends Queues {
     data: any,
     options: {
       addStroke?: boolean;
-      dataProjection?: string;
       cb?: Function;
     } = {},
   ) {
