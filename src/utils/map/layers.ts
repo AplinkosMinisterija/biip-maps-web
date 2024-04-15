@@ -664,16 +664,9 @@ export class MapLayers extends Queues {
       return;
     }
 
-    console.log(options)
     data = dataToFeatureCollection(data);
-    data = convertCoordinatesToProjection(
-      data,
-      options?.dataProjection,
-      // '',
-      this.map.getView()?.getProjection().getCode(),
-    );
+    data = convertCoordinatesToProjection(data);
 
-    console.log(data)
     const { extent } = featureCollectionToExtent(data, this.map.getView().getProjection(), {
       applyBuffers: true,
     });
