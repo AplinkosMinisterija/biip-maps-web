@@ -517,45 +517,6 @@ export class MapLayers extends Queues {
     return this;
   }
 
-  zoom(
-    id: string,
-    options: {
-      addStroke?: boolean;
-      filters?: any;
-      cb?: Function;
-    } = {},
-  ) {
-    if (!this.map) {
-      return this._addToQueue('zoom', id, options);
-    }
-
-    const filters = options.filters || this.filters(id);
-    if (filters.isEmpty) return;
-    const layer = this.getLayer(id);
-
-    if (!layer) {
-      throw new Error('Layer not exists');
-    }
-
-    if (this._isGroup(layer)) {
-      const layerOptions: any = _.cloneDeep(options);
-      layerOptions.filters = filters;
-      layer.getLayers().forEach((layer: any) => this.zoom(layer.get('id'), layerOptions));
-
-      return this;
-    }
-
-    const queryPromise: any = this._getZoomRequest(id, filters);
-    if (!queryPromise) return this;
-
-    queryPromise.then((data: any) => {
-      this.zoomToFeatureCollection(data, { addStroke: options?.addStroke });
-      if (options?.cb) options.cb();
-    });
-
-    return this;
-  }
-
   async getFeatureInfo(
     id: string,
     coordinate: number[],
