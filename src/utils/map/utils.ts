@@ -37,7 +37,7 @@ export function getPropertiesFromFeaturesArray(data: any[], _layerTitle?: string
 }
 
 export function applyBufferSizesToFeatureCollection(data: any, dataProjection: any) {
-  const hasBufferSizes = data?.features?.some((i: any) => i.properties.bufferSize) || false;
+  const hasBufferSizes = data?.features?.some((i: any) => i?.properties?.bufferSize) || false;
   if (!data?.features?.length || !hasBufferSizes) return data;
 
   // first we need to reproject feature collection to WGS84

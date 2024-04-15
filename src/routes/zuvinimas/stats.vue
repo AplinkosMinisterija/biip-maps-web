@@ -47,8 +47,8 @@ import { inject, ref } from 'vue';
 import {
   projection3857,
   uetkMergedCentroidServiceVT,
-  vectorGRPKBright,
-  vectorGRPKPositron,
+  vectorBright,
+  vectorPositron,
 } from '@/utils';
 import { useStatsStore } from '@/stores/stats';
 import { useFiltersStore } from '@/stores/filters';
@@ -70,8 +70,8 @@ function selectFeatures(feature: any) {
 
 const statsKey = 'zuvinimas.uetk';
 mapLayers
-  .addBaseLayer(vectorGRPKBright.id)
-  .addBaseLayer(vectorGRPKPositron.id)
+  .addBaseLayer(vectorBright.id)
+  .addBaseLayer(vectorPositron.id)
   .add(uetkMergedCentroidServiceVT.id);
 
 uetkMergedCentroidServiceVT.layer.getSource()?.on('tileloadend', ({ tile }: any) => {
