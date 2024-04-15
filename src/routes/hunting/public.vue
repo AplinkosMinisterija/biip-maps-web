@@ -153,10 +153,7 @@ mapLayers
     mapLayers.getFeatureInfo(
       huntingPublicService.id,
       coordinate,
-      ({ geometries, properties }: any) => {
-        mapLayers.highlightFeatures(geometries, {
-          dataProjection: projection3857,
-        });
+      ({ properties }: any) => {
         selectedFeatures.value.push(...properties);
         eventBus.emit('uiSidebar', { open: !!selectedFeatures.value.length });
       },

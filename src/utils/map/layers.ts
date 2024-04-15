@@ -13,7 +13,11 @@ import {
   WMSLegendRequest,
 } from './utils';
 import LayerGroup from 'ol/layer/Group';
-import { convertCoordinates, convertCoordinatesToProjection } from './coordinates';
+import {
+  convertCoordinates,
+  convertCoordinatesToProjection,
+  convertFeatureCollectionProjection,
+} from './coordinates';
 import { getCenter } from 'ol/extent';
 import { Queues } from './queues';
 
@@ -573,18 +577,26 @@ export class MapLayers extends Queues {
     const result = await this._getFeatureInfoRequest(id, coordinate, filters);
     if (!result || !cb) return;
 
+    const mapProjection = this.map.getView().getProjection().getCode();
+
     const transformResponse = (data: any) => {
+      if (mapProjection !== projection) {
+        data = convertFeatureCollectionProjection(data, mapProjection, projection);
+        console.log(data?.features?.[0]?.geometry);
+      }
       const properties = getPropertiesFromFeaturesArray(
-        data,
+        data.features,
         this.get(id)?.title || (parentLayerId && this.get(parentLayerId).title),
       );
 
-      const geometries = getGeometriesFromFeaturesArray(data);
-      return {
-        data,
+      const geometries = getGeometriesFromFeaturesArray(data.features);
+
+      const response = {
         properties,
         geometries,
       };
+
+      return response;
     };
 
     cb(transformResponse(result));
@@ -928,7 +940,7 @@ export class MapLayers extends Queues {
           },
         );
 
-      return loadWMSLayer(url, this._getRequestOptions(id));
+      return loadWMSLayer(url, this._getRequestOptions(id), false);
     }
   }
 
