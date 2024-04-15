@@ -500,7 +500,7 @@ export class MapLayers extends Queues {
 
     if (!result.length) return;
 
-    this.zoomToFeatureCollection(result, options?.addStroke, options?.zoomFn);
+    this.zoomToFeatureCollection(result, { addStroke: options?.addStroke, cb: options?.zoomFn });
 
     return result;
   }
@@ -543,7 +543,7 @@ export class MapLayers extends Queues {
     if (!queryPromise) return this;
 
     queryPromise.then((data: any) => {
-      this.zoomToFeatureCollection(data, options?.addStroke);
+      this.zoomToFeatureCollection(data, { addStroke: options?.addStroke });
       if (options?.cb) options.cb();
     });
 
@@ -649,29 +649,43 @@ export class MapLayers extends Queues {
     });
   }
 
-  zoomToFeatureCollection(data: any, addStroke = false, cb?: Function) {
+  zoomToFeatureCollection(
+    data: any,
+    options: {
+      addStroke?: boolean;
+      dataProjection?: string;
+      cb?: Function;
+    } = {},
+  ) {
     if (_.isEmpty(data)) return;
 
     if (!this.map) {
-      this._addToQueue('zoomToFeatureCollection', data, addStroke, cb);
+      this._addToQueue('zoomToFeatureCollection', data, options);
       return;
     }
 
+    console.log(options)
     data = dataToFeatureCollection(data);
-    data = convertCoordinatesToProjection(data);
+    data = convertCoordinatesToProjection(
+      data,
+      options?.dataProjection,
+      // '',
+      this.map.getView()?.getProjection().getCode(),
+    );
 
+    console.log(data)
     const { extent } = featureCollectionToExtent(data, this.map.getView().getProjection(), {
       applyBuffers: true,
     });
 
-    if (addStroke) {
+    if (options.addStroke) {
       this.highlightFeatures(data, { layer: fixedHighlightLayerId });
     }
 
     this.zoomToExtent(extent);
 
-    if (cb) {
-      cb();
+    if (options?.cb && typeof options?.cb === 'function') {
+      options.cb();
     }
   }
 

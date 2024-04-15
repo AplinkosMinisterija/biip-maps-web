@@ -267,7 +267,7 @@ mapLayers
 mapLayers.updateLayerQuery(rusysService.id);
 
 events.on('geom', (data: any) => {
-  mapLayers.zoomToFeatureCollection(data, true);
+  mapLayers.zoomToFeatureCollection(data, { addStroke: true });
 });
 
 watch(isVisibleSrisLayer, (value) => togglePrivateSrisService(!value || !!user), {
