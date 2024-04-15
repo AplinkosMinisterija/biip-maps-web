@@ -57,6 +57,8 @@ export class MapLayers extends Queues {
 
   private _hoverTimeout: any;
 
+  private _callbacksProjection: string = projection;
+
   waitForLoaded: Promise<void> = new Promise(async (resolve) => {
     const waitForMap = async () => {
       return new Promise<void>((resolve) => {
@@ -580,9 +582,8 @@ export class MapLayers extends Queues {
     const mapProjection = this.map.getView().getProjection().getCode();
 
     const transformResponse = (data: any) => {
-      if (mapProjection !== projection) {
-        data = convertFeatureCollectionProjection(data, mapProjection, projection);
-        console.log(data?.features?.[0]?.geometry);
+      if (mapProjection !== this._callbacksProjection) {
+        data = convertFeatureCollectionProjection(data, mapProjection, this._callbacksProjection);
       }
       const properties = getPropertiesFromFeaturesArray(
         data.features,
