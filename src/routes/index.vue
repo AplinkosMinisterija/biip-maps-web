@@ -12,14 +12,14 @@ import { inject } from "vue";
 import {
   municipalitiesServiceVT,
   projection3857,
-  vectorGRPKBright,
-  vectorGRPKPositron,
+  vectorBright,
+  vectorPositron,
 } from "@/utils";
 
 const mapLayers: any = inject("mapLayers");
 
 mapLayers
-  .addBaseLayer(vectorGRPKBright.id)
-  .addBaseLayer(vectorGRPKPositron.id)
+  .addBaseLayer(vectorBright.id)
+  .addBaseLayer(vectorPositron.id)
   .add(municipalitiesServiceVT.id);
 </script>

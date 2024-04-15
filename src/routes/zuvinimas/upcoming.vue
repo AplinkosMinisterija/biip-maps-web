@@ -64,8 +64,8 @@ import { inject, ref } from 'vue';
 import {
   projection3857,
   zuvinimasServiceVT,
-  vectorGRPKPositron,
-  vectorGRPKBright,
+  vectorPositron,
+  vectorBright,
 } from '@/utils';
 import moment from 'moment';
 import { useFiltersStore } from '@/stores/filters';
@@ -101,7 +101,7 @@ events.on('zoom', (data: any) => {
 });
 
 mapLayers
-  .addBaseLayer(vectorGRPKBright.id)
-  .addBaseLayer(vectorGRPKPositron.id)
+  .addBaseLayer(vectorBright.id)
+  .addBaseLayer(vectorPositron.id)
   .add(zuvinimasServiceVT.id);
 </script>

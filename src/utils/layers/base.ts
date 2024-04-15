@@ -32,18 +32,18 @@ const kpdCopyright = getCopyrightLabel('Kultūros paveldo departamentas', 'https
 
 const crossOrigin = 'Anonymous';
 
-export const vectorGRPKBright = {
-  id: 'vectorGRPKBright',
+export const vectorBright = {
+  id: 'vectorBright',
   title: 'Topografinis (šviesus)',
   layer: new MapboxVectorLayer({
-    styleUrl: 'https://cdn.biip.lt/tiles/grpk/styles/bright/style.json',
+    styleUrl: 'https://basemap.startupgov.lt/vector/styles/bright/style.json',
   }),
 };
-export const vectorGRPKPositron = {
-  id: 'vectorGRPKPositron',
+export const vectorPositron = {
+  id: 'vectorPositron',
   title: 'Pilkas',
   layer: new MapboxVectorLayer({
-    styleUrl: 'https://cdn.biip.lt/tiles/grpk/styles/positron/style.json',
+    styleUrl: 'https://basemap.startupgov.lt/vector/styles/positron/style.json',
   }),
 };
 
