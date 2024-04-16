@@ -31,7 +31,7 @@
 </template>
 <script setup lang="ts">
 import { inject } from "vue";
-import { projection3857, geoportalTopo3857, smalsuolisServiceVT } from "@/utils";
+import { projection3857, vectorBright, smalsuolisServiceVT } from "@/utils";
 import { useFiltersStore } from "@/stores/filters";
 import VueMarkdown from "vue-markdown-render";
 import moment from "moment";
@@ -39,5 +39,5 @@ const filtersStore = useFiltersStore();
 
 const mapLayers: any = inject("mapLayers");
 
-mapLayers.addBaseLayer(geoportalTopo3857.id).add(smalsuolisServiceVT.id);
+mapLayers.addBaseLayer(vectorBright.id).add(smalsuolisServiceVT.id);
 </script>
