@@ -45,8 +45,8 @@ import {
   huntingPublicService,
   stvkService,
   inspireParcelService,
-  vectorGRPKPositron,
-  vectorGRPKBright,
+  vectorPositron,
+  vectorBright,
 } from '@/utils';
 import { useStatsStore } from '@/stores/stats';
 import { useFiltersStore } from '@/stores/filters';
@@ -142,8 +142,8 @@ allLayers
   .forEach((layer) => huntingPublicService.sublayers.unshift(layer));
 
 mapLayers
-  .addBaseLayer(vectorGRPKPositron.id)
-  .addBaseLayer(vectorGRPKBright.id)
+  .addBaseLayer(vectorPositron.id)
+  .addBaseLayer(vectorBright.id)
   .add(municipalitiesServiceVT.id)
   .add(stvkService.id, { isHidden: true })
   .add(inspireParcelService.id, { isHidden: true })
