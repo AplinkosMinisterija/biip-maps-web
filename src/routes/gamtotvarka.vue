@@ -146,7 +146,7 @@ if (query.gamtotvarkos_planas) {
   gamtotvarkaPlanaiFilters
     .onAll(['gamtotvarkos_plotai_patvirtintas', 'gamtotvarkos_teritorijos_patvirtintas'])
     .set('tvark_ter_uuid', query.gamtotvarkos_planas);
-  await mapLayers.toggleVisibility(gamtotvarkaPlanai.id, true).zoomNew(gamtotvarkaPlanai.id, {
+  await mapLayers.toggleVisibility(gamtotvarkaPlanai.id, true).zoom(gamtotvarkaPlanai.id, {
     addStroke: false,
     filters: gamtotvarkaPlanaiFilters,
   });

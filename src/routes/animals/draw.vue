@@ -47,7 +47,7 @@ const iconType = query.type as keyof typeof icons;
 if (query.municipalityCode) {
   municipalitiesServiceFilters.on('municipalities').set('kodas', `${query.municipalityCode}`);
 
-  await mapLayers.zoomNew(municipalitiesService.id, { addStroke: false });
+  await mapLayers.zoom(municipalitiesService.id, { addStroke: false });
 }
 
 events.on('geom', (data: any) => {

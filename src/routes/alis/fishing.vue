@@ -121,5 +121,5 @@ mapLayers
       postMessage('click', properties);
     });
   })
-  .zoomNew(uetkService.id, { addStroke: true });
+  .zoom(uetkService.id, { addStroke: true });
 </script>

@@ -48,7 +48,7 @@ mapLayers
 
 if (query.mpvId) {
   huntingServiceFilters.on('mpv_info_geom').set('mpv_id', query.mpvId);
-  await mapLayers.zoomNew(huntingService.id, { addStroke: false });
+  await mapLayers.zoom(huntingService.id, { addStroke: false });
 }
 
 if (!query.preview) {
