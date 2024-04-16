@@ -12,6 +12,7 @@
     >
       <template #filters>
         <UiButtonIcon icon="layers" @click="filtersStore.toggle('layers')" />
+        <UiButtonIcon icon="legend" @click="filtersStore.toggle('legend')" />
       </template>
       <template v-if="filtersStore.active" #filtersContent>
         <UiMapLayerToggle v-if="filtersStore.isActive('layers')" :layers="toggleLayers" />
@@ -25,6 +26,11 @@
             { type: 'tvenkinys', weight: 2 },
             { type: 'upė', weight: 2 },
           ]"
+        />
+        <UiMapLegend
+          v-if="filtersStore.isActive('legend')"
+          :layer="sznsUetkService.id"
+          title="Sutartiniai ženklai"
         />
       </template>
       <template #sidebar>
@@ -106,6 +112,10 @@ mapLayers
       selectedFeatures.value = properties;
     });
   });
+
+mapLayers.waitForLoaded.then(() => {
+  filtersStore.toggle('layers');
+});
 
 if (query.cadastralId) {
   const layers = mapLayers
