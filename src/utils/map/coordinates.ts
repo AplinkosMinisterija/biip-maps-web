@@ -315,3 +315,14 @@ export function parseGeomFromString(input: string) {
 
   return results;
 }
+
+export function convertFeatureCollectionProjection(data: any, from: string, to: string) {
+  if (from === to) return data;
+
+  const features = new GeoJSON().readFeatures(_.cloneDeep(data), {
+    dataProjection: from,
+    featureProjection: to,
+  });
+
+  return new GeoJSON().writeFeaturesObject(features);
+}

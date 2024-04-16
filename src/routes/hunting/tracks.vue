@@ -46,10 +46,10 @@ await mapLayers
       huntingTracksService.id,
       coordinate,
       ({ geometries, properties }: any) => {
-        mapLayers.highlightFeatures(geometries, { dataProjection: projection3857 });
+        mapLayers.highlightFeatures(geometries);
         postMessage("click", objectPropsToCamel(properties));
       }
     );
   })
-  .zoomNew(huntingService.id, { addStroke: true });
+  .zoom(huntingService.id, { addStroke: true });
 </script>
