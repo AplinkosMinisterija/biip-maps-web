@@ -87,6 +87,15 @@ export class MapDraw extends Queues {
       if (!options?.append) {
         this.remove();
       }
+
+      if (this._enabledBufferSize) {
+        data?.forEach((feature) => {
+          const bufferSize =
+            this.getProperties(feature, 'bufferSize') || this._defaultBufferSizeValue;
+          this.setProperties(feature, { bufferSize });
+        });
+      }
+
       this._source.addFeatures(data);
       this._triggerCallbacks('change');
     } catch (err) {
@@ -411,12 +420,17 @@ export class MapDraw extends Queues {
 
       const feature = event?.feature ? new GeoJSON().writeFeatureObject(event.feature) : null;
 
+      let featuresJSON = features;
+      try {
+        featuresJSON = JSON.parse(features);
+      } catch (err) {}
       (types as CallbackType[]).forEach((type: CallbackType) => {
         this._callbacks[type]?.forEach((cb) => {
           cb({
             source: this._source,
             features,
             feature,
+            featuresJSON,
             featureObj: event?.feature,
           });
         });

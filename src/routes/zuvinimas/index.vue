@@ -67,6 +67,6 @@ mapLayers
   });
 
 if (query.userId || query.tenantId) {
-  await mapLayers.zoomNew(zuvinimasService.id);
+  await mapLayers.zoom(zuvinimasService.id);
 }
 </script>

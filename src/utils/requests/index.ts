@@ -13,7 +13,7 @@ export function splitUrlIfNeeded(url: string, headers?: any) {
 
   headers = headers || {};
 
-  const src = new URL(url);
+  const src = new URL(url, window?.location?.href);
   if (url.length > 2000) {
     method = 'POST';
     body = src.search.slice(1);
@@ -29,7 +29,7 @@ export function splitUrlIfNeeded(url: string, headers?: any) {
   };
 }
 
-export function loadWMSLayer(url: string, options = {}) {
+export function loadWMSLayer(url: string, options = {}, toFeatures = true) {
   const { method, body, headers, url: requestUrl } = splitUrlIfNeeded(url);
 
   options = _.merge({}, options, {
@@ -41,7 +41,7 @@ export function loadWMSLayer(url: string, options = {}) {
   return new Promise((resolve, reject) => {
     fetch(requestUrl, options)
       .then((response) => response.json())
-      .then((json) => (json && json.features) || [])
+      .then((json) => (toFeatures ? (json && json.features) || [] : json))
       .then((features) => {
         resolve(features);
       })

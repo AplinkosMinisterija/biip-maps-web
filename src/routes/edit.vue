@@ -11,6 +11,7 @@
         <template v-if="!isPreview">
           <UiButtonRow class="h-full" gap="lg">
             <UiButton
+              v-if="!enableContinuousDraw"
               v-for="t in drawTypes"
               :key="t.type"
               :icon="t.icon"
@@ -56,27 +57,27 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed, inject, ref } from "vue";
-import _ from "lodash";
-import {
-  geoportalTopo,
-  geoportalOrto,
-  geoportalTopoGray,
-  parseRouteParams,
-  uetkService,
-  stvkService,
-  municipalitiesService,
-  geoportalGrpk,
-  geoportalForests,
-  geoportalOrto2018,
-  geoportalOrto2015,
-  geoportalOrto2012,
-  geoportalOrto2009,
-  geoportalOrto2005,
-  geoportalOrto1995,
-  inspireParcelService,
-} from "@/utils";
 import { useFiltersStore } from "@/stores/filters";
+import {
+  geoportalForests,
+  geoportalGrpk,
+  geoportalOrto,
+  geoportalOrto1995,
+  geoportalOrto2005,
+  geoportalOrto2009,
+  geoportalOrto2012,
+  geoportalOrto2015,
+  geoportalOrto2018,
+  geoportalTopo,
+  geoportalTopoGray,
+  inspireParcelService,
+  municipalitiesService,
+  parseRouteParams,
+  stvkService,
+  uetkService,
+} from "@/utils";
+import _ from "lodash";
+import { computed, inject, ref } from "vue";
 import { useRoute } from "vue-router";
 const $route = useRoute();
 const events: any = inject("events");
@@ -84,7 +85,13 @@ const events: any = inject("events");
 const mapLayers: any = inject("mapLayers");
 const postMessage: any = inject("postMessage");
 
-const query = parseRouteParams($route.query, ["multi", "buffer", "preview", "types"]);
+const query = parseRouteParams($route.query, [
+  "multi",
+  "buffer",
+  "preview",
+  "types",
+  "autoZoom",
+]);
 const isPreview = !!query.preview;
 
 const activeDrawType = computed(() => mapDraw.value.activeType);
@@ -134,6 +141,8 @@ const hasDrawType = (type: string) => {
   return drawTypes.value.some((t) => t.el === type);
 };
 
+const enableContinuousDraw = drawTypes.value.length === 1 && !query.multi;
+
 const filtersStore = useFiltersStore();
 
 const bufferSizes: any = {
@@ -144,8 +153,7 @@ const bufferSizes: any = {
   xl: { min: 1000, max: 10000, step: 1000 },
 };
 
-const bufferSizeKey =
-  query.buffer && bufferSizes[query.buffer] ? query.buffer : "xs";
+const bufferSizeKey = query.buffer && bufferSizes[query.buffer] ? query.buffer : "xs";
 
 const bufferSizeLabel = computed(() => {
   const text = `Buferio dydis`;
@@ -217,9 +225,12 @@ mapLayers
 mapDraw.value
   .setMulti(!!query.multi)
   .enableBufferSize(!!query.buffer, bufferSizes[bufferSizeKey].min)
-  .enableContinuousDraw(drawTypes.value.length === 1 && !query.multi && !query.buffer)
-  .on(["change", "remove"], ({ features }: any) => {
+  .enableContinuousDraw(enableContinuousDraw)
+  .on(["change", "remove"], ({ features, featuresJSON }: any) => {
     postMessage("data", features);
+    if (!!query.autoZoom && !!featuresJSON?.features?.length) {
+      mapLayers.zoomToFeatureCollection(featuresJSON);
+    }
   })
   .on("select", ({ featureObj, feature }: any) => {
     selectedFeature.value = {
@@ -227,6 +238,10 @@ mapDraw.value
       feature: featureObj,
     };
   });
+
+if (enableContinuousDraw) {
+  toggleDrawType(drawTypes.value[0].type);
+}
 
 events.on("geom", (data: any) => {
   let geom = data.geom || data;
