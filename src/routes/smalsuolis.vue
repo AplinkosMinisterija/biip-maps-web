@@ -37,7 +37,22 @@ import VueMarkdown from "vue-markdown-render";
 import moment from "moment";
 const filtersStore = useFiltersStore();
 
+const events: any = inject("events");
 const mapLayers: any = inject("mapLayers");
 
 mapLayers.addBaseLayer(vectorBright.id).add(smalsuolisServiceVT.id);
+
+events.on("geom", (data: any) => {
+  let geom = data.geom || data;
+
+  if (typeof geom === "string") {
+    try {
+      geom = JSON.parse(geom);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  mapLayers.zoomToFeatureCollection(geom);
+});
 </script>
