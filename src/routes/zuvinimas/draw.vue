@@ -65,7 +65,7 @@ const selectSearch = (match: any) => {
 
   if (!match?.geom) return;
 
-  mapLayers.zoomToFeatureCollection(match.geom, true);
+  mapLayers.zoomToFeatureCollection(match.geom, { addStroke: true });
 };
 
 mapLayers

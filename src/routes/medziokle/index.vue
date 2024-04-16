@@ -55,7 +55,7 @@ await mapLayers
   .addBaseLayer(geoportalTopo.id)
   .addBaseLayer(geoportalOrto.id)
   .add(huntingService.id)
-  .zoomNew(huntingService.id, { addStroke: true, zoomFn });
+  .zoom(huntingService.id, { addStroke: true, zoomFn });
 
 const mapDraw = computed(() => mapLayers.getDraw());
 
