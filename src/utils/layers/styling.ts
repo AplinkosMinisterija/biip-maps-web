@@ -19,6 +19,7 @@ const LAYER_TYPE = {
   UETK_MERGED_LABEL: 'uetk.uetk_merged.1',
   ZVEJYBA_FISHINGS: 'zvejyba.fishings',
   ZUVINIMAS_FISH_STOCKINGS: 'zuvinimas.fish_stockings',
+  SMALSUOLIS_EVENTS: 'tiles.events',
 };
 
 const FONT_FAMILY = '"Open Sans", "Arial Unicode MS"';
@@ -162,6 +163,12 @@ export function vectorTileStyles(options?: { layerPrefix: string }): any {
 
       styles[length++] = getIcon(status === 'ONGOING' ? 'pin-water-green' : 'pin-water', {
         align: 'top',
+      });
+    } else if ([LAYER_TYPE.SMALSUOLIS_EVENTS].includes(layer)) {
+      styles[length++] = getIcon('pin', {
+        color: '#14532D',
+        align: 'top',
+        size: 16,
       });
     }
 
