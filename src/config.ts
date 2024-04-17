@@ -9,6 +9,7 @@ export const gyvunaiApiHost = `${proxyUrl}/gyvunai`;
 export const zvejybaApiHost = `${proxyUrl}/zvejyba`;
 export const zuvinimasApiHost = `${proxyUrl}/zuvinimas`;
 export const medziokleApiHost = `${proxyUrl}/medziokle`;
+export const alisApiHost = `${proxyUrl}/alis`;
 export const qgisServerUrl = `${qgisServerHost}/qgisserver`;
 export const qgisApiUrl = `${qgisServerHost}/api`;
 export const qgisTilesUrl = `${qgisServerHost}/tiles`;

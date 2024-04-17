@@ -28,7 +28,7 @@
         <UiSidebarFeatures
           :is-open="!!selectedFeatures.length"
           :features="selectedFeatures"
-          type="uetk"
+          type="alis"
           @close="selectedFeatures = []"
         />
       </template>
