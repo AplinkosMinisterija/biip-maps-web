@@ -4,6 +4,7 @@
       :show-scale-line="true"
       :projection="projection3857"
       :show-coordinates="true"
+      :add-coordinates-to-url="true"
     />
   </div>
 </template>

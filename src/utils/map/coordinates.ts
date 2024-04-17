@@ -38,6 +38,8 @@ export function convertCoordinatesToProjection(
   dataProjection = '',
   featureProjection = projection,
 ) {
+  if (dataProjection === featureProjection) return coordinates;
+  
   if (coordinates?.type === 'FeatureCollection') {
     const options: any = {};
     if (dataProjection) {
