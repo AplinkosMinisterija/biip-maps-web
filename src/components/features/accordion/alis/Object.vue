@@ -17,7 +17,7 @@
                 v-else
                 :href="item.value()"
                 target="_blank"
-                class="border-b border-b-transparent hover:border-b-black"
+                class="border-b border-b-black hover:border-b-gray-700 hover:text-gray-700"
               >
                 {{ item.link }}
               </a>
@@ -63,9 +63,9 @@ const hasCadastralId = computed(() => !!cadastralId.value);
 
 function isLoading(activeTab: string) {
   if (activeTab === "info") {
-    return !!alisWaterBodyLoading.value;
+    return alisWaterBodyLoading.value;
   } else if (activeTab === "fishstocking") {
-    return !!zuvinimasInfoLoading.value;
+    return zuvinimasInfoLoading.value;
   }
 
   return false;
@@ -141,7 +141,7 @@ const basicInfo = [
   },
   {
     key: "Google žemėlapis",
-    link: "Nuoroda į Google",
+    link: "Nuoroda į Google žemėlapį",
     value: () => {
       const y =
         getFeatureProp("Centro X koordinatė (LKS-94), m") ||

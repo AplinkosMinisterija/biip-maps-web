@@ -53,6 +53,7 @@ function getCategory(feature: any) {
 
 const features = computed(() => props.features.map(f => {
   return Object.keys(f).reduce((acc: any, key: string) => {
+    // remove numeric prefixes. E.g. `1. title` -> `title`
     const newKey = key.replace(/^\d+\.\s*/gi, '')
     acc[newKey] = f[key]
     return acc;
