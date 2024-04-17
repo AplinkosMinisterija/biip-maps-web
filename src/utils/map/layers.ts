@@ -2,7 +2,7 @@ import { Overlay, type Map, Feature, Geolocation } from 'ol';
 import { MapFilters } from './filters';
 import { checkAuth, loadWFSLayer, loadWMSLayer, splitUrlIfNeeded } from '../requests';
 import { MapDraw } from '.';
-import { projection, projection4326 } from '../constants';
+import { projection } from '../constants';
 import _ from 'lodash';
 import {
   dataToFeatureCollection,
@@ -462,7 +462,7 @@ export class MapLayers extends Queues {
         });
     };
 
-    /* 
+    /*
       FROM: -Infinity
       TO: level or +Infinity;
     */
@@ -472,7 +472,7 @@ export class MapLayers extends Queues {
       Number.NEGATIVE_INFINITY,
     );
 
-    /* 
+    /*
       FROM: level or -Infinity
       TO: +Infinity;
     */
