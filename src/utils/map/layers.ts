@@ -595,10 +595,22 @@ export class MapLayers extends Queues {
     return isValid;
   }
 
-  zoomToCoordinate(x: number, y: number, zoomLevel?: number, projection = projection4326) {
+  zoomToCoordinate(
+    x: number,
+    y: number,
+    zoomLevel?: number,
+    opts?: {
+      projection?: string;
+      defaultToMapProjection?: boolean;
+    },
+  ) {
     if (!this.map) {
-      return this._addToQueue('zoomToCoordinate', x, y, zoomLevel, projection);
+      return this._addToQueue('zoomToCoordinate', x, y, zoomLevel, opts);
     }
+
+    const projection = opts?.defaultToMapProjection
+      ? this.map.getView().getProjection().getCode()
+      : opts?.projection;
 
     const coords = convertCoordinatesToProjection(
       [x, y],
