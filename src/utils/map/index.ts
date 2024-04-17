@@ -17,6 +17,7 @@ export function createMap(
   target: any,
   options?: {
     showAttribution?: boolean;
+    addCoordinatesToUrl: boolean;
     attributionOptions?: { [key: string]: any };
     showZoom?: boolean;
     showScaleLine?: boolean;
@@ -88,8 +89,10 @@ export function createMap(
     map.addControl(scaleControl);
   }
 
-  const link = new Link({ replace: true, params: ['x', 'y', 'z'] });
-  map.addInteraction(link);
+  if (options?.addCoordinatesToUrl) {
+    const link = new Link({ replace: true, params: ['x', 'y', 'z'], animate: false });
+    map.addInteraction(link);
+  }
 
   return map;
 }

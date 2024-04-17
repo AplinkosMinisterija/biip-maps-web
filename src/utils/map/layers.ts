@@ -2,7 +2,7 @@ import { Overlay, type Map, Feature, Geolocation } from 'ol';
 import { MapFilters } from './filters';
 import { checkAuth, loadWFSLayer, loadWMSLayer, splitUrlIfNeeded } from '../requests';
 import { MapDraw } from '.';
-import { projection } from '../constants';
+import { projection, projection4326 } from '../constants';
 import _ from 'lodash';
 import {
   dataToFeatureCollection,
@@ -595,15 +595,19 @@ export class MapLayers extends Queues {
     return isValid;
   }
 
-  zoomToCoordinate(x: number, y: number) {
+  zoomToCoordinate(x: number, y: number, zoomLevel?: number, projection = projection4326) {
     if (!this.map) {
-      return this._addToQueue('zoomToCoordinate', x, y);
+      return this._addToQueue('zoomToCoordinate', x, y, zoomLevel, projection);
     }
 
-    const coords = convertCoordinatesToProjection([x, y]);
+    const coords = convertCoordinatesToProjection(
+      [x, y],
+      projection,
+      this.map.getView().getProjection().getCode(),
+    );
 
     this.map.getView().setCenter(coords);
-    this.map.getView().setZoom(this._getZoomLevel());
+    this.map.getView().setZoom(zoomLevel || this._getZoomLevel());
   }
 
   zoomToExtent(extent: any, padding: number = 50) {
