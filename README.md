@@ -26,6 +26,7 @@ Ministerija.
   - [Hunting tracks](#hunting-tracks)
   - [Nature Management](#nature-management)
   - [Rusys](#rusys)
+  - [Smalsuolis](#smalsuolis)
   - [UETK](#uetk)
   - [Zuvinimas](#zuvinimas)
   - [Zuvinimas Draw](#zuvinimas-draw)
@@ -318,6 +319,20 @@ https://maps.biip.lt/rusys
 | --------------- | -------------------------- | ---- |
 | `selectedForm`  | Provides selected form id  | ID   |
 | `selectedPlace` | Provides selected place id | ID   |
+
+## Smalsuolis
+
+```
+https://maps.biip.lt/smalsuolis
+```
+
+### Events
+
+**Listens:**
+
+| Name   | Desciption                           | Type               |
+| ------ | ------------------------------------ | ------------------ |
+| `geom` | Zooms to provided feature collection | Feature collection |
 
 ## UETK
 

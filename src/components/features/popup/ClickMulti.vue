@@ -49,6 +49,7 @@
 </template>
 
 <script setup lang="ts">
+import { smalsuolisServiceVT } from "@/utils";
 import { computed, inject, ref, watch } from "vue";
 
 const mapLayers: any = inject("mapLayers");
@@ -70,16 +71,19 @@ const togglePopup = (position?: any) => {
   mapLayers.overlayLayer.setPosition(position);
 };
 
-mapLayers.click(({ features }: any) => {
-  if (!mapLayers.overlayLayer) return;
+mapLayers.click(
+  ({ features }: any) => {
+    if (!mapLayers.overlayLayer) return;
 
-  if (!features?.length) return togglePopup();
+    if (!features?.length) return togglePopup();
 
-  featureIndex.value = 0;
-  const center = mapLayers.getCenter(features[0]);
-  if (!center) return togglePopup();
+    featureIndex.value = 0;
+    const center = mapLayers.getCenter(features[0]);
+    if (!center) return togglePopup();
 
-  featuresData.value = features?.map((f: any) => f.getProperties());
-  togglePopup(center);
-});
+    featuresData.value = features?.map((f: any) => f.getProperties());
+    togglePopup(center);
+  },
+  { layers: [smalsuolisServiceVT.id] }
+);
 </script>
