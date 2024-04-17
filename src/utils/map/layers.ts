@@ -48,7 +48,7 @@ export class MapLayers extends Queues {
   private _overlayLayer: Overlay | undefined;
   private _baseLayersIds: string[] = [];
   private _filtersByLayer: { [id: string]: MapFilters } = {};
-  private _clickCallbacks: Function[] = [];
+  private _clickCallbacks: { cb: Function; opts: any }[] = [];
   private _hoverCallbacks: Function[] = [];
   private _eventsCallbacks: { [key: string]: Function[] } = {};
   private _layers: { [id: string]: any } = {};
@@ -100,7 +100,17 @@ export class MapLayers extends Queues {
       map.on('singleclick', (e: any) => {
         const features = map.getFeaturesAtPixel(e.pixel);
         e.features = features;
-        this._clickCallbacks.map((fn) => fn(e));
+        this._clickCallbacks.map((item) => {
+          if (item?.opts?.layers) {
+            return item.cb({
+              ...e,
+              features: map.getFeaturesAtPixel(e.pixel, {
+                layerFilter: (layer) => item.opts?.layers.includes(layer.get('id')),
+              }),
+            });
+          }
+          return item.cb(e);
+        });
       });
       map.on('pointermove', (e: any) => {
         clearTimeout(this._hoverTimeout);
@@ -491,9 +501,7 @@ export class MapLayers extends Queues {
     }
 
     if (this._isGroup(layer)) {
-      return Promise.all(
-        this.all(layer).map((layer: any) => this.zoom(layer.get('id'), options)),
-      );
+      return Promise.all(this.all(layer).map((layer: any) => this.zoom(layer.get('id'), options)));
     }
 
     if (filters.isEmpty) return;
@@ -564,8 +572,11 @@ export class MapLayers extends Queues {
     cb(transformResponse(result));
   }
 
-  click(callback: Function) {
-    this._clickCallbacks.push(callback);
+  click(callback: Function, opts: { layers?: string[] } = {}) {
+    this._clickCallbacks.push({
+      cb: callback,
+      opts,
+    });
     return this;
   }
 
