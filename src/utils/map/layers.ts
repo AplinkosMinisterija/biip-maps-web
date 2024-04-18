@@ -462,7 +462,7 @@ export class MapLayers extends Queues {
         });
     };
 
-    /* 
+    /*
       FROM: -Infinity
       TO: level or +Infinity;
     */
@@ -472,7 +472,7 @@ export class MapLayers extends Queues {
       Number.NEGATIVE_INFINITY,
     );
 
-    /* 
+    /*
       FROM: level or -Infinity
       TO: +Infinity;
     */
@@ -595,15 +595,31 @@ export class MapLayers extends Queues {
     return isValid;
   }
 
-  zoomToCoordinate(x: number, y: number) {
+  zoomToCoordinate(
+    x: number,
+    y: number,
+    zoomLevel?: number,
+    opts?: {
+      projection?: string;
+      defaultToMapProjection?: boolean;
+    },
+  ) {
     if (!this.map) {
-      return this._addToQueue('zoomToCoordinate', x, y);
+      return this._addToQueue('zoomToCoordinate', x, y, zoomLevel, opts);
     }
 
-    const coords = convertCoordinatesToProjection([x, y]);
+    const projection = opts?.defaultToMapProjection
+      ? this.map.getView().getProjection().getCode()
+      : opts?.projection;
+
+    const coords = convertCoordinatesToProjection(
+      [x, y],
+      projection,
+      this.map.getView().getProjection().getCode(),
+    );
 
     this.map.getView().setCenter(coords);
-    this.map.getView().setZoom(this._getZoomLevel());
+    this.map.getView().setZoom(zoomLevel || this._getZoomLevel());
   }
 
   zoomToExtent(extent: any, padding: number = 50) {
