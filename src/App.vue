@@ -41,8 +41,9 @@ mapLayers.waitForLoaded.then(() => {
 
 $router.isReady().then(() => {
   if ($route?.query?.x && $route?.query?.y) {
-    mapLayers.zoomToCoordinate($route.query.x, $route.query.y, $route.query.z, {
+    mapLayers.zoomToCoordinate($route.query.x, $route.query.y, {
       defaultToMapProjection: true,
+      zoom: $route.query.z,
     });
   }
 });
