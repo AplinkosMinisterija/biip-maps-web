@@ -321,10 +321,22 @@ export function parseGeomFromString(input: string) {
 export function convertFeatureCollectionProjection(data: any, from: string, to: string) {
   if (from === to) return data;
 
+  const dataIsString = typeof data === 'string';
+
+  if (dataIsString) {
+    try {
+      data = JSON.parse(data);
+    } catch (err) {}
+  }
+
   const features = new GeoJSON().readFeatures(_.cloneDeep(data), {
     dataProjection: from,
     featureProjection: to,
   });
+
+  if (dataIsString) {
+    return new GeoJSON().writeFeatures(features);
+  }
 
   return new GeoJSON().writeFeaturesObject(features);
 }

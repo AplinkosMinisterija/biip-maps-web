@@ -598,14 +598,14 @@ export class MapLayers extends Queues {
   zoomToCoordinate(
     x: number,
     y: number,
-    zoomLevel?: number,
     opts?: {
+      zoom?: number;
       projection?: string;
       defaultToMapProjection?: boolean;
     },
   ) {
     if (!this.map) {
-      return this._addToQueue('zoomToCoordinate', x, y, zoomLevel, opts);
+      return this._addToQueue('zoomToCoordinate', x, y, opts);
     }
 
     const projection = opts?.defaultToMapProjection
@@ -619,7 +619,7 @@ export class MapLayers extends Queues {
     );
 
     this.map.getView().setCenter(coords);
-    this.map.getView().setZoom(zoomLevel || this._getZoomLevel());
+    this.map.getView().setZoom(opts?.zoom || this._getZoomLevel());
   }
 
   zoomToExtent(extent: any, padding: number = 50) {
@@ -862,7 +862,10 @@ export class MapLayers extends Queues {
     const positionCoords = this._geolocation.getPosition() as number[];
     if (!positionCoords || positionCoords.length !== 2) return;
 
-    this.zoomToCoordinate(positionCoords[0], positionCoords[1]);
+    this.zoomToCoordinate(positionCoords[0], positionCoords[1], {
+      // Coordinates are in map projection
+      defaultToMapProjection: true,
+    });
     return true;
   }
 

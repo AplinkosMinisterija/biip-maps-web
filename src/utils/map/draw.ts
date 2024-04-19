@@ -73,12 +73,20 @@ export class MapDraw extends Queues {
     options: {
       append?: boolean;
       types?: string[];
+      dataProjection?: string;
     } = {},
   ) {
     if (_.isEmpty(features)) return;
 
     try {
-      let data = new GeoJSON().readFeatures(features);
+      const readFeaturesOptions: any = {};
+
+      if (options?.dataProjection) {
+        readFeaturesOptions.dataProjection = options?.dataProjection;
+        readFeaturesOptions.featureProjection = this?.map?.getView().getProjection().getCode();
+      }
+
+      let data = new GeoJSON().readFeatures(features, readFeaturesOptions);
 
       if (options?.types?.length) {
         data = convertFeaturesToPoints(data, options?.types || []);
