@@ -166,7 +166,7 @@ export const uetkService = {
 export const sznsUetkService = {
   id: 'sznsUetkService',
   title: 'Paviršinių vandens telkinių apsaugos zonos ir juostos',
-  description: biipCopyright,
+  description: [aaaCopyright, biipCopyright],
   sublayers: [
     {
       value: 'apsaugos_juostos',
@@ -180,7 +180,7 @@ export const sznsUetkService = {
   layer: getWMSImageLayer(
     `${qgisServerUrl}/uetk_szns`,
     'apsaugos_juostos,apsaugos_zonos,apreptis',
-    biipCopyright,
+    `${aaaCopyright} ${biipCopyright}`,
   ),
 };
 
