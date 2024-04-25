@@ -13,7 +13,11 @@ import {
   WMSLegendRequest,
 } from './utils';
 import LayerGroup from 'ol/layer/Group';
-import { convertCoordinates, convertCoordinatesToProjection } from './coordinates';
+import {
+  convertCoordinates,
+  convertCoordinatesToProjection,
+  convertFeatureCollectionProjection,
+} from './coordinates';
 import { getCenter } from 'ol/extent';
 import { Queues } from './queues';
 
@@ -44,7 +48,7 @@ export class MapLayers extends Queues {
   private _overlayLayer: Overlay | undefined;
   private _baseLayersIds: string[] = [];
   private _filtersByLayer: { [id: string]: MapFilters } = {};
-  private _clickCallbacks: Function[] = [];
+  private _clickCallbacks: { cb: Function; opts: any }[] = [];
   private _hoverCallbacks: Function[] = [];
   private _eventsCallbacks: { [key: string]: Function[] } = {};
   private _layers: { [id: string]: any } = {};
@@ -52,6 +56,8 @@ export class MapLayers extends Queues {
   private _geolocation: Geolocation | undefined;
 
   private _hoverTimeout: any;
+
+  private _callbacksProjection: string = projection;
 
   waitForLoaded: Promise<void> = new Promise(async (resolve) => {
     const waitForMap = async () => {
@@ -94,7 +100,17 @@ export class MapLayers extends Queues {
       map.on('singleclick', (e: any) => {
         const features = map.getFeaturesAtPixel(e.pixel);
         e.features = features;
-        this._clickCallbacks.map((fn) => fn(e));
+        this._clickCallbacks.map((item) => {
+          if (item?.opts?.layers) {
+            return item.cb({
+              ...e,
+              features: map.getFeaturesAtPixel(e.pixel, {
+                layerFilter: (layer) => item.opts?.layers.includes(layer.get('id')),
+              }),
+            });
+          }
+          return item.cb(e);
+        });
       });
       map.on('pointermove', (e: any) => {
         clearTimeout(this._hoverTimeout);
@@ -467,7 +483,7 @@ export class MapLayers extends Queues {
     );
   }
 
-  async zoomNew(
+  async zoom(
     id: string,
     options: {
       addStroke?: boolean;
@@ -485,9 +501,7 @@ export class MapLayers extends Queues {
     }
 
     if (this._isGroup(layer)) {
-      return Promise.all(
-        this.all(layer).map((layer: any) => this.zoomNew(layer.get('id'), options)),
-      );
+      return Promise.all(this.all(layer).map((layer: any) => this.zoom(layer.get('id'), options)));
     }
 
     if (filters.isEmpty) return;
@@ -500,7 +514,7 @@ export class MapLayers extends Queues {
 
     if (!result.length) return;
 
-    this.zoomToFeatureCollection(result, options?.addStroke, options?.zoomFn);
+    this.zoomToFeatureCollection(result, { addStroke: options?.addStroke, cb: options?.zoomFn });
 
     return result;
   }
@@ -508,45 +522,6 @@ export class MapLayers extends Queues {
   on(type: EventTypes, cb: Function) {
     this._eventsCallbacks[type] = this._eventsCallbacks[type] || [];
     this._eventsCallbacks[type].push(cb);
-    return this;
-  }
-
-  zoom(
-    id: string,
-    options: {
-      addStroke?: boolean;
-      filters?: any;
-      cb?: Function;
-    } = {},
-  ) {
-    if (!this.map) {
-      return this._addToQueue('zoom', id, options);
-    }
-
-    const filters = options.filters || this.filters(id);
-    if (filters.isEmpty) return;
-    const layer = this.getLayer(id);
-
-    if (!layer) {
-      throw new Error('Layer not exists');
-    }
-
-    if (this._isGroup(layer)) {
-      const layerOptions: any = _.cloneDeep(options);
-      layerOptions.filters = filters;
-      layer.getLayers().forEach((layer: any) => this.zoom(layer.get('id'), layerOptions));
-
-      return this;
-    }
-
-    const queryPromise: any = this._getZoomRequest(id, filters);
-    if (!queryPromise) return this;
-
-    queryPromise.then((data: any) => {
-      this.zoomToFeatureCollection(data, options?.addStroke);
-      if (options?.cb) options.cb();
-    });
-
     return this;
   }
 
@@ -573,25 +548,35 @@ export class MapLayers extends Queues {
     const result = await this._getFeatureInfoRequest(id, coordinate, filters);
     if (!result || !cb) return;
 
+    const mapProjection = this.map.getView().getProjection().getCode();
+
     const transformResponse = (data: any) => {
+      if (mapProjection !== this._callbacksProjection) {
+        data = convertFeatureCollectionProjection(data, mapProjection, this._callbacksProjection);
+      }
       const properties = getPropertiesFromFeaturesArray(
-        data,
+        data.features,
         this.get(id)?.title || (parentLayerId && this.get(parentLayerId).title),
       );
 
-      const geometries = getGeometriesFromFeaturesArray(data);
-      return {
-        data,
+      const geometries = getGeometriesFromFeaturesArray(data.features);
+
+      const response = {
         properties,
         geometries,
       };
+
+      return response;
     };
 
     cb(transformResponse(result));
   }
 
-  click(callback: Function) {
-    this._clickCallbacks.push(callback);
+  click(callback: Function, opts: { layers?: string[] } = {}) {
+    this._clickCallbacks.push({
+      cb: callback,
+      opts,
+    });
     return this;
   }
 
@@ -649,11 +634,17 @@ export class MapLayers extends Queues {
     });
   }
 
-  zoomToFeatureCollection(data: any, addStroke = false, cb?: Function) {
+  zoomToFeatureCollection(
+    data: any,
+    options: {
+      addStroke?: boolean;
+      cb?: Function;
+    } = {},
+  ) {
     if (_.isEmpty(data)) return;
 
     if (!this.map) {
-      this._addToQueue('zoomToFeatureCollection', data, addStroke, cb);
+      this._addToQueue('zoomToFeatureCollection', data, options);
       return;
     }
 
@@ -664,14 +655,14 @@ export class MapLayers extends Queues {
       applyBuffers: true,
     });
 
-    if (addStroke) {
+    if (options.addStroke) {
       this.highlightFeatures(data, { layer: fixedHighlightLayerId });
     }
 
     this.zoomToExtent(extent);
 
-    if (cb) {
-      cb();
+    if (options?.cb && typeof options?.cb === 'function') {
+      options.cb();
     }
   }
 
@@ -922,7 +913,7 @@ export class MapLayers extends Queues {
           },
         );
 
-      return loadWMSLayer(url, this._getRequestOptions(id));
+      return loadWMSLayer(url, this._getRequestOptions(id), false);
     }
   }
 

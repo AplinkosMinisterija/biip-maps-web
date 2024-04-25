@@ -19,7 +19,7 @@ const LAYER_TYPE = {
   UETK_MERGED_LABEL: 'uetk.uetk_merged.1',
   ZVEJYBA_FISHINGS: 'zvejyba.fishings',
   ZUVINIMAS_FISH_STOCKINGS: 'zuvinimas.fish_stockings',
-  SMALSUOLIS_EVENTS: 'smalsuolis.events',
+  SMALSUOLIS_EVENTS: 'tiles.events',
 };
 
 const FONT_FAMILY = '"Open Sans", "Arial Unicode MS"';

@@ -28,7 +28,7 @@
         <UiSidebarFeatures
           :is-open="!!selectedFeatures.length"
           :features="selectedFeatures"
-          type="uetk"
+          type="alis"
           @close="selectedFeatures = []"
         />
       </template>
@@ -121,5 +121,5 @@ mapLayers
       postMessage('click', properties);
     });
   })
-  .zoomNew(uetkService.id, { addStroke: true });
+  .zoom(uetkService.id, { addStroke: true });
 </script>
