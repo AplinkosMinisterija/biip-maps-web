@@ -3,8 +3,8 @@
     <UiAccordionItem
       v-for="feature in features"
       :key="feature.featureId"
-      :title="feature['3. Paviršinio vandens telkinio pavadinimas']"
-      :subtitle="feature['1. Specialioji sąlyga']"
+      :title="feature['3. Paviršinio vandens telkinio pavadinimas'] || feature['1. Pavadinimas']"
+      :subtitle="feature['1. Specialioji sąlyga'] || feature['3. Kategorija']"
     >
       <UiTable class="text-xs">
         <UiTableRow v-for="item in getSorted(feature)" :key="item.id">

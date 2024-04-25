@@ -1,15 +1,6 @@
 <template>
   <div>
-    <UiMap
-      :show-scale-line="true"
-      :show-coordinates="true"
-      :show-search="true"
-      :attribution-options="{
-        collapsible: !isPreview || !isScreenshot,
-      }"
-      :is-preview="!!isPreview"
-      @search="onSearch"
-    >
+    <UiMap :show-scale-line="true" :show-coordinates="true" :show-search="true" @search="onSearch">
       <template #filters>
         <UiButtonIcon icon="layers" @click="filtersStore.toggle('layers')" />
         <UiButtonIcon icon="legend" @click="filtersStore.toggle('legend')" />
@@ -66,16 +57,10 @@ const filtersStore = useFiltersStore();
 
 const mapLayers: any = inject('mapLayers');
 const selectedFeatures = ref([] as any[]);
+const selectedGeometries = ref([] as any[]);
 const $route = useRoute();
 
-const query = parseRouteParams($route.query, ['cadastralId', 'preview', 'screenshot']);
-
-const isPreview = ref(!!query.preview);
-const isScreenshot = ref(!!query.screenshot);
-
-if (isPreview.value && isScreenshot.value) {
-  filtersStore.toggle('legend', true);
-}
+const query = parseRouteParams($route.query, ['cadastralId']);
 
 function onSearch(search: string) {
   filtersStore.search = search;
@@ -103,13 +88,18 @@ mapLayers
   .add(uetkService.id, { isHidden: true })
   .add(sznsUetkService.id)
   .click(async ({ coordinate }: any) => {
+    selectedFeatures.value = [];
+    selectedGeometries.value = [];
+
     mapLayers.getFeatureInfo(uetkService.id, coordinate, ({ geometries, properties }: any) => {
-      mapLayers.highlightFeatures(geometries);
-      selectedFeatures.value = properties;
+      selectedGeometries.value = [...selectedGeometries.value, ...geometries];
+      mapLayers.highlightFeatures(selectedGeometries.value);
+      selectedFeatures.value = [...selectedFeatures.value, ...properties];
     });
     mapLayers.getFeatureInfo(sznsUetkService.id, coordinate, ({ geometries, properties }: any) => {
-      mapLayers.highlightFeatures(geometries);
-      selectedFeatures.value = properties;
+      selectedGeometries.value = [...selectedGeometries.value, ...geometries];
+      mapLayers.highlightFeatures(selectedGeometries.value);
+      selectedFeatures.value = [...selectedFeatures.value, ...properties];
     });
   });
 
@@ -130,6 +120,6 @@ if (query.cadastralId) {
     filters.on(item).set('kadastro_id', `${query.cadastralId}`);
   });
 
-  await mapLayers.zoomNew(sznsUetkService.id, { addStroke: true, filters });
+  await mapLayers.zoom(uetkService.id, { addStroke: true, filters });
 }
 </script>
