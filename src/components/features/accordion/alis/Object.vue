@@ -1,10 +1,20 @@
 <template>
+  <UiButton
+    v-if="alisWaterBody?.id"
+    icon="chevron-right"
+    :icon-right="true"
+    type="green"
+    class="w-full my-2"
+    @click="postMessage('buyPermission', alisWaterBody)"
+  >
+    Pirkti leidimą
+  </UiButton>
   <UiTabs v-if="tabs.length" :tabs="tabs" :active="tabs[0].type" :hide-on-one="true">
     <template #default="{ activeTab }">
       <UiLoader v-if="isLoading(activeTab)" type="table" />
       <template v-for="group in tableContent(activeTab)" v-else :key="group">
         <div v-if="group" class="text-xs mb-1">{{ group.name }}</div>
-        <UiTable v-if="group.tableRows?.length" class="text-xs">
+        <UiTable v-if="group.tableRows?.length" class="text-xs mb-3 last:mb-0">
           <UiTableRow v-for="item in group.tableRows" :key="item.key">
             <UiTableCell class="w-1/2">
               {{ item.key }}
@@ -30,13 +40,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, inject } from "vue";
 import { getWaterBodyInfoUrl } from "@/utils/requests/alis";
 import { getFishTypesInfoByYearUrl } from "@/utils/requests/zuvinimas";
 import { convertCoordinates, projection, projection4326 } from "@/utils";
 import { useFetch } from "@vueuse/core";
 
 import { upperFirst } from "lodash";
+
+const postMessage: any = inject("postMessage");
 
 const props = defineProps({
   feature: {
