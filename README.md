@@ -127,9 +127,10 @@ https://maps.biip.lt/alis/fishing
 
 **Sends:**
 
-| Name    | Desciption              | Type           |
-| ------- | ----------------------- | -------------- |
-| `click` | Provides click features | Array of items |
+| Name            | Desciption                                              | Type                           |
+| --------------- | ------------------------------------------------------- | ------------------------------ |
+| `click`         | Provides click features                                 | Array of items                 |
+| `buyPermission` | Provides alis water body data for buying one permission | Object of alis water body data |
 
 ## Animals
 
