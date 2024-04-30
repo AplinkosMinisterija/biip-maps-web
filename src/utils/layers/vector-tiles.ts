@@ -115,7 +115,7 @@ export const smalsuolisServiceVT = {
       minDistance: 30,
       source: new VectorSource({
         format: new GeoJSON(),
-        url: 'https://pmtiles.vycius.lt/events.geojson',
+        url: 'https://pmtiles.vycius.lt/events-ids.geojson',
       }),
     }),
     style: function (feature) {
