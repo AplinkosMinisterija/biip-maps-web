@@ -1,11 +1,15 @@
 import VectorTileLayer from 'ol/layer/VectorTile';
 import VectorTileSource from 'ol/source/VectorTile';
-import { MVT } from 'ol/format';
+import { GeoJSON, MVT } from 'ol/format';
 import { Feature } from 'ol';
 import { projection3857 } from '../constants';
-import { qgisTilesUrl, smalsuolisHost } from '@/config';
+import { qgisTilesUrl } from '@/config';
 import { vectorTileStyles } from './styling';
 import LayerGroup from 'ol/layer/Group';
+import { Cluster } from 'ol/source.js';
+import VectorSource from 'ol/source/Vector';
+import VectorLayer from 'ol/layer/Vector';
+import { Circle as CircleStyle, Fill, Stroke, Style, Text } from 'ol/style.js';
 
 function getVectorTilesUrl(type: string, source: string, baseUrl?: string) {
   return `${baseUrl || qgisTilesUrl}/${type}/${source}/{z}/{x}/{y}`;
@@ -105,8 +109,34 @@ export const zuvinimasServiceVT = {
 export const smalsuolisServiceVT = {
   id: 'smalsuolisServiceVT',
   name: 'Smalsuolis',
-  layer: getVectorTileLayer('tiles', 'events', {
-    idProperty: 'id',
-    baseUrl: smalsuolisHost
+  layer: new VectorLayer({
+    source: new Cluster({
+      distance: 40,
+      minDistance: 30,
+      source: new VectorSource({
+        format: new GeoJSON(),
+        url: 'https://pmtiles.vycius.lt/events.geojson',
+      }),
+    }),
+    style: function (feature) {
+      const size = feature.get('features').length;
+      return new Style({
+        image: new CircleStyle({
+          radius: 10,
+          stroke: new Stroke({
+            color: '#fff',
+          }),
+          fill: new Fill({
+            color: '#3399CC',
+          }),
+        }),
+        text: new Text({
+          text: size.toString(),
+          fill: new Fill({
+            color: '#fff',
+          }),
+        }),
+      });
+    },
   }),
 };
