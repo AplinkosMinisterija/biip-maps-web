@@ -59,6 +59,7 @@
 <script setup lang="ts">
 import { useFiltersStore } from "@/stores/filters";
 import {
+  convertFeatureCollectionProjection,
   geoportalForests,
   geoportalGrpk,
   geoportalOrto,
@@ -73,9 +74,13 @@ import {
   inspireParcelService,
   municipalitiesService,
   parseRouteParams,
+  projection,
+  projection4326,
+  searchGeoportal,
   stvkService,
   uetkService,
 } from "@/utils";
+import { getFeatureCollection } from "geojsonjs";
 import _ from "lodash";
 import { computed, inject, ref } from "vue";
 import { useRoute } from "vue-router";
@@ -257,5 +262,32 @@ events.on("geom", (data: any) => {
   mapLayers.zoomToFeatureCollection(geom);
   mapDraw.value.setFeatures(geom);
   if (!isPreview) mapDraw.value.edit();
+});
+
+events.on("address", (data: any) => {
+  const address = data.address || data;
+
+  // now supports only street + house number + city (e.g. Gedimino pr. 12, Vilnius)
+  // TODO: update this part to support every address (including municipality, etc)
+  searchGeoportal(address, [{ type: "adresas", weight: 2 }], {
+    fields: ["VARDAS^5"],
+  }).then((data: any) => {
+    const firstHit = data?.rows?.[0];
+
+    if (!firstHit?.x || !firstHit?.y) return;
+
+    // convert WGS (coordinates) to LKS (freature collection)
+    const featureCollection = convertFeatureCollectionProjection(
+      getFeatureCollection({
+        type: "Point",
+        coordinates: [firstHit.x, firstHit.y],
+      }),
+      projection4326,
+      projection
+    );
+
+    mapLayers.zoomToFeatureCollection(featureCollection);
+    mapDraw.value.setFeatures(featureCollection);
+  });
 });
 </script>
