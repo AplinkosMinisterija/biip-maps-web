@@ -267,7 +267,7 @@ events.on("geom", (data: any) => {
 events.on("address", (data: any) => {
   const address = data.address || data;
 
-  // now supports only street + house number + city (e.g. Gedimino pr. 12, Vilnius)
+  // now supports only street + building number + city (e.g. Gedimino pr. 12, Vilnius)
   // TODO: update this part to support every address (including municipality, etc)
   searchGeoportal(address, [{ type: "adresas", weight: 2 }], {
     fields: ["VARDAS^5"],
