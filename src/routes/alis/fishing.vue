@@ -91,7 +91,7 @@ if (query.cadastral_id) {
 
 mapLayers.setSublayers(uetkService.id, uetkLayers);
 
-const isSearchEnabled = !!query.show_search;
+const isSearchEnabled = !!query.show_search || !!query.preview;
 
 mapLayers
   .addBaseLayer(geoportalTopoGray.id)
