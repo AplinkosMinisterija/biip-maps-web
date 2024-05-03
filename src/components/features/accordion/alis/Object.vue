@@ -1,7 +1,7 @@
 <template>
   <div>
     <UiButton
-      v-if="alisWaterBody?.id"
+      v-if="alisWaterBody?.id && $route.query.buy"
       icon="chevron-right"
       :icon-right="true"
       type="green"
@@ -49,8 +49,11 @@ import { convertCoordinates, projection, projection4326 } from "@/utils";
 import { useFetch } from "@vueuse/core";
 
 import { upperFirst } from "lodash";
+import { useRoute } from "vue-router";
 
 const postMessage: any = inject("postMessage");
+// TODO: remove
+const $route = useRoute();
 
 const props = defineProps({
   feature: {
