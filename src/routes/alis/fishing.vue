@@ -36,9 +36,9 @@
   </div>
 </template>
 <script setup lang="ts">
-import { inject, ref } from 'vue';
-import { useFiltersStore } from '@/stores/filters';
-import { useRoute } from 'vue-router';
+import { inject, ref } from "vue";
+import { useFiltersStore } from "@/stores/filters";
+import { useRoute } from "vue-router";
 import {
   geoportalTopo,
   geoportalOrto,
@@ -55,10 +55,11 @@ import {
   geoportalHybrid,
   geoportalGrpk,
   parseRouteParams,
-} from '@/utils';
+} from "@/utils";
 
 const filtersStore = useFiltersStore();
-const mapLayers: any = inject('mapLayers');
+const mapLayers: any = inject("mapLayers");
+const postMessage: any = inject("postMessage");
 const selectedFeatures = ref([] as any[]);
 
 const toggleLayers = [
@@ -76,26 +77,21 @@ const toggleLayers = [
 ];
 
 const $route = useRoute();
+const uetkLayers = ["upes", "ezerai_tvenkiniai"];
 
-const query = parseRouteParams($route.query, ['cadastral_id', 'show_search', 'preview']);
+const query = parseRouteParams($route.query, ["cadastral_id", "show_search", "preview"]);
 if (query.cadastral_id) {
   const uetkServiceFilters = mapLayers.filters(uetkService.id);
 
-  const layers = ['upes', 'ezerai_tvenkiniai'];
-
   // TODO: replace this
-  layers.forEach((item) => {
-    uetkServiceFilters.on(item).set('kadastro_id', `${query.cadastral_id}`);
+  uetkLayers.forEach((item) => {
+    uetkServiceFilters.on(item).set("kadastro_id", `${query.cadastral_id}`);
   });
-
-  // uetkServiceFilters
-  //   .onAll(layers)
-  //   .set("kadastro_id", `${query.cadastralId}`);
 }
 
-const isSearchEnabled = !!query.show_search;
+mapLayers.setSublayers(uetkService.id, uetkLayers);
 
-const postMessage: any = inject('postMessage');
+const isSearchEnabled = !!query.show_search || !!query.preview;
 
 mapLayers
   .addBaseLayer(geoportalTopoGray.id)
@@ -113,13 +109,17 @@ mapLayers
   .add(stvkService.id, { isHidden: true })
   .add(uetkService.id)
   .click(async ({ coordinate }: any) => {
-    mapLayers.getFeatureInfo(uetkService.id, coordinate, ({ geometries, properties }: any) => {
-      if (query.preview) {
-        mapLayers.highlightFeatures(geometries);
-        selectedFeatures.value = properties;
+    mapLayers.getFeatureInfo(
+      uetkService.id,
+      coordinate,
+      ({ geometries, properties }: any) => {
+        if (query.preview) {
+          mapLayers.highlightFeatures(geometries);
+          selectedFeatures.value = properties;
+        }
+        postMessage("click", properties);
       }
-      postMessage('click', properties);
-    });
+    );
   })
   .zoom(uetkService.id, { addStroke: true });
 </script>

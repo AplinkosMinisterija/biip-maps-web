@@ -1,42 +1,44 @@
 <template>
-  <UiButton
-    v-if="alisWaterBody?.id"
-    icon="chevron-right"
-    :icon-right="true"
-    type="green"
-    class="w-full my-2"
-    @click="postMessage('buyPermission', alisWaterBody)"
-  >
-    Pirkti leidimą
-  </UiButton>
-  <UiTabs v-if="tabs.length" :tabs="tabs" :active="tabs[0].type" :hide-on-one="true">
-    <template #default="{ activeTab }">
-      <UiLoader v-if="isLoading(activeTab)" type="table" />
-      <template v-for="group in tableContent(activeTab)" v-else :key="group">
-        <div v-if="group" class="text-xs mb-1">{{ group.name }}</div>
-        <UiTable v-if="group.tableRows?.length" class="text-xs mb-3 last:mb-0">
-          <UiTableRow v-for="item in group.tableRows" :key="item.key">
-            <UiTableCell class="w-1/2">
-              {{ item.key }}
-            </UiTableCell>
-            <UiTableCell class="w-1/2">
-              <template v-if="!item.link">
-                {{ item.value() }}
-              </template>
-              <a
-                v-else
-                :href="item.value()"
-                target="_blank"
-                class="border-b border-b-black hover:border-b-gray-700 hover:text-gray-700"
-              >
-                {{ item.link }}
-              </a>
-            </UiTableCell>
-          </UiTableRow>
-        </UiTable>
+  <div>
+    <UiButton
+      v-if="alisWaterBody?.id"
+      icon="chevron-right"
+      :icon-right="true"
+      type="green"
+      class="w-full my-2"
+      @click="postMessage('buyPermission', alisWaterBody)"
+    >
+      Pirkti leidimą
+    </UiButton>
+    <UiTabs v-if="tabs.length" :tabs="tabs" :active="tabs[0].type" :hide-on-one="true">
+      <template #default="{ activeTab }">
+        <UiLoader v-if="isLoading(activeTab)" type="table" />
+        <template v-for="group in tableContent(activeTab)" v-else :key="group">
+          <div v-if="group" class="text-xs mb-1">{{ group.name }}</div>
+          <UiTable v-if="group.tableRows?.length" class="text-xs">
+            <UiTableRow v-for="item in group.tableRows" :key="item.key">
+              <UiTableCell class="w-1/2">
+                {{ item.key }}
+              </UiTableCell>
+              <UiTableCell class="w-1/2">
+                <template v-if="!item.link">
+                  {{ item.value() }}
+                </template>
+                <a
+                  v-else
+                  :href="item.value()"
+                  target="_blank"
+                  class="border-b border-b-black hover:border-b-gray-700 hover:text-gray-700"
+                >
+                  {{ item.link }}
+                </a>
+              </UiTableCell>
+            </UiTableRow>
+          </UiTable>
+        </template>
       </template>
-    </template>
-  </UiTabs>
+    </UiTabs>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -99,10 +101,16 @@ const { data: zuvinimasInfo, isFetching: zuvinimasInfoLoading } = useFetch<any>(
   }
 ).json();
 
-const tabs = [
+const allTabs = [
   { type: "info", name: "Bendra info" },
   { type: "fishstocking", name: "Žuvų įveisimas" },
 ];
+
+const tabs = computed(() => {
+  return allTabs.filter((t) => {
+    return t.type === "info" || (!alisWaterBodyLoading.value && alisWaterBody.value?.id);
+  });
+});
 
 function getFeatureProp(name: string | string[]) {
   return props.getValue(feature.value, name);
@@ -141,15 +149,21 @@ const basicInfo = [
   },
   {
     key: "Statusas",
-    value: () =>
-      hasCadastralId.value
-        ? `${alisWaterBody.value?.isnuomotas ? "Išnuomotas" : "Neišnuomotas"} telkinys`
-        : "",
+    value: () => {
+      if (!hasCadastralId.value) return "";
+      else if (!alisWaterBody.value?.id) return "-";
+      return `${
+        alisWaterBody.value?.isnuomotas ? "Išnuomotas" : "Neišnuomotas"
+      } telkinys`;
+    },
   },
   {
     key: "Limituota žvejyba?",
-    value: () =>
-      hasCadastralId.value ? (alisWaterBody.value?.licencija ? "Taip" : "Ne") : "",
+    value: () => {
+      if (!hasCadastralId.value) return "";
+      else if (!alisWaterBody?.value?.id) return "-";
+      return alisWaterBody.value?.licencija ? "Taip" : "Ne";
+    },
   },
   {
     key: "Google žemėlapis",

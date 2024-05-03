@@ -155,9 +155,10 @@ https://maps.biip.lt/animals/draw
 
 **Listens:**
 
-| Name   | Desciption                        | Type               |
-| ------ | --------------------------------- | ------------------ |
-| `geom` | Draws provided feature collection | Feature collection |
+| Name      | Desciption                             | Type                                    |
+| --------- | -------------------------------------- | --------------------------------------- |
+| `geom`    | Draws provided feature collection      | Feature collection                      |
+| `address` | Zooms to provided address + adds point | String (e.g. `Gedimino pr. 1, Vilnius`) |
 
 **Sends:**
 
