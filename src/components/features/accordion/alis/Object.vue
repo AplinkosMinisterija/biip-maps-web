@@ -1,5 +1,15 @@
 <template>
   <div>
+    <UiButton
+      v-if="alisWaterBody?.id && $route.query.buy"
+      icon="chevron-right"
+      :icon-right="true"
+      type="green"
+      class="w-full my-2"
+      @click="postMessage('buyPermission', alisWaterBody)"
+    >
+      Pirkti leidimą
+    </UiButton>
     <UiTabs v-if="tabs.length" :tabs="tabs" :active="tabs[0].type" :hide-on-one="true">
       <template #default="{ activeTab }">
         <UiLoader v-if="isLoading(activeTab)" type="table" />
@@ -32,13 +42,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, inject } from "vue";
 import { getWaterBodyInfoUrl } from "@/utils/requests/alis";
 import { getFishTypesInfoByYearUrl } from "@/utils/requests/zuvinimas";
 import { convertCoordinates, projection, projection4326 } from "@/utils";
 import { useFetch } from "@vueuse/core";
 
 import { upperFirst } from "lodash";
+import { useRoute } from "vue-router";
+
+const postMessage: any = inject("postMessage");
+// TODO: remove
+const $route = useRoute();
 
 const props = defineProps({
   feature: {
