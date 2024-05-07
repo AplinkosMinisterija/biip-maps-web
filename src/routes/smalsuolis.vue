@@ -25,7 +25,6 @@
 import { inject } from "vue";
 import { projection3857, vectorBright, smalsuolisServiceVT } from "@/utils";
 import { useFiltersStore } from "@/stores/filters";
-import VueMarkdown from "vue-markdown-render";
 const mapLayers: any = inject("mapLayers");
 
 const smalsuolisFilters = mapLayers.filters(smalsuolisServiceVT.id);
