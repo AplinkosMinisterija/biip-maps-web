@@ -1,18 +1,18 @@
 <template>
-  <div>
+  <div class="my-1">
     <UiLoader
       v-if="clusterItemsLoading || eventItemLoading || !pageItem?.id"
       type="table"
       class="w-64"
     />
     <div v-else>
-      <div class="flex gap-1 mb-1">
+      <div class="flex gap-1 mb-1 items-center">
         <div class="text-xxxs text-gray-600">
           {{ moment(pageItem.startAt).format("YYYY-MM-DD") }}
         </div>
         <span class="text-gray-500">·</span>
         <UiBadge type="success">
-          <div>{{ pageItem?.app?.name }}</div>
+          {{ pageItem?.app?.name }}
         </UiBadge>
       </div>
       <div>{{ pageItem?.name }}</div>

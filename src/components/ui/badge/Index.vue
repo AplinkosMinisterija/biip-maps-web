@@ -1,5 +1,5 @@
 <template>
-  <div class="rounded-full text-xxxs px-2 font-semibold" :class="[types[type || 'default']]">
+  <div class="rounded-full text-xxxs px-2 font-semibold flex items-center" :class="[types[type || 'default']]">
     <slot />
   </div>
 </template>

@@ -4,7 +4,7 @@
     class="bg-white px-4 py-2 rounded shadow-md w-full overflow-y-auto max-h-96 max-w-xs lg:max-w-sm"
     :class="[(position && positions[position]) || '', showArrow ? 'display-arrow' : '']"
   >
-    <div class="w-full">
+    <div class="w-full relative">
       <div
         v-if="title || $slots.title || showClose"
         class="flex gap-3"
@@ -14,12 +14,12 @@
           <template v-if="title">{{ title }}</template>
           <template v-else-if="$slots.title"><slot name="title" /></template>
         </div>
-        <UiIcon
+        <div
           v-if="showClose"
-          name="close"
-          class="text-gray-600 cursor-pointer"
-          @click="emit('close')"
-        />
+          class="absolute right-0 top-0 p-1 text-gray-600 cursor-pointer flex-shrink-0"
+        >
+          <UiIcon name="close" @click="emit('close')" />
+        </div>
       </div>
       <hr v-if="title && $slots.default && showSeparator" class="my-2" />
       <slot />
@@ -28,13 +28,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref } from "vue";
 
 const el = ref();
 defineProps({
-  title: { type: String, default: '' },
-  size: { type: String, default: '' },
-  position: { type: String, default: '' },
+  title: { type: String, default: "" },
+  size: { type: String, default: "" },
+  position: { type: String, default: "" },
   showArrow: {
     type: Boolean,
     default: false,
@@ -48,11 +48,11 @@ defineProps({
     default: true,
   },
 });
-const emit = defineEmits(['close']);
+const emit = defineEmits(["close"]);
 
 const positions = ref({
-  'top-left': 'top-full left-0 mt-2',
-  'top-right': 'top-full right-0 mt-2',
+  "top-left": "top-full left-0 mt-2",
+  "top-right": "top-full right-0 mt-2",
 } as any);
 
 const getElement = () => {};
@@ -62,6 +62,6 @@ defineExpose({ el, getElement });
 <style>
 .display-arrow:before {
   @apply rotate-180 border-transparent border-solid h-0 w-0 absolute -top-6 pointer-events-none border-t-[1rem] border-[0.75rem] left-1.5 border-t-white;
-  content: ' ';
+  content: " ";
 }
 </style>

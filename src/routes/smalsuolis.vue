@@ -15,13 +15,8 @@
     </UiMap>
 
     <FeaturesPopupClickMulti :layers="[smalsuolisServiceVT.id]">
-      <template #title="{ current }">
-        <SmalsuolisPreviewBox :item="current" :filters="smalsuolisFilters" />
-      </template>
       <template #content="{ current }">
-        <div v-if="current?.body" class="text-xxs mt-2 text-gray-700">
-          <VueMarkdown :source="current.body" />
-        </div>
+        <SmalsuolisPreviewBox :item="current" :filters="smalsuolisFilters" />
       </template>
     </FeaturesPopupClickMulti>
   </div>
