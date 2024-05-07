@@ -32,6 +32,7 @@ type EventTypes = 'error' | 'success';
 
 const LayerType = {
   WMS: 'WMS',
+  VT: 'vt',
   ARCGIS: 'ARCGIS',
   WFS: 'WFS',
   GEOJSON: 'geojson',
@@ -244,6 +245,19 @@ export class MapLayers extends Queues {
         if (!this.map) return;
         this.highlightFeatures(data);
       });
+    } else if (type === LayerType.VT) {
+      const source = layer.getSource();
+      const query = filter.toQuery(true);
+
+      if (!source.get('originalUrls')) {
+        source.set('originalUrls', source.getUrls());
+      }
+
+      const urls = source.get('originalUrls').map((u: string) => {
+        return `${u}?${query}`;
+      });
+
+      source.setUrls(urls);
     }
   }
 

@@ -6,20 +6,17 @@
       :show-search="true"
       @search="filtersStore.search = $event"
     >
+      <template #filters>
+        <UiButtonIcon icon="filter" @click="filtersStore.toggle('filters')" />
+      </template>
+      <template v-if="filtersStore.active" #filtersContent>
+        <SmalsuolisFilters v-if="filtersStore.isActive('filters')" :filters="smalsuolisFilters" />
+      </template>
     </UiMap>
 
-    <FeaturesPopupClickMulti>
+    <FeaturesPopupClickMulti :layers="[smalsuolisServiceVT.id]">
       <template #title="{ current }">
-        <template v-if="current?.name">
-          <div class="flex gap-1 mb-1">
-            <div class="text-xxxs text-gray-600">
-              {{ moment(current.start_at).format("YYYY-MM-DD") }}
-            </div>
-            <span class="text-gray-500">·</span>
-            <UiBadge type="success">{{ current?.app_name }}</UiBadge>
-          </div>
-          <div>{{ current.name }}</div>
-        </template>
+        <SmalsuolisPreviewBox :item="current" :filters="smalsuolisFilters" />
       </template>
       <template #content="{ current }">
         <div v-if="current?.body" class="text-xxs mt-2 text-gray-700">
@@ -34,11 +31,13 @@ import { inject } from "vue";
 import { projection3857, vectorBright, smalsuolisServiceVT } from "@/utils";
 import { useFiltersStore } from "@/stores/filters";
 import VueMarkdown from "vue-markdown-render";
-import moment from "moment";
+const mapLayers: any = inject("mapLayers");
+
+const smalsuolisFilters = mapLayers.filters(smalsuolisServiceVT.id);
+
 const filtersStore = useFiltersStore();
 
 const events: any = inject("events");
-const mapLayers: any = inject("mapLayers");
 
 mapLayers.addBaseLayer(vectorBright.id).add(smalsuolisServiceVT.id);
 
