@@ -36,7 +36,7 @@ export const vectorBright = {
   id: 'vectorBright',
   title: 'Topografinis (šviesus)',
   layer: new MapboxVectorLayer({
-    styleUrl: 'https://basemap.startupgov.lt/vector/styles/bright/style.json',
+    styleUrl: 'https://cdn.biip.lt/tiles/poc/vector-static/style-bright.json',
   }),
 };
 export const vectorPositron = {
