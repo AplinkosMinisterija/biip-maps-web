@@ -122,6 +122,23 @@ export class MapDraw extends Queues {
     });
   }
 
+  enableMeasurements(
+    opts: { length?: boolean; area?: boolean; segments?: boolean } = {
+      length: true,
+      area: true,
+      segments: true,
+    },
+  ) {
+    return this.setStyles({
+      ...this._styles.opts,
+      showMeasurements: {
+        length: opts?.length,
+        area: opts?.area,
+        segments: opts?.segments,
+      },
+    });
+  }
+
   setColors(primary: string, secondary: string, isTemporary: boolean = false) {
     primary = primary || this._defaultColors.primary;
     secondary = secondary || this._defaultColors.secondary;
