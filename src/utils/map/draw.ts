@@ -19,6 +19,7 @@ export class MapDraw extends Queues {
   private _layer: Layer | undefined;
   private _draw: Draw | undefined;
   private _isMulti: boolean = false;
+  private _isActive: boolean = false;
   private _defaultColors = {
     primary: '#326a72',
     secondary: '#002a30',
@@ -237,6 +238,7 @@ export class MapDraw extends Queues {
     this._addInteractions();
     this._addEditInteractions();
 
+    this._isActive = true;
     return this;
   }
 
@@ -253,7 +255,16 @@ export class MapDraw extends Queues {
     this._setSelectedFeature();
     this._removeInteractions();
 
+    this._isActive = false;
+
     return this;
+  }
+
+  toggle(type?: DrawType, value?: boolean) {
+    const isActive = typeof value !== 'undefined' ? value : this._isActive;
+
+    if (isActive) return this.remove().end();
+    return this.start(type);
   }
 
   on(types: CallbackType | CallbackType[], cb: Function) {

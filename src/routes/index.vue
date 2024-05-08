@@ -5,7 +5,11 @@
       :projection="projection3857"
       :show-coordinates="true"
       :add-coordinates-to-url="true"
-    />
+    >
+      <template #filters>
+        <UiButtonIcon icon="measure" @click="mapLayers.toggleMeasuring()" />
+      </template>
+    </UiMap>
   </div>
 </template>
 <script setup lang="ts">
