@@ -1,5 +1,5 @@
 import type { Feature } from 'ol';
-import { Geometry, LineString, Point, Polygon } from 'ol/geom';
+import { LineString, Point, Polygon } from 'ol/geom';
 import { getArea, getLength } from 'ol/sphere';
 import { Fill, RegularShape, Style, Text } from 'ol/style';
 
@@ -53,7 +53,7 @@ const segmentStyle = new Style({
 
 const segmentStyles = [segmentStyle];
 
-const formatLength = function (line: Geometry) {
+const formatLength = function (line: LineString) {
   const length = getLength(line);
   let output;
   if (length > 100) {
@@ -64,7 +64,7 @@ const formatLength = function (line: Geometry) {
   return output;
 };
 
-const formatArea = function (polygon: Geometry) {
+const formatArea = function (polygon: Polygon) {
   const area = getArea(polygon);
   let output;
   if (area > 10000) {
@@ -93,11 +93,11 @@ export function getMeasurementStyles(
   let point, label, line;
   if (type === 'Polygon' && opts?.showArea) {
     point = (geometry as Polygon).getInteriorPoint();
-    label = formatArea(geometry);
+    label = formatArea(geometry as Polygon);
     line = new LineString((geometry as Polygon).getCoordinates()[0]);
   } else if (type === 'LineString' && opts?.showLength) {
     point = new Point((geometry as LineString).getLastCoordinate());
-    label = formatLength(geometry);
+    label = formatLength(geometry as LineString);
     line = geometry;
   }
 
