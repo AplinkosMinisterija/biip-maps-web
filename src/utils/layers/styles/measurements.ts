@@ -138,10 +138,5 @@ export function getMeasurementStyles(
     styles.push(labelStyle);
   }
 
-  if (type === 'Point') {
-    (labelStyle as any).getText().setText('');
-    styles.push(tipStyle);
-  }
-
   return styles;
 }
