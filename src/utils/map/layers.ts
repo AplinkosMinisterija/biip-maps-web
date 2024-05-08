@@ -3,6 +3,7 @@ import { MapFilters } from './filters';
 import { checkAuth, loadWFSLayer, loadWMSLayer, splitUrlIfNeeded } from '../requests';
 import { MapDraw } from '.';
 import { projection } from '../constants';
+import type { Type as DrawType } from 'ol/geom/Geometry';
 import _ from 'lodash';
 import {
   dataToFeatureCollection,
@@ -280,11 +281,8 @@ export class MapLayers extends Queues {
     return this._draw;
   }
 
-  toggleMeasuring(opts?: any, value?: boolean, id?: string) {
-    return this.getDraw(id)
-      .enableContinuousDraw()
-      .enableMeasurements(opts)
-      .toggle('LineString', value);
+  toggleMeasuring(type: DrawType = 'LineString', opts?: any, value?: boolean, id?: string) {
+    return this.getDraw(id).enableContinuousDraw().enableMeasurements(opts).toggle(type, value);
   }
 
   getLayer(id: string) {
