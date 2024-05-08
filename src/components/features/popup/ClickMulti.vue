@@ -50,6 +50,7 @@
 
 <script setup lang="ts">
 import { computed, inject, ref, watch } from "vue";
+const eventBus: any = inject("eventBus");
 
 const mapLayers: any = inject("mapLayers");
 const props = defineProps({
@@ -75,6 +76,11 @@ watch(overlayLayer, (value) => {
 const togglePopup = (position?: any) => {
   mapLayers.overlayLayer.setPosition(position);
 };
+
+
+eventBus.on('multiFeaturesPopupClose', () => {
+  togglePopup();
+});
 
 mapLayers.click(
   ({ features }: any) => {

@@ -20,7 +20,7 @@
           "
           type="ghost"
           class="cursor-pointer"
-          @click="mapLayers.zoomToFeatureCollection(pageItem?.geom, { animate: true })"
+          @click="preview()"
         >
           Peržiūrėti
         </UiBadge>
@@ -47,6 +47,7 @@ import { computed, inject, ref, watch } from "vue";
 import moment from "moment";
 import VueMarkdown from "vue-markdown-render";
 import { getClusterItemsUrl, getEventUrl } from "@/utils/requests/smalsuolis";
+const eventBus: any = inject("eventBus");
 
 const mapLayers: any = inject("mapLayers");
 
@@ -102,4 +103,11 @@ watch(
   },
   { deep: true }
 );
+
+function preview() {
+  if (!pageItem.value?.geom) return;
+  mapLayers.zoomToFeatureCollection(pageItem.value?.geom, { animate: true });
+
+  eventBus.emit("multiFeaturesPopupClose");
+}
 </script>
