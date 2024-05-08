@@ -3,21 +3,6 @@ import { Geometry, LineString, Point, Polygon } from 'ol/geom';
 import { getArea, getLength } from 'ol/sphere';
 import { Fill, RegularShape, Style, Text } from 'ol/style';
 
-export const tipStyle = new Style({
-  text: new Text({
-    font: '12px Calibri,sans-serif',
-    fill: new Fill({
-      color: 'rgba(255, 255, 255, 1)',
-    }),
-    backgroundFill: new Fill({
-      color: 'rgba(0, 0, 0, 0.4)',
-    }),
-    padding: [2, 2, 2, 2],
-    textAlign: 'left',
-    offsetX: 15,
-  }),
-});
-
 const labelStyle = new Style({
   text: new Text({
     font: '14px Calibri,sans-serif',
