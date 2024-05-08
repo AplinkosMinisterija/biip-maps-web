@@ -14,6 +14,16 @@
         <UiBadge type="success">
           {{ pageItem?.app?.name }}
         </UiBadge>
+        <UiBadge
+          v-if="
+            item?.cluster && mapLayers.getZoomLevels.max > mapLayers.getZoomLevels.current
+          "
+          type="ghost"
+          class="cursor-pointer"
+          @click="mapLayers.zoomToFeatureCollection(pageItem?.geom, { animate: true })"
+        >
+          Peržiūrėti
+        </UiBadge>
       </div>
       <div>{{ pageItem?.name }}</div>
       <div v-if="pageItem?.body" class="text-xxs mt-2 text-gray-700">
@@ -23,6 +33,7 @@
       <UiPagination
         v-if="item?.cluster"
         :total="clusterItems?.total"
+        :max="pageSize"
         :current="currentPage"
         @change="currentPage = $event"
       />
@@ -32,10 +43,12 @@
 
 <script setup lang="ts">
 import { useFetch } from "@vueuse/core";
-import { computed, ref, watch } from "vue";
+import { computed, inject, ref, watch } from "vue";
 import moment from "moment";
 import VueMarkdown from "vue-markdown-render";
 import { getClusterItemsUrl, getEventUrl } from "@/utils/requests/smalsuolis";
+
+const mapLayers: any = inject("mapLayers");
 
 const currentPage = ref(1);
 const props = defineProps({
@@ -56,11 +69,11 @@ const pageItem = computed(() => {
   return eventItem.value;
 });
 
-const pageSize = 10;
+const pageSize = 20;
 
 const clusterItemsUrl = computed(() =>
   getClusterItemsUrl(item.value?.cluster_id, {
-    populate: "app",
+    populate: "app,geom",
     pageSize: pageSize,
     page: Math.floor(currentPage.value / pageSize) + 1,
     ...(props.filters?.toJson(true) || {}),

@@ -132,7 +132,7 @@ export class MapLayers extends Queues {
     if (viewProjection && projection != viewProjection.getCode()) {
       extent = convertCoordinates(extent, projection, viewProjection.getCode());
     }
-    this.zoomToExtent(extent, 0);
+    this.zoomToExtent(extent, { padding: 0 });
   }
 
   getVectorLayer(id: string) {
@@ -636,10 +636,12 @@ export class MapLayers extends Queues {
     this.map.getView().setZoom(opts?.zoom || this._getZoomLevel());
   }
 
-  zoomToExtent(extent: any, padding: number = 50) {
+  zoomToExtent(extent: any, opts: { padding?: number; animate?: boolean } = {}) {
     if (!extent || !this.map) return;
 
     const width = this.map.getViewport().clientWidth;
+
+    let padding = typeof opts.padding === 'undefined' ? 50 : opts.padding;
 
     if (padding === 50) {
       if (width < 480) padding = 10;
@@ -650,6 +652,7 @@ export class MapLayers extends Queues {
 
     this.map.getView().fit(extent, {
       padding: [padding, padding, padding, padding],
+      duration: opts?.animate ? 500 : 0,
       maxZoom: this._getZoomLevel(),
     });
   }
@@ -669,6 +672,7 @@ export class MapLayers extends Queues {
     options: {
       addStroke?: boolean;
       cb?: Function;
+      animate?: boolean;
     } = {},
   ) {
     if (_.isEmpty(data)) return;
@@ -689,7 +693,7 @@ export class MapLayers extends Queues {
       this.highlightFeatures(data, { layer: fixedHighlightLayerId });
     }
 
-    this.zoomToExtent(extent);
+    this.zoomToExtent(extent, { animate: options?.animate });
 
     if (options?.cb && typeof options?.cb === 'function') {
       options.cb();
@@ -881,6 +885,13 @@ export class MapLayers extends Queues {
       defaultToMapProjection: true,
     });
     return true;
+  }
+
+  get getZoomLevels() {
+    return {
+      current: this?.map?.getView()?.getZoom(),
+      max: this._getZoomLevel(),
+    };
   }
 
   enableLocationTracking() {

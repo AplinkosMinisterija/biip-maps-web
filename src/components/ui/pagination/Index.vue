@@ -11,7 +11,9 @@
       </slot>
 
       <slot name="default" :current="current" :total="total">
-        <span class="text-xxs">{{ current }} iš {{ total }}</span>
+        <span class="text-xxs">
+          {{ current }} iš {{ total }}{{ maxLessThanTotal ? "+" : "" }}
+        </span>
       </slot>
 
       <slot name="next" :current="current" :total="total">
@@ -27,7 +29,9 @@
 </template>
 
 <script lang="ts" setup>
-defineProps({
+import { computed } from "vue";
+
+const props = defineProps({
   current: {
     type: Number,
     default: 1,
@@ -36,7 +40,20 @@ defineProps({
     type: Number,
     default: 1,
   },
+  max: {
+    type: Number,
+    default: 0,
+  },
 });
 
 const emit = defineEmits(["change"]);
+
+const maxLessThanTotal = computed(() => {
+  return props.max && props.max < props.total;
+});
+
+const total = computed(() => {
+  if (maxLessThanTotal.value) return props.max;
+  return props.total;
+});
 </script>
