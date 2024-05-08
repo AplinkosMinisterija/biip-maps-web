@@ -280,7 +280,7 @@ export class MapLayers extends Queues {
     return this._draw;
   }
 
-  toggleMeasuring(id?: string, value?: boolean, opts?: any) {
+  toggleMeasuring(opts?: any, value?: boolean, id?: string) {
     return this.getDraw(id)
       .enableContinuousDraw()
       .enableMeasurements(opts)
