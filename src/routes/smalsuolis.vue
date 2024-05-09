@@ -1,12 +1,13 @@
 <template>
   <div>
     <UiMap
-      :show-scale-line="true"
       :projection="projection3857"
-      :show-search="true"
+      :show-zoom="false"
+      :show-attribution="false"
+      :show-center-map="!isPreview"
       @search="filtersStore.search = $event"
     >
-      <template #filters>
+      <template v-if="!isPreview" #filters>
         <UiButtonIcon icon="filter" @click="filtersStore.toggle('filters')" />
       </template>
       <template v-if="filtersStore.active" #filtersContent>
@@ -26,10 +27,20 @@
 </template>
 <script setup lang="ts">
 import { inject } from "vue";
-import { projection3857, vectorBright, smalsuolisServiceVT } from "@/utils";
+import {
+  projection3857,
+  vectorBright,
+  smalsuolisServiceVT,
+  parseRouteParams,
+} from "@/utils";
 import { useFiltersStore } from "@/stores/filters";
+import { useRoute } from "vue-router";
 const mapLayers: any = inject("mapLayers");
 const eventBus: any = inject("eventBus");
+const $route = useRoute();
+
+const query = parseRouteParams($route.query, ["preview"]);
+const isPreview = !!query.preview;
 
 const smalsuolisFilters = mapLayers.filters(smalsuolisServiceVT.id);
 
@@ -43,7 +54,10 @@ const filtersStore = useFiltersStore();
 
 const events: any = inject("events");
 
-mapLayers.addBaseLayer(vectorBright.id).add(smalsuolisServiceVT.id);
+mapLayers
+  .addBaseLayer(vectorBright.id)
+  .add(smalsuolisServiceVT.id)
+  .enableLocationTracking();
 
 events.on("geom", (data: any) => {
   let geom = data.geom || data;
