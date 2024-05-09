@@ -8,6 +8,7 @@ import { GeoJSON } from 'ol/format';
 import { projection } from '../constants';
 import { renderIconHtml } from '../utils';
 import { vectorLayerStyles } from './styling';
+import { getMeasurementStyles } from './styles/measurements';
 
 const color = 'rgba(0,70,80,0.8)';
 const colorFill = 'rgba(0,70,80,0.2)';
@@ -21,6 +22,11 @@ export function getLayerStyles(opts: {
   width?: number;
   icon?: string;
   opts?: any;
+  showMeasurements?: {
+    length: boolean;
+    area: boolean;
+    segments: boolean;
+  };
 }) {
   const primaryColor = opts?.colors?.primary || '#326a72';
   const secondaryColor = opts?.colors?.secondary || '#002a30';
@@ -99,7 +105,14 @@ export function getLayerStyles(opts: {
         circle.setStroke(bufferStroke);
         return styleClone;
       }
-      return defaultStyle;
+
+      const measurementStyles = getMeasurementStyles(feature, {
+        showSegments: opts?.showMeasurements?.segments,
+        showLength: opts?.showMeasurements?.length,
+        showArea: opts?.showMeasurements?.area,
+      });
+
+      return [defaultStyle, ...measurementStyles];
     };
   }
   const styles: any = {
