@@ -28,7 +28,7 @@ type LayerOptions = {
   group?: any;
 };
 
-type EventTypes = 'error' | 'success';
+type EventTypes = 'zoom:change';
 
 const LayerType = {
   WMS: 'WMS',
@@ -56,7 +56,10 @@ export class MapLayers extends Queues {
   private _draw: MapDraw | undefined;
   private _geolocation: Geolocation | undefined;
 
-  private _hoverTimeout: any;
+  private _timeouts: {
+    hover?: any;
+    zoom?: any;
+  } = {};
 
   private _callbacksProjection: string = projection;
 
@@ -114,11 +117,21 @@ export class MapLayers extends Queues {
         });
       });
       map.on('pointermove', (e: any) => {
-        clearTimeout(this._hoverTimeout);
-        this._hoverTimeout = setTimeout(() => {
+        clearTimeout(this._timeouts.hover);
+        this._timeouts.hover = setTimeout(() => {
           const features = map.getFeaturesAtPixel(e.pixel);
           e.features = features;
           this._hoverCallbacks.map((fn) => fn(e));
+        }, 50);
+      });
+
+      map.getView()?.on('change:resolution', () => {
+        clearTimeout(this._timeouts.zoom);
+        this._timeouts.zoom = setTimeout(() => {
+          this._triggerEventCallbacks('zoom:change', {
+            current: this?.map?.getView()?.getZoom(),
+            maxAutoZoom: this._getZoomLevel(),
+          });
         }, 50);
       });
     }
@@ -885,13 +898,6 @@ export class MapLayers extends Queues {
       defaultToMapProjection: true,
     });
     return true;
-  }
-
-  get getZoomLevels() {
-    return {
-      current: this?.map?.getView()?.getZoom(),
-      max: this._getZoomLevel(),
-    };
   }
 
   enableLocationTracking() {

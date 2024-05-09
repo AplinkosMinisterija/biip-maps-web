@@ -15,9 +15,7 @@
           {{ pageItem?.app?.name }}
         </UiBadge>
         <UiBadge
-          v-if="
-            item?.cluster && mapLayers.getZoomLevels.max > mapLayers.getZoomLevels.current
-          "
+          v-if="item?.cluster && enabledPreviewMode"
           type="ghost"
           class="cursor-pointer"
           @click="preview()"
@@ -107,7 +105,12 @@ watch(
 function preview() {
   if (!pageItem.value?.geom) return;
   mapLayers.zoomToFeatureCollection(pageItem.value?.geom, { animate: true });
-
-  eventBus.emit("multiFeaturesPopupClose");
 }
+
+const enabledPreviewMode = ref(true);
+
+mapLayers.on("zoom:change", (data: any) => {
+  enabledPreviewMode.value = data.maxAutoZoom > data.current;
+  eventBus.emit("multiFeaturesPopupClose");
+});
 </script>

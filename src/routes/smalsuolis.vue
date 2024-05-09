@@ -10,7 +10,10 @@
         <UiButtonIcon icon="filter" @click="filtersStore.toggle('filters')" />
       </template>
       <template v-if="filtersStore.active" #filtersContent>
-        <SmalsuolisFilters v-if="filtersStore.isActive('filters')" :filters="smalsuolisFilters" />
+        <SmalsuolisFilters
+          v-if="filtersStore.isActive('filters')"
+          :filters="smalsuolisFilters"
+        />
       </template>
     </UiMap>
 
