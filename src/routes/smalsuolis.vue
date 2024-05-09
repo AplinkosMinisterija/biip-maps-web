@@ -12,7 +12,7 @@
       <template v-if="filtersStore.active" #filtersContent>
         <SmalsuolisFilters
           v-if="filtersStore.isActive('filters')"
-          :filters="smalsuolisFilters"
+          :filters="smalsuolisQueryFilters"
         />
       </template>
     </UiMap>
@@ -33,7 +33,9 @@ const eventBus: any = inject("eventBus");
 
 const smalsuolisFilters = mapLayers.filters(smalsuolisServiceVT.id);
 
-smalsuolisFilters.on("query").on("change", () => {
+const smalsuolisQueryFilters = smalsuolisFilters.on("query");
+
+smalsuolisQueryFilters.on("change", () => {
   eventBus.emit("multiFeaturesPopupClose");
 });
 
@@ -55,5 +57,18 @@ events.on("geom", (data: any) => {
   }
 
   mapLayers.zoomToFeatureCollection(geom);
+});
+
+events.on("filters", (data: any) => {
+  let filters = data.filters || data;
+
+  if (typeof filters === "string") {
+    try {
+      filters = JSON.parse(filters);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+  smalsuolisQueryFilters.setJson(filters);
 });
 </script>

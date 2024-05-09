@@ -43,7 +43,7 @@ const props = defineProps({
     default: null,
   },
 });
-const smalsuolisFilters = computed(() => props.filters?.on("query"));
+const smalsuolisFilters = computed(() => props.filters);
 
 const clearFilters = () => {
   smalsuolisFilters.value?.clear();
