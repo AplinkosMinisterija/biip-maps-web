@@ -28,7 +28,7 @@
       />
 
       <UiDropdown
-        v-if="mapLayers.baseLayers?.length && !isPreview"
+        v-if="mapLayers.baseLayers?.length > 1 && !isPreview"
         v-model="mapLayers.visibleBaseLayerId"
         class="px-1 rounded border border-gray-400 bg-white pointer-events-auto"
       >
@@ -104,7 +104,7 @@
       />
 
       <UiButtonIcon
-        v-if="!isPreview"
+        v-if="showCenterMap && !isPreview"
         icon="globe"
         size="icon-sm"
         class="w-7 h-7 mx-1"
@@ -142,6 +142,10 @@ defineProps({
     default: true,
   },
   showAttribution: {
+    type: Boolean,
+    default: true,
+  },
+  showCenterMap: {
     type: Boolean,
     default: true,
   },

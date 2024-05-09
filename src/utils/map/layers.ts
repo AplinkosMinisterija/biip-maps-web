@@ -3,6 +3,7 @@ import { MapFilters } from './filters';
 import { checkAuth, loadWFSLayer, loadWMSLayer, splitUrlIfNeeded } from '../requests';
 import { MapDraw } from '.';
 import { projection } from '../constants';
+import type { Type as DrawType } from 'ol/geom/Geometry';
 import _ from 'lodash';
 import {
   dataToFeatureCollection,
@@ -28,10 +29,11 @@ type LayerOptions = {
   group?: any;
 };
 
-type EventTypes = 'error' | 'success';
+type EventTypes = 'zoom:change';
 
 const LayerType = {
   WMS: 'WMS',
+  VT: 'vt',
   ARCGIS: 'ARCGIS',
   WFS: 'WFS',
   GEOJSON: 'geojson',
@@ -55,7 +57,10 @@ export class MapLayers extends Queues {
   private _draw: MapDraw | undefined;
   private _geolocation: Geolocation | undefined;
 
-  private _hoverTimeout: any;
+  private _timeouts: {
+    hover?: any;
+    zoom?: any;
+  } = {};
 
   private _callbacksProjection: string = projection;
 
@@ -113,11 +118,21 @@ export class MapLayers extends Queues {
         });
       });
       map.on('pointermove', (e: any) => {
-        clearTimeout(this._hoverTimeout);
-        this._hoverTimeout = setTimeout(() => {
+        clearTimeout(this._timeouts.hover);
+        this._timeouts.hover = setTimeout(() => {
           const features = map.getFeaturesAtPixel(e.pixel);
           e.features = features;
           this._hoverCallbacks.map((fn) => fn(e));
+        }, 50);
+      });
+
+      map.getView()?.on('change:resolution', () => {
+        clearTimeout(this._timeouts.zoom);
+        this._timeouts.zoom = setTimeout(() => {
+          this._triggerEventCallbacks('zoom:change', {
+            current: this?.map?.getView()?.getZoom(),
+            maxAutoZoom: this._getZoomLevel(),
+          });
         }, 50);
       });
     }
@@ -131,7 +146,7 @@ export class MapLayers extends Queues {
     if (viewProjection && projection != viewProjection.getCode()) {
       extent = convertCoordinates(extent, projection, viewProjection.getCode());
     }
-    this.zoomToExtent(extent, 0);
+    this.zoomToExtent(extent, { padding: 0 });
   }
 
   getVectorLayer(id: string) {
@@ -244,6 +259,19 @@ export class MapLayers extends Queues {
         if (!this.map) return;
         this.highlightFeatures(data);
       });
+    } else if (type === LayerType.VT) {
+      const source = layer.getSource();
+      const query = filter.toQuery(true);
+
+      if (!source.get('originalUrls')) {
+        source.set('originalUrls', source.getUrls());
+      }
+
+      const urls = source.get('originalUrls').map((u: string) => {
+        return `${u}?${query}`;
+      });
+
+      source.setUrls(urls);
     }
   }
 
@@ -278,6 +306,10 @@ export class MapLayers extends Queues {
       this._handleDrawColors();
     }
     return this._draw;
+  }
+
+  toggleMeasuring(opts?: any, type: DrawType = 'LineString', value?: boolean, id?: string) {
+    return this.getDraw(id).enableContinuousDraw().enableMeasurements(opts).toggle(type, value);
   }
 
   getLayer(id: string) {
@@ -622,10 +654,12 @@ export class MapLayers extends Queues {
     this.map.getView().setZoom(opts?.zoom || this._getZoomLevel());
   }
 
-  zoomToExtent(extent: any, padding: number = 50) {
+  zoomToExtent(extent: any, opts: { padding?: number; animate?: boolean } = {}) {
     if (!extent || !this.map) return;
 
     const width = this.map.getViewport().clientWidth;
+
+    let padding = typeof opts.padding === 'undefined' ? 50 : opts.padding;
 
     if (padding === 50) {
       if (width < 480) padding = 10;
@@ -636,6 +670,7 @@ export class MapLayers extends Queues {
 
     this.map.getView().fit(extent, {
       padding: [padding, padding, padding, padding],
+      duration: opts?.animate ? 500 : 0,
       maxZoom: this._getZoomLevel(),
     });
   }
@@ -655,6 +690,7 @@ export class MapLayers extends Queues {
     options: {
       addStroke?: boolean;
       cb?: Function;
+      animate?: boolean;
     } = {},
   ) {
     if (_.isEmpty(data)) return;
@@ -675,7 +711,7 @@ export class MapLayers extends Queues {
       this.highlightFeatures(data, { layer: fixedHighlightLayerId });
     }
 
-    this.zoomToExtent(extent);
+    this.zoomToExtent(extent, { animate: options?.animate });
 
     if (options?.cb && typeof options?.cb === 'function') {
       options.cb();

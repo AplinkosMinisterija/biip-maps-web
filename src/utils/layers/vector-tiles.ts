@@ -3,7 +3,7 @@ import VectorTileSource from 'ol/source/VectorTile';
 import { MVT } from 'ol/format';
 import { Feature } from 'ol';
 import { projection3857 } from '../constants';
-import { qgisTilesUrl, smalsuolisHost } from '@/config';
+import { qgisTilesUrl, smalsuolisApiHost } from '@/config';
 import { vectorTileStyles } from './styling';
 import LayerGroup from 'ol/layer/Group';
 
@@ -107,6 +107,8 @@ export const smalsuolisServiceVT = {
   name: 'Smalsuolis',
   layer: getVectorTileLayer('tiles', 'events', {
     idProperty: 'id',
-    baseUrl: smalsuolisHost
+    baseUrl: smalsuolisApiHost,
   }),
 };
+
+smalsuolisServiceVT.layer.set('type', 'vt');
