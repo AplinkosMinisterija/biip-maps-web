@@ -58,7 +58,7 @@ const props = defineProps({
     type: Array<string>,
     default: () => []
   },
-})
+});
 
 const overlayLayer = ref();
 const featureIndex = ref(1);
