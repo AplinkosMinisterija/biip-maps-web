@@ -332,9 +332,10 @@ https://maps.biip.lt/smalsuolis
 
 **Listens:**
 
-| Name   | Desciption                           | Type               |
-| ------ | ------------------------------------ | ------------------ |
-| `geom` | Zooms to provided feature collection | Feature collection |
+| Name      | Desciption                           | Type               |
+| --------- | ------------------------------------ | ------------------ |
+| `geom`    | Zooms to provided feature collection | Feature collection |
+| `filters` | Sets query filters                   | `Filter`           |
 
 ## UETK
 
