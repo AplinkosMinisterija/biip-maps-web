@@ -29,8 +29,13 @@ import { inject } from "vue";
 import { projection3857, vectorBright, smalsuolisServiceVT } from "@/utils";
 import { useFiltersStore } from "@/stores/filters";
 const mapLayers: any = inject("mapLayers");
+const eventBus: any = inject("eventBus");
 
 const smalsuolisFilters = mapLayers.filters(smalsuolisServiceVT.id);
+
+smalsuolisFilters.on("query").on("change", () => {
+  eventBus.emit("multiFeaturesPopupClose");
+});
 
 const filtersStore = useFiltersStore();
 
