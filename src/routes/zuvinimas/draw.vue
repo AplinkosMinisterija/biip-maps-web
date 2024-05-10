@@ -77,8 +77,8 @@ const selectSearch = (match: any) => {
 };
 
 mapLayers
-  .addBaseLayer(vectorPositron.id)
   .addBaseLayer(vectorBright.id)
+  .addBaseLayer(vectorPositron.id)
   .addBaseLayer(geoportalOrto.id)
   .add(uetkService.id)
   .enableLocationTracking();
