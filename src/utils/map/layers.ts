@@ -691,6 +691,7 @@ export class MapLayers extends Queues {
       addStroke?: boolean;
       cb?: Function;
       animate?: boolean;
+      dataProjection?: string;
     } = {},
   ) {
     if (_.isEmpty(data)) return;
@@ -705,6 +706,7 @@ export class MapLayers extends Queues {
 
     const { extent } = featureCollectionToExtent(data, this.map.getView().getProjection(), {
       applyBuffers: true,
+      dataProjection: options?.dataProjection
     });
 
     if (options.addStroke) {
