@@ -34,6 +34,7 @@ import {
   projection,
   convertUETKProperties,
 } from "@/utils";
+import { parse } from "geojsonjs";
 
 const filtersStore = useFiltersStore();
 const postMessage: any = inject("postMessage");
@@ -56,9 +57,36 @@ events.on("geom", (data: any) => {
   mapDraw.value.setFeatures(data.geom || data, { dataProjection: projection });
 });
 
+const uetkLocalFilters = mapLayers.filters("_uetkLocalFilters");
 events.on("cadastralId", (data: any) => {
-  // mapDraw.value.setFeatures(data.geom || data, { dataProjection: projection });
-  console.log(data);
+  uetkLayers.forEach((item) => {
+    uetkLocalFilters.on(item).set("kadastro_id", `${data}`);
+  });
+
+  mapLayers
+    .zoom(uetkService.id, {
+      filters: uetkLocalFilters,
+    })
+    .then((data: any) => {
+      if (data?.length !== 1) return;
+      const properties = convertUETKProperties(data[0].properties);
+      let coordinates: number[] = [];
+      if (properties.centerX && properties.centerY) {
+        coordinates = [properties.centerY, properties.centerX];
+      } else if (properties.mouthX && properties.mouthY) {
+        coordinates = [properties.mouthY, properties.mouthX];
+      }
+
+      if (!coordinates?.length) return;
+
+      const featureCollection = parse({
+        type: "Point",
+        coordinates,
+      });
+
+      mapDraw.value.setFeatures(featureCollection, { dataProjection: projection });
+      mapLayers.zoomToFeatureCollection(featureCollection);
+    });
 });
 
 mapLayers.setSublayers(uetkService.id, uetkLayers);
