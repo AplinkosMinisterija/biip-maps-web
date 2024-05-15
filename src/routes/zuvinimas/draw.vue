@@ -99,7 +99,7 @@ if (!query.preview) {
           ({ properties }: any) => {
             postMessage("selected", {
               geom: features,
-              properties: convertUETKProperties(properties),
+              items: convertUETKProperties(properties),
             });
           }
         );
