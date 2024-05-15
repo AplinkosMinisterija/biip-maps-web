@@ -21,10 +21,10 @@
 import { inject, computed } from "vue";
 import { useRoute } from "vue-router";
 import { useFiltersStore } from "@/stores/filters";
+import center from "@turf/center";
 import {
   geoportalOrto,
   projection3857,
-  zuvinimasService,
   uetkService,
   parseRouteParams,
   markerLayer,
@@ -32,6 +32,7 @@ import {
   vectorBright,
   vectorPositron,
   projection,
+  convertUETKProperties,
 } from "@/utils";
 
 const filtersStore = useFiltersStore();
@@ -49,24 +50,18 @@ const query = parseRouteParams($route.query, [
   "stockingCustomer",
   "preview",
 ]);
-
-const zuvinimasServiceFilters = mapLayers.filters(zuvinimasService.id);
-const filters = computed(() => zuvinimasServiceFilters.on("fish_stockings"));
+const uetkLayers = ["upes", "ezerai_tvenkiniai"];
 
 events.on("geom", (data: any) => {
   mapDraw.value.setFeatures(data.geom || data, { dataProjection: projection });
 });
 
-if (query.tenantId) {
-  filters.value.set("$or", [
-    { tenant_id: query.tenantId },
-    { stocking_customer_id: query.tenantId },
-  ]);
-}
+events.on("cadastralId", (data: any) => {
+  // mapDraw.value.setFeatures(data.geom || data, { dataProjection: projection });
+  console.log(data);
+});
 
-if (query.userId) {
-  filters.value.set("created_by", query.userId).set("tenant_id", { $exists: false });
-}
+mapLayers.setSublayers(uetkService.id, uetkLayers);
 
 const selectSearch = (match: any) => {
   filtersStore.clearSearch();
@@ -86,11 +81,30 @@ mapLayers
 mapDraw.value.setIcon("pin-water", { align: "top", size: 4 });
 
 if (!query.preview) {
-  mapDraw.value.start("Point").on(["change", "remove"], ({ features }: any) => {
-    if (features) {
-      features = convertFeatureCollectionProjection(features, projection3857, projection);
-    }
-    postMessage("userObjects", features);
-  });
+  mapDraw.value
+    .start("Point")
+    .on(["change", "remove"], ({ features, featuresJSON }: any) => {
+      if (features) {
+        features = convertFeatureCollectionProjection(
+          features,
+          projection3857,
+          projection
+        );
+
+        // Just to make sure
+        const point = center(featuresJSON);
+        mapLayers.getFeatureInfo(
+          uetkService.id,
+          point.geometry.coordinates,
+          ({ properties }: any) => {
+            postMessage("selected", {
+              geom: features,
+              properties: convertUETKProperties(properties),
+            });
+          }
+        );
+      }
+      postMessage("userObjects", features);
+    });
 }
 </script>
