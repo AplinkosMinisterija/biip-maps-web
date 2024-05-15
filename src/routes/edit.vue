@@ -11,6 +11,7 @@
         <template v-if="!isPreview">
           <UiButtonRow class="h-full" gap="lg">
             <UiButton
+              v-if="!enableContinuousDraw"
               v-for="t in drawTypes"
               :key="t.type"
               :icon="t.icon"
@@ -45,9 +46,10 @@
         <div v-else-if="showBufferChangeBox" class="flex flex-col gap-3">
           <UiInputSlider
             v-model="featureBufferSize"
-            :min="1"
-            :max="5"
-            :label="`Buferio dydis ${featureBufferSize} m.`"
+            :min="bufferSizes[bufferSizeKey].min"
+            :max="bufferSizes[bufferSizeKey].max"
+            :step="bufferSizes[bufferSizeKey].step"
+            :label="bufferSizeLabel"
           />
         </div>
       </template>
@@ -55,40 +57,54 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed, inject, ref } from 'vue';
+import { useFiltersStore } from "@/stores/filters";
 import {
-  geoportalTopo,
-  geoportalOrto,
-  geoportalTopoGray,
-  parseRouteParams,
-  uetkService,
-  stvkService,
-  municipalitiesService,
-  geoportalGrpk,
+  convertFeatureCollectionProjection,
   geoportalForests,
-  geoportalOrto2018,
-  geoportalOrto2015,
-  geoportalOrto2012,
-  geoportalOrto2009,
-  geoportalOrto2005,
+  geoportalGrpk,
+  geoportalOrto,
   geoportalOrto1995,
+  geoportalOrto2005,
+  geoportalOrto2009,
+  geoportalOrto2012,
+  geoportalOrto2015,
+  geoportalOrto2018,
+  geoportalTopo,
+  geoportalTopoGray,
   inspireParcelService,
-} from '@/utils';
-import { useFiltersStore } from '@/stores/filters';
-import { useRoute } from 'vue-router';
+  municipalitiesService,
+  parseRouteParams,
+  projection,
+  projection4326,
+  searchGeoportal,
+  stvkService,
+  uetkService,
+} from "@/utils";
+import { getFeatureCollection } from "geojsonjs";
+import _ from "lodash";
+import { computed, inject, ref } from "vue";
+import { useRoute } from "vue-router";
 const $route = useRoute();
-const events: any = inject('events');
+const events: any = inject("events");
 
-const mapLayers: any = inject('mapLayers');
-const postMessage: any = inject('postMessage');
+const mapLayers: any = inject("mapLayers");
+const postMessage: any = inject("postMessage");
 
-const query = parseRouteParams($route.query, ['multi', 'buffer', 'preview', 'types']);
+const query = parseRouteParams($route.query, [
+  "multi",
+  "buffer",
+  "preview",
+  "types",
+  "autoZoom",
+]);
 const isPreview = !!query.preview;
 
 const activeDrawType = computed(() => mapDraw.value.activeType);
 const selectedFeature = ref({} as any);
 const showBufferChangeBox = computed(
-  () => query.buffer && ['Point', 'LineString'].includes(selectedFeature.value?.geometry?.type),
+  () =>
+    !!query.buffer &&
+    ["Point", "LineString"].includes(selectedFeature.value?.geometry?.type)
 );
 
 const toggleLayers = [
@@ -108,13 +124,13 @@ const toggleLayers = [
 
 const mapDraw = computed(() => mapLayers.getDraw());
 const defaultDrawElements = [
-  { icon: 'point', type: 'Point', name: 'Taškas', el: 'point' },
-  { icon: 'line', type: 'LineString', name: 'Linija', el: 'line' },
-  { icon: 'polygon', type: 'Polygon', name: 'Plotas', el: 'polygon' },
+  { icon: "point", type: "Point", name: "Taškas", el: "point" },
+  { icon: "line", type: "LineString", name: "Linija", el: "line" },
+  { icon: "polygon", type: "Polygon", name: "Plotas", el: "polygon" },
 ];
 
 const drawTypes = computed(() => {
-  let types = ['point', 'line', 'polygon'];
+  let types = ["point", "line", "polygon"];
   if (query.types) {
     if (Array.isArray(query.types)) {
       types = query.types;
@@ -130,7 +146,31 @@ const hasDrawType = (type: string) => {
   return drawTypes.value.some((t) => t.el === type);
 };
 
+const enableContinuousDraw = drawTypes.value.length === 1 && !query.multi;
+
 const filtersStore = useFiltersStore();
+
+const bufferSizes: any = {
+  xs: { min: 1, max: 5, step: 1 },
+  sm: { min: 10, max: 100, step: 10 },
+  md: { min: 100, max: 1000, step: 100 },
+  lg: { min: 500, max: 5000, step: 500 },
+  xl: { min: 1000, max: 10000, step: 1000 },
+};
+
+const bufferSizeKey = query.buffer && bufferSizes[query.buffer] ? query.buffer : "xs";
+
+const bufferSizeLabel = computed(() => {
+  const text = `Buferio dydis`;
+
+  let size: number = featureBufferSize.value as number;
+
+  if (size < 1000) return `${text} ${size} m.`;
+
+  size = _.round(size / 1000, 2);
+
+  return `${text} ${size} km.`;
+});
 
 const featureBufferSize = computed({
   set(value) {
@@ -138,12 +178,12 @@ const featureBufferSize = computed({
       bufferSize: Number(value),
     });
   },
-  get() {
+  get(): number | undefined {
     if (!selectedFeature.value?.feature) return;
     const bufferSize = Number(
-      mapDraw.value.getProperties(selectedFeature.value?.feature, 'bufferSize'),
+      mapDraw.value.getProperties(selectedFeature.value?.feature, "bufferSize")
     );
-    return bufferSize || 1;
+    return bufferSize || bufferSizes[bufferSizeKey].min;
   },
 });
 
@@ -189,22 +229,29 @@ mapLayers
 
 mapDraw.value
   .setMulti(!!query.multi)
-  .enableBufferSize(!!query.buffer)
-  .enableContinuousDraw(drawTypes.value.length === 1 && !query.multi && !query.buffer)
-  .on(['change', 'remove'], ({ features }: any) => {
-    postMessage('data', features);
+  .enableBufferSize(!!query.buffer, bufferSizes[bufferSizeKey].min)
+  .enableContinuousDraw(enableContinuousDraw)
+  .on(["change", "remove"], ({ features, featuresJSON }: any) => {
+    postMessage("data", features);
+    if (!!query.autoZoom && !!featuresJSON?.features?.length) {
+      mapLayers.zoomToFeatureCollection(featuresJSON);
+    }
   })
-  .on('select', ({ featureObj, feature }: any) => {
+  .on("select", ({ featureObj, feature }: any) => {
     selectedFeature.value = {
       ...feature,
       feature: featureObj,
     };
   });
 
-events.on('geom', (data: any) => {
+if (enableContinuousDraw) {
+  toggleDrawType(drawTypes.value[0].type);
+}
+
+events.on("geom", (data: any) => {
   let geom = data.geom || data;
 
-  if (typeof geom === 'string') {
+  if (typeof geom === "string") {
     try {
       geom = JSON.parse(geom);
     } catch (err) {
@@ -215,5 +262,32 @@ events.on('geom', (data: any) => {
   mapLayers.zoomToFeatureCollection(geom);
   mapDraw.value.setFeatures(geom);
   if (!isPreview) mapDraw.value.edit();
+});
+
+events.on("address", (data: any) => {
+  const address = data.address || data;
+
+  // now supports only street + building number + city (e.g. Gedimino pr. 12, Vilnius)
+  // TODO: update this part to support every address (including municipality, etc)
+  searchGeoportal(address, [{ type: "adresas", weight: 2 }], {
+    fields: ["VARDAS^5"],
+  }).then((data: any) => {
+    const firstHit = data?.rows?.[0];
+
+    if (!firstHit?.x || !firstHit?.y) return;
+
+    // convert WGS (coordinates) to LKS (freature collection)
+    const featureCollection = convertFeatureCollectionProjection(
+      getFeatureCollection({
+        type: "Point",
+        coordinates: [firstHit.x, firstHit.y],
+      }),
+      projection4326,
+      projection
+    );
+
+    mapLayers.zoomToFeatureCollection(featureCollection);
+    mapDraw.value.setFeatures(featureCollection);
+  });
 });
 </script>

@@ -5,6 +5,7 @@ import { format } from 'ol/coordinate';
 import Map from 'ol/Map';
 import { get, Projection } from 'ol/proj';
 import { projection } from '../constants';
+import { Link } from 'ol/interaction';
 
 export * from './coordinates';
 export * from './draw';
@@ -16,6 +17,7 @@ export function createMap(
   target: any,
   options?: {
     showAttribution?: boolean;
+    addCoordinatesToUrl: boolean;
     attributionOptions?: { [key: string]: any };
     showZoom?: boolean;
     showScaleLine?: boolean;
@@ -23,6 +25,7 @@ export function createMap(
     centerView?: number[];
     zoomView?: number;
     projection?: string;
+    constrainResolution?: boolean;
   },
 ) {
   const proj = get(options?.projection || projection);
@@ -33,7 +36,7 @@ export function createMap(
       center: options?.centerView || [495074.61, 6116454.53],
       projection: proj as Projection,
       zoom: options?.zoomView || 9,
-      constrainResolution: true,
+      constrainResolution: options?.constrainResolution,
     }),
     controls: defaults({
       attribution: !!options?.showAttribution,
@@ -70,6 +73,11 @@ export function createMap(
       target: 'mapControlsLB',
     });
     map.addControl(scaleControl);
+  }
+
+  if (options?.addCoordinatesToUrl) {
+    const link = new Link({ replace: true, params: ['x', 'y', 'z'], animate: false });
+    map.addInteraction(link);
   }
 
   return map;

@@ -54,7 +54,7 @@ export function searchGeoportal(
         multi_match: {
           query: value,
           type: 'most_fields',
-          fields: [
+          fields: options?.fields || [
             'VARDAS^5',
             'VARDAS.folded^5',
             'VARDAS.shingle^5',
@@ -109,7 +109,7 @@ export function searchGeoportal(
         }
         return {
           id: item._id,
-          x: source.LOCATION,
+          x: source.LOCATIONX,
           y: source.LOCATIONY,
           name: source.VARDAS,
           description: source.DESCRIPTIO,

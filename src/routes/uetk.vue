@@ -138,6 +138,6 @@ if (query.cadastralId) {
     filters.on(item).set('kadastro_id', `${query.cadastralId}`);
   });
 
-  await mapLayers.zoomNew(uetkService.id, { addStroke: true, filters });
+  await mapLayers.zoom(uetkService.id, { addStroke: true, filters });
 }
 </script>

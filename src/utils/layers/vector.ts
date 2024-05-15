@@ -8,6 +8,7 @@ import { GeoJSON } from 'ol/format';
 import { projection } from '../constants';
 import { renderIconHtml } from '../utils';
 import { vectorLayerStyles } from './styling';
+import { getMeasurementStyles } from './styles/measurements';
 
 const color = 'rgba(0,70,80,0.8)';
 const colorFill = 'rgba(0,70,80,0.2)';
@@ -21,6 +22,11 @@ export function getLayerStyles(opts: {
   width?: number;
   icon?: string;
   opts?: any;
+  showMeasurements?: {
+    length: boolean;
+    area: boolean;
+    segments: boolean;
+  };
 }) {
   const primaryColor = opts?.colors?.primary || '#326a72';
   const secondaryColor = opts?.colors?.secondary || '#002a30';
@@ -72,14 +78,41 @@ export function getLayerStyles(opts: {
   const secondaryStyle = getStyle(secondaryColor, opts?.icon, opts?.opts);
 
   function getStyleByFeature(defaultStyle: Style) {
-    return function (feature: any) {
+    return function (feature: any, resolution: number) {
       const color = feature.get('color');
       const radius = feature.get('radius');
       const icon = feature.get('icon');
+      const bufferSize = feature.get('bufferSize');
+
       if (color) {
         return getStyle(color, icon, { ...(opts?.opts || {}), width: radius });
       }
-      return defaultStyle;
+
+      if (bufferSize) {
+        const styleClone = defaultStyle.clone();
+        const circle = styleClone.getImage() as Circle;
+        const lightColor = styleClone.getFill()?.getColor()?.toString();
+
+        const width = (bufferSize * 2) / resolution;
+
+        if (width > 4000) return styleClone;
+
+        const bufferStroke = new Stroke({
+          color: lightColor,
+          width,
+        });
+
+        circle.setStroke(bufferStroke);
+        return styleClone;
+      }
+
+      const measurementStyles = getMeasurementStyles(feature, {
+        showSegments: opts?.showMeasurements?.segments,
+        showLength: opts?.showMeasurements?.length,
+        showArea: opts?.showMeasurements?.area,
+      });
+
+      return [defaultStyle, ...measurementStyles];
     };
   }
   const styles: any = {
@@ -120,6 +153,7 @@ export const fixedHighlightLayer = {
 export const drawLayer = {
   id: 'drawLayer',
   layer: new VectorLayer({
+    renderBuffer: 2000,
     style: function (feature) {
       const color = feature.get('color');
       const radius = feature.get('radius') || 3;
@@ -147,12 +181,16 @@ export const drawLayer = {
 export const markerLayer = {
   id: 'markerLayer',
   layer: new VectorLayer({
-    style: new Style({
-      image: new Icon({
-        anchor: [0.5, 1],
-        src: '/icons/zuvinimas.png',
-      }),
-    }),
+    style: function () {
+      // default style
+      const markerIconHtml = renderIconHtml('pin-water');
+      return new Style({
+        image: new Icon({
+          anchor: [0.5, 1],
+          src: `data:image/svg+xml;utf8,${markerIconHtml}`,
+        }),
+      });
+    },
     source: new VectorSource({
       format: new GeoJSON({
         dataProjection: projection,

@@ -26,6 +26,7 @@ Ministerija.
   - [Hunting tracks](#hunting-tracks)
   - [Nature Management](#nature-management)
   - [Rusys](#rusys)
+  - [Smalsuolis](#smalsuolis)
   - [UETK](#uetk)
   - [Zuvinimas](#zuvinimas)
   - [Zuvinimas Draw](#zuvinimas-draw)
@@ -126,9 +127,10 @@ https://maps.biip.lt/alis/fishing
 
 **Sends:**
 
-| Name    | Desciption              | Type           |
-| ------- | ----------------------- | -------------- |
-| `click` | Provides click features | Array of items |
+| Name            | Desciption                                              | Type                           |
+| --------------- | ------------------------------------------------------- | ------------------------------ |
+| `click`         | Provides click features                                 | Array of items                 |
+| `buyPermission` | Provides alis water body data for buying one permission | Object of alis water body data |
 
 ## Animals
 
@@ -153,9 +155,10 @@ https://maps.biip.lt/animals/draw
 
 **Listens:**
 
-| Name   | Desciption                        | Type               |
-| ------ | --------------------------------- | ------------------ |
-| `geom` | Draws provided feature collection | Feature collection |
+| Name      | Desciption                             | Type                                    |
+| --------- | -------------------------------------- | --------------------------------------- |
+| `geom`    | Draws provided feature collection      | Feature collection                      |
+| `address` | Zooms to provided address + adds point | String (e.g. `Gedimino pr. 1, Vilnius`) |
 
 **Sends:**
 
@@ -171,12 +174,13 @@ https://maps.biip.lt/edit
 
 ### Parameters
 
-| Name      | Desciption                  | Type       | Default                        |
-| --------- | --------------------------- | ---------- | ------------------------------ |
-| `multi`   | Enables multi geometry      | `Boolean`  | false                          |
-| `buffer`  | Enables buffers to geometry | `Boolean`  | false                          |
-| `preview` | Disables editing            | `Boolean`  | false                          |
-| `types`   | Enables specific draw types | `String[]` | `['point', 'polygon', 'line']` |
+| Name       | Desciption                  | Type                  | Default                                                                                                                                                                   |
+| ---------- | --------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `multi`    | Enables multi geometry      | `Boolean`             | false                                                                                                                                                                     |
+| `buffer`   | Enables buffers to geometry | `Boolean` \| `String` | false. Possible values: `xs` (default if boolean, starts with 1 m), `sm` (starts with 10 m), `md` (starts with 100 m), `lg` (starts with 500 m), `xl` (starts with 1 km). |
+| `preview`  | Disables editing            | `Boolean`             | false                                                                                                                                                                     |
+| `types`    | Enables specific draw types | `String[]`            | `['point', 'polygon', 'line'`                                                                                                                                             |
+| `autoZoom` | Enables auto zoom on change | `Boolean`             | false                                                                                                                                                                     |
 
 ### Events
 
@@ -318,6 +322,21 @@ https://maps.biip.lt/rusys
 | `selectedForm`  | Provides selected form id  | ID   |
 | `selectedPlace` | Provides selected place id | ID   |
 
+## Smalsuolis
+
+```
+https://maps.biip.lt/smalsuolis
+```
+
+### Events
+
+**Listens:**
+
+| Name      | Desciption                           | Type               |
+| --------- | ------------------------------------ | ------------------ |
+| `geom`    | Zooms to provided feature collection | Feature collection |
+| `filters` | Sets query filters                   | `Filter`           |
+
 ## UETK
 
 ```
@@ -363,27 +382,26 @@ https://maps.biip.lt/zuvinimas/draw
 
 ### Parameters
 
-| Name               | Desciption                   | Type      | Default |
-| ------------------ | ---------------------------- | --------- | ------- |
-| `id`               | Filters by ID                | `Filter`  | -       |
-| `createdBy`        | Filters by creator           | `Filter`  | -       |
-| `userId`           | Filters by user              | `Filter`  | -       |
-| `stockingCustomer` | Filters by stocking customer | `Filter`  | -       |
-| `tenantId`         | Filters by tenant            | `Filter`  | -       |
-| `preview`          | Disables editing             | `Boolean` | false   |
+| Name      | Desciption       | Type      | Default |
+| --------- | ---------------- | --------- | ------- |
+| `id`      | Filters by ID    | `Filter`  | -       |
+| `preview` | Disables editing | `Boolean` | false   |
 
 ### Events
 
 **Listens:**
-| Name | Desciption | Type |
-| ------ | --------------------------------- | ------------------ |
-| `geom` | Draws provided feature collection | Feature collection |
+
+| Name          | Desciption                                      | Type                 |
+| ------------- | ----------------------------------------------- | -------------------- |
+| `geom`        | Draws provided feature collection               | `Feature collection` |
+| `cadastralId` | Zooms to provided cadastral object & adds point | `Number` \| `String` |
 
 **Sends:**
 
-| Name          | Desciption              | Type               |
-| ------------- | ----------------------- | ------------------ |
-| `userObjects` | Provides drawn features | Feature collection |
+| Name          | Desciption                           | Type                                                   |
+| ------------- | ------------------------------------ | ------------------------------------------------------ |
+| `userObjects` | Provides drawn features              | Feature collection                                     |
+| `selected`    | Provides drawn features & UETK items | `{geom: FeatureCollection, items: Array<UEKT object>}` |
 
 ## Zuvinimas Upcoming
 

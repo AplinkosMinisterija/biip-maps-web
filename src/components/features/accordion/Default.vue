@@ -43,6 +43,7 @@ const getSorted = (properties: any) => {
     .sort((a: any, b: any) => {
       if (isInteger(a.id)) return a.id - b.id;
       return a.id.localeCompare(b.id);
-    });
+    })
+    .filter((item: any) => !['featureId', '_layerTitle'].includes(item.name));
 };
 </script>

@@ -5,7 +5,7 @@ import { dataToFeatureCollection } from './utils';
 import { getArea, getLength } from 'ol/sphere';
 import { transform } from 'ol/proj';
 import _ from 'lodash';
-import { projection } from '../constants';
+import { projection, projection4326 } from '../constants';
 
 const singleCoordPattern = '(-?\\d+(\\.\\d+)?)';
 
@@ -38,6 +38,8 @@ export function convertCoordinatesToProjection(
   dataProjection = '',
   featureProjection = projection,
 ) {
+  if (dataProjection === featureProjection) return coordinates;
+  
   if (coordinates?.type === 'FeatureCollection') {
     const options: any = {};
     if (dataProjection) {
@@ -86,7 +88,7 @@ export function convertCoordinatesToProjection(
       data = [lastEl, firstEl];
     }
 
-    return transform(data, dataProjection || 'EPSG:4326', projection);
+    return transform(data, dataProjection || projection4326, projection);
   };
 
   return transformCoordinates(coordinates);
@@ -102,7 +104,7 @@ export function convertCoordinates(
   for (let i = 0; i < coordinates.length / 2; i++) {
     const coordinatesPair = transform(
       [coordinates[i * 2], coordinates[i * 2 + 1]],
-      sourceProjection || 'EPSG:4326',
+      sourceProjection || projection4326,
       resultProjection,
     );
 
@@ -314,4 +316,27 @@ export function parseGeomFromString(input: string) {
   }
 
   return results;
+}
+
+export function convertFeatureCollectionProjection(data: any, from: string, to: string) {
+  if (from === to) return data;
+
+  const dataIsString = typeof data === 'string';
+
+  if (dataIsString) {
+    try {
+      data = JSON.parse(data);
+    } catch (err) {}
+  }
+
+  const features = new GeoJSON().readFeatures(_.cloneDeep(data), {
+    dataProjection: from,
+    featureProjection: to,
+  });
+
+  if (dataIsString) {
+    return new GeoJSON().writeFeatures(features);
+  }
+
+  return new GeoJSON().writeFeaturesObject(features);
 }

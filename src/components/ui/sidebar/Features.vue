@@ -17,6 +17,8 @@ import FeaturesAccordionAnimals from '@/components/features/accordion/Animals.vu
 import FeaturesAccordionTourism from '@/components/features/accordion/Tourism.vue';
 import FeaturesAccordionZvejyba from '@/components/features/accordion/Zvejyba.vue';
 import FeaturesAccordionZuvinimas from '@/components/features/accordion/Zuvinimas.vue';
+import FeaturesAccordionSzns from '@/components/features/accordion/Szns.vue';
+import FeaturesAccordionAlis from '@/components/features/accordion/alis/Index.vue';
 
 const emit = defineEmits(['close']);
 
@@ -37,6 +39,8 @@ const componentByType = computed(() => {
   else if (props.type === 'tourism') return FeaturesAccordionTourism;
   else if (props.type === 'zvejyba') return FeaturesAccordionZvejyba;
   else if (props.type === 'zuvinimas') return FeaturesAccordionZuvinimas;
+  else if (props.type === 'szns') return FeaturesAccordionSzns;
+  else if (props.type === 'alis') return FeaturesAccordionAlis;
   return 'pre';
 });
 const features = computed(() => props.features || []);

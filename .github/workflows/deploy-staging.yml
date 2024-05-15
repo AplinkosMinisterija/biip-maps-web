@@ -19,5 +19,5 @@ jobs:
       build-args: |
         NODE_ENV=production
         VUE_APP_SENTRY_DSN=https://6bb481def89a4a3f842b278c693f0c21@sentry.biip.lt/13
-        VUE_APP_QGIS_SERVER=https://staging.gis.biip.lt
-        VUE_APP_API_HOST=https://staging.internalapi.biip.lt
+        VUE_APP_SMALSUOLIS_API_HOST=https://staging.smalsuolis.lt/api
+        VUE_APP_QGIS_SERVER=https://staging-gis.biip.lt

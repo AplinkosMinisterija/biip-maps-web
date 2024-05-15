@@ -24,6 +24,7 @@
     "no-prototype-builtins": "off",
     "@typescript-eslint/no-this-alias": "off",
     "vue/singleline-html-element-content-newline": "off",
-    "@typescript-eslint/no-unused-vars": "warn"
+    "@typescript-eslint/no-unused-vars": "warn",
+    "no-empty": "off"
   }
 }

@@ -11,6 +11,7 @@ import _ from 'lodash';
 import { GeometryType, getFeatures, parse } from 'geojsonjs';
 import { getLayerStyles } from '../layers';
 import { convertFeaturesToPoints } from './utils';
+import type { GenericObject } from '@/types';
 
 type CallbackType = 'change' | 'select' | 'remove';
 
@@ -19,12 +20,14 @@ export class MapDraw extends Queues {
   private _layer: Layer | undefined;
   private _draw: Draw | undefined;
   private _isMulti: boolean = false;
+  private _isActive: boolean = false;
   private _defaultColors = {
     primary: '#326a72',
     secondary: '#002a30',
   };
   private _enabledContinuousDraw: boolean = false;
   private _enabledBufferSize: boolean = false;
+  private _defaultBufferSizeValue: number = 1;
   private _source = new VectorSource({
     wrapX: false,
     format: new GeoJSON({
@@ -68,16 +71,24 @@ export class MapDraw extends Queues {
   }
 
   setFeatures(
-    features: { [key: string]: any },
+    features: GenericObject<any>,
     options: {
       append?: boolean;
       types?: string[];
+      dataProjection?: string;
     } = {},
   ) {
     if (_.isEmpty(features)) return;
 
     try {
-      let data = new GeoJSON().readFeatures(features);
+      const readFeaturesOptions: any = {};
+
+      if (options?.dataProjection) {
+        readFeaturesOptions.dataProjection = options?.dataProjection;
+        readFeaturesOptions.featureProjection = this?.map?.getView().getProjection().getCode();
+      }
+
+      let data = new GeoJSON().readFeatures(features, readFeaturesOptions);
 
       if (options?.types?.length) {
         data = convertFeaturesToPoints(data, options?.types || []);
@@ -86,6 +97,15 @@ export class MapDraw extends Queues {
       if (!options?.append) {
         this.remove();
       }
+
+      if (this._enabledBufferSize) {
+        data?.forEach((feature) => {
+          const bufferSize =
+            this.getProperties(feature, 'bufferSize') || this._defaultBufferSizeValue;
+          this.setProperties(feature, { bufferSize });
+        });
+      }
+
       this._source.addFeatures(data);
       this._triggerCallbacks('change');
     } catch (err) {
@@ -101,6 +121,23 @@ export class MapDraw extends Queues {
       icon: name,
       width: opts.size,
       opts,
+    });
+  }
+
+  enableMeasurements(
+    opts: { length?: boolean; area?: boolean; segments?: boolean } = {
+      length: true,
+      area: true,
+      segments: true,
+    },
+  ) {
+    return this.setStyles({
+      ...this._styles.opts,
+      showMeasurements: {
+        length: opts?.length,
+        area: opts?.area,
+        segments: opts?.segments,
+      },
     });
   }
 
@@ -148,8 +185,9 @@ export class MapDraw extends Queues {
     return this;
   }
 
-  enableBufferSize(value: boolean = false) {
+  enableBufferSize(value: boolean = false, defaultValue: number = 1) {
     this._enabledBufferSize = !!value;
+    this._defaultBufferSizeValue = defaultValue;
     return this;
   }
 
@@ -201,6 +239,7 @@ export class MapDraw extends Queues {
     this._addInteractions();
     this._addEditInteractions();
 
+    this._isActive = true;
     return this;
   }
 
@@ -217,7 +256,16 @@ export class MapDraw extends Queues {
     this._setSelectedFeature();
     this._removeInteractions();
 
+    this._isActive = false;
+
     return this;
+  }
+
+  toggle(type?: DrawType, value?: boolean) {
+    const isActive = typeof value !== 'undefined' ? value : this._isActive;
+
+    if (isActive) return this.remove().end();
+    return this.start(type);
   }
 
   on(types: CallbackType | CallbackType[], cb: Function) {
@@ -361,7 +409,8 @@ export class MapDraw extends Queues {
       if (!feature) return;
 
       if (this._enabledBufferSize) {
-        const bufferSize = this.getProperties(feature, 'bufferSize') || 1;
+        const bufferSize =
+          this.getProperties(feature, 'bufferSize') || this._defaultBufferSizeValue;
         this.setProperties(feature, { bufferSize });
       }
 
@@ -408,12 +457,17 @@ export class MapDraw extends Queues {
 
       const feature = event?.feature ? new GeoJSON().writeFeatureObject(event.feature) : null;
 
+      let featuresJSON = features;
+      try {
+        featuresJSON = JSON.parse(features);
+      } catch (err) {}
       (types as CallbackType[]).forEach((type: CallbackType) => {
         this._callbacks[type]?.forEach((cb) => {
           cb({
             source: this._source,
             features,
             feature,
+            featuresJSON,
             featureObj: event?.feature,
           });
         });

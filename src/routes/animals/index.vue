@@ -34,8 +34,14 @@
 </template>
 <script setup lang="ts">
 import { computed, inject, ref, watch } from 'vue';
-import { municipalitiesServiceVT, projection3857, geoportalTopo3857 } from '@/utils';
+import {
+  municipalitiesServiceVT,
+  projection3857,
+  vectorBright,
+  vectorPositron,
+} from '@/utils';
 import { useStatsStore } from '@/stores/stats';
+
 const statsStore = useStatsStore();
 
 const mapLayers: any = inject('mapLayers');
@@ -49,6 +55,7 @@ function selectFeatures(feature: any) {
     selectedFeatures.value = [feature];
   }
 }
+
 const allLayers = [
   {
     key: 'animals.permits',
@@ -88,5 +95,8 @@ municipalitiesServiceVT.layer.getSource()?.on('tileloadend', ({ tile }: any) => 
 });
 await statsStore.preloadStats(allLayers.map((l) => l.key));
 
-mapLayers.addBaseLayer(geoportalTopo3857.id).add(municipalitiesServiceVT.id);
+mapLayers
+  .addBaseLayer(vectorPositron.id)
+  .addBaseLayer(vectorBright.id)
+  .add(municipalitiesServiceVT.id);
 </script>
