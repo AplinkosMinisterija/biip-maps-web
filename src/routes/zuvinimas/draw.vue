@@ -45,10 +45,6 @@ const mapDraw = computed(() => mapLayers.getDraw(markerLayer.id).enableContinuou
 
 const query = parseRouteParams($route.query, [
   "id",
-  "createdBy",
-  "tenantId",
-  "userId",
-  "stockingCustomer",
   "preview",
 ]);
 const uetkLayers = ["upes", "ezerai_tvenkiniai"];
