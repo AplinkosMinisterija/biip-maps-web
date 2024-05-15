@@ -11,6 +11,7 @@ import _ from 'lodash';
 import { GeometryType, getFeatures, parse } from 'geojsonjs';
 import { getLayerStyles } from '../layers';
 import { convertFeaturesToPoints } from './utils';
+import type { GenericObject } from '@/types';
 
 type CallbackType = 'change' | 'select' | 'remove';
 
@@ -70,7 +71,7 @@ export class MapDraw extends Queues {
   }
 
   setFeatures(
-    features: { [key: string]: any },
+    features: GenericObject<any>,
     options: {
       append?: boolean;
       types?: string[];
