@@ -21,10 +21,10 @@
 import { inject, computed } from "vue";
 import { useRoute } from "vue-router";
 import { useFiltersStore } from "@/stores/filters";
+import center from "@turf/center";
 import {
   geoportalOrto,
   projection3857,
-  zuvinimasService,
   uetkService,
   parseRouteParams,
   markerLayer,
@@ -32,7 +32,9 @@ import {
   vectorBright,
   vectorPositron,
   projection,
+  convertUETKProperties,
 } from "@/utils";
+import { parse } from "geojsonjs";
 
 const filtersStore = useFiltersStore();
 const postMessage: any = inject("postMessage");
@@ -43,30 +45,47 @@ const mapDraw = computed(() => mapLayers.getDraw(markerLayer.id).enableContinuou
 
 const query = parseRouteParams($route.query, [
   "id",
-  "createdBy",
-  "tenantId",
-  "userId",
-  "stockingCustomer",
   "preview",
 ]);
-
-const zuvinimasServiceFilters = mapLayers.filters(zuvinimasService.id);
-const filters = computed(() => zuvinimasServiceFilters.on("fish_stockings"));
+const uetkLayers = ["upes", "ezerai_tvenkiniai"];
 
 events.on("geom", (data: any) => {
   mapDraw.value.setFeatures(data.geom || data, { dataProjection: projection });
 });
 
-if (query.tenantId) {
-  filters.value.set("$or", [
-    { tenant_id: query.tenantId },
-    { stocking_customer_id: query.tenantId },
-  ]);
-}
+const uetkLocalFilters = mapLayers.filters("_uetkLocalFilters");
+events.on("cadastralId", (data: any) => {
+  uetkLayers.forEach((item) => {
+    uetkLocalFilters.on(item).set("kadastro_id", `${data}`);
+  });
 
-if (query.userId) {
-  filters.value.set("created_by", query.userId).set("tenant_id", { $exists: false });
-}
+  mapLayers
+    .zoom(uetkService.id, {
+      filters: uetkLocalFilters,
+    })
+    .then((data: any) => {
+      if (data?.length !== 1) return;
+      const properties = convertUETKProperties(data[0].properties);
+      let coordinates: number[] = [];
+      if (properties.centerX && properties.centerY) {
+        coordinates = [properties.centerY, properties.centerX];
+      } else if (properties.mouthX && properties.mouthY) {
+        coordinates = [properties.mouthY, properties.mouthX];
+      }
+
+      if (!coordinates?.length) return;
+
+      const featureCollection = parse({
+        type: "Point",
+        coordinates,
+      });
+
+      mapDraw.value.setFeatures(featureCollection, { dataProjection: projection });
+      mapLayers.zoomToFeatureCollection(featureCollection);
+    });
+});
+
+mapLayers.setSublayers(uetkService.id, uetkLayers);
 
 const selectSearch = (match: any) => {
   filtersStore.clearSearch();
@@ -86,11 +105,30 @@ mapLayers
 mapDraw.value.setIcon("pin-water", { align: "top", size: 4 });
 
 if (!query.preview) {
-  mapDraw.value.start("Point").on(["change", "remove"], ({ features }: any) => {
-    if (features) {
-      features = convertFeatureCollectionProjection(features, projection3857, projection);
-    }
-    postMessage("userObjects", features);
-  });
+  mapDraw.value
+    .start("Point")
+    .on(["change", "remove"], ({ features, featuresJSON }: any) => {
+      if (features) {
+        features = convertFeatureCollectionProjection(
+          features,
+          projection3857,
+          projection
+        );
+
+        // Just to make sure
+        const point = center(featuresJSON);
+        mapLayers.getFeatureInfo(
+          uetkService.id,
+          point.geometry.coordinates,
+          ({ properties }: any) => {
+            postMessage("selected", {
+              geom: features,
+              items: convertUETKProperties(properties),
+            });
+          }
+        );
+      }
+      postMessage("userObjects", features);
+    });
 }
 </script>
