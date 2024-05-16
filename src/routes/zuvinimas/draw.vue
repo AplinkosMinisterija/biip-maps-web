@@ -122,7 +122,7 @@ if (!query.preview) {
           point.geometry.coordinates,
           ({ properties }: any) => {
             postMessage("selected", {
-              geom: features,
+              geom: featuresJSON,
               items: convertUETKProperties(properties),
             });
           }
