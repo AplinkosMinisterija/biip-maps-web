@@ -32,6 +32,7 @@ import {
   vectorBright,
   smalsuolisServiceVT,
   parseRouteParams,
+  projection,
 } from "@/utils";
 import { useFiltersStore } from "@/stores/filters";
 import { useRoute } from "vue-router";
@@ -70,6 +71,7 @@ events.on("geom", (data: any) => {
     }
   }
 
+  mapLayers.getDraw().setFeatures(geom, { dataProjection: projection });
   mapLayers.zoomToFeatureCollection(geom);
 });
 

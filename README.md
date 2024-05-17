@@ -382,27 +382,26 @@ https://maps.biip.lt/zuvinimas/draw
 
 ### Parameters
 
-| Name               | Desciption                   | Type      | Default |
-| ------------------ | ---------------------------- | --------- | ------- |
-| `id`               | Filters by ID                | `Filter`  | -       |
-| `createdBy`        | Filters by creator           | `Filter`  | -       |
-| `userId`           | Filters by user              | `Filter`  | -       |
-| `stockingCustomer` | Filters by stocking customer | `Filter`  | -       |
-| `tenantId`         | Filters by tenant            | `Filter`  | -       |
-| `preview`          | Disables editing             | `Boolean` | false   |
+| Name      | Desciption       | Type      | Default |
+| --------- | ---------------- | --------- | ------- |
+| `id`      | Filters by ID    | `Filter`  | -       |
+| `preview` | Disables editing | `Boolean` | false   |
 
 ### Events
 
 **Listens:**
-| Name | Desciption | Type |
-| ------ | --------------------------------- | ------------------ |
-| `geom` | Draws provided feature collection | Feature collection |
+
+| Name          | Desciption                                      | Type                 |
+| ------------- | ----------------------------------------------- | -------------------- |
+| `geom`        | Draws provided feature collection               | `Feature collection` |
+| `cadastralId` | Zooms to provided cadastral object & adds point | `Number` \| `String` |
 
 **Sends:**
 
-| Name          | Desciption              | Type               |
-| ------------- | ----------------------- | ------------------ |
-| `userObjects` | Provides drawn features | Feature collection |
+| Name          | Desciption                           | Type                                                   |
+| ------------- | ------------------------------------ | ------------------------------------------------------ |
+| `userObjects` | Provides drawn features              | Feature collection                                     |
+| `selected`    | Provides drawn features & UETK items | `{geom: FeatureCollection, items: Array<UEKT object>}` |
 
 ## Zuvinimas Upcoming
 

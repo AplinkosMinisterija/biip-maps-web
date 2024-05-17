@@ -45,6 +45,7 @@ import { computed, inject, ref, watch } from "vue";
 import moment from "moment";
 import VueMarkdown from "vue-markdown-render";
 import { getClusterItemsUrl, getEventUrl } from "@/utils/requests/smalsuolis";
+import { projection4326 } from "@/utils";
 const eventBus: any = inject("eventBus");
 
 const mapLayers: any = inject("mapLayers");
@@ -74,6 +75,7 @@ const clusterItemsUrl = computed(() =>
   getClusterItemsUrl(item.value?.cluster_id, {
     populate: "app,geom",
     pageSize: pageSize,
+    sort: "-startAt",
     page: Math.floor(currentPage.value / pageSize) + 1,
     ...(props.filters?.toJson(true) || {}),
   })
@@ -104,7 +106,10 @@ watch(
 
 function preview() {
   if (!pageItem.value?.geom) return;
-  mapLayers.zoomToFeatureCollection(pageItem.value?.geom, { animate: true });
+  mapLayers.zoomToFeatureCollection(pageItem.value?.geom, {
+    animate: true,
+    dataProjection: projection4326,
+  });
 }
 
 const enabledPreviewMode = ref(true);
