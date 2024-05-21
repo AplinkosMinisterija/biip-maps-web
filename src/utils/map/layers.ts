@@ -387,7 +387,7 @@ export class MapLayers extends Queues {
 
     const layer = this.getLayer(id);
     if (!layer) {
-      throw new Error('Layer not found');
+      throw new Error(`Layer "${id}" not found`);
     }
 
     if (!layer.get('id')) {
@@ -706,7 +706,7 @@ export class MapLayers extends Queues {
 
     const { extent } = featureCollectionToExtent(data, this.map.getView().getProjection(), {
       applyBuffers: true,
-      dataProjection: options?.dataProjection
+      dataProjection: options?.dataProjection,
     });
 
     if (options.addStroke) {

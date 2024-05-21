@@ -335,533 +335,299 @@ export const rusysService = {
 
 // https://wmsgisservice.biomon.lt/opengisservice/gamtotvarka?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetCapabilities
 
-export const gamtotvarkaAtliktiDarbai = {
+export const gamtotvarkaAtliktiDarbai = new PakmapsLayer({
   id: 'gamtotvarkaAtliktiDarbai',
-  title: 'Atlikti tvarkymo darbai',
+  name: 'Atlikti tvarkymo darbai',
   sublayers: [
-    {
-      value: 'tvarkymo_darbu_pateikimo_busena',
-      name: 'Tvarkymo darbų pateikimo būsena',
-    },
-    {
-      value: 'tvarkymo_darbai',
-      name: 'Atlikti tvarkymo darbai',
-    },
+    { value: 'tvarkymo_darbu_pateikimo_busena', name: 'Tvarkymo darbų pateikimo būsena' },
+    { value: 'tvarkymo_darbai', name: 'Atlikti tvarkymo darbai' },
   ],
   layer: getWMSImageLayer(
     'https://wmsgisservice.biomon.lt/opengisservice/gamtotvarka',
     'tvarkymo_darbai,tvarkymo_darbu_pateikimo_busena',
     vsttCopyright,
   ),
-};
-gamtotvarkaAtliktiDarbai.layer.set('id', 'gamtotvarkaAtliktiDarbai');
+  type: PakmapsLayerType.WMS,
+});
 
-export const gamtotvarkaPlanuPlotai = {
+export const gamtotvarkaPlanuPlotai = new PakmapsLayer({
   id: 'gamtotvarkaPlanuPlotai',
-  title: 'Gamtotvarkos planų tvarkymo plotai',
+  name: 'Gamtotvarkos planų tvarkymo plotai',
   sublayers: [
-    {
-      value: 'gamtotvarkos_plotai_negalioja',
-      name: 'Negalioja',
-    },
-    {
-      value: 'gamtotvarkos_plotai_rengiamas',
-      name: 'Rengiami',
-    },
-    {
-      value: 'gamtotvarkos_plotai_patvirtintas',
-      name: 'Patvirtinti',
-    },
+    { value: 'gamtotvarkos_plotai_negalioja', name: 'Negalioja' },
+    { value: 'gamtotvarkos_plotai_rengiamas', name: 'Rengiami' },
+    { value: 'gamtotvarkos_plotai_patvirtintas', name: 'Patvirtinti' },
   ],
   layer: getWMSImageLayer(
     'https://wmsgisservice.biomon.lt/opengisservice/gamtotvarka',
     'gamtotvarkos_plotai_patvirtintas',
     vsttCopyright,
   ),
-};
-gamtotvarkaPlanuPlotai.layer.set('id', 'gamtotvarkaPlanuPlotai');
+  type: PakmapsLayerType.WMS,
+});
 
-export const gamtotvarkaPlanuTeritorijos = {
+export const gamtotvarkaPlanuTeritorijos = new PakmapsLayer({
   id: 'gamtotvarkaPlanuTeritorijos',
-  title: 'Gamtotvarkos planų teritorijos',
+  name: 'Gamtotvarkos planų teritorijos',
   sublayers: [
-    {
-      value: 'gamtotvarkos_teritorijos_negalioja',
-      name: 'Negalioja',
-    },
-    {
-      value: 'gamtotvarkos_teritorijos_rengiamas',
-      name: 'Rengiamos',
-    },
-    {
-      value: 'gamtotvarkos_teritorijos_patvirtintas',
-      name: 'Patvirtintos',
-    },
+    { value: 'gamtotvarkos_teritorijos_negalioja', name: 'Negalioja' },
+    { value: 'gamtotvarkos_teritorijos_rengiamas', name: 'Rengiamos' },
+    { value: 'gamtotvarkos_teritorijos_patvirtintas', name: 'Patvirtintos' },
   ],
   layer: getWMSImageLayer(
     'https://wmsgisservice.biomon.lt/opengisservice/gamtotvarka',
     'gamtotvarkos_teritorijos_patvirtintas',
     vsttCopyright,
   ),
-};
-gamtotvarkaPlanuTeritorijos.layer.set('id', 'gamtotvarkaPlanuTeritorijos');
+  type: PakmapsLayerType.WMS,
+});
 
-export const gamtotvarkaPlanai = {
+export const gamtotvarkaPlanai = new PakmapsLayer({
   id: 'gamtotvarkaPlanai',
-  title: 'Gamtotvarkos planai',
+  name: 'Gamtotvarkos planai',
   sublayers: [
-    {
-      name: 'Plotai',
-      layer: gamtotvarkaPlanuPlotai.layer,
-      id: gamtotvarkaPlanuPlotai.id,
-    },
-    {
-      name: 'Teritorijos',
-      layer: gamtotvarkaPlanuTeritorijos.layer,
-      id: gamtotvarkaPlanuTeritorijos.id,
-    },
+    { name: 'Plotai', pakmapsLayer: gamtotvarkaPlanuPlotai },
+    { name: 'Teritorijos', pakmapsLayer: gamtotvarkaPlanuTeritorijos },
   ],
-  layer: new LayerGroup({
-    layers: [gamtotvarkaPlanuTeritorijos.layer, gamtotvarkaPlanuPlotai.layer],
-  }),
-};
-gamtotvarkaPlanai.layer.setVisible(false);
-gamtotvarkaPlanai.layer.set('id', 'gamtotvarkaPlanai');
+  hidden: true,
+});
 
-export const gamtotvarkaProgramuPlotai = {
+export const gamtotvarkaProgramuPlotai = new PakmapsLayer({
   id: 'gamtotvarkaProgramuPlotai',
-  title: 'Tvarkymo programų plotai',
+  name: 'Tvarkymo programų plotai',
   sublayers: [
-    {
-      value: 'tvarkymo_programu_plotai_negalioja',
-      name: 'Negalioja',
-    },
-    {
-      value: 'tvarkymo_programu_plotai_rengiamas',
-      name: 'Rengiami',
-    },
-    {
-      value: 'tvarkymo_programu_plotai_patvirtintas',
-      name: 'Patvirtinti',
-    },
+    { value: 'tvarkymo_programu_plotai_negalioja', name: 'Negalioja' },
+    { value: 'tvarkymo_programu_plotai_rengiamas', name: 'Rengiami' },
+    { value: 'tvarkymo_programu_plotai_patvirtintas', name: 'Patvirtinti' },
   ],
   layer: getWMSImageLayer(
     'https://wmsgisservice.biomon.lt/opengisservice/gamtotvarka',
     'tvarkymo_programu_plotai_patvirtintas',
     vsttCopyright,
   ),
-};
-gamtotvarkaProgramuPlotai.layer.set('id', 'gamtotvarkaProgramuPlotai');
+  type: PakmapsLayerType.WMS,
+});
 
-export const gamtotvarkaProgramuTeritorijos = {
+export const gamtotvarkaProgramuTeritorijos = new PakmapsLayer({
   id: 'gamtotvarkaProgramuTeritorijos',
-  title: 'Tvarkymo programų teritorijos',
+  name: 'Tvarkymo programų teritorijos',
   sublayers: [
-    {
-      value: 'tvarkymo_programu_teritorijos_negalioja',
-      name: 'Negalioja',
-    },
-    {
-      value: 'tvarkymo_programu_teritorijos_rengiamas',
-      name: 'Rengiamos',
-    },
-    {
-      value: 'tvarkymo_programu_teritorijos_patvirtintas',
-      name: 'Patvirtintos',
-    },
+    { value: 'tvarkymo_programu_teritorijos_negalioja', name: 'Negalioja' },
+    { value: 'tvarkymo_programu_teritorijos_rengiamas', name: 'Rengiamos' },
+    { value: 'tvarkymo_programu_teritorijos_patvirtintas', name: 'Patvirtintos' },
   ],
   layer: getWMSImageLayer(
     'https://wmsgisservice.biomon.lt/opengisservice/gamtotvarka',
     'tvarkymo_programu_teritorijos_patvirtintas',
     vsttCopyright,
   ),
-};
-gamtotvarkaProgramuTeritorijos.layer.set('id', 'gamtotvarkaProgramuTeritorijos');
+  type: PakmapsLayerType.WMS,
+});
 
-export const gamtotvarkaTvarkymoProgramos = {
+export const gamtotvarkaTvarkymoProgramos = new PakmapsLayer({
   id: 'gamtotvarkaTvarkymoProgramos',
-  title: 'Tvarkymo programos',
+  name: 'Tvarkymo programos',
   sublayers: [
-    {
-      name: 'Plotai',
-      layer: gamtotvarkaProgramuPlotai.layer,
-      id: gamtotvarkaProgramuPlotai.id,
-    },
-    {
-      name: 'Teritorijos',
-      layer: gamtotvarkaProgramuTeritorijos.layer,
-      id: gamtotvarkaProgramuTeritorijos.id,
-    },
+    { name: 'Plotai', pakmapsLayer: gamtotvarkaProgramuPlotai },
+    { name: 'Teritorijos', pakmapsLayer: gamtotvarkaProgramuTeritorijos },
   ],
-  layer: new LayerGroup({
-    layers: [gamtotvarkaProgramuTeritorijos.layer, gamtotvarkaProgramuPlotai.layer],
-  }),
-};
-gamtotvarkaTvarkymoProgramos.layer.setVisible(false);
-gamtotvarkaTvarkymoProgramos.layer.set('id', 'gamtotvarkaTvarkymoProgramos');
+  hidden: true,
+});
 
-export const gamtotvarkaTiksliniuProgramuPlotai = {
+export const gamtotvarkaTiksliniuProgramuPlotai = new PakmapsLayer({
   id: 'gamtotvarkaTiksliniuProgramuPlotai',
-  title: 'Tikslinių programų plotai',
+  name: 'Tikslinių programų plotai',
   sublayers: [
-    {
-      value: 'tikslines_programos_plotai_negalioja',
-      name: 'Negalioja',
-    },
-    {
-      value: 'tikslines_programos_plotai_rengiamas',
-      name: 'Rengiami',
-    },
-    {
-      value: 'tikslines_programos_plotai_patvirtintas',
-      name: 'Patvirtinti',
-    },
+    { value: 'tikslines_programos_plotai_negalioja', name: 'Negalioja' },
+    { value: 'tikslines_programos_plotai_rengiamas', name: 'Rengiami' },
+    { value: 'tikslines_programos_plotai_patvirtintas', name: 'Patvirtinti' },
   ],
   layer: getWMSImageLayer(
     'https://wmsgisservice.biomon.lt/opengisservice/gamtotvarka',
     'tikslines_programos_plotai_patvirtintas',
     vsttCopyright,
   ),
-};
-gamtotvarkaTiksliniuProgramuPlotai.layer.set('id', 'gamtotvarkaTiksliniuProgramuPlotai');
+  type: PakmapsLayerType.WMS,
+});
 
-export const gamtotvarkaTiksliniuProgramuTeritorijos = {
+export const gamtotvarkaTiksliniuProgramuTeritorijos = new PakmapsLayer({
   id: 'gamtotvarkaTiksliniuProgramuTeritorijos',
-  title: 'Tikslinių programų teritorijos',
+  name: 'Tikslinių programų teritorijos',
   sublayers: [
-    {
-      value: 'tiksliniu_programu_teritorijos_negalioja',
-      name: 'Negalioja',
-    },
-    {
-      value: 'tiksliniu_programu_teritorijos_rengiamas',
-      name: 'Rengiamos',
-    },
-    {
-      value: 'tiksliniu_programu_teritorijos_patvirtintas',
-      name: 'Patvirtintos',
-    },
+    { value: 'tiksliniu_programu_teritorijos_negalioja', name: 'Negalioja' },
+    { value: 'tiksliniu_programu_teritorijos_rengiamas', name: 'Rengiamos' },
+    { value: 'tiksliniu_programu_teritorijos_patvirtintas', name: 'Patvirtintos' },
   ],
   layer: getWMSImageLayer(
     'https://wmsgisservice.biomon.lt/opengisservice/gamtotvarka',
     'tiksliniu_programu_teritorijos_patvirtintas',
     vsttCopyright,
   ),
-};
-gamtotvarkaTiksliniuProgramuTeritorijos.layer.set('id', 'gamtotvarkaTiksliniuProgramuTeritorijos');
+  type: PakmapsLayerType.WMS,
+});
 
-export const gamtotvarkaTikslinesProgramos = {
+export const gamtotvarkaTikslinesProgramos = new PakmapsLayer({
   id: 'gamtotvarkaTikslinesProgramos',
-  title: 'Tikslinės programos',
+  name: 'Tikslinės programos',
   sublayers: [
-    {
-      name: 'Plotai',
-      layer: gamtotvarkaTiksliniuProgramuPlotai.layer,
-      id: gamtotvarkaTiksliniuProgramuPlotai.id,
-    },
-    {
-      name: 'Teritorijos',
-      layer: gamtotvarkaTiksliniuProgramuTeritorijos.layer,
-      id: gamtotvarkaTiksliniuProgramuTeritorijos.id,
-    },
+    { name: 'Plotai', pakmapsLayer: gamtotvarkaTiksliniuProgramuPlotai },
+    { name: 'Teritorijos', pakmapsLayer: gamtotvarkaTiksliniuProgramuTeritorijos },
   ],
-  layer: new LayerGroup({
-    layers: [
-      gamtotvarkaTiksliniuProgramuTeritorijos.layer,
-      gamtotvarkaTiksliniuProgramuPlotai.layer,
-    ],
-  }),
-};
-gamtotvarkaTikslinesProgramos.layer.setVisible(false);
-gamtotvarkaTikslinesProgramos.layer.set('id', 'gamtotvarkaTikslinesProgramos');
+  hidden: true,
+});
 
-export const gamtotvarkaVeiksmuPlanuPlotai = {
+export const gamtotvarkaVeiksmuPlanuPlotai = new PakmapsLayer({
   id: 'gamtotvarkaVeiksmuPlanuPlotai',
-  title: 'Rūšių apsaugos veiksmų planų plotai',
+  name: 'Rūšių apsaugos veiksmų planų plotai',
   sublayers: [
-    {
-      value: 'rusiu_veiksmu_planu_plotai_negalioja',
-      name: 'Negalioja',
-    },
-    {
-      value: 'rusiu_veiksmu_planu_plotai_rengiamas',
-      name: 'Rengiami',
-    },
-    {
-      value: 'rusiu_veiksmu_planu_plotai_patvirtintas',
-      name: 'Patvirtinti',
-    },
+    { value: 'rusiu_veiksmu_planu_plotai_negalioja', name: 'Negalioja' },
+    { value: 'rusiu_veiksmu_planu_plotai_rengiamas', name: 'Rengiami' },
+    { value: 'rusiu_veiksmu_planu_plotai_patvirtintas', name: 'Patvirtinti' },
   ],
   layer: getWMSImageLayer(
     'https://wmsgisservice.biomon.lt/opengisservice/gamtotvarka',
     'rusiu_veiksmu_planu_plotai_patvirtintas',
     vsttCopyright,
   ),
-};
-gamtotvarkaVeiksmuPlanuPlotai.layer.set('id', 'gamtotvarkaVeiksmuPlanuPlotai');
+  type: PakmapsLayerType.WMS,
+});
 
-export const gamtotvarkaVeiksmuPlanuTeritorijos = {
+export const gamtotvarkaVeiksmuPlanuTeritorijos = new PakmapsLayer({
   id: 'gamtotvarkaVeiksmuPlanuTeritorijos',
-  title: 'Rūšių apsaugos veiksmų planų teritorijos',
+  name: 'Rūšių apsaugos veiksmų planų teritorijos',
   sublayers: [
-    {
-      value: 'rusiu_apsaugos_veiksmu_teritorijos_negalioja',
-      name: 'Negalioja',
-    },
-    {
-      value: 'rusiu_apsaugos_veiksmu_teritorijos_rengiamas',
-      name: 'Rengiamos',
-    },
-    {
-      value: 'rusiu_apsaugos_veiksmu_teritorijos_patvirtintas',
-      name: 'Patvirtintos',
-    },
+    { value: 'rusiu_apsaugos_veiksmu_teritorijos_negalioja', name: 'Negalioja' },
+    { value: 'rusiu_apsaugos_veiksmu_teritorijos_rengiamas', name: 'Rengiamos' },
+    { value: 'rusiu_apsaugos_veiksmu_teritorijos_patvirtintas', name: 'Patvirtintos' },
   ],
   layer: getWMSImageLayer(
     'https://wmsgisservice.biomon.lt/opengisservice/gamtotvarka',
     'rusiu_apsaugos_veiksmu_teritorijos_patvirtintas',
     vsttCopyright,
   ),
-};
-gamtotvarkaVeiksmuPlanuTeritorijos.layer.set('id', 'gamtotvarkaVeiksmuPlanuTeritorijos');
+  type: PakmapsLayerType.WMS,
+});
 
-export const gamtotvarkaVeiksmuPlanai = {
+export const gamtotvarkaVeiksmuPlanai = new PakmapsLayer({
   id: 'gamtotvarkaVeiksmuPlanai',
-  title: 'Rūšių apsaugos veiksmų planai',
+  name: 'Rūšių apsaugos veiksmų planai',
   sublayers: [
-    {
-      name: 'Plotai',
-      layer: gamtotvarkaVeiksmuPlanuPlotai.layer,
-      id: gamtotvarkaVeiksmuPlanuPlotai.id,
-    },
-    {
-      name: 'Teritorijos',
-      layer: gamtotvarkaVeiksmuPlanuTeritorijos.layer,
-      id: gamtotvarkaVeiksmuPlanuTeritorijos.id,
-    },
+    { name: 'Plotai', pakmapsLayer: gamtotvarkaVeiksmuPlanuPlotai },
+    { name: 'Teritorijos', pakmapsLayer: gamtotvarkaVeiksmuPlanuTeritorijos },
   ],
-  layer: new LayerGroup({
-    layers: [gamtotvarkaVeiksmuPlanuTeritorijos.layer, gamtotvarkaVeiksmuPlanuPlotai.layer],
-  }),
-};
-gamtotvarkaVeiksmuPlanai.layer.setVisible(false);
-gamtotvarkaVeiksmuPlanai.layer.set('id', 'gamtotvarkaVeiksmuPlanai');
+  hidden: true,
+});
 
-export const gamtotvarkaStTvarkymoPlanuPlotai = {
+export const gamtotvarkaStTvarkymoPlanuPlotai = new PakmapsLayer({
   id: 'gamtotvarkaStTvarkymoPlanuPlotai',
-  title: 'ST tvarkymo planų plotai',
+  name: 'ST tvarkymo planų plotai',
   sublayers: [
-    {
-      value: 'st_tvarkymo_planu_plotai_negalioja',
-      name: 'Negalioja',
-    },
-    {
-      value: 'st_tvarkymo_planu_plotai_rengiamas',
-      name: 'Rengiami',
-    },
-    {
-      value: 'st_tvarkymo_planu_plotai_patvirtintas',
-      name: 'Patvirtinti',
-    },
+    { value: 'st_tvarkymo_planu_plotai_negalioja', name: 'Negalioja' },
+    { value: 'st_tvarkymo_planu_plotai_rengiamas', name: 'Rengiami' },
+    { value: 'st_tvarkymo_planu_plotai_patvirtintas', name: 'Patvirtinti' },
   ],
   layer: getWMSImageLayer(
     'https://wmsgisservice.biomon.lt/opengisservice/gamtotvarka',
     'st_tvarkymo_planu_plotai_patvirtintas',
     vsttCopyright,
   ),
-};
-gamtotvarkaStTvarkymoPlanuPlotai.layer.set('id', 'gamtotvarkaStTvarkymoPlanuPlotai');
+  type: PakmapsLayerType.WMS,
+});
 
-export const gamtotvarkaStTvarkymoPlanuTeritorijos = {
+export const gamtotvarkaStTvarkymoPlanuTeritorijos = new PakmapsLayer({
   id: 'gamtotvarkaStTvarkymoPlanuTeritorijos',
-  title: 'ST tvarkymo planų teritorijos',
+  name: 'ST tvarkymo planų teritorijos',
   sublayers: [
-    {
-      value: 'st_tvarkymo_planu_teritorijos_negalioja',
-      name: 'Negalioja',
-    },
-    {
-      value: 'st_tvarkymo_planu_teritorijos_rengiamas',
-      name: 'Rengiamos',
-    },
-    {
-      value: 'st_tvarkymo_planu_teritorijos_patvirtintas',
-      name: 'Patvirtintos',
-    },
+    { value: 'st_tvarkymo_planu_teritorijos_negalioja', name: 'Negalioja' },
+    { value: 'st_tvarkymo_planu_teritorijos_rengiamas', name: 'Rengiamos' },
+    { value: 'st_tvarkymo_planu_teritorijos_patvirtintas', name: 'Patvirtintos' },
   ],
   layer: getWMSImageLayer(
     'https://wmsgisservice.biomon.lt/opengisservice/gamtotvarka',
     'st_tvarkymo_planu_teritorijos_patvirtintas',
     vsttCopyright,
   ),
-};
-gamtotvarkaStTvarkymoPlanuTeritorijos.layer.set('id', 'gamtotvarkaStTvarkymoPlanuTeritorijos');
+  type: PakmapsLayerType.WMS,
+});
 
-export const gamtotvarkaStTvarkymoPlanai = {
+export const gamtotvarkaStTvarkymoPlanai = new PakmapsLayer({
   id: 'gamtotvarkaStTvarkymoPlanai',
-  title: 'ST tvarkymo planai',
+  name: 'ST tvarkymo planai',
   sublayers: [
-    {
-      name: 'Plotai',
-      layer: gamtotvarkaStTvarkymoPlanuPlotai.layer,
-      id: gamtotvarkaStTvarkymoPlanuPlotai.id,
-    },
-    {
-      name: 'Teritorijos',
-      layer: gamtotvarkaStTvarkymoPlanuTeritorijos.layer,
-      id: gamtotvarkaStTvarkymoPlanuTeritorijos.id,
-    },
+    { name: 'Plotai', pakmapsLayer: gamtotvarkaStTvarkymoPlanuPlotai },
+    { name: 'Teritorijos', pakmapsLayer: gamtotvarkaStTvarkymoPlanuTeritorijos },
   ],
-  layer: new LayerGroup({
-    layers: [gamtotvarkaStTvarkymoPlanuTeritorijos.layer, gamtotvarkaStTvarkymoPlanuPlotai.layer],
-  }),
-};
-gamtotvarkaStTvarkymoPlanai.layer.setVisible(false);
-gamtotvarkaStTvarkymoPlanai.layer.set('id', 'gamtotvarkaStTvarkymoPlanai');
+  hidden: true,
+});
 
-export const gamtotvarkaInvaVeiksmuPlanuPlotai = {
+export const gamtotvarkaInvaVeiksmuPlanuPlotai = new PakmapsLayer({
   id: 'gamtotvarkaInvaVeiksmuPlanuPlotai',
-  title: 'Invazinių rūšių veiksmų planų plotai',
+  name: 'Invazinių rūšių veiksmų planų plotai',
   sublayers: [
-    {
-      value: 'invaziniu_rusiu_veiksmu_plotai_negalioja',
-      name: 'Negalioja',
-    },
-    {
-      value: 'invaziniu_rusiu_veiksmu_plotai_rengiamas',
-      name: 'Rengiami',
-    },
-    {
-      value: 'invaziniu_rusiu_veiksmu_plotai_patvirtintas',
-      name: 'Patvirtinti',
-    },
+    { value: 'invaziniu_rusiu_veiksmu_plotai_negalioja', name: 'Negalioja' },
+    { value: 'invaziniu_rusiu_veiksmu_plotai_rengiamas', name: 'Rengiami' },
+    { value: 'invaziniu_rusiu_veiksmu_plotai_patvirtintas', name: 'Patvirtinti' },
   ],
   layer: getWMSImageLayer(
     'https://wmsgisservice.biomon.lt/opengisservice/gamtotvarka',
     'invaziniu_rusiu_veiksmu_plotai_patvirtintas',
     vsttCopyright,
   ),
-};
-gamtotvarkaInvaVeiksmuPlanuPlotai.layer.set('id', 'gamtotvarkaInvaVeiksmuPlanuPlotai');
+  type: PakmapsLayerType.WMS,
+});
 
-export const gamtotvarkaInvaVeiksmuPlanuTeritorijos = {
+export const gamtotvarkaInvaVeiksmuPlanuTeritorijos = new PakmapsLayer({
   id: 'gamtotvarkaInvaVeiksmuPlanuTeritorijos',
-  title: 'Invazinių rūšių veiksmų planų teritorijos',
+  name: 'Invazinių rūšių veiksmų planų teritorijos',
   sublayers: [
-    {
-      value: 'invaziniu_rusiu_veiksmu_planu_teritorijos_negalioja',
-      name: 'Negalioja',
-    },
-    {
-      value: 'invaziniu_rusiu_veiksmu_planu_teritorijos_rengiamas',
-      name: 'Rengiamos',
-    },
-    {
-      value: 'invaziniu_rusiu_veiksmu_planu_teritorijos_patvirtintas',
-      name: 'Patvirtintos',
-    },
+    { value: 'invaziniu_rusiu_veiksmu_planu_teritorijos_negalioja', name: 'Negalioja' },
+    { value: 'invaziniu_rusiu_veiksmu_planu_teritorijos_rengiamas', name: 'Rengiamos' },
+    { value: 'invaziniu_rusiu_veiksmu_planu_teritorijos_patvirtintas', name: 'Patvirtintos' },
   ],
   layer: getWMSImageLayer(
     'https://wmsgisservice.biomon.lt/opengisservice/gamtotvarka',
     'invaziniu_rusiu_veiksmu_planu_teritorijos_patvirtintas',
     vsttCopyright,
   ),
-};
-gamtotvarkaInvaVeiksmuPlanuTeritorijos.layer.set('id', 'gamtotvarkaInvaVeiksmuPlanuTeritorijos');
+  type: PakmapsLayerType.WMS,
+});
 
-export const gamtotvarkaInvaVeiksmuPlanai = {
+export const gamtotvarkaInvaVeiksmuPlanai = new PakmapsLayer({
   id: 'gamtotvarkaInvaVeiksmuPlanai',
-  title: 'Invazinių rūšių reguliavimo veiksmų planas',
+  name: 'Invazinių rūšių reguliavimo veiksmų planas',
   sublayers: [
-    {
-      name: 'Plotai',
-      layer: gamtotvarkaInvaVeiksmuPlanuPlotai.layer,
-      id: gamtotvarkaInvaVeiksmuPlanuPlotai.id,
-    },
-    {
-      name: 'Teritorijos',
-      layer: gamtotvarkaInvaVeiksmuPlanuTeritorijos.layer,
-      id: gamtotvarkaInvaVeiksmuPlanuTeritorijos.id,
-    },
+    { name: 'Plotai', pakmapsLayer: gamtotvarkaInvaVeiksmuPlanuPlotai },
+    { name: 'Teritorijos', pakmapsLayer: gamtotvarkaInvaVeiksmuPlanuTeritorijos },
   ],
-  layer: new LayerGroup({
-    layers: [gamtotvarkaInvaVeiksmuPlanuTeritorijos.layer, gamtotvarkaInvaVeiksmuPlanuPlotai.layer],
-  }),
-};
-gamtotvarkaInvaVeiksmuPlanai.layer.setVisible(false);
-gamtotvarkaInvaVeiksmuPlanai.layer.set('id', 'gamtotvarkaInvaVeiksmuPlanai');
+  hidden: true,
+});
 
-export const gamtotvarkaService = {
+export const gamtotvarkaService = new PakmapsLayer({
   id: 'gamtotvarkaService',
-  title: 'Gamtotvarkos duomenų žemėlapis',
+  name: 'Gamtotvarkos duomenų žemėlapis',
   description: vsttCopyright,
   sublayers: [
     {
       name: 'Invazinių rūšių reguliavimo veiksmų planas',
-      layer: gamtotvarkaInvaVeiksmuPlanai.layer,
-      id: gamtotvarkaInvaVeiksmuPlanai.id,
+      pakmapsLayer: gamtotvarkaInvaVeiksmuPlanai,
     },
-    {
-      name: 'Saugomų teritorijų tvarkymo planai',
-      layer: gamtotvarkaStTvarkymoPlanai.layer,
-      id: gamtotvarkaStTvarkymoPlanai.id,
-    },
-    {
-      name: 'Rūšių apsaugos veiksmų planai',
-      layer: gamtotvarkaVeiksmuPlanai.layer,
-      id: gamtotvarkaVeiksmuPlanai.id,
-    },
-    {
-      name: 'Tikslinės programos',
-      layer: gamtotvarkaTikslinesProgramos.layer,
-      id: gamtotvarkaTikslinesProgramos.id,
-    },
-    {
-      name: 'Tvarkymo programos',
-      layer: gamtotvarkaTvarkymoProgramos.layer,
-      id: gamtotvarkaTvarkymoProgramos.id,
-    },
-    {
-      name: 'Gamtotvarkos planai',
-      layer: gamtotvarkaPlanai.layer,
-      id: gamtotvarkaPlanai.id,
-    },
-    {
-      name: 'Atlikti tvarkymo darbai',
-      layer: gamtotvarkaAtliktiDarbai.layer,
-      id: gamtotvarkaAtliktiDarbai.id,
-    },
+    { name: 'Saugomų teritorijų tvarkymo planai', pakmapsLayer: gamtotvarkaStTvarkymoPlanai },
+    { name: 'Rūšių apsaugos veiksmų planai', pakmapsLayer: gamtotvarkaVeiksmuPlanai },
+    { name: 'Tikslinės programos', pakmapsLayer: gamtotvarkaTikslinesProgramos },
+    { name: 'Tvarkymo programos', pakmapsLayer: gamtotvarkaTvarkymoProgramos },
+    { name: 'Gamtotvarkos planai', pakmapsLayer: gamtotvarkaPlanai },
+    { name: 'Atlikti tvarkymo darbai', pakmapsLayer: gamtotvarkaAtliktiDarbai },
   ],
-  layer: new LayerGroup({
-    layers: [
-      gamtotvarkaAtliktiDarbai.layer,
-      gamtotvarkaPlanai.layer,
-      gamtotvarkaTvarkymoProgramos.layer,
-      gamtotvarkaTikslinesProgramos.layer,
-      gamtotvarkaVeiksmuPlanai.layer,
-      gamtotvarkaStTvarkymoPlanai.layer,
-    ],
-  }),
-};
-gamtotvarkaService.layer.set('id', 'gamtotvarkaService');
+});
 
-export const huntingPublicService = {
+export const huntingPublicService = new PakmapsLayer({
   id: 'huntingPublicService',
-  title: 'Medžioklė',
+  name: 'Medžioklė',
   description: [biipCopyright],
   sublayers: [
-    {
-      value: 'damages',
-      name: 'Padaryta žala',
-    },
-    {
-      value: 'wolfs',
-      name: 'Sumedžioti vilkai',
-    },
-    {
-      value: 'observations',
-      name: 'Stebėti gyvūnai',
-    },
+    { value: 'damages', name: 'Padaryta žala' },
+    { value: 'wolfs', name: 'Sumedžioti vilkai' },
+    { value: 'observations', name: 'Stebėti gyvūnai' },
   ],
 
   layer: getWMSImageLayer(
@@ -869,16 +635,14 @@ export const huntingPublicService = {
     'wolfs,observations,damages',
     `${biipCopyright}`,
   ),
-};
+  type: PakmapsLayerType.WMS,
+});
 
-export const gamtotvarkaNatura2000 = {
+export const gamtotvarkaNatura2000 = new PakmapsLayer({
   id: 'gamtotvarkaNatura2000',
-  title: 'Natura 2000 teritorijų apsaugos tikslai',
+  name: 'Natura 2000 teritorijų apsaugos tikslai',
   sublayers: [
-    {
-      value: 'at_web_viesinimui_materiali',
-      name: 'BAST apsaugos tikslų vertybės (D1-317)',
-    },
+    { value: 'at_web_viesinimui_materiali', name: 'BAST apsaugos tikslų vertybės (D1-317)' },
     {
       value: 'vietoviu_web_viesinimui_materiali',
       name: 'BAST vietovėse esančios vertybės (D1-210)',
@@ -889,237 +653,120 @@ export const gamtotvarkaNatura2000 = {
     'at_web_viesinimui_materiali,vietoviu_web_viesinimui_materiali',
     vsttCopyright,
   ),
-};
-gamtotvarkaNatura2000.layer.set('id', 'gamtotvarkaNatura2000');
+  type: PakmapsLayerType.WMS,
+});
 
-export const stvkGpoService = {
+function getStvkLayerData(sublayers: string) {
+  return {
+    description: vsttCopyright,
+    layer: getWMSImageLayer('https://services.stvk.lt/wms/stvk-services', sublayers, vsttCopyright),
+    type: PakmapsLayerType.WMS,
+  };
+}
+
+export const stvkGpoService = new PakmapsLayer({
   id: 'stvkGpoService',
-  description: vsttCopyright,
-  title: 'Gamtos paveldo objektai',
-  layer: getWMSImageLayer(
-    'https://services.stvk.lt/wms/stvk-services',
+  name: 'Gamtos paveldo objektai',
+  ...getStvkLayerData(
     'botaniniai_gpo_t,geomorfologiniai_gpo_t,geologiniai_gpo_t,hidrogeologiniai_gpo_t,hidrografiniai_gpo_t,zoologiniai_gpo_t,botaniniai_gpo_p,geomorfologiniai_gpo_p,geologiniai_gpo_p,hidrogeologiniai_gpo_p,hidrografiniai_gpo_p,zoologiniai_gpo_p,sunyke_botaniniai_gpo_t,sunyke_geomorfologiniai_gpo_t,sunyke_geologiniai_gpo_t,sunyke_hidrogeologiniai_gpo_t,sunyke_hidrografiniai_gpo_t,sunyke_zoologiniai_gpo_t,sunyke_botaniniai_gpo_p,sunyke_geomorfologiniai_gpo_p,sunyke_geologiniai_gpo_p,sunyke_hidrogeologiniai_gpo_p,sunyke_hidrografiniai_gpo_p,sunyke_zoologiniai_gpo_p',
-    vsttCopyright,
   ),
-};
-stvkGpoService.layer.set('id', 'stvkGpoService');
+});
 
-export const stvkRezervataiService = {
+export const stvkRezervataiService = new PakmapsLayer({
   id: 'stvkRezervataiService',
-  description: vsttCopyright,
-  title: 'Valstybiniai rezervatai',
-  layer: getWMSImageLayer(
-    'https://services.stvk.lt/wms/stvk-services',
-    'valstybiniai_rezervatai',
-    vsttCopyright,
-  ),
-};
-stvkRezervataiService.layer.set('id', 'stvkRezervataiService');
+  name: 'Valstybiniai rezervatai',
+  ...getStvkLayerData('valstybiniai_rezervatai'),
+});
 
-export const stvkDraustiniaiService = {
+export const stvkDraustiniaiService = new PakmapsLayer({
   id: 'stvkDraustiniaiService',
-  description: vsttCopyright,
-  title: 'Draustiniai',
+  name: 'Draustiniai',
   sublayers: [
-    {
-      value: 'valstybiniai_draustiniai',
-      name: 'Valstybiniai draustiniai',
-    },
-    {
-      value: 'savivaldybiu_draustiniai',
-      name: 'Savivaldybių draustiniai',
-    },
+    { value: 'valstybiniai_draustiniai', name: 'Valstybiniai draustiniai' },
+    { value: 'savivaldybiu_draustiniai', name: 'Savivaldybių draustiniai' },
   ],
-  layer: getWMSImageLayer(
-    'https://services.stvk.lt/wms/stvk-services',
-    'valstybiniai_draustiniai,savivaldybiu_draustiniai',
-    vsttCopyright,
-  ),
-};
-stvkDraustiniaiService.layer.set('id', 'stvkDraustiniaiService');
+  ...getStvkLayerData('valstybiniai_draustiniai,savivaldybiu_draustiniai'),
+});
 
-export const stvkParkaiService = {
+export const stvkParkaiService = new PakmapsLayer({
   id: 'stvkParkaiService',
-  description: vsttCopyright,
-  title: 'Valstybiniai parkai',
+  name: 'Valstybiniai parkai',
   sublayers: [
-    {
-      value: 'nac_parkai',
-      name: 'Nacionaliniai parkai',
-    },
-    {
-      value: 'reg_parkai',
-      name: 'Regioniniai parkai',
-    },
+    { value: 'nac_parkai', name: 'Nacionaliniai parkai' },
+    { value: 'reg_parkai', name: 'Regioniniai parkai' },
   ],
-  layer: getWMSImageLayer(
-    'https://services.stvk.lt/wms/stvk-services',
-    'nac_parkai,reg_parkai',
-    vsttCopyright,
-  ),
-};
-stvkParkaiService.layer.set('id', 'stvkParkaiService');
+  ...getStvkLayerData('nac_parkai,reg_parkai'),
+});
 
-export const stvkBioStebesenosService = {
+export const stvkBioStebesenosService = new PakmapsLayer({
   id: 'stvkBioStebesenosService',
-  description: vsttCopyright,
-  title: 'Biosferos stebėsenos (monitoringo) teritorijos',
+  name: 'Biosferos stebėsenos (monitoringo) teritorijos',
   sublayers: [
-    {
-      value: 'bio_rezervatai',
-      name: 'Biosferos rezervatai',
-    },
-    {
-      value: 'bio_poligonai',
-      name: 'Biosferos poligonai',
-    },
+    { value: 'bio_rezervatai', name: 'Biosferos rezervatai' },
+    { value: 'bio_poligonai', name: 'Biosferos poligonai' },
   ],
-  layer: getWMSImageLayer(
-    'https://services.stvk.lt/wms/stvk-services',
-    'bio_rezervatai,bio_poligonai',
-    vsttCopyright,
-  ),
-};
-stvkBioStebesenosService.layer.set('id', 'stvkBioStebesenosService');
+  ...getStvkLayerData('bio_rezervatai,bio_poligonai'),
+});
 
-export const stvkGenetiniaiSklypaiService = {
+export const stvkGenetiniaiSklypaiService = new PakmapsLayer({
   id: 'stvkGenetiniaiSklypaiService',
-  description: vsttCopyright,
-  title: 'Genetiniai sklypai',
-  layer: getWMSImageLayer(
-    'https://services.stvk.lt/wms/stvk-services',
-    'genetiniai_sklypai',
-    vsttCopyright,
-  ),
-};
-stvkGenetiniaiSklypaiService.layer.set('id', 'stvkGenetiniaiSklypaiService');
+  name: 'Genetiniai sklypai',
+  ...getStvkLayerData('genetiniai_sklypai'),
+});
 
-export const stvkAtkuriamiejiSklypaiService = {
+export const stvkAtkuriamiejiSklypaiService = new PakmapsLayer({
   id: 'stvkAtkuriamiejiSklypaiService',
-  description: vsttCopyright,
-  title: 'Atkuriamieji sklypai',
-  layer: getWMSImageLayer(
-    'https://services.stvk.lt/wms/stvk-services',
-    'atkuriamieji_sklypai',
-    vsttCopyright,
-  ),
-};
-stvkAtkuriamiejiSklypaiService.layer.set('id', 'stvkAtkuriamiejiSklypaiService');
+  name: 'Atkuriamieji sklypai',
+  ...getStvkLayerData('atkuriamieji_sklypai'),
+});
 
-export const stvkBufApsZonosService = {
+export const stvkBufApsZonosService = new PakmapsLayer({
   id: 'stvkBufApsZonosService',
-  description: vsttCopyright,
-  title: 'Buferinės apsaugos zonos',
-  layer: getWMSImageLayer(
-    'https://services.stvk.lt/wms/stvk-services',
-    'buf_apsaugos_zonos',
-    vsttCopyright,
-  ),
-};
-stvkBufApsZonosService.layer.set('id', 'stvkBufApsZonosService');
+  name: 'Buferinės apsaugos zonos',
+  ...getStvkLayerData('buf_apsaugos_zonos'),
+});
 
-export const stvkNatura2000Service = {
+export const stvkNatura2000Service = new PakmapsLayer({
   id: 'stvkNatura2000Service',
-  description: vsttCopyright,
-  title: 'Natura 2000',
+  name: 'Natura 2000',
   sublayers: [
-    {
-      value: 'past',
-      name: 'Paukščių apsaugai svarbios teritorijos',
-    },
-    {
-      value: 'bast',
-      name: 'Buveinių apsaugai svarbios teritorijos',
-    },
+    { value: 'past', name: 'Paukščių apsaugai svarbios teritorijos' },
+    { value: 'bast', name: 'Buveinių apsaugai svarbios teritorijos' },
   ],
-  layer: getWMSImageLayer('https://services.stvk.lt/wms/stvk-services', 'past,bast', vsttCopyright),
-};
-stvkNatura2000Service.layer.set('id', 'stvkNatura2000Service');
+  ...getStvkLayerData('past,bast'),
+});
 
-export const stvkPajurioJuostaService = {
+export const stvkPajurioJuostaService = new PakmapsLayer({
   id: 'stvkPajurioJuostaService',
-  description: vsttCopyright,
-  title: 'Pajūrio juosta',
-  layer: getWMSImageLayer('https://services.stvk.lt/wms/stvk-services', 'pajurio', vsttCopyright),
-};
-stvkPajurioJuostaService.layer.set('id', 'stvkPajurioJuostaService');
+  name: 'Pajūrio juosta',
+  ...getStvkLayerData('pajurio'),
+});
 
-export const gamtotvarkaStvkService = {
+export const gamtotvarkaStvkService = new PakmapsLayer({
   id: 'gamtotvarkaStvkService',
   description: vsttCopyright,
-  title: 'Saugomų teritorijų valstybės kadastras',
+  name: 'Saugomų teritorijų valstybės kadastras',
   sublayers: [
-    {
-      name: 'Pajūrio juosta',
-      layer: stvkPajurioJuostaService.layer,
-      id: stvkPajurioJuostaService.id,
-    },
-    {
-      name: 'Natura 2000',
-      layer: stvkNatura2000Service.layer,
-      id: stvkNatura2000Service.id,
-    },
-    {
-      name: 'Buferinės apsaugos zonos',
-      layer: stvkBufApsZonosService.layer,
-      id: stvkBufApsZonosService.id,
-    },
-    {
-      name: 'Genetiniai sklypai',
-      layer: stvkGenetiniaiSklypaiService.layer,
-      id: stvkGenetiniaiSklypaiService.id,
-    },
-    {
-      name: 'Atkuriamieji sklypai',
-      layer: stvkAtkuriamiejiSklypaiService.layer,
-      id: stvkAtkuriamiejiSklypaiService.id,
-    },
+    { name: 'Pajūrio juosta', pakmapsLayer: stvkPajurioJuostaService },
+    { name: 'Natura 2000', pakmapsLayer: stvkNatura2000Service },
+    { name: 'Buferinės apsaugos zonos', pakmapsLayer: stvkBufApsZonosService },
+    { name: 'Genetiniai sklypai', pakmapsLayer: stvkGenetiniaiSklypaiService },
+    { name: 'Atkuriamieji sklypai', pakmapsLayer: stvkAtkuriamiejiSklypaiService },
     {
       name: 'Biosferos stebėsenos (monitoringo) teritorijos',
-      layer: stvkBioStebesenosService.layer,
-      id: stvkBioStebesenosService.id,
+      pakmapsLayer: stvkBioStebesenosService,
     },
-    {
-      name: 'Valstybiniai parkai',
-      layer: stvkParkaiService.layer,
-      id: stvkParkaiService.id,
-    },
-    {
-      name: 'Draustiniai',
-      layer: stvkDraustiniaiService.layer,
-      id: stvkDraustiniaiService.id,
-    },
-    {
-      name: 'Valstybiniai rezervatai',
-      layer: stvkRezervataiService.layer,
-      id: stvkRezervataiService.id,
-    },
-    {
-      name: 'Gamtos paveldo objektai',
-      layer: stvkGpoService.layer,
-      id: stvkGpoService.id,
-    },
+    { name: 'Valstybiniai parkai', pakmapsLayer: stvkParkaiService },
+    { name: 'Draustiniai', pakmapsLayer: stvkDraustiniaiService },
+    { name: 'Valstybiniai rezervatai', pakmapsLayer: stvkRezervataiService },
+    { name: 'Gamtos paveldo objektai', pakmapsLayer: stvkGpoService },
   ],
-  layer: new LayerGroup({
-    layers: [
-      stvkPajurioJuostaService.layer,
-      stvkNatura2000Service.layer,
-      stvkBufApsZonosService.layer,
-      stvkGenetiniaiSklypaiService.layer,
-      stvkAtkuriamiejiSklypaiService.layer,
-      stvkBioStebesenosService.layer,
-      stvkParkaiService.layer,
-      stvkDraustiniaiService.layer,
-      stvkRezervataiService.layer,
-      stvkGpoService.layer,
-    ],
-  }),
-};
-gamtotvarkaStvkService.layer.set('id', 'gamtotvarkaStvkService');
+});
 
-export const tourismService = {
+export const tourismService = new PakmapsLayer({
   id: 'tourismService',
   description: vsttCopyright,
-  title: 'Turizmo objektai',
+  name: 'Turizmo objektai',
   layer: getWMSImageLayer(`${qgisServerUrl}/tourism`, 'forms', biipCopyright),
-};
+  type: PakmapsLayerType.WMS,
+});
