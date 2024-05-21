@@ -9,6 +9,7 @@ import { projection } from '../constants';
 import { renderIconHtml } from '../utils';
 import { vectorLayerStyles } from './styling';
 import { getMeasurementStyles } from './styles/measurements';
+import { PakmapsLayer, PakmapsLayerType } from '@/libs/pak-maps';
 
 const color = 'rgba(0,70,80,0.8)';
 const colorFill = 'rgba(0,70,80,0.2)';
@@ -124,20 +125,23 @@ export function getLayerStyles(opts: {
   return styles;
 }
 
-export const highlightLayer = {
+export const highlightLayer = new PakmapsLayer({
   id: 'highlightLayer',
   layer: new VectorLayer({
     style: vectorLayerStyles('highlightLayer', { color: '#004650' }),
   }),
-};
-export const highlightLayerRusys = {
+  type: PakmapsLayerType.GeoJSON,
+});
+
+export const highlightLayerRusys = new PakmapsLayer({
   id: 'highlightLayerRusys',
   layer: new VectorLayer({
     style: vectorLayerStyles('highlightLayerRusys', { color: '#004650' }),
   }),
-};
+  type: PakmapsLayerType.GeoJSON,
+});
 
-export const fixedHighlightLayer = {
+export const fixedHighlightLayer = new PakmapsLayer({
   id: 'fixedHighlightLayer',
   layer: new VectorLayer({
     style: new Style({
@@ -148,9 +152,10 @@ export const fixedHighlightLayer = {
       }),
     }),
   }),
-};
+  type: PakmapsLayerType.GeoJSON,
+});
 
-export const drawLayer = {
+export const drawLayer = new PakmapsLayer({
   id: 'drawLayer',
   layer: new VectorLayer({
     renderBuffer: 2000,
@@ -176,9 +181,10 @@ export const drawLayer = {
       }),
     }),
   }),
-};
+  type: PakmapsLayerType.GeoJSON,
+});
 
-export const markerLayer = {
+export const markerLayer = new PakmapsLayer({
   id: 'markerLayer',
   layer: new VectorLayer({
     style: function () {
@@ -197,17 +203,17 @@ export const markerLayer = {
       }),
     }),
   }),
-};
+  type: PakmapsLayerType.GeoJSON,
+});
 
-export const vectorsLayer = {
+export const vectorsLayer = new PakmapsLayer({
   id: 'vectorsLayer',
-  layer: new LayerGroup({
-    layers: [
-      fixedHighlightLayer.layer,
-      drawLayer.layer,
-      highlightLayer.layer,
-      markerLayer.layer,
-      highlightLayerRusys.layer,
-    ],
-  }),
-};
+  sublayers: [
+    { pakmapsLayer: fixedHighlightLayer },
+    { pakmapsLayer: drawLayer },
+    { pakmapsLayer: highlightLayer },
+    { pakmapsLayer: markerLayer },
+    { pakmapsLayer: highlightLayerRusys },
+  ],
+  type: PakmapsLayerType.GeoJSON,
+});

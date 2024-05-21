@@ -96,6 +96,7 @@ const query = parseRouteParams($route.query, [
   "preview",
   "types",
   "autoZoom",
+  "measure",
 ]);
 const isPreview = !!query.preview;
 
@@ -243,6 +244,10 @@ mapDraw.value
       feature: featureObj,
     };
   });
+
+if (query.measure) {
+  mapDraw.value.enableMeasurements();
+}
 
 if (enableContinuousDraw) {
   toggleDrawType(drawTypes.value[0].type);
