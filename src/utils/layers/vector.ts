@@ -9,6 +9,8 @@ import { projection } from '../constants';
 import { renderIconHtml } from '../utils';
 import { vectorLayerStyles } from './styling';
 import { getMeasurementStyles } from './styles/measurements';
+import { getPointResolution } from 'ol/proj';
+import { featureToPoint } from '../map';
 
 const color = 'rgba(0,70,80,0.8)';
 const colorFill = 'rgba(0,70,80,0.2)';
@@ -27,6 +29,7 @@ export function getLayerStyles(opts: {
     area: boolean;
     segments: boolean;
   };
+  projection?: string;
 }) {
   const primaryColor = opts?.colors?.primary || '#326a72';
   const secondaryColor = opts?.colors?.secondary || '#002a30';
@@ -93,7 +96,17 @@ export function getLayerStyles(opts: {
         const circle = styleClone.getImage() as Circle;
         const lightColor = styleClone.getFill()?.getColor()?.toString();
 
-        const width = (bufferSize * 2) / resolution;
+        const featureAsPoint = featureToPoint(feature);
+        let pointResolution = 1;
+        if (featureAsPoint) {
+          pointResolution = getPointResolution(
+            opts?.projection,
+            1,
+            featureAsPoint?.getCoordinates(),
+          );
+        }
+
+        const width = (bufferSize * 2) / resolution / pointResolution;
 
         if (width > 4000) return styleClone;
 

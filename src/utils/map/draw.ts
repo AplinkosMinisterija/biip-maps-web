@@ -37,6 +37,7 @@ export class MapDraw extends Queues {
   private _snap: Snap = new Snap({ source: this._source });
   private _styles = getLayerStyles({
     colors: this._defaultColors,
+    projection,
   });
   private _select: Select = new Select({
     condition: click,
@@ -67,6 +68,11 @@ export class MapDraw extends Queues {
   setMap(map: Map | undefined) {
     this.map = map;
     this._processQueue();
+
+    if (map) {
+      this._applyStyles({ projection: map.getView().getProjection().getCode() });
+    }
+
     return this;
   }
 
@@ -120,8 +126,7 @@ export class MapDraw extends Queues {
   }
 
   setIcon(name: string, opts?: any) {
-    return this.setStyles({
-      ...this._styles.opts,
+    return this._applyStyles({
       icon: name,
       width: opts.size,
       opts,
@@ -135,8 +140,7 @@ export class MapDraw extends Queues {
       segments: true,
     },
   ) {
-    return this.setStyles({
-      ...this._styles.opts,
+    return this._applyStyles({
       showMeasurements: {
         length: opts?.length,
         area: opts?.area,
@@ -169,11 +173,7 @@ export class MapDraw extends Queues {
     icon?: string;
     [key: string]: any;
   }) {
-    this._styles = getLayerStyles(opts);
-
-    this._layer?.getSource()?.changed();
-
-    return this;
+    return this._applyStyles(opts);
   }
 
   setLayer(layer: Layer) {
@@ -517,5 +517,13 @@ export class MapDraw extends Queues {
       this.remove();
     }
     this._modifySelect.setActive(false);
+  }
+
+  private _applyStyles(opts: any = {}) {
+    this._styles = getLayerStyles(_.merge({}, this._styles.opts || {}, opts));
+
+    this._layer?.getSource()?.changed();
+
+    return this;
   }
 }
