@@ -84,6 +84,10 @@ export class MapDraw extends Queues {
       dataProjection?: string;
     } = {},
   ) {
+    if (!this.map) {
+      return this._addToQueue('setFeatures', features, options);
+    }
+
     if (_.isEmpty(features)) return;
 
     try {
