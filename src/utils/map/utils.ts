@@ -184,7 +184,7 @@ function toPointByLineCenter(lineString: Geometry) {
   return coords;
 }
 
-export function featureToPoint(feature: Feature) {
+export function featureToPoint(feature: Feature): Point | undefined {
   const geometry = feature?.getGeometry();
   const type = geometry?.getType() || '';
 
@@ -194,6 +194,8 @@ export function featureToPoint(feature: Feature) {
     return new Point(toPointCoordsByExtent(geometry));
   } else if (['LineString', 'MultiLineString'].includes(type)) {
     return new Point(toPointByLineCenter(geometry));
+  } else if (['Point'].includes(type)) {
+    return geometry as Point;
   }
 }
 
