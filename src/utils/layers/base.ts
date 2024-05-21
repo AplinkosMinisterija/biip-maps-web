@@ -6,6 +6,7 @@ import { projection, projection3857 } from '../constants';
 import ImageLayer from 'ol/layer/Image';
 import ImageArcGISRest from 'ol/source/ImageArcGISRest';
 import { MapboxVectorLayer } from 'ol-mapbox-style';
+import { PakmapsLayer, PakmapsLayerType } from '@/libs/pak-maps';
 
 const geoportalUrl = (type: string) => {
   return `https://www.geoportal.lt/mapproxy/${type}`;
@@ -32,24 +33,27 @@ const kpdCopyright = getCopyrightLabel('Kultūros paveldo departamentas', 'https
 
 const crossOrigin = 'Anonymous';
 
-export const vectorBright = {
+export const vectorBright = new PakmapsLayer({
   id: 'vectorBright',
-  title: 'Topografinis (šviesus)',
+  name: 'Topografinis (šviesus)',
   layer: new MapboxVectorLayer({
     styleUrl: 'https://basemap.startupgov.lt/vector/styles/bright/style.json',
   }),
-};
-export const vectorPositron = {
+  type: PakmapsLayerType.VectorTiles,
+});
+
+export const vectorPositron = new PakmapsLayer({
   id: 'vectorPositron',
-  title: 'Pilkas',
+  name: 'Pilkas',
   layer: new MapboxVectorLayer({
     styleUrl: 'https://basemap.startupgov.lt/vector/styles/positron/style.json',
   }),
-};
+  type: PakmapsLayerType.VectorTiles,
+});
 
-export const geoportalTopo = {
+export const geoportalTopo = new PakmapsLayer({
   id: 'geoportalTopo',
-  title: 'Topografinis',
+  name: 'Topografinis',
   layer: new TileLayer({
     source: new XYZ({
       crossOrigin,
@@ -69,11 +73,12 @@ export const geoportalTopo = {
       projection,
     }),
   }),
-};
+  type: PakmapsLayerType.XYZ,
+});
 
-export const geoportalTopo3857 = {
+export const geoportalTopo3857 = new PakmapsLayer({
   id: 'geoportalTopo3857',
-  title: 'Topografinis',
+  name: 'Topografinis',
   layer: new TileLayer({
     source: new XYZ({
       crossOrigin,
@@ -93,12 +98,15 @@ export const geoportalTopo3857 = {
       projection: projection3857,
     }),
   }),
-};
+  type: PakmapsLayerType.XYZ,
+});
 
-export const geoportalOrto = {
+export const geoportalOrto = new PakmapsLayer({
   id: 'geoportalOrto',
-  title: 'Ortofoto',
-  invertColors: true,
+  name: 'Ortofoto',
+  props: {
+    invertColors: true,
+  },
   layer: new TileLayer({
     source: new XYZ({
       crossOrigin,
@@ -117,11 +125,12 @@ export const geoportalOrto = {
       projection,
     }),
   }),
-};
+  type: PakmapsLayerType.XYZ,
+});
 
-export const geoportalTopoGray = {
+export const geoportalTopoGray = new PakmapsLayer({
   id: 'geoportalTopoGray',
-  title: 'Topografinis, pilkas',
+  name: 'Topografinis, pilkas',
   layer: new TileLayer({
     source: new XYZ({
       crossOrigin,
@@ -141,11 +150,12 @@ export const geoportalTopoGray = {
       projection,
     }),
   }),
-};
+  type: PakmapsLayerType.XYZ,
+});
 
-export const geoportalOrto1995 = {
+export const geoportalOrto1995 = new PakmapsLayer({
   id: 'geoportalOrto1995',
-  title: 'ORT10LT 1995-2001',
+  name: 'ORT10LT 1995-2001',
   layer: new TileLayer({
     source: new XYZ({
       crossOrigin,
@@ -164,11 +174,12 @@ export const geoportalOrto1995 = {
       projection,
     }),
   }),
-};
+  type: PakmapsLayerType.XYZ,
+});
 
-export const geoportalOrto2005 = {
+export const geoportalOrto2005 = new PakmapsLayer({
   id: 'geoportalOrto2005',
-  title: 'ORT10LT 2005-2006',
+  name: 'ORT10LT 2005-2006',
   layer: new TileLayer({
     source: new XYZ({
       attributions: nztCopyright,
@@ -186,11 +197,12 @@ export const geoportalOrto2005 = {
       projection,
     }),
   }),
-};
+  type: PakmapsLayerType.XYZ,
+});
 
-export const geoportalOrto2009 = {
+export const geoportalOrto2009 = new PakmapsLayer({
   id: 'geoportalOrto2009',
-  title: 'ORT10LT 2009-2010',
+  name: 'ORT10LT 2009-2010',
   layer: new TileLayer({
     source: new XYZ({
       crossOrigin,
@@ -209,11 +221,12 @@ export const geoportalOrto2009 = {
       projection,
     }),
   }),
-};
+  type: PakmapsLayerType.XYZ,
+});
 
-export const geoportalOrto2012 = {
+export const geoportalOrto2012 = new PakmapsLayer({
   id: 'geoportalOrto2012',
-  title: 'ORT10LT 2012-2013',
+  name: 'ORT10LT 2012-2013',
   layer: new TileLayer({
     source: new XYZ({
       attributions: nztCopyright,
@@ -231,11 +244,12 @@ export const geoportalOrto2012 = {
       projection,
     }),
   }),
-};
+  type: PakmapsLayerType.XYZ,
+});
 
-export const geoportalOrto2015 = {
+export const geoportalOrto2015 = new PakmapsLayer({
   id: 'geoportalOrto2015',
-  title: 'ORT10LT 2015-2017',
+  name: 'ORT10LT 2015-2017',
   layer: new TileLayer({
     source: new XYZ({
       attributions: nztCopyright,
@@ -253,11 +267,12 @@ export const geoportalOrto2015 = {
       projection,
     }),
   }),
-};
+  type: PakmapsLayerType.XYZ,
+});
 
-export const geoportalOrto2018 = {
+export const geoportalOrto2018 = new PakmapsLayer({
   id: 'geoportalOrto2018',
-  title: 'ORT10LT 2018-2020',
+  name: 'ORT10LT 2018-2020',
   layer: new TileLayer({
     source: new XYZ({
       crossOrigin,
@@ -276,11 +291,12 @@ export const geoportalOrto2018 = {
       projection,
     }),
   }),
-};
+  type: PakmapsLayerType.XYZ,
+});
 
-export const geoportalHybrid = {
+export const geoportalHybrid = new PakmapsLayer({
   id: 'geoportalHybrid',
-  title: 'Mišrus',
+  name: 'Mišrus',
   layer: new TileLayer({
     source: new XYZ({
       attributions: geoportalCopyright('gisc_misrus_public'),
@@ -298,11 +314,12 @@ export const geoportalHybrid = {
       projection,
     }),
   }),
-};
+  type: PakmapsLayerType.XYZ,
+});
 
-export const geoportalGrpk = {
+export const geoportalGrpk = new PakmapsLayer({
   id: 'geoportalGrpk',
-  title: 'GRPK',
+  name: 'GRPK',
   layer: new TileLayer({
     source: new XYZ({
       crossOrigin,
@@ -322,11 +339,12 @@ export const geoportalGrpk = {
       projection,
     }),
   }),
-};
+  type: PakmapsLayerType.XYZ,
+});
 
-export const geoportalForests = {
+export const geoportalForests = new PakmapsLayer({
   id: 'geoportalForests',
-  title: 'Miškai',
+  name: 'Miškai',
   layer: new ImageLayer({
     source: new ImageArcGISRest({
       attributions: geoportalCopyright('vmt_mkd'),
@@ -338,54 +356,23 @@ export const geoportalForests = {
     }),
   }),
   sublayers: [
-    {
-      name: 'VMU urėdijos regioniniai padaliniai',
-      value: '0',
-    },
-    {
-      name: 'Urėdijos',
-      value: '1',
-    },
-    {
-      name: 'Girininkijos',
-      value: '2',
-    },
-    {
-      name: 'Girininkijos iki 2022-12-31',
-      value: '3',
-    },
-    {
-      name: 'Kertinės miško buveinės',
-      value: '4',
-    },
-    {
-      name: 'Kvartalai',
-      value: '5',
-    },
-    {
-      name: 'Kvartalai iki 2022-12-31',
-      value: '6',
-    },
-    {
-      name: 'Valstybinės reikšmės miškų plotų ribos',
-      value: '7',
-    },
-    {
-      name: 'Miškų pogrupiai',
-      value: '8',
-    },
-    {
-      name: 'Miško sklypai',
-      value: '9',
-    },
+    { name: 'VMU urėdijos regioniniai padaliniai', value: '0' },
+    { name: 'Urėdijos', value: '1' },
+    { name: 'Girininkijos', value: '2' },
+    { name: 'Girininkijos iki 2022-12-31', value: '3' },
+    { name: 'Kertinės miško buveinės', value: '4' },
+    { name: 'Kvartalai', value: '5' },
+    { name: 'Kvartalai iki 2022-12-31', value: '6' },
+    { name: 'Valstybinės reikšmės miškų plotų ribos', value: '7' },
+    { name: 'Miškų pogrupiai', value: '8' },
+    { name: 'Miško sklypai', value: '9' },
   ],
-};
+  type: PakmapsLayerType.ARCGIS,
+});
 
-geoportalForests.layer.set('type', 'ARCGIS');
-
-export const geoportalKvr = {
+export const geoportalKvr = new PakmapsLayer({
   id: 'geoportalKvr',
-  title: 'Kultūros vertybių registras',
+  name: 'Kultūros vertybių registras',
   description: kpdCopyright,
   layer: new ImageLayer({
     source: new ImageArcGISRest({
@@ -398,19 +385,9 @@ export const geoportalKvr = {
     }),
   }),
   sublayers: [
-    {
-      name: 'Kultūros vertybių apsaugos zonos',
-      value: '2',
-    },
-    {
-      name: 'Plotiniai objektai',
-      value: '1',
-    },
-    {
-      name: 'Taškiniai objektai',
-      value: '0',
-    },
+    { name: 'Kultūros vertybių apsaugos zonos', value: '2' },
+    { name: 'Plotiniai objektai', value: '1' },
+    { name: 'Taškiniai objektai', value: '0' },
   ],
-};
-
-geoportalKvr.layer.set('type', 'ARCGIS');
+  type: PakmapsLayerType.ARCGIS,
+});

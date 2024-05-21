@@ -21,6 +21,7 @@ import {
 } from './coordinates';
 import { getCenter } from 'ol/extent';
 import { Queues } from './queues';
+import { PakmapsLayerType } from '@/libs/pak-maps';
 
 type LayerOptions = {
   opacity?: number;
@@ -31,13 +32,7 @@ type LayerOptions = {
 
 type EventTypes = 'zoom:change';
 
-const LayerType = {
-  WMS: 'WMS',
-  VT: 'vt',
-  ARCGIS: 'ARCGIS',
-  WFS: 'WFS',
-  GEOJSON: 'geojson',
-};
+const LayerType = PakmapsLayerType;
 
 const vectorsLayerId = 'vectorsLayer';
 const fixedHighlightLayerId = 'fixedHighlightLayer';
@@ -245,7 +240,7 @@ export class MapLayers extends Queues {
     const type = layer.get('type');
     if (!id) return;
 
-    if (type === LayerType.GEOJSON) {
+    if (type === LayerType.GeoJSON) {
       return this.loadStats(id, filter);
     } else if (type === LayerType.WMS) {
       const source = layer.getSource();
@@ -259,7 +254,7 @@ export class MapLayers extends Queues {
         if (!this.map) return;
         this.highlightFeatures(data);
       });
-    } else if (type === LayerType.VT) {
+    } else if (type === LayerType.VectorTiles) {
       const source = layer.getSource();
       const query = filter.toQuery(true);
 
@@ -827,7 +822,7 @@ export class MapLayers extends Queues {
       layer.getSource().updateParams({
         LAYERS: layers.join(','),
       });
-    } else if (type === LayerType.GEOJSON) {
+    } else if (type === LayerType.GeoJSON) {
       this.filters(id).on('all').set('layers', this.getInnerVisibleLayers(id));
     } else if (type === LayerType.ARCGIS) {
       let prefix = layer.getSource().getParams().LAYERS.split(':')[0];
@@ -986,7 +981,7 @@ export class MapLayers extends Queues {
 
     const colors = { primary: '', secondary: '' };
 
-    const isTemporary = !!this.visibleBaseLayer.invertColors;
+    const isTemporary = !!this.visibleBaseLayer.props.invertColors;
     if (isTemporary) {
       colors.primary = '#ffd154';
       colors.secondary = '#ffbe0b';

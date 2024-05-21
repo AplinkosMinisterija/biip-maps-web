@@ -6,6 +6,7 @@ import { projection3857 } from '../constants';
 import { qgisTilesUrl, smalsuolisApiHost } from '@/config';
 import { vectorTileStyles } from './styling';
 import LayerGroup from 'ol/layer/Group';
+import { PakmapsLayer, PakmapsLayerType } from '@/libs/pak-maps';
 
 function getVectorTilesUrl(type: string, source: string, baseUrl?: string) {
   return `${baseUrl || qgisTilesUrl}/${type}/${source}/{z}/{x}/{y}`;
@@ -35,25 +36,27 @@ function getVectorTileLayer(
   });
 }
 
-export const municipalitiesServiceVT = {
+export const municipalitiesServiceVT = new PakmapsLayer({
   id: 'municipalitiesServiceVT',
   name: 'Savivaldybės',
   layer: getVectorTileLayer('boundaries', 'municipalities', {
     idProperty: 'code',
     declutter: true,
   }),
-};
+  type: PakmapsLayerType.VectorTiles,
+});
 
-export const municipalitiesCentroidServiceVT = {
+export const municipalitiesCentroidServiceVT = new PakmapsLayer({
   id: 'municipalitiesCentroidServiceVT',
   name: 'Savivaldybės',
   layer: getVectorTileLayer('boundaries', 'municipalities_centroid', {
     idProperty: 'code',
     declutter: true,
   }),
-};
+  type: PakmapsLayerType.VectorTiles,
+});
 
-export const eldershipsServiceVT = {
+export const eldershipsServiceVT = new PakmapsLayer({
   id: 'eldershipsServiceVT',
   name: 'Seniūnijos',
   layer: new LayerGroup({
@@ -62,9 +65,10 @@ export const eldershipsServiceVT = {
       getVectorTileLayer('boundaries', 'elderships_centroid'),
     ],
   }),
-};
+  type: PakmapsLayerType.VectorTiles,
+});
 
-export const countiesServiceVT = {
+export const countiesServiceVT = new PakmapsLayer({
   id: 'countiesServiceVT',
   name: 'Apskritys',
   layer: new LayerGroup({
@@ -73,9 +77,10 @@ export const countiesServiceVT = {
       getVectorTileLayer('boundaries', 'counties_centroid'),
     ],
   }),
-};
+  type: PakmapsLayerType.VectorTiles,
+});
 
-export const residentialAreasServiceVT = {
+export const residentialAreasServiceVT = new PakmapsLayer({
   id: 'residentialAreasServiceVT',
   name: 'Gyvenamosios vietovės',
   layer: new LayerGroup({
@@ -84,31 +89,33 @@ export const residentialAreasServiceVT = {
       getVectorTileLayer('boundaries', 'residential_areas_centroid'),
     ],
   }),
-};
+  type: PakmapsLayerType.VectorTiles,
+});
 
-export const uetkMergedCentroidServiceVT = {
+export const uetkMergedCentroidServiceVT = new PakmapsLayer({
   id: 'uetkMergedCentroidServiceVT',
   name: 'UETK',
   layer: getVectorTileLayer('uetk', 'uetk_merged.1', {
     idProperty: 'cadastral_id',
   }),
-};
+  type: PakmapsLayerType.VectorTiles,
+});
 
-export const zuvinimasServiceVT = {
+export const zuvinimasServiceVT = new PakmapsLayer({
   id: 'zuvinimasServiceVT',
   name: 'Įžuvinimas',
   layer: getVectorTileLayer('zuvinimas', 'fish_stockings', {
     idProperty: 'id',
   }),
-};
+  type: PakmapsLayerType.VectorTiles,
+});
 
-export const smalsuolisServiceVT = {
+export const smalsuolisServiceVT = new PakmapsLayer({
   id: 'smalsuolisServiceVT',
   name: 'Smalsuolis',
   layer: getVectorTileLayer('tiles', 'events', {
     idProperty: 'id',
     baseUrl: smalsuolisApiHost,
   }),
-};
-
-smalsuolisServiceVT.layer.set('type', 'vt');
+  type: PakmapsLayerType.VectorTiles,
+});

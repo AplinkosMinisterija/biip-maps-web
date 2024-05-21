@@ -7,8 +7,10 @@ export enum PakmapsLayerType {
   GeoJSON = 'GeoJSON',
   VectorTiles = 'VectorTiles',
   ARCGIS = 'ARCGIS',
+  XYZ = 'XYZ',
 }
 
+type GenericObject = { [key: string]: any };
 export interface PakmapsLayerOpts {
   id?: string;
   name?: string;
@@ -19,6 +21,7 @@ export interface PakmapsLayerOpts {
   layer?: Layer | LayerGroup;
   type?: PakmapsLayerType;
   pakmapsLayer?: PakmapsLayer;
+  props?: GenericObject;
 }
 
 export class PakmapsLayer {
@@ -29,6 +32,7 @@ export class PakmapsLayer {
   type?: PakmapsLayerType;
   sublayers: PakmapsLayer[] = [];
   value?: string;
+  props: GenericObject = {};
 
   constructor(opts: PakmapsLayerOpts) {
     if (!opts?.name && !opts?.id) {
@@ -39,6 +43,7 @@ export class PakmapsLayer {
     this.name = opts.name || opts.id;
     this.description = opts.description;
     this.value = opts.value;
+    this.props = opts.props || {};
 
     if (opts.layer) {
       if (!opts.type) {
