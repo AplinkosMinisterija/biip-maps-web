@@ -1,5 +1,4 @@
 import type { Layer } from 'ol/layer';
-import { PakmapsSublayer, type PakmapsSublayerOpts } from './sublayer';
 
 export enum PakmapsLayerType {
   WMS = 'WMS',
@@ -10,12 +9,14 @@ export enum PakmapsLayerType {
 }
 
 export type PakmapsLayerOpts = {
-  id: string;
+  id?: string;
   name?: string;
   description?: string | string[];
-  sublayers?: PakmapsSublayer[];
+  sublayers?: PakmapsLayerOpts[];
   layer?: Layer;
   type?: PakmapsLayerType;
+  value?: string;
+  [key: string]: any;
 };
 
 export class PakmapsLayer {
@@ -24,11 +25,15 @@ export class PakmapsLayer {
   layer: Layer | undefined;
   description: string | string[] | undefined;
   type: PakmapsLayerType | undefined;
-  sublayers: PakmapsSublayer[] = [];
+  sublayers: PakmapsLayer[] = [];
 
   constructor(opts: PakmapsLayerOpts) {
-    this.id = opts.id;
-    this.name = opts.name || opts.id;
+    if (!opts?.name && !opts?.id) {
+      throw new Error('Name or ID should be initialized');
+    }
+
+    this.id = opts.id || opts.name || '';
+    this.name = opts.name || opts.id || '';
     this.description = opts.description;
 
     if (opts.layer) {
@@ -47,14 +52,14 @@ export class PakmapsLayer {
     }
   }
 
-  addSublayer(opts: PakmapsSublayerOpts) {
-    const sublayer = new PakmapsSublayer(opts);
+  addSublayer(opts: PakmapsLayerOpts) {
+    const sublayer = new PakmapsLayer(opts);
     this.sublayers.push(sublayer);
 
     return this;
   }
 
-  addSublayers(items: PakmapsSublayerOpts[]) {
+  addSublayers(items: PakmapsLayerOpts[]) {
     items.forEach((item) => this.addSublayer(item));
     return this;
   }
