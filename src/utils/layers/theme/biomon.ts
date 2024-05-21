@@ -58,7 +58,7 @@ export const gamtotvarkaPlanai = new PakmapsLayer({
     { name: 'Plotai', pakmapsLayer: gamtotvarkaPlanuPlotai },
     { name: 'Teritorijos', pakmapsLayer: gamtotvarkaPlanuTeritorijos },
   ],
-  hidden: true,
+  visible: false,
 });
 
 export const gamtotvarkaProgramuPlotai = new PakmapsLayer({
@@ -96,7 +96,7 @@ export const gamtotvarkaTvarkymoProgramos = new PakmapsLayer({
     { name: 'Plotai', pakmapsLayer: gamtotvarkaProgramuPlotai },
     { name: 'Teritorijos', pakmapsLayer: gamtotvarkaProgramuTeritorijos },
   ],
-  hidden: true,
+  visible: false,
 });
 
 export const gamtotvarkaTiksliniuProgramuPlotai = new PakmapsLayer({
@@ -134,7 +134,7 @@ export const gamtotvarkaTikslinesProgramos = new PakmapsLayer({
     { name: 'Plotai', pakmapsLayer: gamtotvarkaTiksliniuProgramuPlotai },
     { name: 'Teritorijos', pakmapsLayer: gamtotvarkaTiksliniuProgramuTeritorijos },
   ],
-  hidden: true,
+  visible: false,
 });
 
 export const gamtotvarkaVeiksmuPlanuPlotai = new PakmapsLayer({
@@ -172,7 +172,7 @@ export const gamtotvarkaVeiksmuPlanai = new PakmapsLayer({
     { name: 'Plotai', pakmapsLayer: gamtotvarkaVeiksmuPlanuPlotai },
     { name: 'Teritorijos', pakmapsLayer: gamtotvarkaVeiksmuPlanuTeritorijos },
   ],
-  hidden: true,
+  visible: false,
 });
 
 export const gamtotvarkaStTvarkymoPlanuPlotai = new PakmapsLayer({
@@ -210,7 +210,7 @@ export const gamtotvarkaStTvarkymoPlanai = new PakmapsLayer({
     { name: 'Plotai', pakmapsLayer: gamtotvarkaStTvarkymoPlanuPlotai },
     { name: 'Teritorijos', pakmapsLayer: gamtotvarkaStTvarkymoPlanuTeritorijos },
   ],
-  hidden: true,
+  visible: false,
 });
 
 export const gamtotvarkaInvaVeiksmuPlanuPlotai = new PakmapsLayer({
@@ -252,7 +252,7 @@ export const gamtotvarkaInvaVeiksmuPlanai = new PakmapsLayer({
     { name: 'Plotai', pakmapsLayer: gamtotvarkaInvaVeiksmuPlanuPlotai },
     { name: 'Teritorijos', pakmapsLayer: gamtotvarkaInvaVeiksmuPlanuTeritorijos },
   ],
-  hidden: true,
+  visible: false,
 });
 
 export const gamtotvarkaService = new PakmapsLayer({

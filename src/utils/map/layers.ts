@@ -426,12 +426,12 @@ export class MapLayers extends Queues {
 
   async loadStats(id: string, filter?: any) {
     const layer = this.get(id);
-    if (!layer?.stats?.url) return;
+    if (!layer?.props.stats?.url) return;
 
     const source = layer.layer.getSource();
 
     const filters = (filter || this.filters(id)).toQuery();
-    const { method, body, url, headers } = splitUrlIfNeeded(`${layer.stats.url}?${filters}`);
+    const { method, body, url, headers } = splitUrlIfNeeded(`${layer.props?.stats.url}?${filters}`);
 
     const options = _.merge({}, this._getRequestOptions(id), {
       headers,
@@ -442,11 +442,11 @@ export class MapLayers extends Queues {
     const data = await fetch(url, options).then((data) => data.json());
 
     const styleItems = () => {
-      const styleFn = layer.stats.styleFn(data);
+      const styleFn = layer.props?.stats.styleFn(data);
       source.forEachFeature((feature: any) => {
         let matchingConfig: any;
-        if (layer?.stats?.applyToFeatureFn) {
-          matchingConfig = layer.stats.applyToFeatureFn(data, feature);
+        if (layer.props.stats?.applyToFeatureFn) {
+          matchingConfig = layer.props?.stats.applyToFeatureFn(data, feature);
         } else {
           if (!Array.isArray(data)) return;
           matchingConfig = data.find((data: any) => data.id === feature.get('id'));
@@ -614,7 +614,7 @@ export class MapLayers extends Queues {
 
   async validateLayer(id: string) {
     const layer = this.get(id);
-    const url = layer.authEndpoint || layer.layer.getSource()?.getUrl();
+    const url = layer.props?.authEndpoint || layer.layer.getSource()?.getUrl();
     if (!url) return;
 
     const isValid = await checkAuth(url, this._getRequestOptions(id));
@@ -866,10 +866,10 @@ export class MapLayers extends Queues {
         );
     }
 
-    if (!layer.queryKey) return {};
+    if (!layer.props?.queryKey) return {};
 
     return {
-      [layer.queryKey]: this.getSublayers(id),
+      [layer.props.queryKey]: this.getSublayers(id),
     };
   }
 
@@ -971,9 +971,9 @@ export class MapLayers extends Queues {
 
   private _getRequestOptions(id: string) {
     const layer = this.get(id);
-    if (!layer.getHeaders) return;
+    if (!layer.props?.getHeaders) return;
 
-    return { headers: layer.getHeaders?.() };
+    return { headers: layer.props.getHeaders?.() };
   }
 
   private _handleDrawColors() {

@@ -17,11 +17,12 @@ export interface PakmapsLayerOpts {
   description?: string | string[];
   sublayers?: PakmapsLayerOpts[];
   value?: string;
-  hidden?: boolean;
+  visible?: boolean;
   layer?: Layer | LayerGroup;
   type?: PakmapsLayerType;
   pakmapsLayer?: PakmapsLayer;
   props?: GenericObject;
+  isHidden?: boolean;
 }
 
 export class PakmapsLayer {
@@ -33,6 +34,7 @@ export class PakmapsLayer {
   sublayers: PakmapsLayer[] = [];
   value?: string;
   props: GenericObject = {};
+  isHidden: boolean = false;
 
   constructor(opts: PakmapsLayerOpts) {
     if (!opts?.name && !opts?.id) {
@@ -44,6 +46,7 @@ export class PakmapsLayer {
     this.description = opts.description;
     this.value = opts.value;
     this.props = opts.props || {};
+    this.isHidden = opts.isHidden || false;
 
     if (opts.layer) {
       if (!opts.type) {
@@ -61,8 +64,8 @@ export class PakmapsLayer {
       this.addSublayers(opts.sublayers);
     }
 
-    if (opts.hidden && this.layer) {
-      this.layer.setVisible(false);
+    if (typeof opts.visible !== 'undefined' && this.layer) {
+      this.layer.setVisible(opts.visible);
     }
   }
 

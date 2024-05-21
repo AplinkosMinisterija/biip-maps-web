@@ -7,6 +7,7 @@ import { getCopyrightLabel } from '../../utils';
 import { qgisServerUrl, rusysApiHost } from '../../../config';
 import { getVectorLayer, getWMSImageLayer } from '../utils';
 import { PakmapsLayer, PakmapsLayerType } from '@/libs/pak-maps';
+import type { Layer } from 'ol/layer';
 
 export * from './stvk';
 export * from './biomon';
@@ -150,82 +151,89 @@ export const municipalitiesService = new PakmapsLayer({
   type: PakmapsLayerType.WMS,
 });
 
-const srisPrivateServiceImageLayer = getWMSImageLayer(
-  `${rusysApiHost}/maps/qgisserver`,
-  'radavietes,stebejimai_interpretuojami',
-  biipCopyright,
-  () => srisPrivateService.getHeaders(),
-);
-srisPrivateServiceImageLayer.setVisible(false);
-export const srisPrivateService = {
+export const srisPrivateService = new PakmapsLayer({
   id: 'srisPrivateService',
-  authEndpoint: `${rusysApiHost}/maps/auth/me`,
-  queryKey: 'sris',
-  getHeaders: () => {
-    return config().srisHeaders || {};
-  },
-  layer: srisPrivateServiceImageLayer,
-};
-
-export const rusysGridService = {
-  id: 'rusysGridService',
-  getHeaders: () => {
-    return config().srisHeaders || {};
-  },
-  stats: {
-    url: `${rusysApiHost}/maps/hexagons/stats`,
-    styleFn: (data: any) => {
-      if (!Array.isArray(data)) return;
-      const maxValue = Math.max(...data.map((item: any) => item.count));
-
-      const colorPalette = [
-        'rgba(178,226,226,0.5)',
-        'rgba(102,194,164,0.5)',
-        'rgba(44,162,95,0.5)',
-        'rgba(0,109,44,0.5)',
-      ];
-
-      return (feature: any) => {
-        const matchingConfig = feature.get('stats');
-
-        let featureFillColor = 'rgba(237,248,251,0.5)';
-
-        const count = matchingConfig?.count || 0;
-        if (count) {
-          const colorIndex = Math.round((count / maxValue) * (colorPalette.length - 1));
-          featureFillColor = colorPalette[colorIndex];
-        }
-
-        let text;
-
-        if (count > 0) {
-          text = new Text({
-            text: `${count}`,
-          });
-        }
-
-        return new Style({
-          fill: new Fill({
-            color: featureFillColor,
-          }),
-          text,
-          stroke: new Stroke({
-            color: 'rgba(15,15,15,0.3)',
-            width: 1,
-          }),
-        });
-      };
+  props: {
+    authEndpoint: `${rusysApiHost}/maps/auth/me`,
+    queryKey: 'sris',
+    getHeaders: () => {
+      return config().srisHeaders || {};
     },
   },
+  layer: getWMSImageLayer(
+    `${rusysApiHost}/maps/qgisserver`,
+    'radavietes,stebejimai_interpretuojami',
+    biipCopyright,
+    () => srisPrivateService.props.getHeaders(),
+  ),
+  visible: false,
+  type: PakmapsLayerType.WMS,
+});
+
+export const rusysGridService = new PakmapsLayer({
+  id: 'rusysGridService',
+  isHidden: true,
+  props: {
+    getHeaders: () => {
+      return config().srisHeaders || {};
+    },
+    stats: {
+      url: `${rusysApiHost}/maps/hexagons/stats`,
+      styleFn: (data: any) => {
+        if (!Array.isArray(data)) return;
+        const maxValue = Math.max(...data.map((item: any) => item.count));
+
+        const colorPalette = [
+          'rgba(178,226,226,0.5)',
+          'rgba(102,194,164,0.5)',
+          'rgba(44,162,95,0.5)',
+          'rgba(0,109,44,0.5)',
+        ];
+
+        return (feature: any) => {
+          const matchingConfig = feature.get('stats');
+
+          let featureFillColor = 'rgba(237,248,251,0.5)';
+
+          const count = matchingConfig?.count || 0;
+          if (count) {
+            const colorIndex = Math.round((count / maxValue) * (colorPalette.length - 1));
+            featureFillColor = colorPalette[colorIndex];
+          }
+
+          let text;
+
+          if (count > 0) {
+            text = new Text({
+              text: `${count}`,
+            });
+          }
+
+          return new Style({
+            fill: new Fill({
+              color: featureFillColor,
+            }),
+            text,
+            stroke: new Stroke({
+              color: 'rgba(15,15,15,0.3)',
+              width: 1,
+            }),
+          });
+        };
+      },
+    },
+  },
+
   layer: getVectorLayer(`${rusysApiHost}/maps/hexagons`, {
     stroke: {
       color: 'rgba(0,70,80,0.8)',
       width: 1,
     },
   }),
-};
+  type: PakmapsLayerType.GeoJSON,
+});
 
-export const srisAccessService = {
+export const srisAccessService = new PakmapsLayer({
   id: 'srisAccessService',
   layer: getVectorLayer(`${rusysApiHost}/maps/access/my`, {
     stroke: {
@@ -233,12 +241,13 @@ export const srisAccessService = {
       width: 1,
     },
     queryOptions: () => ({
-      headers: srisPrivateService.getHeaders(),
+      headers: srisPrivateService.props.getHeaders(),
     }),
   }),
-};
+  type: PakmapsLayerType.GeoJSON,
+});
 
-export const rusysRequestService = {
+export const rusysRequestService = new PakmapsLayer({
   id: 'rusysRequestService',
   layer: getVectorLayer('', {
     stroke: {
@@ -247,11 +256,13 @@ export const rusysRequestService = {
     },
     showOnUrlChange: true,
   }),
-};
+  isHidden: true,
+  type: PakmapsLayerType.GeoJSON,
+});
 
-export const srisService = {
+export const srisService = new PakmapsLayer({
   id: 'srisService',
-  title: 'SRIS',
+  name: 'Saugomos rūšys',
   description: biipCopyright,
   sublayers: [
     {
@@ -264,14 +275,17 @@ export const srisService = {
     },
   ],
   layer: new LayerGroup({
-    layers: [srisPrivateService.layer, srisAccessService.layer],
+    layers: [srisPrivateService.layer as Layer, srisAccessService.layer as Layer],
   }),
-};
+  type: PakmapsLayerType.WMS,
+});
 
-export const invaService = {
+export const invaService = new PakmapsLayer({
   id: 'invaService',
-  title: 'Invazinės rūšys',
-  queryKey: 'inva',
+  name: 'Invazinės rūšys',
+  props: {
+    queryKey: 'inva',
+  },
   description: biipCopyright,
   layer: getWMSImageLayer(`${qgisServerUrl}/inva`, 'radavietes_invazines', biipCopyright),
   sublayers: [
@@ -284,41 +298,29 @@ export const invaService = {
       value: 'radavietes_svetimzemes',
     },
   ],
-};
 
-rusysGridService.layer.set('id', 'rusysGridService');
-rusysGridService.layer.set('type', PakmapsLayerType.GeoJSON);
-srisAccessService.layer.set('id', 'srisAccessService');
-srisPrivateService.layer.set('id', 'srisPrivateService');
-rusysRequestService.layer.set('id', 'rusysRequestService');
-srisService.layer.set('id', 'srisService');
-invaService.layer.set('id', 'invaService');
+  type: PakmapsLayerType.WMS,
+});
 
-export const rusysService = {
+// rusysGridService.layer.set('id', 'rusysGridService');
+// rusysGridService.layer.set('type', PakmapsLayerType.GeoJSON);
+// srisAccessService.layer.set('id', 'srisAccessService');
+// srisPrivateService.layer.set('id', 'srisPrivateService');
+// rusysRequestService.layer.set('id', 'rusysRequestService');
+// srisService.layer.set('id', 'srisService');
+// invaService.layer.set('id', 'invaService');
+
+export const rusysService = new PakmapsLayer({
   id: 'rusysService',
-  title: 'Rūšys',
+  name: 'Rūšys',
   description: biipCopyright,
   sublayers: [
-    {
-      name: 'Saugomos rūšys',
-      layer: srisService.layer,
-      id: srisService.id,
-    },
-    {
-      name: 'Invazinės rūšys',
-      layer: invaService.layer,
-      id: invaService.id,
-    },
+    { pakmapsLayer: rusysRequestService },
+    { pakmapsLayer: srisService },
+    { pakmapsLayer: invaService },
+    { pakmapsLayer: rusysGridService },
   ],
-  layer: new LayerGroup({
-    layers: [
-      rusysGridService.layer,
-      invaService.layer,
-      srisService.layer,
-      rusysRequestService.layer,
-    ],
-  }),
-};
+});
 
 export const huntingPublicService = new PakmapsLayer({
   id: 'huntingPublicService',
