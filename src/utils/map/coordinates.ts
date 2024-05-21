@@ -39,7 +39,7 @@ export function convertCoordinatesToProjection(
   featureProjection = projection,
 ) {
   if (dataProjection === featureProjection) return coordinates;
-  
+
   if (coordinates?.type === 'FeatureCollection') {
     const options: any = {};
     if (dataProjection) {
@@ -149,7 +149,7 @@ export function getElementFromCoordinates(
 }
 
 function toGeoJSON(data: Geometry) {
-  return dataToFeatureCollection(JSON.parse(new GeoJSON().writeGeometry(data)));
+  return dataToFeatureCollection(new GeoJSON().writeGeometryObject(data));
 }
 
 const formatLength = function (line: LineString) {
