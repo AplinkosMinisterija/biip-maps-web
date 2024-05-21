@@ -6,6 +6,7 @@ import { useConfigStore } from '@/stores/config';
 import { getCopyrightLabel } from '../utils';
 import { qgisServerUrl, rusysApiHost } from '../../config';
 import { getVectorLayer, getWMSImageLayer } from './utils';
+import { PakmapsLayer, PakmapsLayerType } from '@/libs/pak-maps';
 
 const config = () => {
   return useConfigStore();
@@ -29,7 +30,7 @@ const rcCopyright = getCopyrightLabel(
   'https://www.registrucentras.lt',
 );
 
-export const huntingService = {
+export const huntingService = new PakmapsLayer({
   id: 'huntingService',
   description: biipCopyright,
   layer: getWMSImageLayer(
@@ -37,59 +38,38 @@ export const huntingService = {
     'mpv_info_geom,mpv_info_geom_50k,mpv_info_geom_250k',
     biipCopyright,
   ),
-};
+  type: PakmapsLayerType.WMS,
+});
 
-export const administrativeBoundariesService = {
+export const administrativeBoundariesService = new PakmapsLayer({
   id: 'administrativeBoundariesService',
   name: 'Administracinės ribos',
   description: biipCopyright,
   layer: getWMSImageLayer(`${qgisServerUrl}/administrative_boundaries`, '', biipCopyright),
   sublayers: [
-    {
-      value: 'municipalities',
-      name: 'Savivaldybės',
-    },
-    {
-      value: 'counties',
-      name: 'Apskritys',
-    },
-    {
-      value: 'elderships',
-      name: 'Seniūnijos',
-    },
-    {
-      value: 'residential_areas',
-      name: 'Gyvenamosios vietovės',
-    },
+    { value: 'municipalities', name: 'Savivaldybės' },
+    { value: 'counties', name: 'Apskritys' },
+    { value: 'elderships', name: 'Seniūnijos' },
+    { value: 'residential_areas', name: 'Gyvenamosios vietovės' },
   ],
-};
+  type: PakmapsLayerType.WMS,
+});
 
-export const administrativeBoundariesLabelsService = {
+export const administrativeBoundariesLabelsService = new PakmapsLayer({
   id: 'administrativeBoundariesLabelsService',
   name: 'Administracinės ribos',
   description: biipCopyright,
   layer: getWMSImageLayer(`${qgisServerUrl}/administrative_boundaries`, '', biipCopyright),
   sublayers: [
-    {
-      value: 'residential_areas_labels',
-      name: 'Gyvenamosios vietovės',
-    },
-    {
-      value: 'elderships_labels',
-      name: 'Seniūnijos',
-    },
-    {
-      value: 'municipalities_labels',
-      name: 'Savivaldybės',
-    },
-    {
-      value: 'counties_labels',
-      name: 'Apskritys',
-    },
+    { value: 'residential_areas_labels', name: 'Gyvenamosios vietovės' },
+    { value: 'elderships_labels', name: 'Seniūnijos' },
+    { value: 'municipalities_labels', name: 'Savivaldybės' },
+    { value: 'counties_labels', name: 'Apskritys' },
   ],
-};
+  type: PakmapsLayerType.WMS,
+});
 
-export const huntingTracksService = {
+export const huntingTracksService = new PakmapsLayer({
   id: 'huntingTracksService',
   description: biipCopyright,
   layer: getWMSImageLayer(
@@ -97,121 +77,91 @@ export const huntingTracksService = {
     'footprint_tracks',
     biipCopyright,
   ),
-};
+  type: PakmapsLayerType.WMS,
+});
 
-export const zuvinimasService = {
+export const zuvinimasService = new PakmapsLayer({
   id: 'zuvinimasService',
   description: biipCopyright,
   layer: getWMSImageLayer(`${qgisServerUrl}/zuvinimas`, 'fish_stockings', biipCopyright),
-};
+  type: PakmapsLayerType.WMS,
+});
 
-export const uetkService = {
+export const uetkService = new PakmapsLayer({
   id: 'uetkService',
-  title: 'UETK',
+  name: 'UETK',
   description: [aaaCopyright, biipCopyright],
   sublayers: [
-    {
-      value: 'upiu_baseinu_rajonai',
-      name: 'Upių baseinų rajonai',
-    },
-    {
-      value: 'upiu_baseinai',
-      name: 'Upių baseinai',
-    },
-    {
-      value: 'upiu_pabaseiniai',
-      name: 'Upių pabaseiniai',
-    },
-    {
-      value: 'upes',
-      name: 'Upės',
-    },
-    {
-      value: 'ezerai_tvenkiniai',
-      name: 'Ežerai ir tvenkiniai',
-    },
-    {
-      value: 'vandens_matavimo_stotys',
-      name: 'Vandens matavimo stotys',
-    },
-    {
-      value: 'vandens_tyrimu_vietos',
-      name: 'Vandens tyrimų vietos',
-    },
-    {
-      value: 'zemiu_uztvanka',
-      name: 'Žemių užtvanka',
-    },
-    {
-      value: 'vandens_pertekliaus_pralaida',
-      name: 'Vandens pertekliaus pralaida',
-    },
-    {
-      value: 'zuvu_pralaida',
-      name: 'Žuvų pralaida',
-    },
-    {
-      value: 'hidroelektrines',
-      name: 'Hidroelektrinės',
-    },
+    { value: 'upiu_baseinu_rajonai', name: 'Upių baseinų rajonai' },
+    { value: 'upiu_baseinai', name: 'Upių baseinai' },
+    { value: 'upiu_pabaseiniai', name: 'Upių pabaseiniai' },
+    { value: 'upes', name: 'Upės' },
+    { value: 'ezerai_tvenkiniai', name: 'Ežerai ir tvenkiniai' },
+    { value: 'vandens_matavimo_stotys', name: 'Vandens matavimo stotys' },
+    { value: 'vandens_tyrimu_vietos', name: 'Vandens tyrimų vietos' },
+    { value: 'zemiu_uztvanka', name: 'Žemių užtvanka' },
+    { value: 'vandens_pertekliaus_pralaida', name: 'Vandens pertekliaus pralaida' },
+    { value: 'zuvu_pralaida', name: 'Žuvų pralaida' },
+    { value: 'hidroelektrines', name: 'Hidroelektrinės' },
   ],
-
   layer: getWMSImageLayer(
     `${qgisServerUrl}/uetk_public`,
     'upes,ezerai_tvenkiniai,vandens_matavimo_stotys,vandens_tyrimu_vietos,zemiu_uztvanka,vandens_pertekliaus_pralaida,zuvu_pralaida,hidroelektrines',
     `${aaaCopyright} ${biipCopyright}`,
   ),
-};
+  type: PakmapsLayerType.WMS,
+});
 
-export const sznsUetkService = {
+export const sznsUetkService = new PakmapsLayer({
   id: 'sznsUetkService',
-  title: 'Paviršinių vandens telkinių apsaugos zonos ir juostos',
+  name: 'Paviršinių vandens telkinių apsaugos zonos ir juostos',
   description: [aaaCopyright, biipCopyright],
   sublayers: [
     {
       value: 'apsaugos_juostos',
       name: 'Paviršinių vandens telkinių pakrančių apsaugos juostos (projektas)',
     },
-    {
-      value: 'apsaugos_zonos',
-      name: 'Paviršinių vandens telkinių apsaugos zonos (projektas)',
-    },
+    { value: 'apsaugos_zonos', name: 'Paviršinių vandens telkinių apsaugos zonos (projektas)' },
   ],
   layer: getWMSImageLayer(
     `${qgisServerUrl}/uetk_szns`,
     'apsaugos_juostos,apsaugos_zonos,apreptis',
     `${aaaCopyright} ${biipCopyright}`,
   ),
-};
+  type: PakmapsLayerType.WMS,
+});
 
-export const stvkService = {
+export const stvkService = new PakmapsLayer({
   id: 'stvkService',
   description: vsttCopyright,
-  title: 'Saugomų teritorijų valstybės kadastras',
+  name: 'Saugomų teritorijų valstybės kadastras',
   layer: getWMSImageLayer(
     'https://services.stvk.lt/wms/stvk-services',
     'botaniniai_gpo_t,geomorfologiniai_gpo_t,geologiniai_gpo_t,hidrogeologiniai_gpo_t,hidrografiniai_gpo_t,zoologiniai_gpo_t,botaniniai_gpo_p,geomorfologiniai_gpo_p,geologiniai_gpo_p,hidrogeologiniai_gpo_p,hidrografiniai_gpo_p,zoologiniai_gpo_p,sunyke_botaniniai_gpo_t,sunyke_geomorfologiniai_gpo_t,sunyke_geologiniai_gpo_t,sunyke_hidrogeologiniai_gpo_t,sunyke_hidrografiniai_gpo_t,sunyke_zoologiniai_gpo_t,sunyke_botaniniai_gpo_p,sunyke_geomorfologiniai_gpo_p,sunyke_geologiniai_gpo_p,sunyke_hidrogeologiniai_gpo_p,sunyke_hidrografiniai_gpo_p,sunyke_zoologiniai_gpo_p,valstybiniai_rezervatai,kpfz_rezervatai,valstybiniai_draustiniai,savivaldybiu_draustiniai,kpfz_draustiniai,nac_parkai,np_rezervatai,np_draustiniai,np_ekolog_aps_fpz,np_rekreac_fpz,np_zem_uk_fpz,np_misk_uk_fpz,np_bendr_naud_vand_uk_fpz,np_kitos_uk_fpz,np_gyv_pask_fpz,np_kitos_pask_fpz,reg_parkai,rp_rezervatai,rp_draustiniai,rp_ekolog_aps_fpz,rp_rekreac_fpz,rp_zemes_uk_fpz,rp_misku_uk_fpz,rp_bendr_naud_vand_uk_fpz,rp_kitos_uk_fpz,rp_gyv_fpz,rp_kitos_fpz,bio_rezervatai,biosferos_rez_rezervatai,biosferos_poli_draustiniai,eko_fpz,zemes_fpz,misku_fpz,ekosistem_fpz,bio_poligonai,vandens_fpz,kitos_paskirties_fpz,atkuriamieji_sklypai,genetiniai_sklypai,buf_apsaugos_zonos,past,bast,pajurio,direkciju_teritorijos',
     vsttCopyright,
   ),
-};
+  type: PakmapsLayerType.WMS,
+});
 
-export const inspireParcelService = {
+export const inspireParcelService = new PakmapsLayer({
   id: 'inspireParcelService',
   description: zudcCopyright,
-  title: 'Kadastriniai sklypai (INSPIRE duomenų rinkinys)',
+  name: 'Kadastriniai sklypai (INSPIRE duomenų rinkinys)',
   layer: getWMSImageLayer(
     'https://www.geoportal.lt/mapproxy/gisc_inspire_geoserver/cp/wms',
     'CP.CadastralParcel,CP.CadastralZoning',
     zudcCopyright,
   ),
-};
+  type: PakmapsLayerType.WMS,
+});
 
-export const municipalitiesService = {
+export const municipalitiesService = new PakmapsLayer({
   id: 'municipalitiesService',
   description: rcCopyright,
-  title: 'Savivaldybės (Adresų registras)',
+  name: 'Savivaldybės (Adresų registras)',
   layer: getWMSImageLayer(`${qgisServerUrl}/uetk_zuvinimas`, 'municipalities', rcCopyright),
-};
+  type: PakmapsLayerType.WMS,
+});
 
 const srisPrivateServiceImageLayer = getWMSImageLayer(
   `${rusysApiHost}/maps/qgisserver`,
