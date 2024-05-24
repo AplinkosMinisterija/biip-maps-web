@@ -83,10 +83,7 @@ export function loadFeaturesCollection(url: string, options = {}) {
 
 export function checkAuth(url: string, options = {}) {
   return new Promise((resolve) => {
-    fetch(url, {
-      ...options,
-      method: 'OPTIONS',
-    })
+    fetch(url, options)
       .then((res) => {
         if (res.ok && res.status >= 200 && res.status < 300) {
           return resolve(res.json());

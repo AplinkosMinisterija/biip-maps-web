@@ -20,7 +20,7 @@
             >
               {{ r.link }}
             </span>
-            <template v-else>{{ feature[r.prop] || "" }}</template>
+            <template v-else>{{ feature[r.prop] || '' }}</template>
           </UiTableCell>
         </UiTableRow>
       </UiTable>
@@ -206,7 +206,6 @@ const rows: any[] = [
   {
     name: 'Centro koordinatės',
     prop: 'center_coordinates',
-    show: checkFeatureId(radavietesFeatureIds),
   },
   {
     name: 'Anketa',
@@ -218,7 +217,8 @@ const rows: any[] = [
     name: 'Radavietė',
     link: 'Peržiūrėti radavietę',
     click: selectFeature,
-    show: (feature: any) => (config.user.isAdmin || config.user.isExpert) && isFeaturePlace(feature),
+    show: (feature: any) =>
+      (config.user.isAdmin || config.user.isExpert) && isFeaturePlace(feature),
   },
 ];
 
