@@ -183,6 +183,20 @@ export function vectorTileStyles(options?: { layerPrefix: string }): any {
         styles[length++] = point;
         styles[length++] = text;
       }
+    } else if (
+      layer.includes('rinkejoribos.apygardos_r') ||
+      layer.includes('rinkejoribos.apylinkes_r')
+    ) {
+      styles[length++] = line;
+    } else if (
+      layer.includes('rinkejoribos.apylinkes_c') ||
+      layer.includes('rinkejoribos.apygardos_c')
+    ) {
+      text.getText()?.setText(`${feature.get('pav')} (${feature.getId()})`);
+      styles[length++] = text;
+    } else if (layer.includes('rinkejoribos.bustines')) {
+      text.getText()?.setText(`${feature.get('pav')} (${feature.getId()})`);
+      styles[length++] = getIcon('pin', { align: 'top', color: '#00AAFF' });
     }
 
     styles.length = length;

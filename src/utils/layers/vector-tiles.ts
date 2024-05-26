@@ -34,6 +34,26 @@ function getVectorTileLayer(
     style: vectorTileStyles({ layerPrefix: type }),
   });
 }
+export const rinkejasRibosVT = {
+  id: 'rinkejasRibosVT',
+  name: 'Rinkėjo puslapis',
+  layer: new VectorTileLayer({
+    renderMode: 'vector',
+    declutter: true,
+    source: new VectorTileSource({
+      overlaps: false,
+      projection: projection3857,
+      format: new MVT({
+        featureClass: Feature,
+        idProperty: 'nr',
+      }),
+
+      tileSize: [512, 512],
+      url: 'https://www.rinkejopuslapis.lt/tiles/maps/ribos/{z}/{x}/{y}.pbf',
+    }),
+    style: vectorTileStyles({ layerPrefix: 'rinkejoribos' }),
+  }),
+};
 
 export const municipalitiesServiceVT = {
   id: 'municipalitiesServiceVT',

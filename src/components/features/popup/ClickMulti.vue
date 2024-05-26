@@ -58,6 +58,10 @@ const props = defineProps({
     type: Array<string>,
     default: () => []
   },
+  filter: {
+    type: Function,
+    default: (features: any[]) => features
+  },
 });
 
 const overlayLayer = ref();
@@ -93,6 +97,12 @@ mapLayers.click(
     if (!center) return togglePopup();
 
     featuresData.value = features?.map((f: any) => ({...f.getProperties(), id: f.getId()}));
+
+    if (props.filter && typeof props.filter === "function") {
+      featuresData.value = props.filter(featuresData.value)
+
+      if (!featuresData.value?.length) return togglePopup();
+    }
     togglePopup(center);
   },
   { layers: props.layers }
