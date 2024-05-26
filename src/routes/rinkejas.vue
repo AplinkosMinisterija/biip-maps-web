@@ -13,7 +13,7 @@
 
     <FeaturesPopupClickMulti
       :layers="[rinkejasRibosVT.id]"
-      :filter="(features) => features.filter((f) => f.layer === 'bustines')"
+      :filter="(features: any[]) => features?.filter((f) => f.layer === 'bustines')"
     >
       <template #content="{ current }">
         <div class="mr-8">{{ current?.pav }} apylinkė Nr. {{ current?.id }}</div>
