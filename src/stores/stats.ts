@@ -7,29 +7,29 @@ import { serializeQuery } from '@/utils';
 const statsByType = {
   animals: {
     permits: {
-      url: `${gyvunaiApiHost}/api/public/permits/all`,
+      url: `${gyvunaiApiHost}/public/permits/all`,
       idProperty: 'municipality.id',
       countProperty: 'permitsCount',
     },
     fostered: {
-      url: `${gyvunaiApiHost}/api/public/fosteredAnimals/all`,
+      url: `${gyvunaiApiHost}/public/fosteredAnimals/all`,
       idProperty: 'municipality.id',
       countProperty: 'count',
     },
     aviaries: {
-      url: `${gyvunaiApiHost}/api/public/aviaries/all`,
+      url: `${gyvunaiApiHost}/public/aviaries/all`,
       idProperty: 'municipality.id',
       countProperty: 'aviariesCount',
     },
     species: {
-      url: `${gyvunaiApiHost}/api/public/species/all`,
+      url: `${gyvunaiApiHost}/public/species/all`,
       idProperty: 'municipality.id',
       countProperty: 'count',
     },
   },
   zvejyba: {
     uetk: {
-      url: `${zvejybaApiHost}/api/public/uetk/statistics`,
+      url: `${zvejybaApiHost}/public/uetk/statistics`,
       idProperty: 'uetkCadastralId',
       countProperty: 'count',
       transformFn: (data: any) =>
@@ -47,7 +47,7 @@ const statsByType = {
   },
   zuvinimas: {
     uetk: {
-      url: `${zuvinimasApiHost}/api/public/uetk/statistics`,
+      url: `${zuvinimasApiHost}/public/uetk/statistics`,
       idProperty: 'uetkCadastralId',
       countProperty: 'count',
       transformFn: (data: any) =>
@@ -65,7 +65,7 @@ const statsByType = {
   },
   medziokle: {
     loots: {
-      url: `${medziokleApiHost}/api/lootsByMunicipality/stats`,
+      url: `${medziokleApiHost}/lootsByMunicipality/stats`,
       transformFn: (data: any) =>
         Object.keys(data).reduce(
           (acc: any, municipalityId) => [
@@ -81,7 +81,7 @@ const statsByType = {
       countProperty: 'count',
     },
     limits: {
-      url: `${medziokleApiHost}/api/limitsByMunicipality/stats`,
+      url: `${medziokleApiHost}/limitsByMunicipality/stats`,
       transformFn: (data: any) =>
         Object.keys(data).reduce(
           (acc: any, municipalityId) => [

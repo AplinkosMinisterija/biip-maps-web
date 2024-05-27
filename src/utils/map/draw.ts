@@ -11,6 +11,7 @@ import _ from 'lodash';
 import { GeometryType, getFeatures, parse } from 'geojsonjs';
 import { getLayerStyles } from '../layers';
 import { convertFeaturesToPoints } from './utils';
+import type { GenericObject } from '@/types';
 
 type CallbackType = 'change' | 'select' | 'remove';
 
@@ -19,6 +20,7 @@ export class MapDraw extends Queues {
   private _layer: Layer | undefined;
   private _draw: Draw | undefined;
   private _isMulti: boolean = false;
+  private _isActive: boolean = false;
   private _defaultColors = {
     primary: '#326a72',
     secondary: '#002a30',
@@ -35,6 +37,7 @@ export class MapDraw extends Queues {
   private _snap: Snap = new Snap({ source: this._source });
   private _styles = getLayerStyles({
     colors: this._defaultColors,
+    projection,
   });
   private _select: Select = new Select({
     condition: click,
@@ -65,20 +68,37 @@ export class MapDraw extends Queues {
   setMap(map: Map | undefined) {
     this.map = map;
     this._processQueue();
+
+    if (map) {
+      this._applyStyles({ projection: map.getView().getProjection().getCode() });
+    }
+
     return this;
   }
 
   setFeatures(
-    features: { [key: string]: any },
+    features: GenericObject<any>,
     options: {
       append?: boolean;
       types?: string[];
+      dataProjection?: string;
     } = {},
   ) {
+    if (!this.map) {
+      return this._addToQueue('setFeatures', features, options);
+    }
+
     if (_.isEmpty(features)) return;
 
     try {
-      let data = new GeoJSON().readFeatures(features);
+      const readFeaturesOptions: any = {};
+
+      if (options?.dataProjection) {
+        readFeaturesOptions.dataProjection = options?.dataProjection;
+        readFeaturesOptions.featureProjection = this?.map?.getView().getProjection().getCode();
+      }
+
+      let data = new GeoJSON().readFeatures(features, readFeaturesOptions);
 
       if (options?.types?.length) {
         data = convertFeaturesToPoints(data, options?.types || []);
@@ -106,11 +126,26 @@ export class MapDraw extends Queues {
   }
 
   setIcon(name: string, opts?: any) {
-    return this.setStyles({
-      ...this._styles.opts,
+    return this._applyStyles({
       icon: name,
       width: opts.size,
       opts,
+    });
+  }
+
+  enableMeasurements(
+    opts: { length?: boolean; area?: boolean; segments?: boolean } = {
+      length: true,
+      area: true,
+      segments: true,
+    },
+  ) {
+    return this._applyStyles({
+      showMeasurements: {
+        length: opts?.length,
+        area: opts?.area,
+        segments: opts?.segments,
+      },
     });
   }
 
@@ -138,11 +173,7 @@ export class MapDraw extends Queues {
     icon?: string;
     [key: string]: any;
   }) {
-    this._styles = getLayerStyles(opts);
-
-    this._layer?.getSource()?.changed();
-
-    return this;
+    return this._applyStyles(opts);
   }
 
   setLayer(layer: Layer) {
@@ -212,6 +243,7 @@ export class MapDraw extends Queues {
     this._addInteractions();
     this._addEditInteractions();
 
+    this._isActive = true;
     return this;
   }
 
@@ -228,7 +260,16 @@ export class MapDraw extends Queues {
     this._setSelectedFeature();
     this._removeInteractions();
 
+    this._isActive = false;
+
     return this;
+  }
+
+  toggle(type?: DrawType, value?: boolean) {
+    const isActive = typeof value !== 'undefined' ? value : this._isActive;
+
+    if (isActive) return this.remove().end();
+    return this.start(type);
   }
 
   on(types: CallbackType | CallbackType[], cb: Function) {
@@ -420,12 +461,17 @@ export class MapDraw extends Queues {
 
       const feature = event?.feature ? new GeoJSON().writeFeatureObject(event.feature) : null;
 
+      let featuresJSON = features;
+      try {
+        featuresJSON = JSON.parse(features);
+      } catch (err) {}
       (types as CallbackType[]).forEach((type: CallbackType) => {
         this._callbacks[type]?.forEach((cb) => {
           cb({
             source: this._source,
             features,
             feature,
+            featuresJSON,
             featureObj: event?.feature,
           });
         });
@@ -471,5 +517,13 @@ export class MapDraw extends Queues {
       this.remove();
     }
     this._modifySelect.setActive(false);
+  }
+
+  private _applyStyles(opts: any = {}) {
+    this._styles = getLayerStyles(_.merge({}, this._styles.opts || {}, opts));
+
+    this._layer?.getSource()?.changed();
+
+    return this;
   }
 }

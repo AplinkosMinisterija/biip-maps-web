@@ -54,7 +54,7 @@ export function searchGeoportal(
     {
       multi_match: {
         query: value,
-        type: 'most_fields',
+        type: options?.fields || 'most_fields',
         fields: [
           'VARDAS^5',
           'VARDAS.folded^5',
@@ -92,10 +92,11 @@ export function searchGeoportal(
         bool: {
           must: mustClauses,
         },
+        functions: functionsArray,
       },
-      functions: functionsArray,
     },
   };
+
   const page = options?.page || 1;
   const pageSize = options?.pageSize || 10;
 
@@ -120,27 +121,23 @@ export function searchGeoportal(
     },
   })
     .then((data) => data.json())
-    .then((data: any) => {
-      console.log(data, 'kac');
-
-      return {
-        rows: data?.hits?.hits?.map((item: any) => {
-          const source = item._source || {};
-          let data: any = {};
-          if (source?.geometry?.coordinates?.length) {
-            data = getElementFromCoordinates(source?.geometry?.type, source?.geometry?.coordinates);
-          }
-          return {
-            id: item._id,
-            x: source.LOCATION,
-            y: source.LOCATIONY,
-            name: source.VARDAS,
-            description: source.DESCRIPTIO,
-            extent: data?.extent,
-            geom: data?.geom,
-          };
-        }),
-        total: data?.took || 0,
-      };
-    });
+    .then((data: any) => ({
+      rows: data?.hits?.hits?.map((item: any) => {
+        const source = item._source || {};
+        let data: any = {};
+        if (source?.geometry?.coordinates?.length) {
+          data = getElementFromCoordinates(source?.geometry?.type, source?.geometry?.coordinates);
+        }
+        return {
+          id: item._id,
+          x: source.LOCATIONX,
+          y: source.LOCATIONY,
+          name: source.VARDAS,
+          description: source.DESCRIPTIO,
+          extent: data?.extent,
+          geom: data?.geom,
+        };
+      }),
+      total: data?.took || 0,
+    }));
 }

@@ -205,7 +205,7 @@ const zoomToMatch = (match: any) => {
   if (!match?.id) return;
 
   if (match.geom) {
-    mapLayers.zoomToFeatureCollection(match.geom, !!props.addStroke);
+    mapLayers.zoomToFeatureCollection(match.geom, { addStroke: !!props.addStroke });
   } else if (match.extent) {
     mapLayers.zoomToExtent(match.extent);
   } else if (match.x && match.y) {

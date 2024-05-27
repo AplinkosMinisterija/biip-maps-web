@@ -18,16 +18,17 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, ref, watch } from 'vue';
-import { useRoute } from 'vue-router';
-import { canvasToImage } from '@/utils';
-const events: any = inject('events');
-const mapLayers: any = inject('mapLayers');
+import { computed, inject, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { canvasToImage, projection3857 } from "@/utils";
+const events: any = inject("events");
+const mapLayers: any = inject("mapLayers");
 
 const isLoadedSuspense = ref(false);
 const isLoadedMap = ref(false);
 const isLoaded = computed(() => isLoadedSuspense.value && isLoadedMap.value);
 const $route = useRoute();
+const $router = useRouter();
 
 const onSuspenseResolve = () => {
   isLoadedSuspense.value = true;
@@ -38,12 +39,21 @@ mapLayers.waitForLoaded.then(() => {
   isLoadedMap.value = true;
 });
 
+$router.isReady().then(() => {
+  if ($route?.query?.x && $route?.query?.y) {
+    mapLayers.zoomToCoordinate($route.query.x, $route.query.y, {
+      defaultToMapProjection: true,
+      zoom: $route.query.z,
+    });
+  }
+});
+
 watch(
   isLoaded,
   (value) => {
     if (!value || !$route?.query?.screenshot) return;
     canvasToImage();
   },
-  { immediate: true },
+  { immediate: true }
 );
 </script>

@@ -163,6 +163,27 @@ export const uetkService = {
   ),
 };
 
+export const sznsUetkService = {
+  id: 'sznsUetkService',
+  title: 'Paviršinių vandens telkinių apsaugos zonos ir juostos',
+  description: [aaaCopyright, biipCopyright],
+  sublayers: [
+    {
+      value: 'apsaugos_juostos',
+      name: 'Paviršinių vandens telkinių pakrančių apsaugos juostos (projektas)',
+    },
+    {
+      value: 'apsaugos_zonos',
+      name: 'Paviršinių vandens telkinių apsaugos zonos (projektas)',
+    },
+  ],
+  layer: getWMSImageLayer(
+    `${qgisServerUrl}/uetk_szns`,
+    'apsaugos_juostos,apsaugos_zonos,apreptis',
+    `${aaaCopyright} ${biipCopyright}`,
+  ),
+};
+
 export const stvkService = {
   id: 'stvkService',
   description: vsttCopyright,

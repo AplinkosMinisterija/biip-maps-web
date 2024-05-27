@@ -8,20 +8,19 @@
       :description="getDescription(feature)"
       :badge="feature?._layerTitle"
     >
-      <UiButton
-        v-if="false && (config.user.isAdmin || config.user.isExpert)"
-        class="mb-2"
-        size="sm"
-        @click="selectFeature(feature)"
-      >
-        Peržiūrėti pilnus duomenis
-      </UiButton>
       <UiTable class="text-xs">
         <UiTableRow v-for="(r, key) in filteredRows(feature)" :key="key">
           <UiTableCell>{{ r.name }}</UiTableCell>
-          <UiTableCell v-if="r.fn" v-html="r.fn(feature, ...(r.fnParams || [])) || ''" />
-          <UiTableCell v-else>
-            {{ feature[r.prop] || '' }}
+          <UiTableCell>
+            <div v-if="r.fn" v-html="r.fn(feature, ...(r.fnParams || [])) || ''"></div>
+            <span
+              v-else-if="r.link"
+              class="border-b border-b-black hover:border-b-gray-700 hover:text-gray-700 cursor-pointer"
+              @click="r.click(feature)"
+            >
+              {{ r.link }}
+            </span>
+            <template v-else>{{ feature[r.prop] || '' }}</template>
           </UiTableCell>
         </UiTableRow>
       </UiTable>
@@ -207,7 +206,19 @@ const rows: any[] = [
   {
     name: 'Centro koordinatės',
     prop: 'center_coordinates',
-    show: checkFeatureId(radavietesFeatureIds),
+  },
+  {
+    name: 'Anketa',
+    link: 'Peržiūrėti anketą',
+    click: selectFeature,
+    show: (feature: any) => (config.user.isAdmin || config.user.isExpert) && isFeatureForm(feature),
+  },
+  {
+    name: 'Radavietė',
+    link: 'Peržiūrėti radavietę',
+    click: selectFeature,
+    show: (feature: any) =>
+      (config.user.isAdmin || config.user.isExpert) && isFeaturePlace(feature),
   },
 ];
 

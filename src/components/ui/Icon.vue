@@ -51,7 +51,14 @@
     fill="none"
     viewBox="0 0 24 24"
   >
-    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+    <circle
+      class="opacity-25"
+      cx="12"
+      cy="12"
+      r="10"
+      stroke="currentColor"
+      stroke-width="4"
+    />
     <path
       class="opacity-75"
       fill="currentColor"
@@ -134,6 +141,26 @@
     />
   </svg>
   <svg
+    v-else-if="name === 'chevron-right'"
+    xmlns="http://www.w3.org/2000/svg"
+    :width="size"
+    :height="size"
+    fill="currentColor"
+    viewBox="0 -960 960 960"
+  >
+    <path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z" />
+  </svg>
+  <svg
+    v-else-if="name === 'chevron-left'"
+    xmlns="http://www.w3.org/2000/svg"
+    :width="size"
+    :height="size"
+    fill="currentColor"
+    viewBox="0 -960 960 960"
+  >
+    <path d="M560-240 320-480l240-240 56 56-184 184 184 184-56 56Z" />
+  </svg>
+  <svg
     v-else-if="name === 'search'"
     xmlns="http://www.w3.org/2000/svg"
     :width="size"
@@ -160,7 +187,9 @@
     xmlns="http://www.w3.org/2000/svg"
   >
     <path fill="none" d="M0 0h24v24H0V0z" />
-    <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z" />
+    <path
+      d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"
+    />
   </svg>
   <svg
     v-else-if="name === 'fullscreen'"
@@ -173,7 +202,9 @@
     xmlns="http://www.w3.org/2000/svg"
   >
     <path fill="none" d="M0 0h24v24H0V0z" />
-    <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />
+    <path
+      d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"
+    />
   </svg>
   <svg
     v-else-if="name === 'remove'"
@@ -518,20 +549,44 @@
       d="m612-292 56-56-148-148v-184h-80v216l172 172ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-400Zm0 320q133 0 226.5-93.5T800-480q0-133-93.5-226.5T480-800q-133 0-226.5 93.5T160-480q0 133 93.5 226.5T480-160Z"
     />
   </svg>
+  <svg
+    v-else-if="name === 'pin'"
+    xmlns="http://www.w3.org/2000/svg"
+    :height="size"
+    viewBox="0 0 640 800"
+    :width="size"
+    fill="currentColor"
+  >
+    <path
+      d="M320 400C342 400 360.833 392.167 376.5 376.5C392.167 360.833 400 342 400 320C400 298 392.167 279.167 376.5 263.5C360.833 247.833 342 240 320 240C298 240 279.167 247.833 263.5 263.5C247.833 279.167 240 298 240 320C240 342 247.833 360.833 263.5 376.5C279.167 392.167 298 400 320 400ZM320 800C212.667 708.667 132.5 623.833 79.5 545.5C26.5 467.167 0 394.667 0 328C0 228 32.1667 148.333 96.5 89C160.833 29.6667 235.333 0 320 0C404.667 0 479.167 29.6667 543.5 89C607.833 148.333 640 228 640 328C640 394.667 613.5 467.167 560.5 545.5C507.5 623.833 427.333 708.667 320 800Z"
+    />
+  </svg>
+  <svg
+    v-else-if="name === 'measure'"
+    xmlns="http://www.w3.org/2000/svg"
+    :height="size"
+    viewBox="0 -960 960 960"
+    :width="size"
+    fill="currentColor"
+  >
+    <path
+      d="M160-240q-33 0-56.5-23.5T80-320v-320q0-33 23.5-56.5T160-720h640q33 0 56.5 23.5T880-640v320q0 33-23.5 56.5T800-240H160Zm0-80h640v-320H680v160h-80v-160h-80v160h-80v-160h-80v160h-80v-160H160v320Zm120-160h80-80Zm160 0h80-80Zm160 0h80-80Zm-120 0Z"
+    />
+  </svg>
 </template>
 
 <script lang="ts" setup>
-import { computed } from 'vue';
+import { computed } from "vue";
 
 const props = defineProps({
   name: {
     type: String,
-    default: '',
+    default: "",
     required: true,
   },
   text: {
     type: String,
-    default: '',
+    default: "",
   },
   size: {
     type: Number,

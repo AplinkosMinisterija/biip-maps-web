@@ -17,8 +17,6 @@ const app = createApp(App);
 
 app.config.unwrapInjectedRef = true;
 
-const apiUrls = [import.meta.env.VUE_APP_API_HOST];
-
 if (import.meta.env.VUE_APP_SENTRY_DSN) {
   Sentry.init({
     app,
@@ -31,7 +29,6 @@ if (import.meta.env.VUE_APP_SENTRY_DSN) {
     environment: import.meta.env.VUE_APP_ENVIRONMENT,
     release: import.meta.env.VUE_APP_VERSION,
     tracesSampleRate: 1,
-    tracePropagationTargets: apiUrls,
   });
 }
 

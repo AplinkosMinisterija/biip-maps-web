@@ -238,8 +238,8 @@ export class MapFilters {
     }, {});
   }
 
-  toQuery() {
-    return serializeQuery(this.toJson());
+  toQuery(withKeys: boolean = false) {
+    return serializeQuery(this.toJson(withKeys));
   }
 
   clear() {

@@ -19,6 +19,7 @@ const LAYER_TYPE = {
   UETK_MERGED_LABEL: 'uetk.uetk_merged.1',
   ZVEJYBA_FISHINGS: 'zvejyba.fishings',
   ZUVINIMAS_FISH_STOCKINGS: 'zuvinimas.fish_stockings',
+  SMALSUOLIS_EVENTS: 'tiles.events',
 };
 
 const FONT_FAMILY = '"Open Sans", "Arial Unicode MS"';
@@ -95,6 +96,7 @@ function getFillColorByStats(count: number, max: number) {
 
 export function vectorTileStyles(options?: { layerPrefix: string }): any {
   const fill = new Fill({ color: '' });
+  const textFill = new Fill({ color: '' });
   const stroke = new Stroke({ color: '', width: 1 });
   const circle = new Circle({
     fill,
@@ -107,8 +109,7 @@ export function vectorTileStyles(options?: { layerPrefix: string }): any {
   const text = new Style({
     text: new Text({
       text: '',
-      fill: fill,
-      stroke: stroke,
+      fill: textFill,
     }),
   });
 
@@ -151,9 +152,9 @@ export function vectorTileStyles(options?: { layerPrefix: string }): any {
         LAYER_TYPE.BOUNDARIES_RESIDENTIAL_AREAS_LABEL,
       ].includes(layer)
     ) {
-      text.getText().setText(feature.get('name'));
-      fill.setColor(COLORS.GRAY);
-      text.getText().setFont(getFont(11));
+      text.getText()?.setText(feature.get('name'));
+      textFill.setColor(COLORS.GRAY);
+      text.getText()?.setFont(getFont(11));
       stroke.setColor(getColorWithOpacity(COLORS.WHITE, 0.3));
       stroke.setWidth(2);
       styles[length++] = text;
@@ -163,6 +164,25 @@ export function vectorTileStyles(options?: { layerPrefix: string }): any {
       styles[length++] = getIcon(status === 'ONGOING' ? 'pin-water-green' : 'pin-water', {
         align: 'top',
       });
+    } else if ([LAYER_TYPE.SMALSUOLIS_EVENTS].includes(layer)) {
+      const isCluster = feature.get('cluster');
+
+      if (!isCluster) {
+        styles[length++] = getIcon('pin', {
+          color: COLORS.BLACK,
+          align: 'top',
+        });
+      } else {
+        const count = feature.get('point_count') || 0;
+        if (!count) return;
+
+        fill.setColor(getColorWithOpacity(`#73DC8C`, 0.7));
+        textFill.setColor(COLORS.BLACK);
+        text.getText()?.setText(`${count}`);
+        circle.setRadius(20);
+        styles[length++] = point;
+        styles[length++] = text;
+      }
     }
 
     styles.length = length;

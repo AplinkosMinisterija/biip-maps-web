@@ -3,19 +3,20 @@ import VectorTileSource from 'ol/source/VectorTile';
 import { MVT } from 'ol/format';
 import { Feature } from 'ol';
 import { projection3857 } from '../constants';
-import { qgisTilesUrl } from '@/config';
+import { qgisTilesUrl, smalsuolisApiHost } from '@/config';
 import { vectorTileStyles } from './styling';
 import LayerGroup from 'ol/layer/Group';
 
-function getVectorTilesUrl(type: string, source: string) {
-  return `${qgisTilesUrl}/${type}/${source}/{z}/{x}/{y}`;
+function getVectorTilesUrl(type: string, source: string, baseUrl?: string) {
+  return `${baseUrl || qgisTilesUrl}/${type}/${source}/{z}/{x}/{y}`;
 }
 
 function getVectorTileLayer(
   type: string,
   source: string,
-  opts?: { idProperty?: string; declutter?: boolean },
+  opts?: { idProperty?: string; declutter?: boolean; tileSize?: number; baseUrl?: string },
 ) {
+  const tileSize = opts?.tileSize || 512;
   return new VectorTileLayer({
     renderMode: 'vector',
     declutter: !!opts?.declutter,
@@ -27,8 +28,8 @@ function getVectorTileLayer(
         idProperty: opts?.idProperty,
       }),
 
-      tileSize: [512, 512],
-      url: getVectorTilesUrl(type, source),
+      tileSize: [tileSize, tileSize],
+      url: getVectorTilesUrl(type, source, opts?.baseUrl),
     }),
     style: vectorTileStyles({ layerPrefix: type }),
   });
@@ -100,3 +101,14 @@ export const zuvinimasServiceVT = {
     idProperty: 'id',
   }),
 };
+
+export const smalsuolisServiceVT = {
+  id: 'smalsuolisServiceVT',
+  name: 'Smalsuolis',
+  layer: getVectorTileLayer('tiles', 'events', {
+    idProperty: 'id',
+    baseUrl: smalsuolisApiHost,
+  }),
+};
+
+smalsuolisServiceVT.layer.set('type', 'vt');
