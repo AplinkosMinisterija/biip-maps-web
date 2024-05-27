@@ -30,16 +30,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, inject, computed } from 'vue';
-import type { SearchResult, SearchResults } from '@/types';
 import SearchBox from '@/components/search/Box.vue';
+import type { SearchResult, SearchResults } from '@/types';
+import { computed, inject, ref, watch } from 'vue';
 
 import {
+  GEOM_TYPES,
   isCoordinate,
-  searchGeoportal,
-  searchUETK,
   parseGeomFromString,
+  searchGeoportal,
   searchRusys,
+  searchUETK,
 } from '@/utils';
 
 const props = defineProps({
@@ -159,7 +160,14 @@ const searchGeoportalData = (value: string) => {
     filters.push(...props.additionalGeoportalLayers);
   }
 
-  return searchGeoportal(value, filters);
+  const geomTypes: GEOM_TYPES[] = [];
+
+  if (!props.searchPoint) {
+    !!props?.searchLine && geomTypes.push(GEOM_TYPES.LINE);
+    !!props?.searchPolygon && geomTypes.push(GEOM_TYPES.POLYGON);
+  }
+
+  return searchGeoportal(value, filters, geomTypes);
 };
 
 const tabs = computed(() => {

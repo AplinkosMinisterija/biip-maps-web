@@ -1,6 +1,7 @@
 import type { SearchOptions, SearchResults } from '@/types';
 import { serializeQuery } from '.';
 import { rusysApiHost, uetkApiHost } from '../../config';
+import type { GEOM_TYPES } from '../constants';
 import { getElementFromCoordinates } from '../map';
 import { SpeciesTypes } from '../utils';
 
@@ -46,34 +47,53 @@ export function searchRusys(value: string, options?: SearchOptions): Promise<Sea
 export function searchGeoportal(
   value: string,
   filters: any[],
+  geomTypes: GEOM_TYPES[],
   options?: SearchOptions,
 ): Promise<SearchResults> {
+  const mustClauses: any = [
+    {
+      multi_match: {
+        query: value,
+        type: 'most_fields',
+        fields: [
+          'VARDAS^5',
+          'VARDAS.folded^5',
+          'VARDAS.shingle^5',
+          'VARDAS.trigram^3',
+          'VARDAS.edge^5',
+          'FULL_ADDR',
+          'FULL_ADDR.folded',
+        ],
+        slop: 5,
+      },
+    },
+  ];
+
+  if (geomTypes.length > 0) {
+    mustClauses.push({
+      terms: {
+        GEOM_TYPE: geomTypes,
+      },
+    });
+  }
+
+  const functionsArray = filters.map((f) => ({
+    filter: {
+      term: {
+        TYPE: f.type,
+      },
+    },
+    weight: f.weight || 1,
+  }));
+
   const query = {
     function_score: {
       query: {
-        multi_match: {
-          query: value,
-          type: 'most_fields',
-          fields: [
-            'VARDAS^5',
-            'VARDAS.folded^5',
-            'VARDAS.shingle^5',
-            'VARDAS.trigram^3',
-            'VARDAS.edge^5',
-            'FULL_ADDR',
-            'FULL_ADDR.folded',
-          ],
-          slop: 5,
+        bool: {
+          must: mustClauses,
         },
       },
-      functions: filters.map((f) => ({
-        filter: {
-          term: {
-            TYPE: f.type,
-          },
-        },
-        weight: f.weight || 1,
-      })),
+      functions: functionsArray,
     },
   };
   const page = options?.page || 1;
@@ -100,23 +120,27 @@ export function searchGeoportal(
     },
   })
     .then((data) => data.json())
-    .then((data: any) => ({
-      rows: data?.hits?.hits?.map((item: any) => {
-        const source = item._source || {};
-        let data: any = {};
-        if (source?.geometry?.coordinates?.length) {
-          data = getElementFromCoordinates(source?.geometry?.type, source?.geometry?.coordinates);
-        }
-        return {
-          id: item._id,
-          x: source.LOCATION,
-          y: source.LOCATIONY,
-          name: source.VARDAS,
-          description: source.DESCRIPTIO,
-          extent: data?.extent,
-          geom: data?.geom,
-        };
-      }),
-      total: data?.took || 0,
-    }));
+    .then((data: any) => {
+      console.log(data, 'kac');
+
+      return {
+        rows: data?.hits?.hits?.map((item: any) => {
+          const source = item._source || {};
+          let data: any = {};
+          if (source?.geometry?.coordinates?.length) {
+            data = getElementFromCoordinates(source?.geometry?.type, source?.geometry?.coordinates);
+          }
+          return {
+            id: item._id,
+            x: source.LOCATION,
+            y: source.LOCATIONY,
+            name: source.VARDAS,
+            description: source.DESCRIPTIO,
+            extent: data?.extent,
+            geom: data?.geom,
+          };
+        }),
+        total: data?.took || 0,
+      };
+    });
 }

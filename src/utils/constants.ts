@@ -1,5 +1,5 @@
 import { applyTransform } from 'ol/extent';
-import { Projection, get, getTransform } from 'ol/proj';
+import { get, getTransform, Projection } from 'ol/proj';
 import { register } from 'ol/proj/proj4';
 import proj4 from 'proj4';
 
@@ -27,3 +27,9 @@ if (lksBbox[1] > lksBbox[3]) {
 }
 const extent = applyTransform(worldExtent, fromLonLat, undefined, 8);
 lksProjection.setExtent(extent);
+
+export enum GEOM_TYPES {
+  LINE = 'line',
+  POINT = 'point',
+  POLYGON = 'polygon',
+}
