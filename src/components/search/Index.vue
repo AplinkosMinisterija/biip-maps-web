@@ -167,7 +167,7 @@ const searchGeoportalData = (value: string) => {
     !!props?.searchPolygon && geomTypes.push(GEOM_TYPES.POLYGON);
   }
 
-  return searchGeoportal(value, filters, geomTypes);
+  return searchGeoportal({ value, geomTypes, filters });
 };
 
 const tabs = computed(() => {

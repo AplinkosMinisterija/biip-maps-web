@@ -57,7 +57,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { useFiltersStore } from "@/stores/filters";
+import { useFiltersStore } from '@/stores/filters';
 import {
   convertFeatureCollectionProjection,
   geoportalForests,
@@ -79,32 +79,24 @@ import {
   searchGeoportal,
   stvkService,
   uetkService,
-} from "@/utils";
-import { getFeatureCollection } from "geojsonjs";
-import _ from "lodash";
-import { computed, inject, ref } from "vue";
-import { useRoute } from "vue-router";
+} from '@/utils';
+import { getFeatureCollection } from 'geojsonjs';
+import _ from 'lodash';
+import { computed, inject, ref } from 'vue';
+import { useRoute } from 'vue-router';
 const $route = useRoute();
-const events: any = inject("events");
+const events: any = inject('events');
 
-const mapLayers: any = inject("mapLayers");
-const postMessage: any = inject("postMessage");
+const mapLayers: any = inject('mapLayers');
+const postMessage: any = inject('postMessage');
 
-const query = parseRouteParams($route.query, [
-  "multi",
-  "buffer",
-  "preview",
-  "types",
-  "autoZoom",
-]);
+const query = parseRouteParams($route.query, ['multi', 'buffer', 'preview', 'types', 'autoZoom']);
 const isPreview = !!query.preview;
 
 const activeDrawType = computed(() => mapDraw.value.activeType);
 const selectedFeature = ref({} as any);
 const showBufferChangeBox = computed(
-  () =>
-    !!query.buffer &&
-    ["Point", "LineString"].includes(selectedFeature.value?.geometry?.type)
+  () => !!query.buffer && ['Point', 'LineString'].includes(selectedFeature.value?.geometry?.type),
 );
 
 const toggleLayers = [
@@ -124,13 +116,13 @@ const toggleLayers = [
 
 const mapDraw = computed(() => mapLayers.getDraw());
 const defaultDrawElements = [
-  { icon: "point", type: "Point", name: "Taškas", el: "point" },
-  { icon: "line", type: "LineString", name: "Linija", el: "line" },
-  { icon: "polygon", type: "Polygon", name: "Plotas", el: "polygon" },
+  { icon: 'point', type: 'Point', name: 'Taškas', el: 'point' },
+  { icon: 'line', type: 'LineString', name: 'Linija', el: 'line' },
+  { icon: 'polygon', type: 'Polygon', name: 'Plotas', el: 'polygon' },
 ];
 
 const drawTypes = computed(() => {
-  let types = ["point", "line", "polygon"];
+  let types = ['point', 'line', 'polygon'];
   if (query.types) {
     if (Array.isArray(query.types)) {
       types = query.types;
@@ -158,7 +150,7 @@ const bufferSizes: any = {
   xl: { min: 1000, max: 10000, step: 1000 },
 };
 
-const bufferSizeKey = query.buffer && bufferSizes[query.buffer] ? query.buffer : "xs";
+const bufferSizeKey = query.buffer && bufferSizes[query.buffer] ? query.buffer : 'xs';
 
 const bufferSizeLabel = computed(() => {
   const text = `Buferio dydis`;
@@ -181,7 +173,7 @@ const featureBufferSize = computed({
   get(): number | undefined {
     if (!selectedFeature.value?.feature) return;
     const bufferSize = Number(
-      mapDraw.value.getProperties(selectedFeature.value?.feature, "bufferSize")
+      mapDraw.value.getProperties(selectedFeature.value?.feature, 'bufferSize'),
     );
     return bufferSize || bufferSizes[bufferSizeKey].min;
   },
@@ -231,13 +223,13 @@ mapDraw.value
   .setMulti(!!query.multi)
   .enableBufferSize(!!query.buffer, bufferSizes[bufferSizeKey].min)
   .enableContinuousDraw(enableContinuousDraw)
-  .on(["change", "remove"], ({ features, featuresJSON }: any) => {
-    postMessage("data", features);
+  .on(['change', 'remove'], ({ features, featuresJSON }: any) => {
+    postMessage('data', features);
     if (!!query.autoZoom && !!featuresJSON?.features?.length) {
       mapLayers.zoomToFeatureCollection(featuresJSON);
     }
   })
-  .on("select", ({ featureObj, feature }: any) => {
+  .on('select', ({ featureObj, feature }: any) => {
     selectedFeature.value = {
       ...feature,
       feature: featureObj,
@@ -248,10 +240,10 @@ if (enableContinuousDraw) {
   toggleDrawType(drawTypes.value[0].type);
 }
 
-events.on("geom", (data: any) => {
+events.on('geom', (data: any) => {
   let geom = data.geom || data;
 
-  if (typeof geom === "string") {
+  if (typeof geom === 'string') {
     try {
       geom = JSON.parse(geom);
     } catch (err) {
@@ -264,13 +256,17 @@ events.on("geom", (data: any) => {
   if (!isPreview) mapDraw.value.edit();
 });
 
-events.on("address", (data: any) => {
+events.on('address', (data: any) => {
   const address = data.address || data;
 
   // now supports only street + building number + city (e.g. Gedimino pr. 12, Vilnius)
   // TODO: update this part to support every address (including municipality, etc)
-  searchGeoportal(address, [{ type: "adresas", weight: 2 }], {
-    fields: ["VARDAS^5"],
+  searchGeoportal({
+    value: address,
+    filters: [{ type: 'adresas', weight: 2 }],
+    options: {
+      fields: ['VARDAS^5'],
+    },
   }).then((data: any) => {
     const firstHit = data?.rows?.[0];
 
@@ -279,11 +275,11 @@ events.on("address", (data: any) => {
     // convert WGS (coordinates) to LKS (freature collection)
     const featureCollection = convertFeatureCollectionProjection(
       getFeatureCollection({
-        type: "Point",
+        type: 'Point',
         coordinates: [firstHit.x, firstHit.y],
       }),
       projection4326,
-      projection
+      projection,
     );
 
     mapLayers.zoomToFeatureCollection(featureCollection);

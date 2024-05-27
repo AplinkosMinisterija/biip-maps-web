@@ -44,12 +44,17 @@ export function searchRusys(value: string, options?: SearchOptions): Promise<Sea
     });
 }
 
-export function searchGeoportal(
-  value: string,
-  filters: any[],
-  geomTypes: GEOM_TYPES[],
-  options?: SearchOptions,
-): Promise<SearchResults> {
+export function searchGeoportal({
+  value,
+  filters,
+  geomTypes,
+  options,
+}: {
+  value: string;
+  filters: any[];
+  geomTypes?: GEOM_TYPES[];
+  options?: SearchOptions;
+}): Promise<SearchResults> {
   const mustClauses: any = [
     {
       multi_match: {
@@ -69,7 +74,7 @@ export function searchGeoportal(
     },
   ];
 
-  if (geomTypes.length > 0) {
+  if (geomTypes && geomTypes?.length > 0) {
     mustClauses.push({
       terms: {
         GEOM_TYPE: geomTypes,
