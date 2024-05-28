@@ -59,8 +59,8 @@ export function searchGeoportal({
     {
       multi_match: {
         query: value,
-        type: options?.fields || 'most_fields',
-        fields: [
+        type: 'most_fields',
+        fields: options?.fields || [
           'VARDAS^5',
           'VARDAS.folded^5',
           'VARDAS.shingle^5',
@@ -97,8 +97,8 @@ export function searchGeoportal({
         bool: {
           must: mustClauses,
         },
-        functions: functionsArray,
       },
+      functions: functionsArray,
     },
   };
 
