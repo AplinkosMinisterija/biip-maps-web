@@ -38,33 +38,33 @@
   </div>
 </template>
 <script setup lang="ts">
-import { inject, computed, ref, watch } from 'vue';
-import { useRoute } from 'vue-router';
 import { useFiltersStore } from '@/stores/filters';
 import {
-  geoportalTopo,
-  geoportalOrto,
-  geoportalTopoGray,
-  parseRouteParams,
-  srisService,
-  rusysService,
-  validateSrisAuth,
-  rusysGridService,
-  invaService,
-  srisPrivateService,
-  stvkService,
-  municipalitiesService,
-  srisAccessService,
-  rusysRequestService,
-  uetkService,
-  geoportalGrpk,
-  geoportalForests,
   gamtotvarkaService,
+  geoportalForests,
+  geoportalGrpk,
+  geoportalOrto,
+  geoportalTopo,
+  geoportalTopoGray,
   highlightLayerRusys,
+  invaService,
+  municipalitiesService,
+  parseRouteParams,
+  rusysGridService,
+  rusysRequestService,
+  rusysService,
+  srisAccessService,
+  srisPrivateService,
+  srisService,
+  stvkService,
+  uetkService,
+  validateSrisAuth,
 } from '@/utils';
+import { computed, inject, ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
 
-import { useConfigStore } from '@/stores/config';
 import { rusysApiHost } from '@/config';
+import { useConfigStore } from '@/stores/config';
 import { getItemsByRequest } from '@/utils/requests/rusys';
 
 const GRID_TO_SERVICE_LEVEL = 5;
@@ -89,6 +89,7 @@ const query = parseRouteParams($route.query, [
   'preview',
   'amateur',
   'request',
+  'screenshot',
 ]);
 
 const isVisibleSrisLayer = ref(true);
@@ -257,6 +258,8 @@ if (query.place) {
 } else if (query.informationalForm) {
   mapLayers.setSublayers(srisService.id, 'stebejimai_interpretuojami');
   mapLayers.toggleVisibility(invaService.id, false);
+} else if (query.request && query.screenshot) {
+  toggleGrid(true);
 }
 
 mapLayers
