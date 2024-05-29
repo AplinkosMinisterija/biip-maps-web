@@ -1,11 +1,11 @@
+import turfBuffer from '@turf/buffer';
+import type { Feature } from 'ol';
 import { extend, getCenter } from 'ol/extent';
 import { GeoJSON } from 'ol/format';
+import { Geometry, LineString, Point } from 'ol/geom';
 import VectorSource from 'ol/source/Vector';
 import { projection, projection4326 } from '../constants';
 import { serializeQuery } from '../requests';
-import type { Feature } from 'ol';
-import { Geometry, LineString, Point } from 'ol/geom';
-import turfBuffer from '@turf/buffer';
 
 export function dataToFeatureCollection(data: any) {
   if (!data) return data;
@@ -209,17 +209,18 @@ export function convertFeaturesToPoints(features: Feature[], types?: string[]) {
 
     if (!type) continue;
 
-    // for now - convert to points only!
-    if (!types.includes(type) && types.includes('Point')) {
+    // Add features if their type matches, or convert to points if possible; otherwise, skip.
+    if (types.includes(type)) {
+      resultFeatures.push(feature);
+    } else if (!types.includes(type) && types.includes('Point')) {
       const point = featureToPoint(feature);
       if (!point) {
         throw new Error(`Geometry type ${type} is not supported`);
       }
 
       feature.setGeometry(point);
+      resultFeatures.push(feature);
     }
-
-    resultFeatures.push(feature);
   }
 
   return resultFeatures;
