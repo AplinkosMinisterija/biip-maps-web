@@ -65,7 +65,7 @@ import { useRoute } from 'vue-router';
 
 import { rusysApiHost } from '@/config';
 import { useConfigStore } from '@/stores/config';
-import { getItemsByRequest } from '@/utils/requests/rusys';
+import { getGeomByRequest, getItemsByRequest } from '@/utils/requests/rusys';
 
 const GRID_TO_SERVICE_LEVEL = 5;
 const filtersStore = useFiltersStore();
@@ -177,12 +177,27 @@ if (query.informationalForm) {
 }
 if (query.request) {
   rusysRequestService.layer.set('url', `${rusysApiHost}/maps/requests/${query.request}/geom`);
+
   const itemsByRequest = await getItemsByRequest(query.request);
 
-  if (itemsByRequest?.places?.length) filterById('id', { $in: itemsByRequest.places });
-  if (itemsByRequest?.forms?.length) {
-    filtersSrisInformational.value.set('id', { $in: itemsByRequest.forms });
-    filtersPlacesGrid.value.set('forms', { $in: itemsByRequest.forms });
+  const placesFilter = query.screenshot
+    ? itemsByRequest.places || [-1]
+    : itemsByRequest.places?.length
+    ? itemsByRequest.places
+    : undefined;
+  const formsFilter = query.screenshot
+    ? itemsByRequest.forms || [-1]
+    : itemsByRequest.forms?.length
+    ? itemsByRequest.forms
+    : undefined;
+
+  if (placesFilter) {
+    filterById('id', { $in: placesFilter });
+  }
+
+  if (formsFilter) {
+    filtersSrisInformational.value.set('id', { $in: formsFilter });
+    filtersPlacesGrid.value.set('forms', { $in: formsFilter });
   }
 }
 function toggleGrid(value: boolean) {
@@ -258,8 +273,6 @@ if (query.place) {
 } else if (query.informationalForm) {
   mapLayers.setSublayers(srisService.id, 'stebejimai_interpretuojami');
   mapLayers.toggleVisibility(invaService.id, false);
-} else if (query.request && query.screenshot) {
-  toggleGrid(false);
 }
 
 mapLayers
@@ -295,5 +308,11 @@ function onChangeSublayers(layer: any) {
 
 if (query.place || query.informationalForm || query.request) {
   await mapLayers.zoom(rusysService.id);
+}
+
+if (query.request && query.screenshot) {
+  const geom = await getGeomByRequest(query.request);
+  mapLayers.zoomToFeatureCollection(geom);
+  toggleGrid(true);
 }
 </script>
