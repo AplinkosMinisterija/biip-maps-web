@@ -259,7 +259,7 @@ if (query.place) {
   mapLayers.setSublayers(srisService.id, 'stebejimai_interpretuojami');
   mapLayers.toggleVisibility(invaService.id, false);
 } else if (query.request && query.screenshot) {
-  toggleGrid(true);
+  toggleGrid(false);
 }
 
 mapLayers
