@@ -38,34 +38,35 @@
   </div>
 </template>
 <script setup lang="ts">
-import { inject, computed, ref, watch } from 'vue';
-import { useRoute } from 'vue-router';
 import { useFiltersStore } from '@/stores/filters';
 import {
-  geoportalTopo,
-  geoportalOrto,
-  geoportalTopoGray,
-  parseRouteParams,
-  srisService,
-  rusysService,
-  validateSrisAuth,
-  rusysGridService,
-  invaService,
-  srisPrivateService,
-  stvkService,
-  municipalitiesService,
-  srisAccessService,
-  rusysRequestService,
-  uetkService,
-  geoportalGrpk,
-  geoportalForests,
   gamtotvarkaService,
+  geoportalForests,
+  geoportalGrpk,
+  geoportalOrto,
+  geoportalTopo,
+  geoportalTopoGray,
   highlightLayerRusys,
+  invaService,
+  municipalitiesService,
+  parseRouteParams,
+  rusysGridService,
+  rusysRequestService,
+  rusysService,
+  srisAccessService,
+  srisPrivateService,
+  srisService,
+  stvkService,
+  uetkService,
+  validateSrisAuth,
 } from '@/utils';
+import { computed, inject, ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
 
-import { useConfigStore } from '@/stores/config';
 import { rusysApiHost } from '@/config';
+import { useConfigStore } from '@/stores/config';
 import { getItemsByRequest } from '@/utils/requests/rusys';
+import GeoJSON from 'ol/format/GeoJSON';
 
 const GRID_TO_SERVICE_LEVEL = 5;
 const filtersStore = useFiltersStore();
@@ -89,6 +90,7 @@ const query = parseRouteParams($route.query, [
   'preview',
   'amateur',
   'request',
+  'screenshot',
 ]);
 
 const isVisibleSrisLayer = ref(true);
@@ -178,11 +180,9 @@ if (query.request) {
   rusysRequestService.layer.set('url', `${rusysApiHost}/maps/requests/${query.request}/geom`);
   const itemsByRequest = await getItemsByRequest(query.request);
 
-  if (itemsByRequest?.places?.length) filterById('id', { $in: itemsByRequest.places });
-  if (itemsByRequest?.forms?.length) {
-    filtersSrisInformational.value.set('id', { $in: itemsByRequest.forms });
-    filtersPlacesGrid.value.set('forms', { $in: itemsByRequest.forms });
-  }
+  filterById('id', { $in: itemsByRequest.places || [0] });
+  filtersSrisInformational.value.set('id', { $in: itemsByRequest.forms || [0] });
+  filtersPlacesGrid.value.set('forms', { $in: itemsByRequest.forms || [0] });
 }
 function toggleGrid(value: boolean) {
   const level = value ? Number.NEGATIVE_INFINITY : GRID_TO_SERVICE_LEVEL;
@@ -290,7 +290,18 @@ function onChangeSublayers(layer: any) {
     .set('layers', mapLayers.getInnerVisibleLayers(rusysService.id));
 }
 
-if (query.place || query.informationalForm || query.request) {
+if (query.request) {
+  rusysRequestService?.layer.getSource()?.on('featuresloadend', function (evt) {
+    if (!evt.features) return;
+
+    const features = new GeoJSON().writeFeaturesObject(evt.features);
+    mapLayers.zoomToFeatureCollection(features);
+  });
+} else if (query.place || query.informationalForm) {
   await mapLayers.zoom(rusysService.id);
+}
+
+if (query.screenshot) {
+  toggleGrid(true);
 }
 </script>
