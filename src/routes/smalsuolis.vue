@@ -5,7 +5,6 @@
       :show-zoom="false"
       :show-attribution="false"
       :show-center-map="!isPreview"
-      :add-coordinates-to-url="true"
       @search="filtersStore.search = $event"
     >
       <template v-if="!isPreview" #filters>
