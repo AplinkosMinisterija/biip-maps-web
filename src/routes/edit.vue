@@ -169,6 +169,9 @@ const featureBufferSize = computed({
     mapDraw.value.setProperties(selectedFeature.value?.feature, {
       bufferSize: Number(value),
     });
+    if (query.buffer && featureBufferSize.value) {
+      mapDraw.value.setBufferSize(featureBufferSize.value);
+    }
   },
   get(): number | undefined {
     if (!selectedFeature.value?.feature) return;
@@ -230,17 +233,10 @@ mapDraw.value
     }
   })
   .on('select', ({ featureObj, feature }: any) => {
-    if (!feature && !featureObj) return;
-    const previousBuffer = featureBufferSize.value;
-
     selectedFeature.value = {
       ...feature,
       feature: featureObj,
     };
-    const bufferSize = previousBuffer || bufferSizes[bufferSizeKey].min;
-    mapDraw.value.setProperties(selectedFeature.value?.feature, {
-      bufferSize,
-    });
   });
 
 if (enableContinuousDraw) {

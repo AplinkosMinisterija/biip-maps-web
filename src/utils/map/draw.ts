@@ -49,6 +49,7 @@ export class MapDraw extends Queues {
     style: this._styleFn(),
   });
   private _callbacks: { [key: string]: Function[] } = {};
+  private _selectedBuffer: number = this._defaultBufferSizeValue;
   activeType: DrawType | undefined;
 
   constructor(map?: Map) {
@@ -57,7 +58,12 @@ export class MapDraw extends Queues {
     this._setup();
 
     this._select.on('select', (event) => {
-      this._setSelectedFeature(event.selected?.[0]);
+      const feature = event.selected?.[0];
+      this._setSelectedFeature(feature);
+      if (this._enabledBufferSize) {
+        const bufferSize = this._selectedBuffer || this._defaultBufferSizeValue;
+        this.setProperties(feature, { bufferSize });
+      }
     });
 
     this._modifySelect.on('modifyend', () => {
@@ -110,8 +116,7 @@ export class MapDraw extends Queues {
 
       if (this._enabledBufferSize) {
         data?.forEach((feature) => {
-          const bufferSize =
-            this.getProperties(feature, 'bufferSize') || this._defaultBufferSizeValue;
+          const bufferSize = this._selectedBuffer || this._defaultBufferSizeValue;
           this.setProperties(feature, { bufferSize });
         });
       }
@@ -192,6 +197,8 @@ export class MapDraw extends Queues {
   enableBufferSize(value: boolean = false, defaultValue: number = 1) {
     this._enabledBufferSize = !!value;
     this._defaultBufferSizeValue = defaultValue;
+    this._selectedBuffer = defaultValue;
+
     return this;
   }
 
@@ -220,8 +227,13 @@ export class MapDraw extends Queues {
 
     this._source.removeFeature(feature);
     this._triggerCallbacks('remove');
+    this._selectedBuffer = this._defaultBufferSizeValue;
 
     return this;
+  }
+
+  setBufferSize(value?: number) {
+    this._selectedBuffer = value || this._defaultBufferSizeValue;
   }
 
   start(type?: DrawType) {
@@ -405,7 +417,10 @@ export class MapDraw extends Queues {
     }
 
     this._draw?.on('drawstart', () => {
-      this._handleDrawStart.call(this);
+      if (!this._isMulti) {
+        this.remove();
+      }
+      this._modifySelect.setActive(false);
     });
 
     this._draw?.on('drawend', (event) => {
@@ -413,8 +428,7 @@ export class MapDraw extends Queues {
       if (!feature) return;
 
       if (this._enabledBufferSize) {
-        const bufferSize =
-          this.getProperties(feature, 'bufferSize') || this._defaultBufferSizeValue;
+        const bufferSize = this._selectedBuffer || this._defaultBufferSizeValue;
         this.setProperties(feature, { bufferSize });
       }
 
@@ -510,13 +524,6 @@ export class MapDraw extends Queues {
 
     this._source = source;
     this._snap = new Snap({ source: this._source });
-  }
-
-  private _handleDrawStart() {
-    if (!this._isMulti) {
-      this.remove();
-    }
-    this._modifySelect.setActive(false);
   }
 
   private _applyStyles(opts: any = {}) {
