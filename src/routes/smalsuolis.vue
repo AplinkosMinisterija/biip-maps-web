@@ -2,7 +2,6 @@
   <div>
     <UiMap
       :projection="projection3857"
-      :show-zoom="false"
       :show-attribution="false"
       :show-center-map="!isPreview"
       @search="filtersStore.search = $event"
