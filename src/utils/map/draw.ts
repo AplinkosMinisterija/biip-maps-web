@@ -1,5 +1,4 @@
 import type { Feature, Map } from 'ol';
-import type Layer from 'ol/layer/Layer';
 import VectorSource from 'ol/source/Vector';
 import { Draw, Modify, Snap, Interaction, Select } from 'ol/interaction';
 import type { Type as DrawType } from 'ol/geom/Geometry';
@@ -12,6 +11,7 @@ import { GeometryType, getFeatures, parse } from 'geojsonjs';
 import { getLayerStyles } from '../layers';
 import { convertFeaturesToPoints } from './utils';
 import type { GenericObject } from '@/types';
+import type { Layer } from 'ol-mapbox-style/dist/util';
 
 type CallbackType = 'change' | 'select' | 'remove';
 
@@ -57,7 +57,15 @@ export class MapDraw extends Queues {
     this._setup();
 
     this._select.on('select', (event) => {
-      this._setSelectedFeature(event.selected?.[0]);
+      const features = this._select.getFeatures().getArray();
+
+      const featureWithBuffer = features.find(
+        (feature) => !!feature.getProperties()?.['bufferSize'],
+      );
+      if (featureWithBuffer) {
+        console.log('Features selected: ', featureWithBuffer?.getProperties()?.['bufferSize']);
+        this._setSelectedFeature(featureWithBuffer);
+      }
     });
 
     this._modifySelect.on('modifyend', () => {
@@ -69,10 +77,21 @@ export class MapDraw extends Queues {
     this.map = map;
     this._processQueue();
 
-    if (map) {
-      this._applyStyles({ projection: map.getView().getProjection().getCode() });
+    if (this.map) {
+      this._applyStyles({ projection: this.map.getView().getProjection().getCode() });
+      // this.map.on('pointermove', (e) => {
+      //   const features = this.map?.getFeaturesAtPixel(e.pixel, {
+      //     layerFilter: (layer) => layer == this._layer,
+      //   });
+      //
+      //   if (features?.length) {
+      //     console.log('Features found', features.length);
+      //     this._draw?.setActive(false);
+      //   } else {
+      //     this._draw?.setActive(true);
+      //   }
+      // });
     }
-
     return this;
   }
 
@@ -209,9 +228,12 @@ export class MapDraw extends Queues {
     return this;
   }
 
-  remove(feature?: Feature) {
-    this._setSelectedFeature();
-
+  remove(feature?: Feature, deselect?: boolean) {
+    if (deselect) {
+      // Deselect a feature only if remove is triggered by remove button click.
+      // Otherwise, it can remain selected to preserve buffer size.
+      this._setSelectedFeature();
+    }
     if (!feature) {
       this._source.clear();
       this._triggerCallbacks('remove');
@@ -409,12 +431,19 @@ export class MapDraw extends Queues {
     });
 
     this._draw?.on('drawend', (event) => {
+      console.log('drawend');
       const { feature } = event;
       if (!feature) return;
 
       if (this._enabledBufferSize) {
-        const bufferSize =
-          this.getProperties(feature, 'bufferSize') || this._defaultBufferSizeValue;
+        const features = this._select.getFeatures().getArray();
+        const previousFeature = features.find((f) => f.getProperties()?.['bufferSize']);
+        const previousBuffer = previousFeature
+          ? this.getProperties(previousFeature, 'bufferSize')
+          : undefined;
+        const currentBuffer = feature ? this.getProperties(feature, 'bufferSize') : undefined;
+        const bufferSize = previousBuffer || currentBuffer || this._defaultBufferSizeValue;
+        console.log('bufferSize', previousBuffer, currentBuffer, bufferSize);
         this.setProperties(feature, { bufferSize });
       }
 
