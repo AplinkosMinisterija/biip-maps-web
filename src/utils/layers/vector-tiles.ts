@@ -45,6 +45,7 @@ export const municipalitiesServiceVT = {
     source: new PMTilesVectorSource({
       url: 'https://boundaries.startupgov.lt/pmtiles/municipalities.pmtiles',
       attributions: ['© VĮ Registrų centras'],
+      projection: projection3857,
       overlaps: false,
     }),
     style: vectorTileStyles({ layerPrefix: 'boundaries' }),
