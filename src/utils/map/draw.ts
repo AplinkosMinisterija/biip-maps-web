@@ -427,10 +427,8 @@ export class MapDraw extends Queues {
       if (this._enabledBufferSize) {
         const features = this._select.getFeatures().getArray();
         const previousFeature = features.find((f) => f.getProperties()?.['bufferSize']);
-        const previousBuffer = previousFeature
-          ? this.getProperties(previousFeature, 'bufferSize')
-          : undefined;
-        const currentBuffer = feature ? this.getProperties(feature, 'bufferSize') : undefined;
+        const previousBuffer = previousFeature && this.getProperties(previousFeature, 'bufferSize');
+        const currentBuffer = feature && this.getProperties(feature, 'bufferSize');
         const bufferSize = previousBuffer || currentBuffer || this._defaultBufferSizeValue;
         this.setProperties(feature, { bufferSize });
       }
