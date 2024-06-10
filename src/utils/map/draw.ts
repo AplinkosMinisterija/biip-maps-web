@@ -63,8 +63,9 @@ export class MapDraw extends Queues {
         (feature) => !!feature.getProperties()?.['bufferSize'],
       );
       if (featureWithBuffer) {
-        console.log('Features selected: ', featureWithBuffer?.getProperties()?.['bufferSize']);
         this._setSelectedFeature(featureWithBuffer);
+      } else {
+        this._setSelectedFeature(event.selected[0]);
       }
     });
 
