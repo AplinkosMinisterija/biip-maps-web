@@ -6,6 +6,8 @@ import { projection3857 } from '../constants';
 import { qgisTilesUrl, smalsuolisApiHost } from '@/config';
 import { vectorTileStyles } from './styling';
 import LayerGroup from 'ol/layer/Group';
+// @ts-expect-error pmtiles doesn't have types :(
+import { PMTilesVectorSource } from 'ol-pmtiles';
 
 function getVectorTilesUrl(type: string, source: string, baseUrl?: string) {
   return `${baseUrl || qgisTilesUrl}/${type}/${source}/{z}/{x}/{y}`;
@@ -38,9 +40,14 @@ function getVectorTileLayer(
 export const municipalitiesServiceVT = {
   id: 'municipalitiesServiceVT',
   name: 'Savivaldybės',
-  layer: getVectorTileLayer('boundaries', 'municipalities', {
-    idProperty: 'code',
+  layer: new VectorTileLayer({
     declutter: true,
+    source: new PMTilesVectorSource({
+      url: 'https://boundaries.startupgov.lt/pmtiles/municipalities.pmtiles',
+      attributions: ['© VĮ Registrų centras'],
+      overlaps: false,
+    }),
+    style: vectorTileStyles({ layerPrefix: 'boundaries' }),
   }),
 };
 
