@@ -79,18 +79,6 @@ export class MapDraw extends Queues {
 
     if (this.map) {
       this._applyStyles({ projection: this.map.getView().getProjection().getCode() });
-      // this.map.on('pointermove', (e) => {
-      //   const features = this.map?.getFeaturesAtPixel(e.pixel, {
-      //     layerFilter: (layer) => layer == this._layer,
-      //   });
-      //
-      //   if (features?.length) {
-      //     console.log('Features found', features.length);
-      //     this._draw?.setActive(false);
-      //   } else {
-      //     this._draw?.setActive(true);
-      //   }
-      // });
     }
     return this;
   }
@@ -124,7 +112,8 @@ export class MapDraw extends Queues {
       }
 
       if (!options?.append) {
-        this.remove();
+        //Remove and deselect previous features.
+        this.remove(undefined, true);
       }
 
       if (this._enabledBufferSize) {
@@ -136,6 +125,8 @@ export class MapDraw extends Queues {
       }
 
       this._source.addFeatures(data);
+      // Preselect feature
+      this._setSelectedFeature(data[0]);
       this._triggerCallbacks('change');
     } catch (err) {
       console.error('Cannot read features');
@@ -230,8 +221,6 @@ export class MapDraw extends Queues {
 
   remove(feature?: Feature, deselect?: boolean) {
     if (deselect) {
-      // Deselect a feature only if remove is triggered by remove button click.
-      // Otherwise, it can remain selected to preserve buffer size.
       this._setSelectedFeature();
     }
     if (!feature) {
@@ -431,7 +420,6 @@ export class MapDraw extends Queues {
     });
 
     this._draw?.on('drawend', (event) => {
-      console.log('drawend');
       const { feature } = event;
       if (!feature) return;
 
@@ -443,7 +431,6 @@ export class MapDraw extends Queues {
           : undefined;
         const currentBuffer = feature ? this.getProperties(feature, 'bufferSize') : undefined;
         const bufferSize = previousBuffer || currentBuffer || this._defaultBufferSizeValue;
-        console.log('bufferSize', previousBuffer, currentBuffer, bufferSize);
         this.setProperties(feature, { bufferSize });
       }
 

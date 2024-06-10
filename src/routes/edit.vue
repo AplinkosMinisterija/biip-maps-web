@@ -230,7 +230,6 @@ mapDraw.value
     }
   })
   .on('select', ({ featureObj, feature }: any) => {
-    // console.log('select !!!', featureObj, feature);
     selectedFeature.value = {
       ...feature,
       feature: featureObj,
@@ -252,8 +251,9 @@ events.on('geom', (data: any) => {
       console.error(err);
     }
   }
-
-  mapLayers.zoomToFeatureCollection(geom);
+  if (query.autoZoom) {
+    mapLayers.zoomToFeatureCollection(geom);
+  }
   mapDraw.value.setFeatures(geom);
   if (!isPreview) mapDraw.value.edit();
 });
