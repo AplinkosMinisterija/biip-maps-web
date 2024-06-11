@@ -69,6 +69,11 @@ export const municipalitiesServiceVT = {
   }),
 };
 
+(municipalitiesServiceVT.layer.getSource() as PMTilesVectorSource).format_ = new MVT({
+  featureClass: Feature,
+  idProperty: 'code',
+});
+
 export const municipalitiesCentroidServiceVT = {
   id: 'municipalitiesCentroidServiceVT',
   name: 'Savivaldybės',
