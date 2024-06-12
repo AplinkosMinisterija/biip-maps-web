@@ -57,7 +57,6 @@ export const municipalitiesServiceVT = {
   layer: getVectorTileLayer('boundaries', '', {
     idProperty: 'code',
     declutter: true,
-    attributions: ['© VĮ Registrų centras'],
     url: 'https://boundaries.startupgov.lt/pmtiles/municipalities.pmtiles',
     tileSourceClass: PMTilesVectorSource,
   }),
