@@ -178,7 +178,6 @@ const bufferSizeLabel = computed(() => {
 
 const featureBufferSize = computed({
   set(value) {
-    console.log('set buffer', value);
     mapDraw.value.setProperties(selectedFeature.value?.feature, {
       bufferSize: Number(value),
     });
