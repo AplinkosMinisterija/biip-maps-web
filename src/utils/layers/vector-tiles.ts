@@ -42,12 +42,6 @@ function getVectorTileLayer(
     url: opts?.url || getVectorTilesUrl(type, source, opts?.baseUrl),
   });
 
-  // temp hack for PMTilesVectorSource
-  (vtSource as any).format_ = new MVT({
-    featureClass: Feature,
-    idProperty: opts?.idProperty,
-  });
-
   return new VectorTileLayer({
     renderMode: 'vector',
     declutter: !!opts?.declutter,
