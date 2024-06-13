@@ -46,10 +46,11 @@
         <div v-else-if="showBufferChangeBox" class="flex flex-col gap-3">
           <UiInputSlider
             v-model="featureBufferSize"
-            :min="bufferSizes[bufferSizeKey].min"
-            :max="bufferSizes[bufferSizeKey].max"
+            :min="bufferMin"
+            :max="bufferMax"
             :step="bufferSizes[bufferSizeKey].step"
             :label="bufferSizeLabel"
+            :value="featureBufferSize"
           />
         </div>
       </template>
@@ -81,16 +82,26 @@ import {
   uetkService,
 } from '@/utils';
 import { getFeatureCollection } from 'geojsonjs';
-import _ from 'lodash';
 import { computed, inject, ref } from 'vue';
 import { useRoute } from 'vue-router';
+import type { Buffer } from '@/types';
+import _ from 'lodash';
+
 const $route = useRoute();
 const events: any = inject('events');
 
 const mapLayers: any = inject('mapLayers');
 const postMessage: any = inject('postMessage');
 
-const query = parseRouteParams($route.query, ['multi', 'buffer', 'preview', 'types', 'autoZoom']);
+const query = parseRouteParams($route.query, [
+  'multi',
+  'buffer',
+  'preview',
+  'types',
+  'autoZoom',
+  'bufferMin',
+  'bufferMax',
+]);
 const isPreview = !!query.preview;
 
 const activeDrawType = computed(() => mapDraw.value.activeType);
@@ -142,7 +153,7 @@ const enableContinuousDraw = drawTypes.value.length === 1 && !query.multi;
 
 const filtersStore = useFiltersStore();
 
-const bufferSizes: any = {
+const bufferSizes: { [key: string]: Buffer } = {
   xs: { min: 1, max: 5, step: 1 },
   sm: { min: 10, max: 100, step: 10 },
   md: { min: 100, max: 1000, step: 100 },
@@ -151,6 +162,8 @@ const bufferSizes: any = {
 };
 
 const bufferSizeKey = query.buffer && bufferSizes[query.buffer] ? query.buffer : 'xs';
+const bufferMin = query.bufferMin || bufferSizes[bufferSizeKey].min;
+const bufferMax = query.bufferMax || bufferSizes[bufferSizeKey].max;
 
 const bufferSizeLabel = computed(() => {
   const text = `Buferio dydis`;
@@ -175,7 +188,7 @@ const featureBufferSize = computed({
     const bufferSize = Number(
       mapDraw.value.getProperties(selectedFeature.value?.feature, 'bufferSize'),
     );
-    return bufferSize || bufferSizes[bufferSizeKey].min;
+    return bufferSize || bufferMin;
   },
 });
 
@@ -221,7 +234,7 @@ mapLayers
 
 mapDraw.value
   .setMulti(!!query.multi)
-  .enableBufferSize(!!query.buffer, bufferSizes[bufferSizeKey].min)
+  .enableBufferSize(!!query.buffer, bufferMin)
   .enableContinuousDraw(enableContinuousDraw)
   .on(['change', 'remove'], ({ features, featuresJSON }: any) => {
     postMessage('data', features);
@@ -241,7 +254,6 @@ if (enableContinuousDraw) {
 }
 
 events.on('geom', (data: any) => {
-  console.log('on geom', data);
   let geom = data.geom || data;
 
   if (typeof geom === 'string') {

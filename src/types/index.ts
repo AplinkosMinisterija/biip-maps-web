@@ -24,3 +24,5 @@ export type SearchOptions = {
 };
 
 export type GenericObject<T> = { [key: string]: T };
+
+export type Buffer = { min: number; max: number; step: number };
