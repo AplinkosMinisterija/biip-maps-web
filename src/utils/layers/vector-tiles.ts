@@ -6,6 +6,8 @@ import { projection3857 } from '../constants';
 import { qgisTilesUrl, smalsuolisApiHost } from '@/config';
 import { vectorTileStyles } from './styling';
 import LayerGroup from 'ol/layer/Group';
+// @ts-expect-error pmtiles doesn't have types :(
+import { PMTilesVectorSource } from 'ol-pmtiles';
 
 function getVectorTilesUrl(type: string, source: string, baseUrl?: string) {
   return `${baseUrl || qgisTilesUrl}/${type}/${source}/{z}/{x}/{y}`;
@@ -14,23 +16,36 @@ function getVectorTilesUrl(type: string, source: string, baseUrl?: string) {
 function getVectorTileLayer(
   type: string,
   source: string,
-  opts?: { idProperty?: string; declutter?: boolean; tileSize?: number; baseUrl?: string },
+  opts?: {
+    idProperty?: string;
+    declutter?: boolean;
+    tileSize?: number;
+    baseUrl?: string;
+    tileSourceClass?: any;
+    url?: string;
+    attributions?: string | string[];
+  },
 ) {
   const tileSize = opts?.tileSize || 512;
+
+  const tileSource: any = opts?.tileSourceClass || VectorTileSource;
+  const vtSource = new tileSource({
+    overlaps: false,
+    projection: projection3857,
+    format: new MVT({
+      featureClass: Feature,
+      idProperty: opts?.idProperty,
+    }),
+    attributions: opts?.attributions,
+
+    tileSize: [tileSize, tileSize],
+    url: opts?.url || getVectorTilesUrl(type, source, opts?.baseUrl),
+  });
+
   return new VectorTileLayer({
     renderMode: 'vector',
     declutter: !!opts?.declutter,
-    source: new VectorTileSource({
-      overlaps: false,
-      projection: projection3857,
-      format: new MVT({
-        featureClass: Feature,
-        idProperty: opts?.idProperty,
-      }),
-
-      tileSize: [tileSize, tileSize],
-      url: getVectorTilesUrl(type, source, opts?.baseUrl),
-    }),
+    source: vtSource,
     style: vectorTileStyles({ layerPrefix: type }),
   });
 }
@@ -38,9 +53,12 @@ function getVectorTileLayer(
 export const municipalitiesServiceVT = {
   id: 'municipalitiesServiceVT',
   name: 'Savivaldybės',
-  layer: getVectorTileLayer('boundaries', 'municipalities', {
+
+  layer: getVectorTileLayer('boundaries', '', {
     idProperty: 'code',
     declutter: true,
+    url: 'https://boundaries.startupgov.lt/pmtiles/municipalities.pmtiles',
+    tileSourceClass: PMTilesVectorSource,
   }),
 };
 

@@ -3,11 +3,12 @@
     <UiLabel v-if="label" class="cursor-pointer" size="xs" :align-column="true">
       <div>{{ label }}</div>
       <input
-        v-model="modelValue"
+        v-model="internalValue"
         type="range"
         :min="min || 0"
-        :step="step || 1"
+        :step="1"
         :max="max || 10"
+        @input="handleInput"
         class="w-full"
       />
     </UiLabel>
@@ -15,11 +16,11 @@
 </template>
 
 <script lang="ts" setup>
-import { computed } from 'vue';
+import { ref, watch } from 'vue';
 
 const props = defineProps({
   modelValue: { type: Number, default: 0 },
-  value: { type: String, default: '' },
+  value: { type: Number, default: 0 },
   label: { type: String, default: '' },
   min: { type: Number, default: 0 },
   max: { type: Number, default: 10 },
@@ -27,11 +28,34 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:modelValue', 'change']);
-const modelValue = computed({
-  get: () => props.modelValue || props.value,
-  set: (value) => {
+
+const internalValue = ref(props.modelValue);
+
+watch(
+  () => props.modelValue,
+  (newValue) => {
+    internalValue.value = adjustToStep(newValue, props.step, props.min, props.max);
+  },
+);
+
+function adjustToStep(value: number, step: number, min: number, max: number) {
+  if (value !== max) {
+    const val = Math.floor(value / step) * step;
+    if (val < min) return min;
+    return val || min;
+  }
+  return value;
+}
+
+function handleInput(event: any) {
+  let value = Number(event.target.value);
+  value = adjustToStep(value, props.step, props.min, props.max);
+  if (props.value !== value) {
     emit('update:modelValue', value);
     emit('change', value);
-  },
-});
+  }
+  internalValue.value = value;
+}
+
+internalValue.value = adjustToStep(props.modelValue, props.step, props.min, props.max);
 </script>
