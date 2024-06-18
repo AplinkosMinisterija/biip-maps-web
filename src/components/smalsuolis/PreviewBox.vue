@@ -27,6 +27,15 @@
       <div v-if="pageItem?.body" class="text-xxs mt-2 text-gray-700">
         <VueMarkdown :source="pageItem.body" />
       </div>
+      <a
+        v-if="pageItem?.url"
+        :href="pageItem?.url"
+        target="_blank"
+        class="text-black text-xxs flex items-center justify-center gap-1 bg-green-400 rounded-full py-1 my-2"
+      >
+        <span>Aplankykite svetainę</span>
+        <UiIcon name="link" :size="12" />
+      </a>
 
       <UiPagination
         v-if="item?.cluster"
