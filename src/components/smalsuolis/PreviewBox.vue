@@ -29,7 +29,7 @@
       </div>
       <a
         v-if="pageItem?.url"
-        :href="pageItem.url"
+        :href="pageItem?.url"
         target="_blank"
         class="text-black text-xxs flex items-center justify-center gap-1 bg-green-400 rounded-full py-1 my-2"
       >
