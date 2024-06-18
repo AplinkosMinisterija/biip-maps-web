@@ -42,12 +42,6 @@ function getVectorTileLayer(
     url: opts?.url || getVectorTilesUrl(type, source, opts?.baseUrl),
   });
 
-  // temp hack for PMTilesVectorSource
-  (vtSource as any).format_ = new MVT({
-    featureClass: Feature,
-    idProperty: opts?.idProperty,
-  });
-
   return new VectorTileLayer({
     renderMode: 'vector',
     declutter: !!opts?.declutter,
@@ -63,7 +57,6 @@ export const municipalitiesServiceVT = {
   layer: getVectorTileLayer('boundaries', '', {
     idProperty: 'code',
     declutter: true,
-    attributions: ['© VĮ Registrų centras'],
     url: 'https://boundaries.startupgov.lt/pmtiles/municipalities.pmtiles',
     tileSourceClass: PMTilesVectorSource,
   }),
