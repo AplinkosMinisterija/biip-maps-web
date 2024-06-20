@@ -146,3 +146,9 @@ if (query.cadastralId) {
   await mapLayers.zoom(uetkService.id, { addStroke: true, filters });
 }
 </script>
+
+<style>
+.ol-layer {
+  cursor: help;
+}
+</style>
