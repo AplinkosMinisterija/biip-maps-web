@@ -13,6 +13,7 @@
       <template #filters>
         <UiButtonIcon icon="layers" @click="filtersStore.toggle('layers')" />
         <UiButtonIcon icon="legend" @click="filtersStore.toggle('legend')" />
+        <UiButtonIcon icon="measure" @click="mapLayers.toggleMeasuring()" />
       </template>
       <template v-if="filtersStore.active" #filtersContent>
         <UiMapLayerToggle v-if="filtersStore.isActive('layers')" :layers="toggleLayers" />
@@ -27,7 +28,11 @@
             { type: 'upė', weight: 2 },
           ]"
         />
-        <UiMapLegend v-if="filtersStore.isActive('legend')" :layer="uetkService.id" title="Sutartiniai ženklai"/>
+        <UiMapLegend
+          v-if="filtersStore.isActive('legend')"
+          :layer="uetkService.id"
+          title="Sutartiniai ženklai"
+        />
       </template>
       <template #sidebar>
         <UiSidebarFeatures
