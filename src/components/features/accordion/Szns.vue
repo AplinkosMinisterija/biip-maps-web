@@ -16,6 +16,13 @@
           </UiTableCell>
         </UiTableRow>
       </UiTable>
+      <div>
+        <UiButton v-if="feature['6. Papildoma informacija']" class="mt-2" size="sm">
+          <a target="_blank" :href="feature['6. Papildoma informacija']">
+            Peržiūrėti papildomą informaciją
+          </a>
+        </UiButton>
+      </div>
     </UiAccordionItem>
   </UiAccordion>
 </template>
@@ -41,6 +48,8 @@ const getSorted = (properties: any) => {
       if (isInteger(a.id)) return a.id - b.id;
       return a.id.localeCompare(b.id);
     })
-    .filter((item: any) => !['featureId', '_layerTitle'].includes(item.name));
+    .filter(
+      (item: any) => !['featureId', '_layerTitle', '6. Papildoma informacija'].includes(item.name),
+    );
 };
 </script>
