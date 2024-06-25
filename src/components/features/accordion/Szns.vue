@@ -17,7 +17,7 @@
         </UiTableRow>
       </UiTable>
       <div>
-        <UiButton v-if="feature['6. Papildoma informacija']" class="mt-2" size="sm">
+        <UiButton v-if="feature[urlAttribute]" class="mt-2" size="sm">
           <a target="_blank" :href="feature['6. Papildoma informacija']">
             Peržiūrėti papildomą informaciją
           </a>
@@ -37,6 +37,8 @@ defineProps({
   },
 });
 
+const urlAttribute = '6. Papildoma informacija';
+
 const getSorted = (properties: any) => {
   return Object.entries(properties)
     .reduce((acc: any, [key, value]) => {
@@ -48,8 +50,6 @@ const getSorted = (properties: any) => {
       if (isInteger(a.id)) return a.id - b.id;
       return a.id.localeCompare(b.id);
     })
-    .filter(
-      (item: any) => !['featureId', '_layerTitle', '6. Papildoma informacija'].includes(item.name),
-    );
+    .filter((item: any) => !['featureId', '_layerTitle', urlAttribute].includes(item.name));
 };
 </script>
