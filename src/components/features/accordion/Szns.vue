@@ -16,6 +16,13 @@
           </UiTableCell>
         </UiTableRow>
       </UiTable>
+      <div>
+        <UiButton v-if="feature[urlAttribute]" class="mt-2" size="sm">
+          <a target="_blank" :href="feature['6. Papildoma informacija']">
+            Peržiūrėti papildomą informaciją
+          </a>
+        </UiButton>
+      </div>
     </UiAccordionItem>
   </UiAccordion>
 </template>
@@ -30,6 +37,8 @@ defineProps({
   },
 });
 
+const urlAttribute = '6. Papildoma informacija';
+
 const getSorted = (properties: any) => {
   return Object.entries(properties)
     .reduce((acc: any, [key, value]) => {
@@ -41,6 +50,6 @@ const getSorted = (properties: any) => {
       if (isInteger(a.id)) return a.id - b.id;
       return a.id.localeCompare(b.id);
     })
-    .filter((item: any) => !['featureId', '_layerTitle'].includes(item.name));
+    .filter((item: any) => !['featureId', '_layerTitle', urlAttribute].includes(item.name));
 };
 </script>
