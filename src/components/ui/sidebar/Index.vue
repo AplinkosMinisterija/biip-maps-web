@@ -1,7 +1,7 @@
 <template>
   <div
     v-if="isOpen"
-    class="absolute right-0 top-0 h-screen overflow-y-scroll p-4 w-96 max-w-screen-sm z-40 shadow-md bg-white"
+    class="absolute right-0 top-0 h-screen overflow-y-scroll p-4 sm:w-96 max-w-screen-sm z-40 shadow-md bg-white"
   >
     <div class="flex items-center justify-between gap-3 w-full mb-3">
       <span class="font-semibold">{{ title }}</span>
@@ -12,7 +12,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, inject } from 'vue';
+import { computed, inject, ref, watch } from 'vue';
 const eventBus: any = inject('eventBus');
 const mapLayers: any = inject('mapLayers');
 const emit = defineEmits(['close']);
