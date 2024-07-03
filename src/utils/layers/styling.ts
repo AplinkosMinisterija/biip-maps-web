@@ -206,7 +206,7 @@ export function vectorTileStyles(options?: { layerPrefix: string }): any {
       text.getText()?.setText(feature.get('name'));
       text.getText()?.setFont('bold 14px sans-serif');
       text.getText()?.setStroke(stroke);
-      textFill.setColor('#ffffff')
+      textFill.setColor('#ffffff');
       styles[length++] = text;
     } else if ([LAYER_TYPE.SMALSUOLIS_EVENTS].includes(layer)) {
       const isCluster = feature.get('cluster');
