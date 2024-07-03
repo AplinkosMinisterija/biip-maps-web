@@ -199,12 +199,15 @@ export function vectorTileStyles(options?: { layerPrefix: string }): any {
         align: 'top',
       });
     } else if ([LAYER_TYPE.HUNTING_MPV].includes(layer)) {
-      // const status = feature?.get('status');
-
-      // line.setFill('')
       stroke.setColor('#ff0000');
       stroke.setWidth(2);
       styles[length++] = line;
+
+      text.getText()?.setText(feature.get('name'));
+      text.getText()?.setFont('bold 14px sans-serif');
+      text.getText()?.setStroke(stroke);
+      textFill.setColor('#ffffff')
+      styles[length++] = text;
     } else if ([LAYER_TYPE.SMALSUOLIS_EVENTS].includes(layer)) {
       const isCluster = feature.get('cluster');
 
