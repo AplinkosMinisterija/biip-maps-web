@@ -130,3 +130,13 @@ export const smalsuolisServiceVT = {
 };
 
 smalsuolisServiceVT.layer.set('type', 'vt');
+
+export const huntingServiceVT = {
+  id: 'huntingServiceVT',
+  layer: getVectorTileLayer('mpv', '', {
+    idProperty: 'id',
+    declutter: true,
+    url: 'https://cdn.biip.lt/tiles/poc/mpv/mpv.pmtiles',
+    tileSourceClass: PMTilesVectorSource,
+  }),
+};

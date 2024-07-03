@@ -16,6 +16,7 @@ const LAYER_TYPE = {
   BOUNDARIES_COUNTIES_LABEL: 'boundaries.counties_centroid',
   BOUNDARIES_RESIDENTIAL_AREAS: 'boundaries.residential_areas',
   BOUNDARIES_RESIDENTIAL_AREAS_LABEL: 'boundaries.residential_areas_centroid',
+  HUNTING_MPV: 'mpv.mpv',
   UETK_MERGED_LABEL: 'uetk.uetk_merged.1',
   ZVEJYBA_FISHINGS: 'zvejyba.fishings',
   ZUVINIMAS_FISH_STOCKINGS: 'zuvinimas.fish_stockings',
@@ -197,6 +198,13 @@ export function vectorTileStyles(options?: { layerPrefix: string }): any {
       styles[length++] = getIcon(status === 'ONGOING' ? 'pin-water-green' : 'pin-water', {
         align: 'top',
       });
+    } else if ([LAYER_TYPE.HUNTING_MPV].includes(layer)) {
+      // const status = feature?.get('status');
+
+      // line.setFill('')
+      stroke.setColor('#ff0000');
+      stroke.setWidth(2);
+      styles[length++] = line;
     } else if ([LAYER_TYPE.SMALSUOLIS_EVENTS].includes(layer)) {
       const isCluster = feature.get('cluster');
 
