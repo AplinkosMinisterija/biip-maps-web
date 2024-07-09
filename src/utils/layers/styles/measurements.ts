@@ -53,8 +53,8 @@ const segmentStyle = new Style({
 
 const segmentStyles = [segmentStyle];
 
-const formatLength = function (line: LineString) {
-  const length = getLength(line);
+const formatLength = function (line: LineString, projection?: string) {
+  const length = getLength(line, { projection });
   let output;
   if (length > 100) {
     output = Math.round((length / 1000) * 100) / 100 + ' km';
@@ -64,8 +64,8 @@ const formatLength = function (line: LineString) {
   return output;
 };
 
-const formatArea = function (polygon: Polygon) {
-  const area = getArea(polygon);
+const formatArea = function (polygon: Polygon, projection?: string) {
+  const area = getArea(polygon, { projection });
   let output;
   if (area > 10000) {
     output = Math.round((area / 1000000) * 100) / 100 + ' km\xB2';
@@ -81,6 +81,7 @@ export function getMeasurementStyles(
     showSegments?: boolean;
     showLength?: boolean;
     showArea?: boolean;
+    projection?: string;
   },
 ) {
   const geometry = feature?.getGeometry();
@@ -93,11 +94,11 @@ export function getMeasurementStyles(
   let point, label, line;
   if (type === 'Polygon' && opts?.showArea) {
     point = (geometry as Polygon).getInteriorPoint();
-    label = formatArea(geometry as Polygon);
+    label = formatArea(geometry as Polygon, opts?.projection);
     line = new LineString((geometry as Polygon).getCoordinates()[0]);
   } else if (type === 'LineString' && opts?.showLength) {
     point = new Point((geometry as LineString).getLastCoordinate());
-    label = formatLength(geometry as LineString);
+    label = formatLength(geometry as LineString, opts?.projection);
     line = geometry;
   }
 
@@ -105,7 +106,7 @@ export function getMeasurementStyles(
     let count = 0;
     (geometry as LineString)?.forEachSegment?.(function (a, b) {
       const segment = new LineString([a, b]);
-      const label = formatLength(segment);
+      const label = formatLength(segment, opts?.projection);
       if (segmentStyles.length - 1 < count) {
         segmentStyles.push(segmentStyle.clone());
       }

@@ -123,6 +123,7 @@ export function getLayerStyles(opts: {
         showSegments: opts?.showMeasurements?.segments,
         showLength: opts?.showMeasurements?.length,
         showArea: opts?.showMeasurements?.area,
+        projection,
       });
 
       return [defaultStyle, ...measurementStyles];

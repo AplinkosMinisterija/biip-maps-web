@@ -109,6 +109,7 @@ export function vectorTileStyles(options?: { layerPrefix: string }): any {
   const text = new Style({
     text: new Text({
       text: '',
+      font: 'bold 11px sans-serif',
       fill: textFill,
     }),
   });
@@ -120,6 +121,38 @@ export function vectorTileStyles(options?: { layerPrefix: string }): any {
     const statsFn = feature.get('statsFn');
     const layerPrefix = options?.layerPrefix ? `${options.layerPrefix}.` : '';
     const layer = `${layerPrefix}${feature.get('layer')}`;
+
+    function applyDefaultStyles(opts: {
+      color: string;
+      strokeColor?: string;
+      icon?: string;
+      iconAlign?: 'top' | 'center';
+    }) {
+      const geometry = feature.getGeometry();
+
+      const geometryType = geometry?.getType() as string;
+
+      fill.setColor(opts.color);
+      stroke.setColor(opts.strokeColor || '');
+      const hasStroke = opts.strokeColor;
+
+      if (['Polygon', 'MultiPolygon'].includes(geometryType)) {
+        styles[length++] = hasStroke ? strokedPolygon : polygon;
+      } else if (['LineString', 'MultiLineString'].includes(geometryType)) {
+        // TODO: setup stroked line
+        styles[length++] = line;
+      } else if (['Point', 'MultiPoint'].includes(geometryType)) {
+        if (opts.icon) {
+          styles[length++] = getIcon(opts.icon, {
+            color: opts.strokeColor || opts.color,
+            align: opts.iconAlign || 'top',
+          });
+        } else {
+          styles[length++] = point;
+        }
+      }
+      // TODO: setup these styles (if needed) - LinearRing, GeometryCollection, Circle
+    }
 
     if (statsFn && typeof statsFn === 'function') {
       const stats = statsFn();
@@ -167,17 +200,21 @@ export function vectorTileStyles(options?: { layerPrefix: string }): any {
     } else if ([LAYER_TYPE.SMALSUOLIS_EVENTS].includes(layer)) {
       const isCluster = feature.get('cluster');
 
+      const color = getColorWithOpacity(`#73DC8C`, 0.8);
+      const strokeColor = '#2E5838';
+
       if (!isCluster) {
-        styles[length++] = getIcon('pin', {
-          color: COLORS.BLACK,
-          align: 'top',
+        applyDefaultStyles({
+          color,
+          strokeColor,
+          icon: 'pin',
         });
       } else {
         const count = feature.get('point_count') || 0;
         if (!count) return;
 
-        fill.setColor(getColorWithOpacity(`#73DC8C`, 0.7));
-        textFill.setColor(COLORS.BLACK);
+        fill.setColor(color);
+        textFill.setColor(strokeColor);
         text.getText()?.setText(`${count}`);
         circle.setRadius(20);
         styles[length++] = point;

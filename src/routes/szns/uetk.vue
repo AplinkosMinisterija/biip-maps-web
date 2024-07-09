@@ -4,6 +4,7 @@
       <template #filters>
         <UiButtonIcon icon="layers" @click="filtersStore.toggle('layers')" />
         <UiButtonIcon icon="legend" @click="filtersStore.toggle('legend')" />
+        <UiButtonIcon icon="measure" @click="mapLayers.toggleMeasuring()" />
       </template>
       <template v-if="filtersStore.active" #filtersContent>
         <UiMapLayerToggle v-if="filtersStore.isActive('layers')" :layers="toggleLayers" />
@@ -123,3 +124,9 @@ if (query.cadastralId) {
   await mapLayers.zoom(uetkService.id, { addStroke: true, filters });
 }
 </script>
+
+<style>
+.ol-layer {
+  cursor: help;
+}
+</style>
