@@ -89,7 +89,7 @@ const props = defineProps({
       { type: 'gyvenvietė' },
       { type: 'miesto dalis' },
       { type: 'gatvė', weight: 1.2 },
-      { type: 'adresas', weight: 0.8 },
+      { type: 'adresas', weight: 1.3 },
     ],
   },
 });
