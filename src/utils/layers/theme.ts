@@ -198,7 +198,7 @@ export const stvkService = {
 export const inspireParcelService = {
   id: 'inspireParcelService',
   description: zudcCopyright,
-  title: 'Kadastriniai sklypai (INSPIRE duomenų rinkinys)',
+  title: 'Kadastriniai sklypai (atnaujinami kartą per metus)',
   layer: getWMSImageLayer(
     'https://www.geoportal.lt/mapproxy/gisc_inspire_geoserver/cp/wms',
     'CP.CadastralParcel,CP.CadastralZoning',
