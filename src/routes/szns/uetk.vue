@@ -85,7 +85,7 @@ mapLayers
   .addBaseLayer(geoportalOrto.id)
   .add(geoportalGrpk.id, { isHidden: true })
   .add(administrativeBoundariesLabelsService.id, { isHidden: true })
-  .add(inspireParcelService.id, { isHidden: true })
+  .add(inspireParcelService.id, { isHidden: false })
   .add(uetkService.id, { isHidden: true })
   .add(sznsUetkService.id)
   .click(async ({ coordinate }: any) => {
@@ -106,6 +106,7 @@ mapLayers
 
 mapLayers.waitForLoaded.then(() => {
   filtersStore.toggle('layers');
+  mapLayers.setOpacity(inspireParcelService.id, 0.8);
 });
 
 if (query.cadastralId) {
