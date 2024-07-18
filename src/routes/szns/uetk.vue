@@ -85,7 +85,7 @@ mapLayers
   .addBaseLayer(geoportalOrto.id)
   .add(geoportalGrpk.id, { isHidden: true })
   .add(administrativeBoundariesLabelsService.id, { isHidden: true })
-  .add(inspireParcelService.id, { isHidden: false })
+  .add(inspireParcelService.id)
   .add(uetkService.id, { isHidden: true })
   .add(sznsUetkService.id)
   .click(async ({ coordinate }: any) => {
