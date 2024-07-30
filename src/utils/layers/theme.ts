@@ -170,11 +170,11 @@ export const sznsUetkService = {
   sublayers: [
     {
       value: 'apsaugos_juostos',
-      name: 'Paviršinių vandens telkinių pakrančių apsaugos juostos (projektas)',
+      name: 'Paviršinių vandens telkinių pakrančių apsaugos juostos (NEPATVIRTINTAS PROJEKTAS)',
     },
     {
       value: 'apsaugos_zonos',
-      name: 'Paviršinių vandens telkinių apsaugos zonos (projektas)',
+      name: 'Paviršinių vandens telkinių apsaugos zonos (NEPATVIRTINTAS PROJEKTAS)',
     },
   ],
   layer: getWMSImageLayer(
