@@ -59,6 +59,7 @@ import {
   uetkService,
   geoportalGrpk,
   geoportalForests,
+  sznsPievosPelkes,
   gamtotvarkaService,
   highlightLayerRusys,
 } from '@/utils';
@@ -152,6 +153,7 @@ const toggleLayers = [
   municipalitiesService,
   geoportalGrpk,
   geoportalForests,
+  sznsPievosPelkes,
   gamtotvarkaService,
 ];
 
@@ -234,6 +236,7 @@ mapLayers
   .add(geoportalGrpk.id, { isHidden: true })
   .add(uetkService.id, { isHidden: true })
   .add(municipalitiesService.id, { isHidden: true })
+  .add(sznsPievosPelkes.id, { isHidden: true })
   .add(gamtotvarkaService.id, { isHidden: true })
   .add(rusysService.id)
   .click(async ({ coordinate }: any) => {

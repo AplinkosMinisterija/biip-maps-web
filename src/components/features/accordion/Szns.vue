@@ -17,9 +17,9 @@
         </UiTableRow>
       </UiTable>
       <div>
-        <UiButton v-if="feature[urlAttribute]" class="mt-2" size="sm">
+        <UiButton v-if="feature[urlAttribute]" class="mt-2 text-left" size="sm">
           <a target="_blank" :href="feature['6. Papildoma informacija']">
-            Peržiūrėti papildomą informaciją
+            Specialiosios žemės naudojimo sąlygos (draudimai ir apribojimai)
           </a>
         </UiButton>
       </div>
