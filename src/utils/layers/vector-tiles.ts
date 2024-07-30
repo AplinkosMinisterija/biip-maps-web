@@ -136,7 +136,7 @@ export const huntingServiceVT = {
   layer: getVectorTileLayer('mpv', '', {
     idProperty: 'id',
     declutter: true,
-    url: 'https://cdn.biip.lt/tiles/poc/mpv/mpv.pmtiles',
+    url: 'https://cdn.biip.lt/tiles/medziokle/pmtiles/hunting-areas.pmtiles',
     tileSourceClass: PMTilesVectorSource,
   }),
 };

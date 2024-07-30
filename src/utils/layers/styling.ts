@@ -16,7 +16,7 @@ const LAYER_TYPE = {
   BOUNDARIES_COUNTIES_LABEL: 'boundaries.counties_centroid',
   BOUNDARIES_RESIDENTIAL_AREAS: 'boundaries.residential_areas',
   BOUNDARIES_RESIDENTIAL_AREAS_LABEL: 'boundaries.residential_areas_centroid',
-  HUNTING_MPV: 'mpv.mpv',
+  HUNTING_MPV: 'mpv.hunting_areas',
   UETK_MERGED_LABEL: 'uetk.uetk_merged.1',
   ZVEJYBA_FISHINGS: 'zvejyba.fishings',
   ZUVINIMAS_FISH_STOCKINGS: 'zuvinimas.fish_stockings',
