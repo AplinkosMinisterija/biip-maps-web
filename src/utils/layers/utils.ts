@@ -6,6 +6,7 @@ import { GeoJSON } from 'ol/format';
 import { projection } from '../constants';
 import ImageLayer from 'ol/layer/Image';
 import ImageWMS from 'ol/source/ImageWMS';
+import type { ServerType } from 'ol/source/wms';
 
 export function getVectorLayer(
   url: string,
@@ -52,9 +53,12 @@ export function getWMSImageLayer(
   url: string,
   layers: string,
   attributions: string,
-  requestHeaders?: any,
+  opts?: {
+    serverType?: ServerType;
+    requestHeaders?: any;
+  },
 ) {
-  const imageLoadFunction = wmsImageLoaderFn(requestHeaders);
+  const imageLoadFunction = wmsImageLoaderFn(opts?.requestHeaders);
 
   const layer = new ImageLayer({
     source: new ImageWMS({
@@ -67,7 +71,7 @@ export function getWMSImageLayer(
       imageLoadFunction,
       crossOrigin: 'anonymous',
       ratio: 1,
-      serverType: 'qgis',
+      serverType: opts?.serverType || 'qgis',
       attributions,
     }),
   });

@@ -203,6 +203,7 @@ export const inspireParcelService = {
     'https://www.geoportal.lt/mapproxy/gisc_inspire_geoserver/cp/wms',
     'CP.CadastralParcel,CP.CadastralZoning',
     zudcCopyright,
+    { serverType: 'geoserver' },
   ),
 };
 
@@ -217,7 +218,7 @@ const srisPrivateServiceImageLayer = getWMSImageLayer(
   `${rusysApiHost}/maps/qgisserver`,
   'radavietes,stebejimai_interpretuojami',
   biipCopyright,
-  () => srisPrivateService.getHeaders(),
+  { requestHeaders: () => srisPrivateService.getHeaders() },
 );
 srisPrivateServiceImageLayer.setVisible(false);
 export const srisPrivateService = {
