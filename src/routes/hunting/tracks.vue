@@ -20,6 +20,7 @@ import {
   huntingTracksService,
   objectPropsToCamel,
   parseRouteParams,
+  huntingServiceVT,
 } from "@/utils";
 
 const mapLayers: any = inject("mapLayers");
@@ -39,7 +40,8 @@ await mapLayers
   .addBaseLayer(vectorBright.id)
   .addBaseLayer(vectorPositron.id)
   .addBaseLayer(geoportalOrto.id)
-  .add(huntingService.id)
+  .add(huntingServiceVT.id)
+  .add(huntingService.id, { isHidden: true })
   .add(huntingTracksService.id)
   .click(async ({ coordinate }: any) => {
     mapLayers.getFeatureInfo(

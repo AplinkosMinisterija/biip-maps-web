@@ -88,7 +88,7 @@ export function convertCoordinatesToProjection(
       data = [lastEl, firstEl];
     }
 
-    return transform(data, dataProjection || projection4326, projection);
+    return transform(data, dataProjection || projection4326, featureProjection || projection);
   };
 
   return transformCoordinates(coordinates);
