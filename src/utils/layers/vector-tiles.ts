@@ -3,7 +3,7 @@ import VectorTileSource from 'ol/source/VectorTile';
 import { MVT } from 'ol/format';
 import { Feature } from 'ol';
 import { projection3857 } from '../constants';
-import { qgisTilesUrl, smalsuolisApiHost } from '@/config';
+import { cdnHost, qgisTilesUrl, smalsuolisApiHost } from '@/config';
 import { vectorTileStyles } from './styling';
 import LayerGroup from 'ol/layer/Group';
 // @ts-expect-error pmtiles doesn't have types :(
@@ -130,3 +130,13 @@ export const smalsuolisServiceVT = {
 };
 
 smalsuolisServiceVT.layer.set('type', 'vt');
+
+export const huntingServiceVT = {
+  id: 'huntingServiceVT',
+  layer: getVectorTileLayer('mpv', '', {
+    idProperty: 'id',
+    declutter: true,
+    url: new URL('tiles/medziokle/pmtiles/hunting-areas.pmtiles', cdnHost).toString(),
+    tileSourceClass: PMTilesVectorSource,
+  }),
+};

@@ -1,5 +1,7 @@
 export const qgisServerHost = import.meta.env.VUE_APP_QGIS_SERVER || 'https://gis.biip.lt';
-export const smalsuolisApiHost = import.meta.env.VUE_APP_SMALSUOLIS_API_HOST || 'https://smalsuolis.lt/api';
+export const smalsuolisApiHost =
+  import.meta.env.VUE_APP_SMALSUOLIS_API_HOST || 'https://smalsuolis.lt/api';
+export const cdnHost = import.meta.env.VUE_APP_CDN_HOST || 'https://cdn.biip.lt';
 
 const proxyUrl = import.meta.env.VUE_APP_PROXY_BASE_URL ?? '/proxy';
 

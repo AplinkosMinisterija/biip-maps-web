@@ -1,6 +1,7 @@
 <template>
   <div>
     <UiMap
+      :projection="projection3857"
       :show-scale-line="true"
       :mark-center="!!query.draw"
       :constrain-resolution="false"
@@ -12,12 +13,17 @@ import { computed, inject } from "vue";
 import { useRoute } from "vue-router";
 import { parse, GeometryType } from "geojsonjs";
 import {
-  geoportalTopo,
   geoportalOrto,
-  geoportalTopoGray,
   huntingService,
   parseRouteParams,
   convertCoordinatesToProjection,
+  projection3857,
+  vectorPositron,
+  vectorBright,
+  huntingServiceVT,
+  projection4326,
+  convertFeatureCollectionProjection,
+  projection,
 } from "@/utils";
 
 const mapLayers: any = inject("mapLayers");
@@ -38,7 +44,12 @@ const colors: any = {
 };
 
 function zoomToCoordinate(data: any) {
-  const coordinates = convertCoordinatesToProjection([data.x, data.y]);
+  const coordinates = convertCoordinatesToProjection(
+    [data.x, data.y],
+    projection4326,
+    projection4326
+  );
+
   mapLayers.zoomToCoordinate(...coordinates);
 }
 
@@ -51,10 +62,11 @@ if (query.zoom) {
 }
 
 await mapLayers
-  .addBaseLayer(geoportalTopoGray.id)
-  .addBaseLayer(geoportalTopo.id)
+  .addBaseLayer(vectorBright.id)
+  .addBaseLayer(vectorPositron.id)
   .addBaseLayer(geoportalOrto.id)
-  .add(huntingService.id)
+  .add(huntingServiceVT.id)
+  .add(huntingService.id, { isHidden: true })
   .zoom(huntingService.id, { addStroke: true, zoomFn });
 
 const mapDraw = computed(() => mapLayers.getDraw());
@@ -63,7 +75,11 @@ function parsePoints(data: any[]) {
   const featureCollection = parse(
     data.map((item) => ({
       type: GeometryType.POINT,
-      coordinates: convertCoordinatesToProjection([item.x, item.y]),
+      coordinates: convertCoordinatesToProjection(
+        [item.x, item.y],
+        projection4326,
+        projection3857
+      ),
       properties: {
         color: colors[item.type] || colors.current,
         ...item,
@@ -83,6 +99,9 @@ mapDraw.value
     postMessage("selected", feature);
   })
   .on("change", ({ features }: any) => {
+    if (features) {
+      features = convertFeatureCollectionProjection(features, projection3857, projection);
+    }
     postMessage("data", features);
   });
 
