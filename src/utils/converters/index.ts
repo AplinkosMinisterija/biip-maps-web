@@ -70,3 +70,38 @@ export function convertUETKProperties(properties: GenericObject<any>): any | any
     ...fields,
   };
 }
+
+function readFile(file: File) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.readAsText(file);
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      resolve(result);
+    };
+  });
+}
+export function readGeojsonFromFile(file: File) {
+  return new Promise((resolve, reject) => {
+    const emptyResponse = () => reject();
+    if (file.type !== 'application/json') emptyResponse();
+
+    readFile(file).then((data) => {
+      const result = data as string;
+      if (!result?.length) return emptyResponse();
+
+      try {
+        resolve(JSON.parse(result));
+      } catch (err) {
+        emptyResponse();
+      }
+    });
+  });
+}
+
+export function readShapefileFromFile(file: File) {
+  return new Promise((resolve, reject) => {
+    const emptyResponse = () => reject();
+    if (file.type !== 'application/zip') emptyResponse();
+  });
+}
