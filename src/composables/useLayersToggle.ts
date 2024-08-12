@@ -6,10 +6,29 @@ export function useLayersToggle() {
   const allLayers = ref([] as any);
   const mapLayers: any = inject('mapLayers');
 
+  function getVisibleSublayersCount(layer: any) {
+    if (!layer?.sublayers) return 0;
+
+    return layer.sublayers
+      ?.map((s: any) => {
+        if (!!s.parent && !s.layer) {
+          return isVisible(s.parent, s.value);
+        }
+        return isVisible(s);
+      })
+      .filter((i: boolean) => !!i).length;
+  }
+
   function setVisible(layer: any, value: boolean = false, sublayerName: string = ''): void {
     let sublayer;
     if (sublayerName) {
       sublayer = layer?.sublayers?.find((sublayer: any) => sublayer.value === sublayerName);
+    }
+
+    const visibleSublayersCount = getVisibleSublayersCount(layer);
+
+    if (visibleSublayersCount <= 1 && !value && sublayer) {
+      return setVisible(layer, value);
     }
 
     if (typeof sublayer?.setVisible === 'function') {
@@ -31,10 +50,6 @@ export function useLayersToggle() {
         return isVisible(layer, name);
       })
       .join(',');
-
-    if (!currentSublayers && sublayerName) {
-      return setVisible(layer, value);
-    }
 
     mapLayers.setSublayers(layer.id, currentSublayers);
     triggerCallbacks('change', layer, value, currentSublayers);

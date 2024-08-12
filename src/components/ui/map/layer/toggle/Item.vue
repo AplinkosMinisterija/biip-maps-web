@@ -25,7 +25,6 @@
       <UiMapLayerToggleSublayers
         v-if="layer?.sublayers?.length && layerIsVisible"
         :layers="layer?.sublayers"
-        :parent="layer"
       />
     </div>
   </div>
@@ -41,14 +40,12 @@ const props = defineProps({
     type: Object,
     required: true,
   },
-  parent: {
-    type: Object,
-    default: () => undefined,
-  },
 });
 
-const doTargetParent = computed(() => !!props.parent && !props.layer?.layer);
-const targetLayer = computed(() => (doTargetParent.value ? props.parent : props.layer));
+const doTargetParent = computed(() => !!props.layer?.parent && !props.layer?.layer);
+const targetLayer = computed(() =>
+  doTargetParent.value ? props.layer?.parent : props.layer
+);
 const targetSublayer = computed(() => (doTargetParent.value ? props.layer?.value : ""));
 
 function getVisibility() {

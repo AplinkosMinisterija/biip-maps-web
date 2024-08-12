@@ -5,7 +5,6 @@
       :key="layer.value"
       class="pl-2"
       :layer="layer"
-      :parent="parent"
     />
   </div>
 </template>
@@ -15,10 +14,6 @@ defineProps({
   layers: {
     type: Array,
     required: true,
-  },
-  parent: {
-    type: Object,
-    default: () => ({}),
   },
 });
 </script>
