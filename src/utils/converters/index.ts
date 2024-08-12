@@ -1,5 +1,5 @@
 import type { GenericObject } from '@/types';
-
+import shp from 'shpjs';
 function getValue(item: any, props: string | string[], translates?: any) {
   if (!Array.isArray(props)) {
     props = [props];
@@ -100,8 +100,16 @@ export function readGeojsonFromFile(file: File) {
 }
 
 export function readShapefileFromFile(file: File) {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     const emptyResponse = () => reject();
     if (file.type !== 'application/zip') emptyResponse();
+
+    const buffer = await file.arrayBuffer().catch(emptyResponse);
+    if (!buffer) return emptyResponse();
+
+    const geojson = await shp(buffer).catch(emptyResponse);
+    if (!geojson) return emptyResponse();
+
+    resolve(geojson);
   });
 }

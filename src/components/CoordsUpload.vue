@@ -14,8 +14,17 @@
             </p>
             <UiInputFile
               :accept="Object.values(fileTypes).join(',')"
-              @upload="onFilesUpload"
+              @upload="(files: any) => (file = files?.[0])"
             />
+            <div v-if="file?.type === fileTypes.json" class="text-sm text-gray-600">
+              <UiLabel>Įkeliamų duomenų projekcija:</UiLabel>
+              <UiInputRadio v-model="fileDataProjection" :value="projection">
+                LKS
+              </UiInputRadio>
+              <UiInputRadio v-model="fileDataProjection" :value="projection4326">
+                WGS84
+              </UiInputRadio>
+            </div>
           </template>
           <template v-else-if="activeTab === 'input'">
             <p class="text-sm text-gray-600">
@@ -55,7 +64,7 @@
     </UiTabs>
 
     <template #footer>
-      <UiButton type="success" @click="upload">Įkelti</UiButton>
+      <UiButton type="success" :loading="uploadLoading" @click="upload">Įkelti</UiButton>
     </template>
   </UiModal>
 </template>
@@ -66,6 +75,7 @@ import {
   isCoordinate,
   parseGeomFromString,
   projection4326,
+  projection,
   readGeojsonFromFile,
   readShapefileFromFile,
 } from "@/utils";
@@ -75,6 +85,9 @@ const mapLayers: any = inject("mapLayers");
 const uploadModalRef = ref();
 const validObjects = ref([] as any);
 const selectedItemType = ref("");
+const file = ref({} as any);
+const fileDataProjection = ref(projection);
+const uploadLoading = ref(false);
 
 const mapDraw = computed(() => mapLayers.getDraw());
 
@@ -96,38 +109,37 @@ const tabs = [
 
 defineExpose({ modal: uploadModalRef });
 
-function onFilesUpload(files: File[]) {
-  const file = files?.[0];
-  if (!file) return;
-
-  if (file.type === fileTypes.json) {
-    readGeojsonFromFile(file).then((data) => {
-      // console.log(data);
-      mapLayers.zoomToFeatureCollection(data, {
-        dataProjection: projection4326,
-      });
-      mapDraw.value.setFeatures(data, {
-        dataProjection: projection4326,
-      });
-    });
-  } else if (file.type === fileTypes.zip) {
-    readShapefileFromFile(file);
-  }
-}
-
 function validateCoordinates() {
   isCoordinate(coordinatesInput.value, true);
   validObjects.value = parseGeomFromString(coordinatesInput.value) || [];
   selectedItemType.value = validObjects.value?.[0]?.type || "";
 }
 
-function upload() {
+async function upload() {
+  uploadLoading.value = true;
   if (selectedItemType?.value && validObjects.value?.length) {
     const selectedObject = validObjects.value.find(
       (i: any) => i.type === selectedItemType.value
     );
 
     if (!selectedObject) return;
+  } else if (file?.value?.type) {
+    let geojson: any;
+    let dataProjection = fileDataProjection.value;
+    if (file.value.type === fileTypes.json) {
+      geojson = await readGeojsonFromFile(file.value);
+    } else if (file.value.type === fileTypes.zip) {
+      geojson = await readShapefileFromFile(file.value);
+      dataProjection = projection4326;
+    }
+
+    if (geojson) {
+      mapLayers.zoomToFeatureCollection(geojson, { dataProjection });
+      mapDraw.value.setFeatures(geojson, { dataProjection });
+    }
   }
+
+  uploadLoading.value = false;
+  uploadModalRef?.value?.close?.();
 }
 </script>
