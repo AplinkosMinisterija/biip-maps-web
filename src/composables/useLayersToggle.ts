@@ -6,7 +6,7 @@ export function useLayersToggle() {
   const allLayers = ref([] as any);
   const mapLayers: any = inject('mapLayers');
 
-  function setVisible(layer: any, value: boolean = false, sublayerName: string = '') {
+  function setVisible(layer: any, value: boolean = false, sublayerName: string = ''): void {
     let sublayer;
     if (sublayerName) {
       sublayer = layer?.sublayers?.find((sublayer: any) => sublayer.value === sublayerName);
