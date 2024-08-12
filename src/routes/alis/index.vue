@@ -58,6 +58,8 @@ import {
   geoportalHybrid,
   geoportalGrpk,
   parseRouteParams,
+  geoportalForests,
+  gamtotvarkaNatura2000,
 } from "@/utils";
 
 const filtersStore = useFiltersStore();
@@ -68,6 +70,8 @@ const uploadRef = ref();
 
 const toggleLayers = [
   uetkService,
+  geoportalForests,
+  gamtotvarkaNatura2000,
   stvkService,
   municipalitiesService,
   geoportalOrto1995,
@@ -111,6 +115,8 @@ mapLayers
   .add(geoportalOrto1995.id, { isHidden: true })
   .add(municipalitiesService.id, { isHidden: true })
   .add(stvkService.id, { isHidden: true })
+  .add(geoportalForests.id, { isHidden: true })
+  .add(gamtotvarkaNatura2000.id, { isHidden: true })
   .add(uetkService.id)
   .click(async ({ coordinate }: any) => {
     mapLayers.getFeatureInfo(
