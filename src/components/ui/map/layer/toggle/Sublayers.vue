@@ -5,8 +5,6 @@
       :key="layer.value"
       class="pl-2"
       :layer="layer"
-      :is-visible="isVisible"
-      :set-visible="setVisible"
       :parent="parent"
     />
   </div>
@@ -16,14 +14,6 @@
 defineProps({
   layers: {
     type: Array,
-    required: true,
-  },
-  isVisible: {
-    type: Function,
-    required: true,
-  },
-  setVisible: {
-    type: Function,
     required: true,
   },
   parent: {

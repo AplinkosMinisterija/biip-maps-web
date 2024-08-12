@@ -26,51 +26,37 @@
         v-if="layer?.sublayers?.length && layerIsVisible"
         :layers="layer?.sublayers"
         :parent="layer"
-        :is-visible="isVisible"
-        :set-visible="setVisible"
       />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref } from "vue";
+import { useLayersToggle } from "@/composables/useLayersToggle";
+const layersToggle = useLayersToggle();
 
 const props = defineProps({
   layer: {
     type: Object,
     required: true,
   },
-  isVisible: {
-    type: Function,
-    required: true,
-  },
-  setVisible: {
-    type: Function,
-    required: true,
-  },
   parent: {
     type: Object,
-    default: () => ({}),
+    default: () => undefined,
   },
 });
 
-const layer = computed(() => props.layer);
-const parent = computed(() => props.parent);
+const doTargetParent = computed(() => !!props.parent && !props.layer?.layer);
+const targetLayer = computed(() => (doTargetParent.value ? props.parent : props.layer));
+const targetSublayer = computed(() => (doTargetParent.value ? props.layer?.value : ""));
 
 function getVisibility() {
-  if (!parent.value || layer.value.layer) return props.isVisible(layer.value);
-  return props.isVisible(parent.value, layer.value.value);
+  return layersToggle.isVisible(targetLayer.value, targetSublayer.value);
 }
 
 function toggleVisibility() {
-  const value = !layerIsVisible.value;
-  if (!parent.value || layer.value.layer) {
-    props.setVisible(layer.value, value);
-  } else {
-    props.setVisible(parent.value, value, layer.value.value);
-  }
-
+  layersToggle.toggleVisibility(targetLayer.value, targetSublayer.value);
   layerIsVisible.value = getVisibility();
 }
 
