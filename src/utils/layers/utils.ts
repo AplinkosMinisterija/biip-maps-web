@@ -46,6 +46,7 @@ export function getVectorLayer(
 
   layer.setSource(source);
   layer.setVisible(!!url);
+  layer.set('type', 'geojson');
   return layer;
 }
 
