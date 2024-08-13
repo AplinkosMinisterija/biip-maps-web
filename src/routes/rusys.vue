@@ -201,11 +201,10 @@ if (query.request) {
   );
   const itemsByRequest = await getItemsByRequest(query.request);
 
-  if (itemsByRequest?.places?.length) filterById("id", { $in: itemsByRequest.places });
-  if (itemsByRequest?.forms?.length) {
-    filtersSrisInformational.value.set("id", { $in: itemsByRequest.forms });
-    filtersPlacesGrid.value.set("forms", { $in: itemsByRequest.forms });
-  }
+  const defaultValue = [-1];
+  filterById("id", { $in: itemsByRequest.places || defaultValue });
+  filtersSrisInformational.value.set("id", { $in: itemsByRequest.forms || defaultValue });
+  filtersPlacesGrid.value.set("forms", { $in: itemsByRequest.forms || defaultValue });
 }
 function toggleGrid(value: boolean) {
   const level = value ? Number.NEGATIVE_INFINITY : GRID_TO_SERVICE_LEVEL;
@@ -329,7 +328,13 @@ function onChangeSublayers(layer: any) {
     .set("layers", mapLayers.getInnerVisibleLayers(rusysService.id));
 }
 
-if (query.place || query.informationalForm || query.request) {
+if (query.place || query.informationalForm) {
   await mapLayers.zoom(rusysService.id);
+}
+
+if (query.request && user) {
+  toggleGrid(true);
+  // do not await this
+  mapLayers.zoom(rusysRequestService.id, { zoomEmptyFilters: true });
 }
 </script>

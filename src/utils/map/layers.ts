@@ -21,6 +21,8 @@ import {
 } from './coordinates';
 import { getCenter } from 'ol/extent';
 import { Queues } from './queues';
+import VectorSource from 'ol/source/Vector';
+import { GeoJSON } from 'ol/format';
 
 type LayerOptions = {
   opacity?: number;
@@ -522,6 +524,7 @@ export class MapLayers extends Queues {
       filters?: any;
       cb?: Function;
       zoomFn?: Function;
+      zoomEmptyFilters?: boolean;
     } = {},
   ): Promise<any> {
     const filters = options?.filters || this.filters(id);
@@ -536,7 +539,7 @@ export class MapLayers extends Queues {
       return Promise.all(this.all(layer).map((layer: any) => this.zoom(layer.get('id'), options)));
     }
 
-    if (filters.isEmpty) return;
+    if (filters.isEmpty && !options?.zoomEmptyFilters) return;
 
     const queryPromise: any = this._getZoomRequest(id, filters);
 
@@ -941,6 +944,24 @@ export class MapLayers extends Queues {
     } else if (type === LayerType.WMS) {
       const query = WMSFeatureQuery(filters.toWMS(), filters.getLayersNames());
       return loadWMSLayer(`${url}?${query}`, options);
+    } else if (type === LayerType.GEOJSON) {
+      return new Promise((resolve) => {
+        function getFeaturesCollection() {
+          const features = (layer?.getSource() as VectorSource)?.getFeatures();
+          if (!features?.length) return;
+          return new GeoJSON().writeFeaturesObject(features);
+        }
+
+        const featureCollection = getFeaturesCollection();
+
+        if (featureCollection) {
+          return resolve(featureCollection);
+        }
+
+        layer.getSource().once('featuresloadend', () => {
+          resolve(getFeaturesCollection());
+        });
+      });
     }
   }
 
