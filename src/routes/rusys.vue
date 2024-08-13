@@ -10,7 +10,7 @@
             Rodyti visas radavietes
           </UiInputCheckbox>
         </UiBox>
-        <UiBox v-if="config.user.isAdmin || config.user.isExpert || !isVisibleSrisLayer">
+        <UiBox v-if="(config.user.isAdmin || config.user.isExpert || !isVisibleSrisLayer) && isVisibleRusysLayer">
           <UiInputCheckbox @change="toggleGrid">Išjungti gardelę</UiInputCheckbox>
         </UiBox>
       </template>
@@ -93,9 +93,13 @@ const query = parseRouteParams($route.query, [
 ]);
 
 const isVisibleSrisLayer = ref(true);
+const isVisibleRusysLayer = ref(true);
 
 srisService.layer.on('change:visible', () => {
   isVisibleSrisLayer.value = mapLayers.isVisible(srisService.id);
+});
+rusysService.layer.on('change:visible', () => {
+  isVisibleRusysLayer.value = mapLayers.isVisible(rusysService.id);
 });
 
 if (query.type === 'sris') {
