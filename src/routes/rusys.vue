@@ -1,6 +1,13 @@
 <template>
   <div>
-    <UiMap :show-scale-line="true" :show-coordinates="true" :is-preview="isPreview">
+    <UiMap
+      :show-scale-line="true"
+      :show-coordinates="true"
+      :is-preview="isPreview"
+      :attribution-options="{
+        collapsible: !isPreview || !isScreenshot,
+      }"
+    >
       <template #filters>
         <UiButtonIcon icon="filter" @click="filtersStore.toggle('filters')" />
         <UiButtonIcon icon="layers" @click="filtersStore.toggle('layers')" />
@@ -98,6 +105,7 @@ const query = parseRouteParams($route.query, [
   "preview",
   "amateur",
   "request",
+  "screenshot",
 ]);
 
 const isVisibleSrisLayer = ref(true);
@@ -137,6 +145,7 @@ if (user?.type !== "ADMIN" && !user?.isExpert) {
 }
 
 isPreview.value = !!query.preview;
+const isScreenshot = ref(!!query.screenshot);
 
 const filtersPlacesGrid = computed(() =>
   mapLayers
