@@ -308,7 +308,7 @@ export class MapLayers extends Queues {
     return this._draw;
   }
 
-  toggleMeasuring(opts?: any, type: DrawType = 'LineString', value?: boolean, id?: string) {
+  toggleMeasuring(type: DrawType = 'LineString', opts?: any, value?: boolean, id?: string) {
     return this.getDraw(id).enableContinuousDraw().enableMeasurements(opts).toggle(type, value);
   }
 
@@ -706,7 +706,7 @@ export class MapLayers extends Queues {
 
     const { extent } = featureCollectionToExtent(data, this.map.getView().getProjection(), {
       applyBuffers: true,
-      dataProjection: options?.dataProjection
+      dataProjection: options?.dataProjection,
     });
 
     if (options.addStroke) {
