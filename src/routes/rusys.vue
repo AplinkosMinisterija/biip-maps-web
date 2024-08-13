@@ -3,10 +3,12 @@
     <UiMap
       :show-scale-line="true"
       :show-coordinates="true"
+      :show-search="true"
       :is-preview="isPreview"
       :attribution-options="{
         collapsible: !isPreview || !isScreenshot,
       }"
+      @search="filtersStore.search = $event"
     >
       <template #filters>
         <UiButtonIcon icon="filter" @click="filtersStore.toggle('filters')" />
@@ -36,6 +38,15 @@
           @change="onChangeSublayers"
         />
         <RusysFilters v-else-if="filtersStore.isActive('filters')" />
+        <Search
+          v-else-if="filtersStore.isActive('search')"
+          :search-point="true"
+          :search-line="true"
+          :search-polygon="true"
+          :value="filtersStore.search"
+          :types="['geoportal']"
+          @select="selectSearch"
+        />
       </template>
 
       <template #sidebar>
@@ -346,4 +357,11 @@ if (query.request && user) {
   // do not await this
   mapLayers.zoom(rusysRequestService.id, { zoomEmptyFilters: true });
 }
+
+const selectSearch = (match: any) => {
+  if (!match?.geom) return;
+  
+  filtersStore.clearSearch();
+  mapLayers.zoomToFeatureCollection(match.geom);
+};
 </script>
