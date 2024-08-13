@@ -14,7 +14,7 @@
 <script setup lang="ts">
 import { inject, ref, watch } from "vue";
 import { projection, convertFeatureCollectionProjection, projection4326 } from "@/utils";
-import { useClipboard } from "@vueuse/core";
+import { useClipboard, onClickOutside } from "@vueuse/core";
 import { getFeatureCollection } from "geojsonjs";
 
 const mapLayers: any = inject("mapLayers");
@@ -41,7 +41,10 @@ mapLayers.click(
   { right: true }
 );
 
-mapLayers.click(() => togglePopup());
+onClickOutside(overlayLayer, () => {
+  togglePopup();
+});
+
 const { copy } = useClipboard();
 
 function copyCoordinatesToClipboard(projection: string) {
@@ -59,7 +62,5 @@ function copyCoordinatesToClipboard(projection: string) {
   );
 
   copy(convertedCoordinates);
-
-  togglePopup();
 }
 </script>
