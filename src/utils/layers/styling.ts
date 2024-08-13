@@ -210,9 +210,11 @@ export function vectorTileStyles(options?: { layerPrefix: string }): any {
       textFill.setColor('#ffffff');
       styles[length++] = text;
     } else if ([LAYER_TYPE.FOREST_LUMBERING].includes(layer)) {
-      stroke.setColor('#ff0000');
+      const color = '#ff0000';
+      stroke.setColor(color);
+      fill.setColor(getColorWithOpacity(color, 0.1));
       stroke.setWidth(2);
-      styles[length++] = line;
+      styles[length++] = strokedPolygon;
     } else if ([LAYER_TYPE.SMALSUOLIS_EVENTS].includes(layer)) {
       const isCluster = feature.get('cluster');
 
