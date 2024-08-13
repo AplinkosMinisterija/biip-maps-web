@@ -1,7 +1,7 @@
 <template>
   <div class="w-full text-gray-600 hover:text-gray-900 group">
     <div class="-mx-2 px-2 hover:bg-gray-50 py-2">
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 cursor-pointer">
         <UiIcon
           v-if="icon"
           :name="icon"
@@ -19,11 +19,11 @@
 defineProps({
   icon: {
     type: String,
-    default: '',
+    default: "",
   },
   label: {
     type: String,
-    default: '',
+    default: "",
     required: true,
   },
 });

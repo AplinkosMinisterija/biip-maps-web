@@ -142,9 +142,9 @@ export class MapDraw extends Queues {
   ) {
     return this._applyStyles({
       showMeasurements: {
-        length: opts?.length,
-        area: opts?.area,
-        segments: opts?.segments,
+        length: opts?.length || false,
+        area: opts?.area || false,
+        segments: opts?.segments || false,
       },
     });
   }
