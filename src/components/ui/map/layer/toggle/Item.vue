@@ -42,7 +42,7 @@ const props = defineProps({
   },
 });
 
-const doTargetParent = computed(() => !!props.layer?.parent && !props.layer?.layer);
+const doTargetParent = computed(() => layersToggle.isVirtualLayer(props.layer));
 const targetLayer = computed(() =>
   doTargetParent.value ? props.layer?.parent : props.layer
 );

@@ -5,12 +5,16 @@ const callbacks: { [key: string]: Function[] } = reactive({});
 export function useLayersToggle() {
   const mapLayers: any = inject('mapLayers');
 
+  function isVirtualLayer(layer: any) {
+    return !!layer?.parent && !layer?.layer;
+  }
+
   function getVisibleSublayersCount(layer: any) {
     if (!layer?.sublayers) return 0;
 
     return layer.sublayers
       ?.map((s: any) => {
-        if (!!s.parent && !s.layer) {
+        if (isVirtualLayer(s)) {
           return isVisible(s.parent, s.value);
         }
         return isVisible(s);
@@ -119,5 +123,5 @@ export function useLayersToggle() {
     return isVisible(layer, sublayerName);
   }
 
-  return { isVisible, setVisible, on, mapSublayers, toggleVisibility };
+  return { isVisible, setVisible, on, mapSublayers, toggleVisibility, isVirtualLayer };
 }
