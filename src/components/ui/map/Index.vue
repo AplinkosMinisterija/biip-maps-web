@@ -22,10 +22,7 @@
     <div
       class="absolute left-0 z-10 ml-2 mb-2 bottom-0 flex flex-col items-start gap-2 pointer-events-none"
     >
-      <div
-        id="mapControlsLB"
-        class="text-xxs text-gray-700 flex flex-col gap-2 items-start"
-      />
+      <div id="mapControlsLB" class="text-xxs text-gray-700 flex flex-col gap-2 items-start" />
 
       <UiDropdown
         v-if="mapLayers.baseLayers?.length > 1 && !isPreview"
@@ -61,10 +58,7 @@
             @click-icon="clearSearch()"
           />
         </div>
-        <div
-          v-if="!isPreview"
-          class="flex gap-3 items-stretch overflow-x-auto max-w-full pb-2"
-        >
+        <div v-if="!isPreview" class="flex gap-3 items-stretch overflow-hidden max-w-full pb-2">
           <slot name="filters" />
         </div>
       </div>
@@ -86,9 +80,7 @@
         </div>
       </div>
     </div>
-    <div
-      class="absolute left-auto right-0 z-10 mr-2 mt-2 top-0 flex flex-col gap-2 items-end"
-    >
+    <div class="absolute left-auto right-0 z-10 mr-2 mt-2 top-0 flex flex-col gap-2 items-end">
       <div id="mapControlsRT" class="text-gray-700 flex flex-col gap-2 items-end" />
       <slot v-if="!isPreview" name="rightTop" />
     </div>
@@ -120,12 +112,12 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, inject, ref } from "vue";
-import { useFiltersStore } from "@/stores/filters";
+import { computed, inject, ref } from 'vue';
+import { useFiltersStore } from '@/stores/filters';
 
-const mapLayers: any = inject("mapLayers");
-const eventBus: any = inject("eventBus");
-const search = ref("");
+const mapLayers: any = inject('mapLayers');
+const eventBus: any = inject('eventBus');
+const search = ref('');
 
 const filtersStore = useFiltersStore();
 
@@ -172,7 +164,7 @@ defineProps({
   },
   projection: {
     type: String,
-    default: "",
+    default: '',
   },
   constrainResolution: {
     type: Boolean,
@@ -184,23 +176,23 @@ defineProps({
   },
 });
 
-const emit = defineEmits(["search"]);
+const emit = defineEmits(['search']);
 
 const isZoomToUserLocationEnabled = computed(() => mapLayers.zoomToUserLocationEnabled);
 
 const clearSearch = () => {
-  search.value = "";
-  emit("search", "");
+  search.value = '';
+  emit('search', '');
 };
 
 function zoomToUserLocation() {
   const success = mapLayers.zoomToUserLocation();
   if (success) return;
 
-  eventBus.emit("uiToast", {
-    type: "danger",
-    title: "Nėra galimybės nustatyti buvimo vietos",
-    description: "Patikrinkite ar įgalinote naršyklę nustatyti jūsų buvimo vietą.",
+  eventBus.emit('uiToast', {
+    type: 'danger',
+    title: 'Nėra galimybės nustatyti buvimo vietos',
+    description: 'Patikrinkite ar įgalinote naršyklę nustatyti jūsų buvimo vietą.',
   });
 }
 </script>
@@ -232,7 +224,7 @@ function zoomToUserLocation() {
   @apply bg-white p-1 rounded shadow mr-2 !important;
 }
 .ol-attribution ul:before {
-  content: "Duomenų šaltiniai: ";
+  content: 'Duomenų šaltiniai: ';
 }
 
 .ol-mouse-position,
