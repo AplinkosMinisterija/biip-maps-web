@@ -15,9 +15,7 @@
             mapLayers.toggleMeasuring(t.value, getOpts(t.value), false);
             close();
           "
-        >
-          {{ getOpts(t.value) }}
-        </UiPopupContentItem>
+        />
       </div>
     </template>
   </UiPopup>
