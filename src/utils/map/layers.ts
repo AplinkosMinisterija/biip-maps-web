@@ -21,7 +21,6 @@ import {
 } from './coordinates';
 import { getCenter } from 'ol/extent';
 import { Queues } from './queues';
-import VectorSource from 'ol/source/Vector';
 import { GeoJSON } from 'ol/format';
 
 type LayerOptions = {
@@ -947,7 +946,7 @@ export class MapLayers extends Queues {
     } else if (type === LayerType.GEOJSON) {
       return new Promise((resolve) => {
         function getFeaturesCollection() {
-          const features = (layer?.getSource() as VectorSource)?.getFeatures();
+          const features = layer?.getSource().getFeatures();
           if (!features?.length) return;
           return new GeoJSON().writeFeaturesObject(features);
         }
