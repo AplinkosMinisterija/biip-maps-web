@@ -1,4 +1,4 @@
-import { inject, reactive, ref } from 'vue';
+import { inject, reactive } from 'vue';
 
 const callbacks: { [key: string]: Function[] } = reactive({});
 
