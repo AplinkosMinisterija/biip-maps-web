@@ -2,6 +2,7 @@
   <div>
     <UiMap
       :show-scale-line="true"
+      :projection="projection3857"
       :show-coordinates="true"
       :show-search="isSearchEnabled"
       @search="filtersStore.search = $event"
@@ -39,13 +40,11 @@
   </div>
 </template>
 <script setup lang="ts">
-import { inject, ref, computed } from "vue";
+import { inject, ref } from "vue";
 import { useFiltersStore } from "@/stores/filters";
 import { useRoute } from "vue-router";
 import {
-  geoportalTopo,
   geoportalOrto,
-  geoportalTopoGray,
   uetkService,
   stvkService,
   municipalitiesService,
@@ -60,6 +59,10 @@ import {
   parseRouteParams,
   geoportalForests,
   gamtotvarkaNatura2000,
+  projection3857,
+  vectorBright,
+  vectorPositron,
+  forestCutsLkmpVT,
 } from "@/utils";
 
 const filtersStore = useFiltersStore();
@@ -102,8 +105,8 @@ mapLayers.setSublayers(uetkService.id, uetkLayers);
 const isSearchEnabled = !!query.show_search || !!query.preview;
 
 mapLayers
-  .addBaseLayer(geoportalTopoGray.id)
-  .addBaseLayer(geoportalTopo.id)
+  .addBaseLayer(vectorBright.id)
+  .addBaseLayer(vectorPositron.id)
   .addBaseLayer(geoportalOrto.id)
   .add(geoportalGrpk.id, { isHidden: true })
   .add(geoportalHybrid.id, { isHidden: true })
@@ -117,6 +120,7 @@ mapLayers
   .add(stvkService.id, { isHidden: true })
   .add(geoportalForests.id, { isHidden: true })
   .add(gamtotvarkaNatura2000.id, { isHidden: true })
+  .add(forestCutsLkmpVT.id)
   .add(uetkService.id)
   .click(async ({ coordinate }: any) => {
     mapLayers.getFeatureInfo(

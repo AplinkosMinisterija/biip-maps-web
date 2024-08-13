@@ -140,3 +140,12 @@ export const huntingServiceVT = {
     tileSourceClass: PMTilesVectorSource,
   }),
 };
+
+export const forestCutsLkmpVT = {
+  id: 'forestCutsLkmpVT',
+  layer: getVectorTileLayer('forests', '', {
+    idProperty: 'atributai',
+    declutter: true,
+    url: 'https://lkmp.alisas.lt/maps/kirtimai/{z}/{x}/{y}.pbf',
+  }),
+};
