@@ -3,7 +3,6 @@ import { inject, reactive, ref } from 'vue';
 const callbacks: { [key: string]: Function[] } = reactive({});
 
 export function useLayersToggle() {
-  const allLayers = ref([] as any);
   const mapLayers: any = inject('mapLayers');
 
   function getVisibleSublayersCount(layer: any) {
@@ -70,10 +69,6 @@ export function useLayersToggle() {
     return mapLayers.getSublayers(layer.id).includes(sublayerName);
   }
 
-  function setLayers(layers: any[] = []) {
-    allLayers.value = layers;
-  }
-
   function on(type: string, callback: Function) {
     callbacks[type] = callbacks[type] || [];
     callbacks[type].push(callback);
@@ -124,5 +119,5 @@ export function useLayersToggle() {
     return isVisible(layer, sublayerName);
   }
 
-  return { setLayers, isVisible, setVisible, on, mapSublayers, toggleVisibility };
+  return { isVisible, setVisible, on, mapSublayers, toggleVisibility };
 }
