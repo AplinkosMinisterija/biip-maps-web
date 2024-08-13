@@ -1,12 +1,16 @@
 <template>
   <UiPopupContent ref="overlayLayer">
     <div class="text-xs">
-      <UiPopupContentItem @click="copyCoordinatesToClipboard(projection)">
-        Kopijuoti koordinates (LKS)
-      </UiPopupContentItem>
-      <UiPopupContentItem @click="copyCoordinatesToClipboard(projection4326)">
-        Kopijuoti koordinates (WGS)
-      </UiPopupContentItem>
+      <UiPopupContentItem
+        label="Kopijuoti koordinates (LKS)"
+        icon="copy"
+        @click="copyCoordinatesToClipboard(projection)"
+      />
+      <UiPopupContentItem
+        label="Kopijuoti koordinates (WGS84)"
+        icon="copy"
+        @click="copyCoordinatesToClipboard(projection4326)"
+      />
     </div>
   </UiPopupContent>
 </template>
@@ -62,5 +66,6 @@ function copyCoordinatesToClipboard(projection: string) {
   );
 
   copy(convertedCoordinates);
+  togglePopup();
 }
 </script>
