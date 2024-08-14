@@ -228,25 +228,25 @@ const rows: any[] = [
   {
     name: 'Veiklos požymiai',
     fn: getValue,
-    fnParams: ['Veiklos požymiai'],
+    fnParams: ['activity_translate'],
     show: checkFeatureId(interpretuojamiStebejimaiFeatureId),
   },
   {
     name: 'Vystymosi stadija',
     fn: getValue,
-    fnParams: ['Vystymosi stadija'],
+    fnParams: ['evolution_translate'],
     show: checkFeatureId(interpretuojamiStebejimaiFeatureId),
   },
   {
     name: 'Nuotraukos',
     fn: getValue,
-    fnParams: ['Nuotraukos'], // TODO
+    fnParams: ['photos'],
     show: checkFeatureId(interpretuojamiStebejimaiFeatureId),
   },
   {
     name: 'Šaltinis',
     fn: getValue,
-    fnParams: ['Šaltinis'], // TODO
+    fnParams: ['source'],
     show: checkFeatureId(interpretuojamiStebejimaiFeatureId),
   },
   {
@@ -258,13 +258,13 @@ const rows: any[] = [
   {
     name: 'Stebėtojas',
     fn: getValue,
-    fnParams: ['Stebėtojas'], // TODO
+    fnParams: ['observed_by'],
     show: (feature: any) => (config.user.isAdmin || config.user.isExpert) && checkFeatureId(interpretuojamiStebejimaiFeatureId)(feature)
   },
   {
     name: 'Plotas',
     fn: getValue,
-    fnParams: ['Plotas'], // TODO
+    fnParams: ['area'],
     show: checkFeatureId(radavietesFeatureIds),
   },
 ];
