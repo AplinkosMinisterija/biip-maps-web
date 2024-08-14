@@ -117,10 +117,9 @@ const getDate = (item: any, props: string | string[]) => {
   if (!Array.isArray(props)) {
     props = [props];
   }
-  const date = props.find((p) => !!item[p]) || '';
-  console.log(props, date)
-
-  // const date = item[prop] || '';
+  const prop = props.find((p) => !!item[p]) || '';
+  
+  const date = item[prop] || '';
   if (!date) return '-';
 
   return moment(date).format('YYYY-MM-DD');
