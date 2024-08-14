@@ -20,7 +20,7 @@
             >
               {{ r.link }}
             </span>
-            <template v-else>{{ feature[r.prop] || '' }}</template>
+            <template v-else>{{ feature[r.prop] || "" }}</template>
           </UiTableCell>
         </UiTableRow>
       </UiTable>
@@ -113,8 +113,14 @@ const getTextFromProps = (item: any, type: string) => {
   return `${getValue(props, propByType.name)} (<i>lot. ${getValue(props, propByType.latin)}</i>)`;
 };
 
-const getDate = (item: any, prop: string) => {
-  const date = item[prop] || '';
+const getDate = (item: any, props: string | string[]) => {
+  if (!Array.isArray(props)) {
+    props = [props];
+  }
+  const date = props.find((p) => !!item[p]) || '';
+  console.log(props, date)
+
+  // const date = item[prop] || '';
   if (!date) return '-';
 
   return moment(date).format('YYYY-MM-DD');
@@ -182,13 +188,13 @@ const rows: any[] = [
   {
     name: 'Pirmas stebėjimas',
     fn: getDate,
-    fnParams: ['Sukūrimo data'],
+    fnParams: ['Sukūrimo data'], // TODO
     show: checkFeatureId(radavietesFeatureIds),
   },
   {
     name: 'Stebėjimo data',
     fn: getDate,
-    fnParams: ['observed_at'],
+    fnParams: [['observed_at', 'Stebėjimo data']],
     show: checkFeatureId(interpretuojamiStebejimaiFeatureId),
   },
   {
@@ -196,12 +202,6 @@ const rows: any[] = [
     show: checkFeatureId(radavietesFeatureIds),
     fn: getDate,
     fnParams: ['Atnaujinimo data'],
-  },
-  {
-    name: 'Sunaikinta / Išnykus',
-    fn: getDate,
-    fnParams: ['Ištrynimo data'],
-    show: checkFeatureId(radavietesFeatureIds),
   },
   {
     name: 'Centro koordinatės',
@@ -219,6 +219,54 @@ const rows: any[] = [
     click: selectFeature,
     show: (feature: any) =>
       (config.user.isAdmin || config.user.isExpert) && isFeaturePlace(feature),
+  },
+  {
+    name: 'Individų skaičius (gausumas)',
+    fn: getValue,
+    fnParams: ['Gausumas (vnt.)'],
+    show: checkFeatureId(interpretuojamiStebejimaiFeatureId),
+  },
+  {
+    name: 'Veiklos požymiai',
+    fn: getValue,
+    fnParams: ['Veiklos požymiai'],
+    show: checkFeatureId(interpretuojamiStebejimaiFeatureId),
+  },
+  {
+    name: 'Vystymosi stadija',
+    fn: getValue,
+    fnParams: ['Vystymosi stadija'],
+    show: checkFeatureId(interpretuojamiStebejimaiFeatureId),
+  },
+  {
+    name: 'Nuotraukos',
+    fn: getValue,
+    fnParams: ['Nuotraukos'], // TODO
+    show: checkFeatureId(interpretuojamiStebejimaiFeatureId),
+  },
+  {
+    name: 'Šaltinis',
+    fn: getValue,
+    fnParams: ['Šaltinis'], // TODO
+    show: checkFeatureId(interpretuojamiStebejimaiFeatureId),
+  },
+  {
+    name: 'Buveinė, elgsena, ūkinė veikla ir kita informacija',
+    fn: getValue,
+    fnParams: ['Buveinės aprašymas'],
+    show: checkFeatureId(interpretuojamiStebejimaiFeatureId),
+  },
+  {
+    name: 'Stebėtojas',
+    fn: getValue,
+    fnParams: ['Stebėtojas'], // TODO
+    show: (feature: any) => (config.user.isAdmin || config.user.isExpert) && checkFeatureId(interpretuojamiStebejimaiFeatureId)(feature)
+  },
+  {
+    name: 'Plotas',
+    fn: getValue,
+    fnParams: ['Plotas'], // TODO
+    show: checkFeatureId(radavietesFeatureIds),
   },
 ];
 
