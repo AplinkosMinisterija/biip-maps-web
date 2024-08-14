@@ -61,9 +61,9 @@ function copyCoordinatesToClipboard(projection: string) {
     projection
   );
 
-  const convertedCoordinates = convertedGeojson?.features?.[0]?.geometry?.coordinates?.join(
-    " "
-  );
+  const convertedCoordinates = convertedGeojson?.features?.[0]?.geometry?.coordinates
+    ?.reverse()
+    ?.join(" ");
 
   copy(convertedCoordinates);
   togglePopup();
