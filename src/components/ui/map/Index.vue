@@ -107,6 +107,7 @@
       <slot v-if="!isPreview" name="rightBottom" />
     </div>
     <slot name="sidebar" />
+    <UiMapRightClick />
   </div>
 </template>
 
