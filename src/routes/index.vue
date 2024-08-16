@@ -7,7 +7,7 @@
       :add-coordinates-to-url="true"
     >
       <template #filters>
-        <UiButtonIcon icon="measure" @click="mapLayers.toggleMeasuring()" />
+        <UiMapMeasure />
       </template>
     </UiMap>
   </div>

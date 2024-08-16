@@ -103,20 +103,31 @@ export class MapLayers extends Queues {
       this.centerMap();
 
       this._processQueue();
+      map.getViewport().addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        const pixel = map.getEventPixel(e);
+        const coordinate = map.getCoordinateFromPixel(pixel);
+        this._clickCallbacks
+          .filter((i) => !!i?.opts?.right)
+          .map((item) => item.cb({ pixel, coordinate }));
+      });
+
       map.on('singleclick', (e: any) => {
         const features = map.getFeaturesAtPixel(e.pixel);
         e.features = features;
-        this._clickCallbacks.map((item) => {
-          if (item?.opts?.layers) {
-            return item.cb({
-              ...e,
-              features: map.getFeaturesAtPixel(e.pixel, {
-                layerFilter: (layer) => item.opts?.layers.includes(layer.get('id')),
-              }),
-            });
-          }
-          return item.cb(e);
-        });
+        this._clickCallbacks
+          .filter((i) => !i?.opts?.right)
+          .map((item) => {
+            if (item?.opts?.layers) {
+              return item.cb({
+                ...e,
+                features: map.getFeaturesAtPixel(e.pixel, {
+                  layerFilter: (layer) => item.opts?.layers.includes(layer.get('id')),
+                }),
+              });
+            }
+            return item.cb(e);
+          });
       });
       map.on('pointermove', (e: any) => {
         clearTimeout(this._timeouts.hover);
@@ -160,7 +171,15 @@ export class MapLayers extends Queues {
 
   setOverlayElement(el: HTMLElement) {
     if (!el) return this;
-    this._overlayLayer = new Overlay({
+    const element = this.appendOverlayElement(el);
+    if (!element) return;
+    this._overlayLayer = element;
+    return this;
+  }
+
+  appendOverlayElement(el: HTMLElement) {
+    if (!el) return;
+    const overlayElement = new Overlay({
       element: el,
       autoPan: {
         animation: {
@@ -168,8 +187,9 @@ export class MapLayers extends Queues {
         },
       },
     });
-    this.map?.addOverlay(this._overlayLayer);
-    return this;
+    this.map?.addOverlay(overlayElement);
+
+    return overlayElement;
   }
 
   get overlayLayer() {
@@ -199,7 +219,7 @@ export class MapLayers extends Queues {
 
     let query: any;
     if (type === LayerType.WMS) {
-      query = WMSLegendRequest(sublayers, this.map?.getView().getProjection().getCode());
+      query = WMSLegendRequest(sublayers, this.getMapProjection());
     }
 
     if (!query) return;
@@ -582,7 +602,7 @@ export class MapLayers extends Queues {
     const result = await this._getFeatureInfoRequest(id, coordinate, filters);
     if (!result || !cb) return;
 
-    const mapProjection = this.map.getView().getProjection().getCode();
+    const mapProjection = this.getMapProjection();
 
     const transformResponse = (data: any) => {
       if (mapProjection !== this._callbacksProjection) {
@@ -606,7 +626,7 @@ export class MapLayers extends Queues {
     cb(transformResponse(result));
   }
 
-  click(callback: Function, opts: { layers?: string[] } = {}) {
+  click(callback: Function, opts: { layers?: string[]; right?: boolean } = {}) {
     this._clickCallbacks.push({
       cb: callback,
       opts,
@@ -642,15 +662,9 @@ export class MapLayers extends Queues {
       return this._addToQueue('zoomToCoordinate', x, y, opts);
     }
 
-    const projection = opts?.defaultToMapProjection
-      ? this.map.getView().getProjection().getCode()
-      : opts?.projection;
+    const projection = opts?.defaultToMapProjection ? this.getMapProjection() : opts?.projection;
 
-    const coords = convertCoordinatesToProjection(
-      [x, y],
-      projection,
-      this.map.getView().getProjection().getCode(),
-    );
+    const coords = convertCoordinatesToProjection([x, y], projection, this.getMapProjection());
 
     this.map.getView().setCenter(coords);
     this.map.getView().setZoom(opts?.zoom || this._getZoomLevel());
@@ -722,6 +736,10 @@ export class MapLayers extends Queues {
     }
   }
 
+  getMapProjection() {
+    return this.map?.getView()?.getProjection().getCode() || '';
+  }
+
   highlightFeatures(
     data: any,
     options: {
@@ -740,11 +758,7 @@ export class MapLayers extends Queues {
     }
 
     data = dataToFeatureCollection(data);
-    data = convertCoordinatesToProjection(
-      data,
-      options?.dataProjection,
-      this.map.getView()?.getProjection().getCode(),
-    );
+    data = convertCoordinatesToProjection(data, options?.dataProjection, this.getMapProjection());
     const { source } = featureCollectionToExtent(data, this.map.getView().getProjection(), {
       dataProjection: options?.dataProjection,
     });
