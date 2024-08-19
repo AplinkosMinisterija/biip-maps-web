@@ -143,7 +143,7 @@ const getImages = (item: any, props: string | string[]) => {
   if (!photos?.length) return [];
 
   return photos.map(p => p.url);
-}
+};
 
 const getValue = (item: any, props: string | string[], translates?: any) => {
   if (!Array.isArray(props)) {
