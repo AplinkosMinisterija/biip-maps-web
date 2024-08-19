@@ -28,12 +28,14 @@ function getOpts(type: string) {
   if (type === "Polygon") {
     return {
       area: true,
+      continuousDraw: false,
     };
   }
 
   return {
     length: true,
     segments: true,
+    continuousDraw: false,
   };
 }
 const mapLayers: any = inject("mapLayers");

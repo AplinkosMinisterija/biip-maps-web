@@ -1,7 +1,7 @@
 <template>
-  <div class="w-full text-gray-600 hover:text-gray-900 group">
+  <div class="w-full text-gray-600 hover:text-gray-900 group cursor-pointer">
     <div class="-mx-2 px-2 hover:bg-gray-50 py-2">
-      <div class="flex items-center gap-2 cursor-pointer">
+      <div class="flex items-center gap-2">
         <UiIcon
           v-if="icon"
           :name="icon"
