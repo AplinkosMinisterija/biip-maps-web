@@ -129,7 +129,6 @@ export function WMSLegendRequest(layers: string | string[], proj: string = proje
     LAYERS: layers,
     FORMAT: 'application/json',
     SRS: proj,
-    STYLE: 'default',
   });
 }
 

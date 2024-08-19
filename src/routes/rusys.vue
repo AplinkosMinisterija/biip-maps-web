@@ -215,6 +215,12 @@ if (query.informationalForm) {
   filtersPlacesGrid.value.set("forms", query.informationalForm);
 }
 if (query.request) {
+  // toggle all
+  mapLayers.setSublayers(invaService.id, [
+    "radavietes_invazines",
+    "radavietes_svetimzemes",
+  ]);
+
   rusysRequestService.layer.set(
     "url",
     `${rusysApiHost}/maps/requests/${query.request}/geom`
@@ -360,7 +366,7 @@ if (query.request && user) {
 
 const selectSearch = (match: any) => {
   if (!match?.geom) return;
-  
+
   filtersStore.clearSearch();
   mapLayers.zoomToFeatureCollection(match.geom);
 };
