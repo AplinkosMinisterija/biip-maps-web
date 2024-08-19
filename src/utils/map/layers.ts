@@ -330,7 +330,10 @@ export class MapLayers extends Queues {
   }
 
   toggleMeasuring(type: DrawType = 'LineString', opts?: any, value?: boolean, id?: string) {
-    return this.getDraw(id).enableContinuousDraw(opts?.continuousDraw).enableMeasurements(opts).toggle(type, value);
+    return this.getDraw(id)
+      .enableContinuousDraw(opts?.continuousDraw)
+      .enableMeasurements(opts)
+      .toggle(type, value);
   }
 
   getLayer(id: string) {
@@ -560,7 +563,7 @@ export class MapLayers extends Queues {
 
     if (filters.isEmpty && !options?.zoomEmptyFilters) return;
 
-    const queryPromise: any = this._getZoomRequest(id, filters);
+    const queryPromise: any = this._getZoomRequest(id, filters, options);
 
     if (!queryPromise) return;
 
@@ -945,7 +948,7 @@ export class MapLayers extends Queues {
     this._eventsCallbacks[event].forEach((cb) => cb(...data));
   }
 
-  private _getZoomRequest(id: string, filters: MapFilters) {
+  private _getZoomRequest(id: string, filters: MapFilters, zoomOptions?: any) {
     const layer = this.getLayer(id);
     const type = layer.get('type');
     const url = layer?.getSource()?.getUrl();
@@ -972,8 +975,15 @@ export class MapLayers extends Queues {
         }
 
         layer.getSource().once('featuresloadend', () => {
-          resolve(getFeaturesCollection());
+          // TODO: find a way to trigger this properly
+          this.zoomToFeatureCollection(getFeaturesCollection(), {
+            addStroke: zoomOptions?.addStroke,
+            cb: zoomOptions?.zoomFn,
+          });
         });
+
+        // Needs to be resolved straight away in this case
+        return resolve('');
       });
     }
   }
