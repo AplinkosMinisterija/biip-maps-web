@@ -207,7 +207,7 @@ const rows: any[] = [
   {
     name: 'Pirmas stebėjimas',
     fn: getDate,
-    fnParams: ['Sukūrimo data'], // TODO
+    fnParams: ['first_observed_at'],
     show: checkFeatureId(radavietesFeatureIds),
   },
   {
