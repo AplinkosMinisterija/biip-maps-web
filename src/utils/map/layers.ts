@@ -974,6 +974,9 @@ export class MapLayers extends Queues {
         layer.getSource().once('featuresloadend', () => {
           resolve(getFeaturesCollection());
         });
+
+        // temp fix!
+        return resolve('');
       });
     }
   }
