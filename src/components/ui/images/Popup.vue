@@ -56,16 +56,15 @@ const close = () => {
 const currentImageIndex = ref(0);
 
 function setIndex(add: number) {
-  let result = currentImageIndex.value + add
+  let result = currentImageIndex.value + add;
 
   if (result >= props?.images?.length && add > 0) {
-    result = result % props.images.length
+    result = result % props.images.length;
   } else if (result < 0 && add < 0) {
     result = props.images.length + result;
   }
 
   currentImageIndex.value = result;
-
 }
 
 defineExpose({ close, open });
