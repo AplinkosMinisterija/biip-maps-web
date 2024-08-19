@@ -284,8 +284,12 @@ const rows: any[] = [
   },
   {
     name: 'Plotas',
-    fn: getValue,
-    fnParams: ['area'],
+    fn: (feature: any) => {
+      const area = feature?.area;
+      if (!area) return '-';
+
+      return `${area} m2`;
+    },
     show: checkFeatureId(radavietesFeatureIds),
   },
 ];
