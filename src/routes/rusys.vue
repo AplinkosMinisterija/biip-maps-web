@@ -355,7 +355,7 @@ if (query.place || query.informationalForm) {
 if (query.request && user) {
   toggleGrid(true);
   // do not await this
-  mapLayers.zoom(rusysRequestService.id, { zoomEmptyFilters: true });
+  await mapLayers.zoom(rusysRequestService.id, { zoomEmptyFilters: true });
 }
 
 const selectSearch = (match: any) => {
