@@ -5,10 +5,10 @@
       class="fixed w-screen h-screen top-0 left-0 z-50 flex items-center justify-center p-2 sm:py-12 sm:px-8"
     >
       <div
-        class="fixed top-0 left-0 h-screen w-screen flex lg:items-center items-end justify-center z-50 bg-black bg-opacity-70"
+        class="fixed top-0 left-0 h-screen w-screen flex lg:items-center items-end justify-center z-30 bg-black bg-opacity-70"
         @click="close"
       />
-      <div class="relative z-50 h-screen p-2 md:p-8 xl:p-16 w-full">
+      <div class="relative z-40 p-2 md:p-8 xl:p-16 max-h-screen h-full max-w-full">
         <div class="h-full w-full flex items-center justify-center select-none">
           <UiIcon
             name="chevron-left"
@@ -26,6 +26,9 @@
             @click="setIndex(1)"
           />
         </div>
+      </div>
+      <div class="absolute right-0 top-0 z-50 text-white m-6">
+        <UiIcon name="close" :size="30" class="cursor-pointer" @click="close" />
       </div>
     </div>
   </div>
