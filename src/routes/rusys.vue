@@ -215,16 +215,26 @@ if (query.informationalForm) {
   filtersPlacesGrid.value.set("forms", query.informationalForm);
 }
 if (query.request) {
+  // toggle all
+  mapLayers.setSublayers(invaService.id, [
+    "radavietes_invazines",
+    "radavietes_svetimzemes",
+  ]);
+
   rusysRequestService.layer.set(
     "url",
     `${rusysApiHost}/maps/requests/${query.request}/geom`
   );
   const itemsByRequest = await getItemsByRequest(query.request);
 
-  const defaultValue = [-1];
-  filterById("id", { $in: itemsByRequest.places || defaultValue });
-  filtersSrisInformational.value.set("id", { $in: itemsByRequest.forms || defaultValue });
-  filtersPlacesGrid.value.set("forms", { $in: itemsByRequest.forms || defaultValue });
+  const getIdInValue = (items: number[]) => {
+    if (!items?.length) return [-1];
+    return items;
+  };
+
+  filterById("id", { $in: getIdInValue(itemsByRequest.places) });
+  filtersSrisInformational.value.set("id", { $in: getIdInValue(itemsByRequest.forms) });
+  filtersPlacesGrid.value.set("forms", { $in: getIdInValue(itemsByRequest.forms) });
 }
 function toggleGrid(value: boolean) {
   const level = value ? Number.NEGATIVE_INFINITY : GRID_TO_SERVICE_LEVEL;
@@ -360,7 +370,7 @@ if (query.request && user) {
 
 const selectSearch = (match: any) => {
   if (!match?.geom) return;
-  
+
   filtersStore.clearSearch();
   mapLayers.zoomToFeatureCollection(match.geom);
 };
