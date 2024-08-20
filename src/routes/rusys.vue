@@ -227,10 +227,14 @@ if (query.request) {
   );
   const itemsByRequest = await getItemsByRequest(query.request);
 
-  const defaultValue = [-1];
-  filterById("id", { $in: itemsByRequest.places || defaultValue });
-  filtersSrisInformational.value.set("id", { $in: itemsByRequest.forms || defaultValue });
-  filtersPlacesGrid.value.set("forms", { $in: itemsByRequest.forms || defaultValue });
+  const getIdInValue = (items: number[]) => {
+    if (!items?.length) return [-1];
+    return items;
+  };
+
+  filterById("id", { $in: getIdInValue(itemsByRequest.places) });
+  filtersSrisInformational.value.set("id", { $in: getIdInValue(itemsByRequest.forms) });
+  filtersPlacesGrid.value.set("forms", { $in: getIdInValue(itemsByRequest.forms) });
 }
 function toggleGrid(value: boolean) {
   const level = value ? Number.NEGATIVE_INFINITY : GRID_TO_SERVICE_LEVEL;
