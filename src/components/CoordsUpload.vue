@@ -56,6 +56,9 @@
                 6120489
               </div>
             </div>
+            <UiAlert v-if="coordinatesInput?.length && !validObjects?.length" type="warning">
+              Pateiktame kode yra klaidų. Prašome patikrinti.
+            </UiAlert>
           </template>
         </div>
       </template>
