@@ -1,43 +1,97 @@
 <template>
-  <div class="w-full">
-    <div v-if="label">
-      <span class="text-xs text-gray-400 font-semibold">{{ label }}</span>
+  <div class="flex items-center justify-center w-full">
+    <div
+      ref="dropZoneRef"
+      class="flex flex-col items-center justify-center w-full h-36 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition"
+      @click="inputFileRef?.click?.()"
+    >
+      <div class="flex flex-col items-center gap-2 justify-center pt-5 pb-6">
+        <UiIcon name="upload" />
+        <p class="text-sm text-gray-600">
+          <slot name="label" :files="files">
+            <template v-if="isOverDropZone">
+              <span class="font-semibold">Paleiskite čia</span>
+            </template>
+            <template v-else-if="!files.length">
+              <span class="font-semibold">Įkelkite</span> arba užneškite failą čia
+            </template>
+            <template v-else>
+              <p v-for="f in fileNames" :key="f">{{ f }}</p>
+            </template>
+          </slot>
+        </p>
+        <p
+          v-if="description && !files.length && !isOverDropZone"
+          class="text-xs text-gray-600"
+        >
+          {{ description }}
+        </p>
+      </div>
     </div>
+
     <input
-      class="w-full focus:outline-none px-2 py-1 text-sm rounded resize-y"
-      :class="{ 'border border-gray-200': !hideBorder }"
+      ref="inputFileRef"
       type="file"
-      :placeholder="placeholder"
-      :accept="accept"
-      @change="upload"
+      class="hidden"
+      :accept="accept.join(',')"
+      :multiple="multiple"
+      @change="(event: any) => upload(event?.target?.files)"
     />
   </div>
 </template>
 
 <script lang="ts" setup>
-import { computed } from "vue";
-
+import { ref, computed } from "vue";
+import { useDropZone } from "@vueuse/core";
 const props = defineProps({
-  modelValue: { type: String, default: "" },
-  placeholder: { type: String, default: "" },
-  label: { type: String, default: "" },
-  hideBorder: { type: Boolean },
-  rows: { type: Number, default: 5 },
-  accept: { type: String, default: "" },
+  description: { type: String, default: "" },
+  accept: { type: Array, default: () => [] },
+  multiple: { type: Boolean, default: false },
 });
+const dropZoneRef = ref<HTMLDivElement>();
+const inputFileRef = ref<HTMLDivElement>();
 
-const emit = defineEmits(["update:modelValue", "change", "focus", "blur", "upload"]);
-const value = computed({
-  get: () => props.modelValue,
-  set: (value) => {
-    emit("update:modelValue", value);
-    emit("change", value);
-  },
-});
+const accept = computed(() => props.accept);
 
-function upload(event: any) {
-  const files = event?.target?.files;
-  if (!files.length) return;
-  emit("upload", files);
+const emit = defineEmits(["upload"]);
+const files = ref([] as any[]);
+
+function upload(filesToUpload: File[] = []) {
+  files.value = [...(filesToUpload || [])].filter((f) => {
+    if (!accept.value.length) return true;
+    return accept.value.includes(f.type);
+  });
+
+  if (!props.multiple) {
+    files.value = files.value.slice(0, 1);
+  }
+
+  if (!files.value.length) return;
+  emit("upload", files.value);
 }
+
+const fileNames = computed(() => {
+  if (!files.value?.length) return "";
+
+  return files.value.map((f) => `${f.name} (${getFileSize(f.size)})`);
+});
+
+const fileSizeNamesDictionary: any = {
+  B: "KB",
+  KB: "MB",
+  MB: "GB",
+  GB: "TB",
+};
+
+function getFileSize(size: number, fileSizeName = "B") {
+  if (size < 900) return `${size} ${fileSizeName}`;
+
+  const newSize = Number((size / 1024).toFixed(1));
+  return getFileSize(newSize, fileSizeNamesDictionary[fileSizeName]);
+}
+
+const { isOverDropZone } = useDropZone(dropZoneRef, {
+  onDrop: upload as any,
+  dataTypes: accept as any,
+});
 </script>

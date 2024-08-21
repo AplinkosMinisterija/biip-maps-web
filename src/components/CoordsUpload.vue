@@ -9,11 +9,9 @@
       <template #default="{ activeTab }">
         <div class="flex flex-col gap-2">
           <template v-if="activeTab === 'file'">
-            <p class="text-sm text-gray-600">
-              Įkelkite geografinių duomenų failą (.shp arba .geojson)
-            </p>
             <UiInputFile
-              :accept="Object.values(fileTypes).join(',')"
+              :accept="Object.values(fileTypes)"
+              description="Įkelkite geografinių duomenų failą (.shp arba .geojson)"
               @upload="(files: any) => (file = files?.[0])"
             />
             <div v-if="file?.type === fileTypes.json" class="text-sm text-gray-600">
@@ -103,8 +101,8 @@ const geomTranslates: any = {
 };
 
 const tabs = [
-  { type: "file", name: "Įkelti failą" },
-  { type: "input", name: "Įklijuoti koordinates" },
+  { type: "file", name: "Įkelti failą", icon: "document" },
+  { type: "input", name: "Įklijuoti koordinates", icon: "curved-line" },
 ];
 
 defineExpose({ modal: uploadModalRef });

@@ -641,6 +641,94 @@
     <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
     <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
   </svg>
+  <svg
+    v-else-if="name === 'curved-line'"
+    :width="size"
+    :height="size"
+    viewBox="0 0 16 16"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <g clip-path="url(#clip0_939_1756)">
+      <path
+        d="M8.00016 4.66634C8.92064 4.66634 9.66683 3.92015 9.66683 2.99967C9.66683 2.0792 8.92064 1.33301 8.00016 1.33301C7.07969 1.33301 6.3335 2.0792 6.3335 2.99967C6.3335 3.92015 7.07969 4.66634 8.00016 4.66634Z"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+      <path
+        d="M6.80019 4.2002L4.2002 6.80019"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+      <path
+        d="M3.00016 9.66634C3.92064 9.66634 4.66683 8.92015 4.66683 7.99967C4.66683 7.0792 3.92064 6.33301 3.00016 6.33301C2.07969 6.33301 1.3335 7.0792 1.3335 7.99967C1.3335 8.92015 2.07969 9.66634 3.00016 9.66634Z"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+      <path
+        d="M4.6665 8H11.3332"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+      <path
+        d="M13.0002 9.66634C13.9206 9.66634 14.6668 8.92015 14.6668 7.99967C14.6668 7.0792 13.9206 6.33301 13.0002 6.33301C12.0797 6.33301 11.3335 7.0792 11.3335 7.99967C11.3335 8.92015 12.0797 9.66634 13.0002 9.66634Z"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+      <path
+        d="M9.2002 11.8002L11.8002 9.2002"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+      <path
+        d="M8.00016 14.6663C8.92064 14.6663 9.66683 13.9201 9.66683 12.9997C9.66683 12.0792 8.92064 11.333 8.00016 11.333C7.07969 11.333 6.3335 12.0792 6.3335 12.9997C6.3335 13.9201 7.07969 14.6663 8.00016 14.6663Z"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </g>
+    <defs>
+      <clipPath id="clip0_939_1756">
+        <rect width="16" height="16" fill="white" />
+      </clipPath>
+    </defs>
+  </svg>
+  <svg
+    v-else-if="name === 'document'"
+    :width="size"
+    :height="size"
+    viewBox="0 0 16 16"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M10.0003 1.33301H4.00033C3.6467 1.33301 3.30756 1.47348 3.05752 1.72353C2.80747 1.97358 2.66699 2.31272 2.66699 2.66634V13.333C2.66699 13.6866 2.80747 14.0258 3.05752 14.2758C3.30756 14.5259 3.6467 14.6663 4.00033 14.6663H12.0003C12.3539 14.6663 12.6931 14.5259 12.9431 14.2758C13.1932 14.0258 13.3337 13.6866 13.3337 13.333V4.66634L10.0003 1.33301Z"
+      stroke="currentColor"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <path
+      d="M9.33301 1.33301V3.99967C9.33301 4.3533 9.47348 4.69244 9.72353 4.94248C9.97358 5.19253 10.3127 5.33301 10.6663 5.33301H13.333"
+      stroke="currentColor"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </svg>
 </template>
 
 <script lang="ts" setup>
