@@ -90,7 +90,12 @@ const toggleLayers = [
 const $route = useRoute();
 const uetkLayers = ["upes", "ezerai_tvenkiniai"];
 
-const query = parseRouteParams($route.query, ["cadastral_id", "show_search", "preview"]);
+const query = parseRouteParams($route.query, [
+  "cadastral_id",
+  "show_search",
+  "preview",
+  "type",
+]);
 if (query.cadastral_id) {
   const uetkServiceFilters = mapLayers.filters(uetkService.id);
 
@@ -100,9 +105,26 @@ if (query.cadastral_id) {
   });
 }
 
+const mode = ref(query.type || "zvejyba");
+
 mapLayers.setSublayers(uetkService.id, uetkLayers);
 
 const isSearchEnabled = !!query.show_search || !!query.preview;
+
+const layersByType: any = {
+  miskai: [
+    forestCutsLkmpVT.id,
+    gamtotvarkaNatura2000.id,
+    gamtotvarkaNatura2000.id,
+    geoportalForests.id,
+  ],
+  zvejyba: [uetkService.id],
+};
+
+function doHideLayer(layerId: string) {
+  const layers = layersByType[mode.value] || [];
+  return !layers.includes(layerId);
+}
 
 mapLayers
   .addBaseLayer(vectorBright.id)
@@ -118,22 +140,26 @@ mapLayers
   .add(geoportalOrto1995.id, { isHidden: true })
   .add(municipalitiesService.id, { isHidden: true })
   .add(stvkService.id, { isHidden: true })
-  .add(geoportalForests.id, { isHidden: true })
-  .add(gamtotvarkaNatura2000.id, { isHidden: true })
-  .add(forestCutsLkmpVT.id)
-  .add(uetkService.id)
+  .add(geoportalForests.id, { isHidden: doHideLayer(geoportalForests.id) })
+  .add(gamtotvarkaNatura2000.id, { isHidden: doHideLayer(geoportalForests.id) })
+  .add(forestCutsLkmpVT.id, { isHidden: doHideLayer(forestCutsLkmpVT.id) })
+  .add(uetkService.id, { isHidden: doHideLayer(uetkService.id) })
   .click(async ({ coordinate }: any) => {
-    mapLayers.getFeatureInfo(
-      uetkService.id,
-      coordinate,
-      ({ geometries, properties }: any) => {
-        if (query.preview) {
-          mapLayers.highlightFeatures(geometries);
-          selectedFeatures.value = properties;
+    if (mode.value === "zvejyba") {
+      mapLayers.getFeatureInfo(
+        uetkService.id,
+        coordinate,
+        ({ geometries, properties }: any) => {
+          if (query.preview) {
+            mapLayers.highlightFeatures(geometries);
+            selectedFeatures.value = properties;
+          }
+          postMessage("click", properties);
         }
-        postMessage("click", properties);
-      }
-    );
+      );
+    } else if (mode.value === "miskai") {
+      // setup click features!
+    }
   })
   .zoom(uetkService.id, { addStroke: true });
 </script>
