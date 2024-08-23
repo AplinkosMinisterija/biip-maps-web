@@ -83,7 +83,7 @@ const fileSizeNamesDictionary: any = {
   GB: "TB",
 };
 
-function getFileSize(size: number, fileSizeName = "B") {
+function getFileSize(size: number, fileSizeName = "B"): string {
   if (size < 900) return `${size} ${fileSizeName}`;
 
   const newSize = Number((size / 1024).toFixed(1));
