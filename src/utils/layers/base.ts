@@ -414,3 +414,21 @@ export const geoportalKvr = {
 };
 
 geoportalKvr.layer.set('type', 'ARCGIS');
+
+export const sentinelPlyniKirtimai = {
+  id: 'sentinelPlyniKirtimai',
+  title: 'Sentinel 2 plyni kirtimai',
+  description: getCopyrightLabel('Valstybinė miškų tarnyba', 'https://amvmt.lrv.lt'),
+  layer: new ImageLayer({
+    source: new ImageArcGISRest({
+      attributions: getCopyrightLabel('Valstybinė miškų tarnyba', 'https://amvmt.lrv.lt'),
+      ratio: 1,
+      params: {
+        LAYERS: 'show:0,1,2',
+      },
+      url: `https://kadastras.amvmt.lt/arcgis/rest/services/Webmaps/sentinel_plyni_kirtimai/MapServer`,
+    }),
+  }),
+};
+
+sentinelPlyniKirtimai.layer.set('type', 'ARCGIS');

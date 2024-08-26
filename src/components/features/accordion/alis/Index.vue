@@ -3,14 +3,19 @@
     <UiAccordionItem
       v-for="feature in features"
       :key="feature.featureId"
-      :title="getValue(feature, ['Pavadinimas'])"
+      :title="getTitle(feature)"
       :subtitle="getSubtitle(feature)"
     >
-      <FeaturesAccordionAlisObject
+      <FeaturesAccordionAlisUetkObject
+        v-if="!isTypeKirtimai(feature)"
         :feature="feature"
         :get-value="getValue"
         :get-cadastral-id="getCadastralId"
         :get-category="getCategory"
+      />
+      <FeaturesAccordionAlisKirtimaiObject
+        v-else
+        :feature="feature"
       />
     </UiAccordionItem>
   </UiAccordion>
@@ -60,7 +65,22 @@ const features = computed(() => props.features.map(f => {
   }, {})
 }))
 
+function isTypeKirtimai(feature: any) {
+  return feature?._type === 'kirtimai'
+}
+
+function getTitle(feature: any) {
+  if (isTypeKirtimai(feature)) {
+    return getValue(feature, ['Kirtimo rūšis'])
+  }
+
+  return getValue(feature, ['Pavadinimas'])
+}
+
 function getSubtitle(feature: any) {
+  if (isTypeKirtimai(feature)) {
+    return `${getValue(feature, ['Girininkija'])} girininkija, ${getValue(feature, ['VMU Padalinys'])} r.p.`
+  }
   const cadastralId = getCadastralId(feature);
   const objectType = getCategory(feature)
   if (!cadastralId) return objectType || '';

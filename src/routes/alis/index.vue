@@ -63,6 +63,11 @@ import {
   vectorBright,
   vectorPositron,
   forestCutsLkmpVT,
+  artimaAplinkaVT,
+  sentinelPlyniKirtimai,
+  rusysService,
+  geoportalKvr,
+  inspireParcelService,
 } from "@/utils";
 
 const filtersStore = useFiltersStore();
@@ -73,9 +78,15 @@ const uploadRef = ref();
 
 const toggleLayers = [
   uetkService,
+  forestCutsLkmpVT,
   geoportalForests,
   gamtotvarkaNatura2000,
   stvkService,
+  rusysService,
+  artimaAplinkaVT,
+  sentinelPlyniKirtimai,
+  geoportalKvr,
+  inspireParcelService,
   municipalitiesService,
   geoportalOrto1995,
   geoportalOrto2005,
@@ -112,12 +123,7 @@ mapLayers.setSublayers(uetkService.id, uetkLayers);
 const isSearchEnabled = !!query.show_search || !!query.preview;
 
 const layersByType: any = {
-  miskai: [
-    forestCutsLkmpVT.id,
-    gamtotvarkaNatura2000.id,
-    gamtotvarkaNatura2000.id,
-    geoportalForests.id,
-  ],
+  miskai: [forestCutsLkmpVT.id, geoportalForests.id, artimaAplinkaVT.id],
   zvejyba: [uetkService.id],
 };
 
@@ -139,12 +145,17 @@ mapLayers
   .add(geoportalOrto2005.id, { isHidden: true })
   .add(geoportalOrto1995.id, { isHidden: true })
   .add(municipalitiesService.id, { isHidden: true })
+  .add(inspireParcelService.id, { isHidden: true })
+  .add(geoportalKvr.id, { isHidden: true })
+  .add(sentinelPlyniKirtimai.id, { isHidden: true })
+  .add(artimaAplinkaVT.id)
+  .add(rusysService.id, { isHidden: true })
   .add(stvkService.id, { isHidden: true })
   .add(geoportalForests.id, { isHidden: doHideLayer(geoportalForests.id) })
   .add(gamtotvarkaNatura2000.id, { isHidden: doHideLayer(geoportalForests.id) })
   .add(forestCutsLkmpVT.id, { isHidden: doHideLayer(forestCutsLkmpVT.id) })
   .add(uetkService.id, { isHidden: doHideLayer(uetkService.id) })
-  .click(async ({ coordinate }: any) => {
+  .click(async ({ coordinate, features }: any) => {
     if (mode.value === "zvejyba") {
       mapLayers.getFeatureInfo(
         uetkService.id,
@@ -158,7 +169,15 @@ mapLayers
         }
       );
     } else if (mode.value === "miskai") {
-      // setup click features!
+      const properties = features
+        .filter((f: any) => f.get("layer") === "kirtimai")
+        .map((f: any) => ({
+          ...JSON.parse(f.getId()),
+          _type: "kirtimai",
+        }));
+      if (query.preview) {
+        selectedFeatures.value = properties;
+      }
     }
   })
   .zoom(uetkService.id, { addStroke: true });

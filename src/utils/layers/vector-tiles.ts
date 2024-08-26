@@ -143,9 +143,20 @@ export const huntingServiceVT = {
 
 export const forestCutsLkmpVT = {
   id: 'forestCutsLkmpVT',
+  name: 'Kirtimų leidimai',
   layer: getVectorTileLayer('forests', '', {
     idProperty: 'atributai',
     declutter: true,
     url: 'https://lkmp.alisas.lt/maps/kirtimai/{z}/{x}/{y}.pbf',
+  }),
+};
+
+export const artimaAplinkaVT = {
+  id: 'artimaAplinkaVT',
+  name: 'Artima aplinka',
+  layer: getVectorTileLayer('forests', '', {
+    idProperty: 'atributai',
+    declutter: true,
+    url: 'https://lkmp.alisas.lt/maps/n2k/{z}/{x}/{y}.pbf',
   }),
 };
