@@ -68,7 +68,14 @@
     </UiTabs>
 
     <template #footer>
-      <UiButton type="success" :loading="uploadLoading" @click="upload">Įkelti</UiButton>
+      <UiButton
+        type="success"
+        :loading="uploadLoading"
+        :disabled="!validObjects?.length && !file?.type"
+        @click="upload"
+      >
+        Įkelti
+      </UiButton>
     </template>
   </UiModal>
 </template>
@@ -150,7 +157,12 @@ async function upload() {
   }
 
   uploadLoading.value = false;
-  file.value = {};
   uploadModalRef?.value?.close?.();
+
+  // reset everything
+  file.value = {};
+  coordinatesInput.value = "";
+  validObjects.value = [];
+  selectedItemType.value = "";
 }
 </script>
