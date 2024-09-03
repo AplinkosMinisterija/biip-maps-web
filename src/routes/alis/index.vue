@@ -65,9 +65,10 @@ import {
   forestCutsLkmpVT,
   artimaAplinkaVT,
   sentinelPlyniKirtimai,
-  rusysService,
   geoportalKvr,
   inspireParcelService,
+  rusysGridService,
+  srisService,
 } from "@/utils";
 
 const filtersStore = useFiltersStore();
@@ -82,7 +83,7 @@ const toggleLayers = [
   geoportalForests,
   gamtotvarkaNatura2000,
   stvkService,
-  rusysService,
+  rusysGridService,
   artimaAplinkaVT,
   sentinelPlyniKirtimai,
   geoportalKvr,
@@ -149,7 +150,7 @@ mapLayers
   .add(geoportalKvr.id, { isHidden: true })
   .add(sentinelPlyniKirtimai.id, { isHidden: true })
   .add(artimaAplinkaVT.id)
-  .add(rusysService.id, { isHidden: true })
+  .add(rusysGridService.id, { isHidden: true })
   .add(stvkService.id, { isHidden: true })
   .add(geoportalForests.id, { isHidden: doHideLayer(geoportalForests.id) })
   .add(gamtotvarkaNatura2000.id, { isHidden: doHideLayer(geoportalForests.id) })
@@ -181,4 +182,13 @@ mapLayers
     }
   })
   .zoom(uetkService.id, { addStroke: true });
+
+// Set title manually
+(rusysGridService as any).title = "Saugomos rūšys";
+
+// Show only SRIS layers
+mapLayers
+  .filters(rusysGridService.id)
+  .on("all")
+  .set("layers", mapLayers.getInnerVisibleLayers(srisService.id));
 </script>

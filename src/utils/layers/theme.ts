@@ -6,6 +6,7 @@ import { useConfigStore } from '@/stores/config';
 import { getCopyrightLabel } from '../utils';
 import { qgisServerUrl, rusysApiHost } from '../../config';
 import { getVectorLayer, getWMSImageLayer } from './utils';
+import { projection } from '../constants';
 
 const config = () => {
   return useConfigStore();
@@ -286,6 +287,7 @@ export const rusysGridService = {
       color: 'rgba(0,70,80,0.8)',
       width: 1,
     },
+    dataProjection: projection
   }),
 };
 
