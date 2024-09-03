@@ -10,11 +10,11 @@
         <div class="flex flex-col gap-2">
           <template v-if="activeTab === 'file'">
             <UiInputFile
-              :accept="Object.values(fileTypes)"
+              :accept="Object.values(fileTypes).flat()"
               description="Įkelkite geografinių duomenų failą (.shp arba .geojson)"
               @upload="(files: any) => (file = files?.[0])"
             />
-            <div v-if="file?.type === fileTypes.json" class="text-sm text-gray-600">
+            <div v-if="fileTypes.json.includes(file?.type)" class="text-sm text-gray-600">
               <UiLabel>Įkeliamų duomenų projekcija:</UiLabel>
               <UiInputRadio v-model="fileDataProjection" :value="projection">
                 LKS
@@ -82,6 +82,8 @@ import {
   projection,
   readGeojsonFromFile,
   readShapefileFromFile,
+  GEOJSON_FILE_FORMATS,
+  SHAPEFILE_FILE_FORMATS,
 } from "@/utils";
 const coordinatesInput = ref("");
 
@@ -96,8 +98,8 @@ const uploadLoading = ref(false);
 const mapDraw = computed(() => mapLayers.getDraw());
 
 const fileTypes = {
-  json: "application/json",
-  zip: "application/zip",
+  json: GEOJSON_FILE_FORMATS,
+  zip: SHAPEFILE_FILE_FORMATS,
 };
 
 const geomTranslates: any = {
@@ -134,9 +136,9 @@ async function upload() {
     geojson = selectedObject.geom;
   } else if (file?.value?.type) {
     dataProjection = fileDataProjection.value;
-    if (file.value.type === fileTypes.json) {
+    if (fileTypes.json.includes(file.value.type)) {
       geojson = await readGeojsonFromFile(file.value);
-    } else if (file.value.type === fileTypes.zip) {
+    } else if (fileTypes.zip.includes(file.value.type)) {
       geojson = await readShapefileFromFile(file.value);
       dataProjection = projection4326;
     }
@@ -148,6 +150,7 @@ async function upload() {
   }
 
   uploadLoading.value = false;
+  file.value = {};
   uploadModalRef?.value?.close?.();
 }
 </script>

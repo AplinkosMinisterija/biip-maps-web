@@ -81,10 +81,14 @@ function readFile(file: File) {
     };
   });
 }
+
+export const GEOJSON_FILE_FORMATS = ['application/json', 'application/geo+json'];
+export const SHAPEFILE_FILE_FORMATS = ['application/zip'];
+
 export function readGeojsonFromFile(file: File) {
   return new Promise((resolve, reject) => {
     const emptyResponse = () => reject();
-    if (file.type !== 'application/json') emptyResponse();
+    if (!GEOJSON_FILE_FORMATS.includes(file.type)) emptyResponse();
 
     readFile(file).then((data) => {
       const result = data as string;
@@ -102,7 +106,7 @@ export function readGeojsonFromFile(file: File) {
 export function readShapefileFromFile(file: File) {
   return new Promise(async (resolve, reject) => {
     const emptyResponse = () => reject();
-    if (file.type !== 'application/zip') emptyResponse();
+    if (!SHAPEFILE_FILE_FORMATS.includes(file.type)) emptyResponse();
 
     const buffer = await file.arrayBuffer().catch(emptyResponse);
     if (!buffer) return emptyResponse();
