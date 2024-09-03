@@ -83,7 +83,7 @@ function readFile(file: File) {
 }
 
 export const GEOJSON_FILE_FORMATS = ['application/json', 'application/geo+json'];
-export const SHAPEFILE_FILE_FORMATS = ['application/zip'];
+export const SHAPEFILE_FILE_FORMATS = ['application/zip', 'application/x-zip-compressed'];
 
 export function readGeojsonFromFile(file: File) {
   return new Promise((resolve, reject) => {
