@@ -80,12 +80,12 @@ const uploadRef = ref();
 const toggleLayers = [
   uetkService,
   forestCutsLkmpVT,
+  sentinelPlyniKirtimai,
   geoportalForests,
   gamtotvarkaNatura2000,
   stvkService,
   rusysGridService,
   artimaAplinkaVT,
-  sentinelPlyniKirtimai,
   geoportalKvr,
   inspireParcelService,
   municipalitiesService,
@@ -148,12 +148,12 @@ mapLayers
   .add(municipalitiesService.id, { isHidden: true })
   .add(inspireParcelService.id, { isHidden: true })
   .add(geoportalKvr.id, { isHidden: true })
-  .add(sentinelPlyniKirtimai.id, { isHidden: true })
   .add(artimaAplinkaVT.id)
   .add(rusysGridService.id, { isHidden: true })
   .add(stvkService.id, { isHidden: true })
   .add(geoportalForests.id, { isHidden: doHideLayer(geoportalForests.id) })
   .add(gamtotvarkaNatura2000.id, { isHidden: doHideLayer(geoportalForests.id) })
+  .add(sentinelPlyniKirtimai.id, { isHidden: true })
   .add(forestCutsLkmpVT.id, { isHidden: doHideLayer(forestCutsLkmpVT.id) })
   .add(uetkService.id, { isHidden: doHideLayer(uetkService.id) })
   .click(async ({ coordinate, features }: any) => {
