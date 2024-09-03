@@ -59,7 +59,7 @@ const emit = defineEmits(["upload"]);
 const files = ref([] as any[]);
 
 function upload(filesToUpload: File[] = []) {
-  console.log(filesToUpload);
+  console.log([...filesToUpload]);
   files.value = [...(filesToUpload || [])].filter((f) => {
     if (!accept.value.length) return true;
     return accept.value.includes(f.type);
