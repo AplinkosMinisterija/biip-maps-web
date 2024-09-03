@@ -2,10 +2,10 @@
   <div class="flex items-center justify-center w-full">
     <div
       ref="dropZoneRef"
-      class="flex flex-col items-center justify-center w-full h-36 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition"
+      class="flex flex-col items-center justify-center w-full h-full border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition"
       @click="inputFileRef?.click?.()"
     >
-      <div class="flex flex-col items-center gap-2 justify-center pt-5 pb-6">
+      <div class="flex flex-col items-center gap-2 justify-center pt-5 pb-6 text-center p-3">
         <UiIcon name="upload" />
         <p class="text-sm text-gray-600">
           <slot name="label" :files="files">

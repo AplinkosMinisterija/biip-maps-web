@@ -11,7 +11,7 @@
           <template v-if="activeTab === 'file'">
             <UiInputFile
               :accept="Object.values(fileTypes).flat()"
-              description="Įkelkite geografinių duomenų failą (.shp arba .geojson)"
+              description="Įkelkite geografinių duomenų failą (.zip archyvai, kuriuose yra Shapefile failai (.shp, .shx, .dbf ir kt.) arba .geojson)"
               @upload="(files: any) => (file = files?.[0])"
             />
             <div v-if="fileTypes.json.includes(file?.type)" class="text-sm text-gray-600">
