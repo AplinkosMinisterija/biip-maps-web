@@ -56,7 +56,10 @@
                 6120489
               </div>
             </div>
-            <UiAlert v-if="coordinatesInput?.length && !validObjects?.length" type="warning">
+            <UiAlert
+              v-if="coordinatesInput?.length && !validObjects?.length"
+              type="warning"
+            >
               Pateiktame kode yra klaidų. Prašome patikrinti.
             </UiAlert>
           </template>
@@ -118,26 +121,30 @@ function validateCoordinates() {
 
 async function upload() {
   uploadLoading.value = true;
+  let geojson: any;
+  let dataProjection = projection;
+
   if (selectedItemType?.value && validObjects.value?.length) {
     const selectedObject = validObjects.value.find(
       (i: any) => i.type === selectedItemType.value
     );
 
     if (!selectedObject) return;
+
+    geojson = selectedObject.geom;
   } else if (file?.value?.type) {
-    let geojson: any;
-    let dataProjection = fileDataProjection.value;
+    dataProjection = fileDataProjection.value;
     if (file.value.type === fileTypes.json) {
       geojson = await readGeojsonFromFile(file.value);
     } else if (file.value.type === fileTypes.zip) {
       geojson = await readShapefileFromFile(file.value);
       dataProjection = projection4326;
     }
+  }
 
-    if (geojson) {
-      mapLayers.zoomToFeatureCollection(geojson, { dataProjection });
-      mapDraw.value.setFeatures(geojson, { dataProjection });
-    }
+  if (geojson) {
+    mapLayers.zoomToFeatureCollection(geojson, { dataProjection });
+    mapDraw.value.setFeatures(geojson, { dataProjection });
   }
 
   uploadLoading.value = false;
