@@ -11,7 +11,7 @@
       roundedProp,
     ]"
     :disabled="disabled"
-    :title="buttonTitle[icon]"
+    :title="buttonTitles[icon]"
     @click="onClick"
   >
     <UiIcon v-if="loading || icon" :name="loading ? 'spinner' : icon" :size="iconSizes[size]" />
@@ -87,7 +87,7 @@ const typesActive: any = {
   white: 'bg-gray-200 hover:bg-gray-200',
 };
 
-const buttonTitle: any = {
+const buttonTitles: any = {
   measure: 'Matuoti atstumą',
   legend: 'Legenda',
   layers: 'Sluoksniai',
