@@ -129,6 +129,7 @@ export function getLayerStyles(opts: {
       return [defaultStyle, ...measurementStyles];
     };
   }
+
   const styles: any = {
     opts,
     primary: getStyleByFeature(primaryStyle),
@@ -171,6 +172,34 @@ export const drawLayer = {
     style: function (feature) {
       const color = feature.get('color');
       const radius = feature.get('radius') || 3;
+      const featureStroke = color ? new Stroke({ color, width: 2 }) : stroke;
+      const featureFill = color ? new Fill({ color }) : fill;
+      const featureFillColor = color ? new Fill({ color }) : fillColor;
+      return new Style({
+        stroke: featureStroke,
+        image: new Circle({
+          radius,
+          fill: featureFill,
+          stroke: featureStroke,
+        }),
+        fill: featureFillColor,
+      });
+    },
+    source: new VectorSource({
+      format: new GeoJSON({
+        dataProjection: projection,
+      }),
+    }),
+  }),
+};
+
+export const myLocationLayer = {
+  id: 'myLocationLayer',
+  layer: new VectorLayer({
+    renderBuffer: 2000,
+    style: function (feature) {
+      const color = feature.get('color');
+      const radius = feature.get('radius') || 4;
       const featureStroke = color ? new Stroke({ color, width: 2 }) : stroke;
       const featureFill = color ? new Fill({ color }) : fill;
       const featureFillColor = color ? new Fill({ color }) : fillColor;

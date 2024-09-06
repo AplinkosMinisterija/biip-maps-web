@@ -22,6 +22,8 @@ import {
 import { getCenter } from 'ol/extent';
 import { Queues } from './queues';
 import { GeoJSON } from 'ol/format';
+import { Point } from 'ol/geom';
+import type BaseEvent from 'ol/events/Event';
 
 type LayerOptions = {
   opacity?: number;
@@ -44,6 +46,7 @@ const vectorsLayerId = 'vectorsLayer';
 const fixedHighlightLayerId = 'fixedHighlightLayer';
 const highlightLayerId = 'highlightLayer';
 const drawLayerId = 'drawLayer';
+const myLocationLayerId = 'myLocationLayer';
 
 export class MapLayers extends Queues {
   map: Map | undefined;
@@ -419,6 +422,7 @@ export class MapLayers extends Queues {
     }
 
     const parentGroup = options?.group;
+
     if (!this.isAdded(id, parentGroup)) {
       this._add(id, parentGroup);
     }
@@ -913,16 +917,28 @@ export class MapLayers extends Queues {
     return !!this._geolocation;
   }
 
+  updateMyLocationPoint(possition: number[], accuracy?: number) {
+    const point = new Feature({ geometry: new Point(possition) });
+    const source = this.getVectorLayer(myLocationLayerId).getSource();
+    source.clear();
+    source.addFeature(point);
+  }
+
   zoomToUserLocation() {
     if (!this._geolocation) return;
 
     const positionCoords = this._geolocation.getPosition() as number[];
+
     if (!positionCoords || positionCoords.length !== 2) return;
 
     this.zoomToCoordinate(positionCoords[0], positionCoords[1], {
       // Coordinates are in map projection
       defaultToMapProjection: true,
     });
+
+    //TODO: show current location layer
+    this.toggleVisibility(myLocationLayerId, true);
+    this.updateMyLocationPoint(positionCoords);
     return true;
   }
 
@@ -939,6 +955,18 @@ export class MapLayers extends Queues {
       projection: this.map?.getView().getProjection(),
     });
 
+    //TODO: add current location layer and make it hidden
+    this.add('myLocationLayer', { isHidden: true });
+    const eventHandler = (event: BaseEvent) => {
+      const visile = this.isVisible(myLocationLayerId);
+      if (visile) {
+        const possition = event.target?.values_?.position;
+        const accuracy = event.target?.values_?.accuracy;
+        this.updateMyLocationPoint(possition, accuracy);
+      }
+    };
+    this._geolocation.on('change:position', eventHandler);
+    this._geolocation.on('change:accuracy', eventHandler);
     return this;
   }
 
@@ -1013,7 +1041,6 @@ export class MapLayers extends Queues {
             WITH_GEOMETRY: true,
           },
         );
-
       return loadWMSLayer(url, this._getRequestOptions(id), false);
     }
   }
@@ -1031,6 +1058,7 @@ export class MapLayers extends Queues {
     const colors = { primary: '', secondary: '' };
 
     const isTemporary = !!this.visibleBaseLayer.invertColors;
+
     if (isTemporary) {
       colors.primary = '#ffd154';
       colors.secondary = '#ffbe0b';

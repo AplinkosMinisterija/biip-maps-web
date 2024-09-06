@@ -186,8 +186,8 @@ const clearSearch = () => {
 };
 
 function zoomToUserLocation() {
-  const success = mapLayers.zoomToUserLocation();
-  if (success) return;
+  const point = mapLayers.zoomToUserLocation();
+  if (point) return;
 
   eventBus.emit('uiToast', {
     type: 'danger',
