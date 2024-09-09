@@ -43,7 +43,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed } from "vue";
+import { ref, computed, inject } from "vue";
 import { useDropZone } from "@vueuse/core";
 import { EXTENTION_BY_FILE_FORMAT } from "@/utils";
 const props = defineProps({
@@ -57,18 +57,35 @@ const inputFileRef = ref<HTMLDivElement>();
 const accept = computed(() => props.accept);
 
 const emit = defineEmits(["upload"]);
+const eventBus: any = inject("eventBus");
 const files = ref([] as any[]);
 
 function upload(filesToUpload: File[] = []) {
+  function toastOnError(name: string) {
+    eventBus.emit("uiToast", {
+      type: "danger",
+      title: name,
+      description: `Failas negali būti įkeltas`,
+      expiresIn: 7000,
+    });
+  }
+
   files.value = [...(filesToUpload || [])].filter((f) => {
-    if (!accept.value.length) return true;
+    let valid = true;
+    if (!accept.value.length) return valid;
+
     if (!f.type) {
       const extention = f.name.split(".").pop();
-      if (!extention) return false;
-
-      return Object.values(EXTENTION_BY_FILE_FORMAT).includes(extention);
+      valid = !!extention && Object.values(EXTENTION_BY_FILE_FORMAT).includes(extention);
+    } else {
+      valid = accept.value.includes(f.type);
     }
-    return accept.value.includes(f.type);
+
+    if (!valid) {
+      toastOnError(f.name);
+    }
+
+    return valid;
   });
 
   if (!props.multiple) {

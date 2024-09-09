@@ -7,6 +7,7 @@
         :type="toast.type"
         :title="toast.title"
         :description="toast.description"
+        :expires-in="toast.expiresIn"
         @close="remove(toast)"
       ></UiToastsItem>
     </div>
