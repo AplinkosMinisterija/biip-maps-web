@@ -58,7 +58,7 @@ import {
   geoportalGrpk,
   parseRouteParams,
   geoportalForests,
-  gamtotvarkaNatura2000,
+  biomonNatura2000Rengiami,
   projection3857,
   vectorBright,
   vectorPositron,
@@ -82,7 +82,7 @@ const toggleLayers = [
   forestCutsLkmpVT,
   sentinelPlyniKirtimai,
   geoportalForests,
-  gamtotvarkaNatura2000,
+  biomonNatura2000Rengiami,
   stvkService,
   rusysGridService,
   artimaAplinkaVT,
@@ -152,7 +152,7 @@ mapLayers
   .add(rusysGridService.id, { isHidden: true })
   .add(stvkService.id, { isHidden: true })
   .add(geoportalForests.id, { isHidden: doHideLayer(geoportalForests.id) })
-  .add(gamtotvarkaNatura2000.id, { isHidden: doHideLayer(geoportalForests.id) })
+  .add(biomonNatura2000Rengiami.id, { isHidden: doHideLayer(geoportalForests.id) })
   .add(sentinelPlyniKirtimai.id, { isHidden: true })
   .add(forestCutsLkmpVT.id, { isHidden: doHideLayer(forestCutsLkmpVT.id) })
   .add(uetkService.id, { isHidden: doHideLayer(uetkService.id) })
