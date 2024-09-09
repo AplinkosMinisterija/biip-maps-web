@@ -68,6 +68,7 @@ import {
   geoportalKvr,
   inspireParcelService,
   rusysGridService,
+  sznsUetkService,
   srisService,
 } from "@/utils";
 
@@ -82,6 +83,7 @@ const toggleLayers = [
   forestCutsLkmpVT,
   sentinelPlyniKirtimai,
   geoportalForests,
+  sznsUetkService,
   biomonNatura2000Rengiami,
   stvkService,
   rusysGridService,
@@ -151,6 +153,7 @@ mapLayers
   .add(artimaAplinkaVT.id)
   .add(rusysGridService.id, { isHidden: true })
   .add(stvkService.id, { isHidden: true })
+  .add(sznsUetkService.id, { isHidden: true })
   .add(geoportalForests.id, { isHidden: doHideLayer(geoportalForests.id) })
   .add(biomonNatura2000Rengiami.id, { isHidden: doHideLayer(geoportalForests.id) })
   .add(sentinelPlyniKirtimai.id, { isHidden: true })
