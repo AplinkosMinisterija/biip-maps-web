@@ -14,7 +14,7 @@
               description="Įkelkite geografinių duomenų failą (.zip archyvai, kuriuose yra Shapefile failai (.shp, .shx, .dbf ir kt.) arba .geojson)"
               @upload="(files: any) => (file = files?.[0])"
             />
-            <div v-if="fileTypes.json.includes(file?.type)" class="text-sm text-gray-600">
+            <div v-if="fileTypes.json.includes(file?.name)" class="text-sm text-gray-600">
               <UiLabel>Įkeliamų duomenų projekcija:</UiLabel>
               <UiInputRadio v-model="fileDataProjection" :value="projection">
                 LKS
@@ -71,7 +71,7 @@
       <UiButton
         type="success"
         :loading="uploadLoading"
-        :disabled="!validObjects?.length && !file?.type"
+        :disabled="!validObjects?.length && !file?.name"
         @click="upload"
       >
         Įkelti
@@ -91,6 +91,8 @@ import {
   readShapefileFromFile,
   GEOJSON_FILE_FORMATS,
   SHAPEFILE_FILE_FORMATS,
+  isShapeFile,
+  isGeojsonFile,
 } from "@/utils";
 const coordinatesInput = ref("");
 
@@ -141,11 +143,11 @@ async function upload() {
     if (!selectedObject) return;
 
     geojson = selectedObject.geom;
-  } else if (file?.value?.type) {
+  } else if (file?.value?.name) {
     dataProjection = fileDataProjection.value;
-    if (fileTypes.json.includes(file.value.type)) {
+    if (isGeojsonFile(file.value)) {
       geojson = await readGeojsonFromFile(file.value);
-    } else if (fileTypes.zip.includes(file.value.type)) {
+    } else if (isShapeFile(file.value)) {
       geojson = await readShapefileFromFile(file.value);
       dataProjection = projection4326;
     }

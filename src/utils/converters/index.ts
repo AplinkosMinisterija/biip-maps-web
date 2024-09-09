@@ -82,13 +82,39 @@ function readFile(file: File) {
   });
 }
 
-export const GEOJSON_FILE_FORMATS = ['application/json', 'application/geo+json'];
+export const GEOJSON_FILE_FORMATS = ['application/json', 'application/geo+json', '.geojson'];
 export const SHAPEFILE_FILE_FORMATS = ['application/zip', 'application/x-zip-compressed'];
 
 // sometimes these types are not provided
 export const EXTENTION_BY_FILE_FORMAT = {
   'application/geo+json': 'geojson',
 };
+
+export function getFileExtention(file: File) {
+  return file.name.split('.').pop();
+}
+
+export function isGeojsonFile(file: File) {
+  if (!file.name) return false;
+
+  if (file.type) {
+    return GEOJSON_FILE_FORMATS.includes(file.type);
+  }
+
+  const extention = getFileExtention(file);
+  if (!extention) return;
+
+  return ['geojson'].includes(extention);
+}
+
+export function isShapeFile(file: File) {
+  if (!file.name) return false;
+
+  if (file.type) {
+    return SHAPEFILE_FILE_FORMATS.includes(file.type);
+  }
+  return false;
+}
 
 export function readGeojsonFromFile(file: File) {
   return new Promise((resolve, reject) => {
