@@ -45,7 +45,7 @@
 <script lang="ts" setup>
 import { ref, computed, inject } from "vue";
 import { useDropZone } from "@vueuse/core";
-import { EXTENTION_BY_FILE_FORMAT } from "@/utils";
+import { EXTENTION_BY_FILE_FORMAT, getFileExtention } from "@/utils";
 const props = defineProps({
   description: { type: String, default: "" },
   accept: { type: Array, default: () => [] },
@@ -75,7 +75,7 @@ function upload(filesToUpload: File[] = []) {
     if (!accept.value.length) return valid;
 
     if (!f.type) {
-      const extention = f.name.split(".").pop();
+      const extention = getFileExtention(f);
       valid = !!extention && Object.values(EXTENTION_BY_FILE_FORMAT).includes(extention);
     } else {
       valid = accept.value.includes(f.type);
