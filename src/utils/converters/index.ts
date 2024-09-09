@@ -119,7 +119,7 @@ export function isShapeFile(file: File) {
 export function readGeojsonFromFile(file: File) {
   return new Promise((resolve, reject) => {
     const emptyResponse = () => reject();
-    if (!GEOJSON_FILE_FORMATS.includes(file.type)) emptyResponse();
+    if (!isGeojsonFile(file)) emptyResponse();
 
     readFile(file).then((data) => {
       const result = data as string;
@@ -137,7 +137,7 @@ export function readGeojsonFromFile(file: File) {
 export function readShapefileFromFile(file: File) {
   return new Promise(async (resolve, reject) => {
     const emptyResponse = () => reject();
-    if (!SHAPEFILE_FILE_FORMATS.includes(file.type)) emptyResponse();
+    if (!isShapeFile(file)) emptyResponse();
 
     const buffer = await file.arrayBuffer().catch(emptyResponse);
     if (!buffer) return emptyResponse();

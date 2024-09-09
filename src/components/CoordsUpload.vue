@@ -14,7 +14,7 @@
               description="Įkelkite geografinių duomenų failą (.zip archyvai, kuriuose yra Shapefile failai (.shp, .shx, .dbf ir kt.) arba .geojson)"
               @upload="(files: any) => (file = files?.[0])"
             />
-            <div v-if="fileTypes.json.includes(file?.name)" class="text-sm text-gray-600">
+            <div v-if="isGeojsonFile(file)" class="text-sm text-gray-600">
               <UiLabel>Įkeliamų duomenų projekcija:</UiLabel>
               <UiInputRadio v-model="fileDataProjection" :value="projection">
                 LKS
