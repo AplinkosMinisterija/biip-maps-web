@@ -150,7 +150,7 @@ mapLayers
   .add(municipalitiesService.id, { isHidden: true })
   .add(inspireParcelService.id, { isHidden: true })
   .add(geoportalKvr.id, { isHidden: true })
-  .add(artimaAplinkaVT.id)
+  .add(artimaAplinkaVT.id, { isHidden: true })
   .add(rusysGridService.id, { isHidden: true })
   .add(stvkService.id, { isHidden: true })
   .add(sznsUetkService.id, { isHidden: true })
