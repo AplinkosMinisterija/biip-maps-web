@@ -43,11 +43,13 @@ export function createMap(
       zoom: !!options?.showZoom,
       zoomOptions: {
         target: 'mapControlsRB',
+        zoomInTipLabel: 'Artinti',
+        zoomOutTipLabel: 'Tolinti',
       },
       attributionOptions: _.merge(
         {
-          tipLabel: 'Duomenų šaltiniai',
           target: 'mapControlsRB',
+          tipLabel: 'Duomenų šaltiniai',
         },
         options?.attributionOptions || {},
       ),
