@@ -143,7 +143,7 @@ export const huntingServiceVT = {
 
 export const forestCutsLkmpVT = {
   id: 'forestCutsLkmpVT',
-  name: 'Kirtimų leidimai',
+  name: 'Kirtimų leidimai nuo 2024-05',
   layer: getVectorTileLayer('forests', '', {
     idProperty: 'atributai',
     declutter: true,
