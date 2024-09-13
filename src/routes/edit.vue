@@ -243,7 +243,6 @@ mapDraw.value
     }
   })
   .on('select', ({ featureObj, feature }: any) => {
-    console.log('onSelect');
     selectedFeature.value = {
       ...feature,
       feature: featureObj,

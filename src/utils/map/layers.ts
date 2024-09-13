@@ -1,28 +1,29 @@
 import { Overlay, type Map, Feature, Geolocation } from 'ol';
-import { MapFilters } from './filters';
-import { checkAuth, loadWFSLayer, loadWMSLayer, splitUrlIfNeeded } from '../requests';
-import { MapDraw } from '.';
-import { projection } from '../constants';
-import type { Type as DrawType } from 'ol/geom/Geometry';
-import _ from 'lodash';
 import {
+  checkAuth,
+  loadWFSLayer,
+  loadWMSLayer,
+  splitUrlIfNeeded,
+  MapFilters,
+  projection,
   dataToFeatureCollection,
   featureCollectionToExtent,
   getGeometriesFromFeaturesArray,
   getPropertiesFromFeaturesArray,
   WMSFeatureQuery,
   WMSLegendRequest,
-} from './utils';
-import LayerGroup from 'ol/layer/Group';
-import {
   convertCoordinates,
   convertCoordinatesToProjection,
   convertFeatureCollectionProjection,
-} from './coordinates';
+} from '@/utils';
+import { MapDraw } from '.';
+import type { Type as DrawType } from 'ol/geom/Geometry';
+import _ from 'lodash';
+import LayerGroup from 'ol/layer/Group';
 import { getCenter } from 'ol/extent';
 import { Queues } from './queues';
 import { GeoJSON } from 'ol/format';
-import { Point } from 'ol/geom';
+import { Point, Circle } from 'ol/geom';
 import type BaseEvent from 'ol/events/Event';
 
 type LayerOptions = {
@@ -917,17 +918,25 @@ export class MapLayers extends Queues {
     return !!this._geolocation;
   }
 
-  updateMyLocationPoint(possition: number[], accuracy?: number) {
-    const point = new Feature({ geometry: new Point(possition) });
+  updateMyLocationPoint(position: number[], accuracy?: number) {
+    const point = new Feature({ geometry: new Point(position) });
     const source = this.getVectorLayer(myLocationLayerId).getSource();
     source.clear();
     source.addFeature(point);
+    if (accuracy) {
+      const accuracyFeature = new Feature({
+        geometry: new Circle(position, accuracy),
+        isAccuracy: true,
+      });
+      source.addFeature(accuracyFeature);
+    }
   }
 
   zoomToUserLocation() {
     if (!this._geolocation) return;
 
     const positionCoords = this._geolocation.getPosition() as number[];
+    const accuracy = this._geolocation.getAccuracy();
 
     if (!positionCoords || positionCoords.length !== 2) return;
 
@@ -936,9 +945,8 @@ export class MapLayers extends Queues {
       defaultToMapProjection: true,
     });
 
-    //TODO: show current location layer
     this.toggleVisibility(myLocationLayerId, true);
-    this.updateMyLocationPoint(positionCoords);
+    this.updateMyLocationPoint(positionCoords, accuracy);
     return true;
   }
 
@@ -960,9 +968,10 @@ export class MapLayers extends Queues {
     const eventHandler = (event: BaseEvent) => {
       const visile = this.isVisible(myLocationLayerId);
       if (visile) {
-        const possition = event.target?.values_?.position;
-        const accuracy = event.target?.values_?.accuracy;
-        this.updateMyLocationPoint(possition, accuracy);
+        const values = event.target?.values_;
+        const position = values?.position;
+        const accuracy = values?.accuracy;
+        this.updateMyLocationPoint(position, accuracy);
       }
     };
     this._geolocation.on('change:position', eventHandler);

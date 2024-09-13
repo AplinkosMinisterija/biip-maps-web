@@ -5,12 +5,12 @@ import LayerGroup from 'ol/layer/Group';
 import { Fill, Circle, Icon } from 'ol/style';
 import VectorSource from 'ol/source/Vector';
 import { GeoJSON } from 'ol/format';
-import { projection } from '../constants';
-import { renderIconHtml } from '../utils';
+import { projection, renderIconHtml } from '@/utils';
 import { vectorLayerStyles } from './styling';
 import { getMeasurementStyles } from './styles/measurements';
 import { getPointResolution } from 'ol/proj';
 import { featureToPoint } from '../map';
+import CircleStyle from 'ol/style/Circle';
 
 const color = 'rgba(0,70,80,0.8)';
 const colorFill = 'rgba(0,70,80,0.2)';
@@ -198,20 +198,24 @@ export const myLocationLayer = {
   layer: new VectorLayer({
     renderBuffer: 2000,
     style: function (feature) {
-      const color = feature.get('color');
-      const radius = feature.get('radius') || 4;
-      const featureStroke = color ? new Stroke({ color, width: 2 }) : stroke;
-      const featureFill = color ? new Fill({ color }) : fill;
-      const featureFillColor = color ? new Fill({ color }) : fillColor;
-      return new Style({
-        stroke: featureStroke,
-        image: new Circle({
-          radius,
-          fill: featureFill,
-          stroke: featureStroke,
-        }),
-        fill: featureFillColor,
-      });
+      if (feature.get('isAccuracy')) {
+        return new Style({
+          fill: new Fill({
+            color: '#4285f433',
+          }),
+        });
+      } else {
+        return new Style({
+          image: new CircleStyle({
+            radius: 4,
+            fill: new Fill({ color: '#4285f4' }),
+            stroke: new Stroke({
+              color: 'white',
+              width: 1,
+            }),
+          }),
+        });
+      }
     },
     source: new VectorSource({
       format: new GeoJSON({
