@@ -332,7 +332,7 @@ export const geoportalForests = {
       attributions: geoportalCopyright('vmt_mkd'),
       ratio: 1,
       params: {
-        LAYERS: 'show:0,1,2,4,5,7,8,9',
+        LAYERS: 'show:0,1,2,4,5,9',
       },
       url: `${geoportalUrl('vmt_mkd')}/MapServer`,
     }),
