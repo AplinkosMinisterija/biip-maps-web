@@ -15,9 +15,9 @@
               @upload="(files: any) => (file = files?.[0])"
             />
             <div v-if="isGeojsonFile(file)" class="text-sm text-gray-600">
-              <UiLabel>Įkeliamų duomenų projekcija:</UiLabel>
+              <UiLabel>Įkeliamų duomenų koordinačių sistema:</UiLabel>
               <UiInputRadio v-model="fileDataProjection" :value="projection">
-                LKS
+                LKS-94
               </UiInputRadio>
               <UiInputRadio v-model="fileDataProjection" :value="projection4326">
                 WGS84
