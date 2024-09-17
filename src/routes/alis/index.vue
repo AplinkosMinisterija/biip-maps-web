@@ -75,6 +75,7 @@ import {
 const filtersStore = useFiltersStore();
 const mapLayers: any = inject("mapLayers");
 const postMessage: any = inject("postMessage");
+const events: any = inject("events");
 const selectedFeatures = ref([] as any[]);
 const uploadRef = ref();
 
@@ -103,6 +104,10 @@ const toggleLayers = [
 
 const $route = useRoute();
 const uetkLayers = ["upes", "ezerai_tvenkiniai"];
+const availableModes = {
+  miskai: "miskai",
+  zvejyba: "zvejyba",
+};
 
 const query = parseRouteParams($route.query, [
   "cadastral_id",
@@ -119,15 +124,15 @@ if (query.cadastral_id) {
   });
 }
 
-const mode = ref(query.type || "zvejyba");
+const mode = ref(query.type || availableModes.zvejyba);
 
 mapLayers.setSublayers(uetkService.id, uetkLayers);
 
 const isSearchEnabled = !!query.show_search || !!query.preview;
 
 const layersByType: any = {
-  miskai: [forestCutsLkmpVT.id, geoportalForests.id, artimaAplinkaVT.id],
-  zvejyba: [uetkService.id],
+  [availableModes.miskai]: [forestCutsLkmpVT.id, geoportalForests.id, artimaAplinkaVT.id],
+  [availableModes.zvejyba]: [uetkService.id],
 };
 
 function doHideLayer(layerId: string) {
@@ -160,7 +165,7 @@ mapLayers
   .add(forestCutsLkmpVT.id, { isHidden: doHideLayer(forestCutsLkmpVT.id) })
   .add(uetkService.id, { isHidden: doHideLayer(uetkService.id) })
   .click(async ({ coordinate, features }: any) => {
-    if (mode.value === "zvejyba") {
+    if (mode.value === availableModes.zvejyba) {
       mapLayers.getFeatureInfo(
         uetkService.id,
         coordinate,
@@ -172,7 +177,7 @@ mapLayers
           postMessage("click", properties);
         }
       );
-    } else if (mode.value === "miskai") {
+    } else if (mode.value === availableModes.miskai) {
       const properties = features
         .filter((f: any) => f.get("layer") === "kirtimai")
         .map((f: any) => ({
@@ -188,6 +193,17 @@ mapLayers
 
 // Set title manually
 (rusysGridService as any).title = "Saugomos rūšys";
+
+events.on("type", (type: any) => {
+  if (Object.values(availableModes).includes(type)) {
+    mode.value = type;
+    Object.keys(layersByType).forEach((key) => {
+      layersByType[key].forEach((layer: string | number) => {
+        mapLayers.toggleVisibility(layer, key === mode.value);
+      });
+    });
+  }
+});
 
 // Show only SRIS layers
 mapLayers
