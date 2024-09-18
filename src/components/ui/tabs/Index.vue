@@ -5,16 +5,19 @@
         v-if="!hideOnOne || (hideOnOne && tabs.length > 1)"
         class="flex text-xs gap-2 border-b-2 bg-opacity-50 border-gray-200 w-full mb-3"
       >
-        <div
-          v-for="t in tabs"
-          :key="t.type"
-          :class="[activeTab === t.type ? 'border-blue-500' : 'border-transparent']"
-          class="flex gap-1 cursor-pointer px-2 py-2 border-b-2 -mb-[1px] font-semibold"
-          @click="activeTab = t.type"
-        >
-          <span>{{ t.name }}</span>
-          <span v-if="t.count">({{ t.count }})</span>
-        </div>
+        <slot name="header" :tabs="tabs" :active="activeTab">
+          <div
+            v-for="t in tabs"
+            :key="t.type"
+            :class="[activeTab === t.type ? 'border-blue-700 text-blue-700' : 'border-transparent text-gray-600']"
+            class="flex gap-1 cursor-pointer px-2 py-2 border-b-2 -mb-[1px] font-semibold"
+            @click="activeTab = t.type"
+          >
+            <UiIcon v-if="t.icon" :name="t.icon" class="mr-1" />
+            <span>{{ t.name }}</span>
+            <span v-if="t.count">({{ t.count }})</span>
+          </div>
+        </slot>
       </div>
     </div>
     <div>

@@ -9,53 +9,69 @@
       :class="[styles[props.type]?.color]"
     ></UiIcon>
     <div class="w-full flex flex-col gap-1">
-      <div class="text-xs font-semibold">{{ title }}</div>
-      <p v-if="description" class="text-xxs">{{ description }}</p>
+      <div class="text-xs font-semibold" v-html="title"></div>
+      <p v-if="description" class="text-xxs" v-html="description"></p>
     </div>
-    <UiButton size="icon-sm" type="ghost" icon="close" class="self-start" @click="$emit('close')" />
+    <UiButton
+      size="icon-sm"
+      type="ghost"
+      icon="close"
+      class="self-start"
+      @click="$emit('close')"
+    />
   </div>
 </template>
 <script setup lang="ts">
 const props = defineProps({
   type: {
     type: String,
-    default: 'default',
+    default: "default",
   },
   title: {
     type: String,
-    default: '',
+    default: "",
     required: true,
   },
   description: {
     type: String,
-    default: '',
+    default: "",
+  },
+  expiresIn: {
+    type: Number,
+    default: 0,
   },
 });
 
-defineEmits(['close']);
+const $emit = defineEmits(["close"]);
 const styles: any = {
   success: {
-    box: 'border-green-600',
-    color: 'text-green-600',
+    box: "border-green-600",
+    color: "text-green-600",
   },
   warning: {
-    box: 'border-yellow-500',
-    color: 'text-yellow-500',
+    box: "border-yellow-500",
+    color: "text-yellow-500",
   },
   danger: {
-    box: 'border-red-500',
-    color: 'text-red-500',
+    box: "border-red-500",
+    color: "text-red-500",
   },
   default: {
-    box: 'border-gray-400',
-    color: 'text-gray-400',
+    box: "border-gray-400",
+    color: "text-gray-400",
   },
 };
 
 const icons: any = {
-  success: 'check-circle',
-  warning: 'warning',
-  danger: 'error-circle',
-  default: 'warning-circle',
+  success: "check-circle",
+  warning: "warning",
+  danger: "error-circle",
+  default: "warning-circle",
 };
+
+if (props.expiresIn) {
+  setTimeout(() => {
+    $emit("close");
+  }, props.expiresIn);
+}
 </script>

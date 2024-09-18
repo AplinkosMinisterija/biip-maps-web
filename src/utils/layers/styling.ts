@@ -21,6 +21,7 @@ const LAYER_TYPE = {
   ZVEJYBA_FISHINGS: 'zvejyba.fishings',
   ZUVINIMAS_FISH_STOCKINGS: 'zuvinimas.fish_stockings',
   SMALSUOLIS_EVENTS: 'tiles.events',
+  FOREST_LUMBERING: 'forests.kirtimai',
 };
 
 const FONT_FAMILY = '"Open Sans", "Arial Unicode MS"';
@@ -208,6 +209,12 @@ export function vectorTileStyles(options?: { layerPrefix: string }): any {
       text.getText()?.setStroke(stroke);
       textFill.setColor('#ffffff');
       styles[length++] = text;
+    } else if ([LAYER_TYPE.FOREST_LUMBERING].includes(layer)) {
+      const color = '#ff0000';
+      stroke.setColor(color);
+      fill.setColor(getColorWithOpacity(color, 0.1));
+      stroke.setWidth(2);
+      styles[length++] = strokedPolygon;
     } else if ([LAYER_TYPE.SMALSUOLIS_EVENTS].includes(layer)) {
       const isCluster = feature.get('cluster');
 
