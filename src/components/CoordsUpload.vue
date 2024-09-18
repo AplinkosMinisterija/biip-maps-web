@@ -97,6 +97,7 @@ import {
 const coordinatesInput = ref("");
 
 const mapLayers: any = inject("mapLayers");
+const eventBus: any = inject("eventBus");
 const uploadModalRef = ref();
 const validObjects = ref([] as any);
 const selectedItemType = ref("");
@@ -130,6 +131,17 @@ function validateCoordinates() {
   selectedItemType.value = validObjects.value?.[0]?.type || "";
 }
 
+function toastOnError(name: string) {
+  if (!name) return;
+
+  eventBus.emit("uiToast", {
+    type: "danger",
+    title: name,
+    description: `Failas negali būti įkeltas`,
+    expiresIn: 7000,
+  });
+}
+
 async function upload() {
   uploadLoading.value = true;
   let geojson: any;
@@ -146,9 +158,9 @@ async function upload() {
   } else if (file?.value?.name) {
     dataProjection = fileDataProjection.value;
     if (isGeojsonFile(file.value)) {
-      geojson = await readGeojsonFromFile(file.value);
+      geojson = await readGeojsonFromFile(file.value).catch(toastOnError);
     } else if (isShapeFile(file.value)) {
-      geojson = await readShapefileFromFile(file.value);
+      geojson = await readShapefileFromFile(file.value).catch(toastOnError);
       dataProjection = projection4326;
     }
   }

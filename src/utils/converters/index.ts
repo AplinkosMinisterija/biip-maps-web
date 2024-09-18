@@ -118,12 +118,12 @@ export function isShapeFile(file: File) {
 
 export function readGeojsonFromFile(file: File) {
   return new Promise((resolve, reject) => {
-    const emptyResponse = () => reject();
-    if (!isGeojsonFile(file)) emptyResponse();
+    const emptyResponse = (text?: string) => reject(text);
+    if (!isGeojsonFile(file)) emptyResponse('Įkeliamas failas nėra .geojson');
 
     readFile(file).then((data) => {
       const result = data as string;
-      if (!result?.length) return emptyResponse();
+      if (!result?.length) return emptyResponse('Tuščias .geojson failas');
 
       try {
         resolve(JSON.parse(result));
@@ -136,14 +136,17 @@ export function readGeojsonFromFile(file: File) {
 
 export function readShapefileFromFile(file: File) {
   return new Promise(async (resolve, reject) => {
-    const emptyResponse = () => reject();
-    if (!isShapeFile(file)) emptyResponse();
+    const emptyResponse = (text?: string) => reject(text);
+    if (!isShapeFile(file)) emptyResponse('Įkeliamas failas nėra Shapefile .zip archyvas');
 
-    const buffer = await file.arrayBuffer().catch(emptyResponse);
+    const buffer = await file.arrayBuffer().catch(() => emptyResponse('Nepavyko nuskaityti failo'));
     if (!buffer) return emptyResponse();
 
-    const geojson = await shp(buffer).catch(emptyResponse);
-    if (!geojson) return emptyResponse();
+    const geojson = await shp(buffer).catch(() =>
+      emptyResponse('Patikrinkite ar yra visi reikiami Shapefile failai .zip archyve '),
+    );
+
+    if (!geojson) return emptyResponse('Tuščias Shapefile failas');
 
     resolve(geojson);
   });
