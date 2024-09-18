@@ -18,7 +18,7 @@
       >
         <div class="flex justify-between items-center p-6 border-b border-gray-100">
           <div>
-            <h3>{{ title }}</h3>
+            <h3 class="font-semibold">{{ title }}</h3>
           </div>
 
           <UiButton icon="close" type="ghost" @click="close" />
@@ -28,7 +28,7 @@
         </div>
         <div class="p-6 flex items-center justify-end border-t border-gray-100 pt-6">
           <UiButtonRow>
-            <UiButton type="ghost" @click="close"> Close </UiButton>
+            <UiButton v-if="showCloseBtn" type="ghost" @click="close"> Close </UiButton>
             <slot name="footer" />
           </UiButtonRow>
         </div>
@@ -38,11 +38,12 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { ref } from "vue";
 
 defineProps({
-  title: { type: String, default: '' },
-  size: { type: String, default: '' },
+  title: { type: String, default: "" },
+  size: { type: String, default: "" },
+  showCloseBtn: { type: Boolean, default: true },
 });
 const isOpen = ref(false);
 const open = () => {
@@ -56,8 +57,8 @@ const close = () => {
 defineExpose({ close, open });
 
 const sizing: any = {
-  default: 'max-w-3xl rounded',
-  sm: 'w-full md:max-w-2xl w-full rounded',
-  xs: 'w-full max-w-md w-full rounded',
+  default: "max-w-3xl rounded",
+  sm: "w-full md:max-w-2xl w-full rounded",
+  xs: "w-full max-w-md w-full rounded",
 };
 </script>

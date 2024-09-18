@@ -6,6 +6,7 @@ import { useConfigStore } from '@/stores/config';
 import { getCopyrightLabel } from '../utils';
 import { qgisServerUrl, rusysApiHost } from '../../config';
 import { getVectorLayer, getWMSImageLayer } from './utils';
+import { projection } from '../constants';
 
 const config = () => {
   return useConfigStore();
@@ -286,6 +287,7 @@ export const rusysGridService = {
       color: 'rgba(0,70,80,0.8)',
       width: 1,
     },
+    dataProjection: projection
   }),
 };
 
@@ -1011,6 +1013,27 @@ export const gamtotvarkaNatura2000 = {
   ),
 };
 gamtotvarkaNatura2000.layer.set('id', 'gamtotvarkaNatura2000');
+
+export const biomonNatura2000Rengiami = {
+  id: 'biomonNatura2000Rengiami',
+  title: 'Biomon',
+  sublayers: [
+    {
+      value: 'at_rengiamos_web_viesinimui_materiali',
+      name: 'BAST rengiamos apsaugos tikslų vertybės (D1-317)',
+    },
+    {
+      value: 'vietoviu_rengiamos_web_viesinimui_materiali',
+      name: 'BAST rengiamos vietovėse esančios vertybės (D1-210)',
+    },
+  ],
+  layer: getWMSImageLayer(
+    'https://wmsgisservice.biomon.lt/opengisservice/apsaugos_tikslai_rengiami',
+    'at_rengiamos_web_viesinimui_materiali,vietoviu_rengiamos_web_viesinimui_materiali',
+    vsttCopyright,
+  ),
+};
+biomonNatura2000Rengiami.layer.set('id', 'biomonNatura2000Rengiami');
 
 export const stvkGpoService = {
   id: 'stvkGpoService',
