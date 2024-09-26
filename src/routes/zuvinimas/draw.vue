@@ -18,10 +18,10 @@
   </div>
 </template>
 <script setup lang="ts">
-import { inject, computed } from "vue";
-import { useRoute } from "vue-router";
-import { useFiltersStore } from "@/stores/filters";
-import center from "@turf/center";
+import { inject, computed } from 'vue';
+import { useRoute } from 'vue-router';
+import { useFiltersStore } from '@/stores/filters';
+import center from '@turf/center';
 import {
   geoportalOrto,
   projection3857,
@@ -33,30 +33,27 @@ import {
   vectorPositron,
   projection,
   convertUETKProperties,
-} from "@/utils";
-import { parse } from "geojsonjs";
+} from '@/utils';
+import { parse } from 'geojsonjs';
 
 const filtersStore = useFiltersStore();
-const postMessage: any = inject("postMessage");
-const mapLayers: any = inject("mapLayers");
+const postMessage: any = inject('postMessage');
+const mapLayers: any = inject('mapLayers');
 const $route = useRoute();
-const events: any = inject("events");
+const events: any = inject('events');
 const mapDraw = computed(() => mapLayers.getDraw(markerLayer.id).enableContinuousDraw());
 
-const query = parseRouteParams($route.query, [
-  "id",
-  "preview",
-]);
-const uetkLayers = ["upes", "ezerai_tvenkiniai"];
+const query = parseRouteParams($route.query, ['id', 'preview']);
+const uetkLayers = ['upes', 'ezerai_tvenkiniai'];
 
-events.on("geom", (data: any) => {
+events.on('geom', (data: any) => {
   mapDraw.value.setFeatures(data.geom || data, { dataProjection: projection });
 });
 
-const uetkLocalFilters = mapLayers.filters("_uetkLocalFilters");
-events.on("cadastralId", (data: any) => {
+const uetkLocalFilters = mapLayers.filters('_uetkLocalFilters');
+events.on('cadastralId', (data: any) => {
   uetkLayers.forEach((item) => {
-    uetkLocalFilters.on(item).set("kadastro_id", `${data}`);
+    uetkLocalFilters.on(item).set('kadastro_id', `${data}`);
   });
 
   mapLayers
@@ -76,7 +73,7 @@ events.on("cadastralId", (data: any) => {
       if (!coordinates?.length) return;
 
       const featureCollection = parse({
-        type: "Point",
+        type: 'Point',
         coordinates,
       });
 
@@ -102,33 +99,28 @@ mapLayers
   .add(uetkService.id)
   .enableLocationTracking();
 
-mapDraw.value.setIcon("pin-water", { align: "top", size: 4 });
+mapDraw.value.setIcon('pin-water', { align: 'top', size: 4 });
 
 if (!query.preview) {
-  mapDraw.value
-    .start("Point")
-    .on(["change", "remove"], ({ features, featuresJSON }: any) => {
-      if (features) {
-        features = convertFeatureCollectionProjection(
-          features,
-          projection3857,
-          projection
-        );
+  mapDraw.value.start('Point').on(['change', 'remove'], ({ features, featuresJSON }: any) => {
+    if (features) {
+      features = convertFeatureCollectionProjection(features, projection3857, projection);
 
-        // Just to make sure
-        const point = center(featuresJSON);
-        mapLayers.getFeatureInfo(
-          uetkService.id,
-          point.geometry.coordinates,
-          ({ properties }: any) => {
-            postMessage("selected", {
-              geom: featuresJSON,
-              items: convertUETKProperties(properties),
-            });
-          }
-        );
-      }
-      postMessage("userObjects", features);
-    });
+      // Just to make sure
+      const point = center(featuresJSON);
+      mapLayers.zoomToFeatureCollection(JSON.parse(features));
+      mapLayers.getFeatureInfo(
+        uetkService.id,
+        point.geometry.coordinates,
+        ({ properties }: any) => {
+          postMessage('selected', {
+            geom: featuresJSON,
+            items: convertUETKProperties(properties),
+          });
+        },
+      );
+    }
+    postMessage('userObjects', features);
+  });
 }
 </script>
