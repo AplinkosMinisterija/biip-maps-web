@@ -206,7 +206,7 @@ export function vectorTileStyles(options?: { layerPrefix: string }): any {
         [LAYER_TYPE.BOUNDARIES_ELDERSHIPS_LABEL]: feature.get('name'),
         [LAYER_TYPE.BOUNDARIES_COUNTIES_LABEL]: feature.get('name'),
         [LAYER_TYPE.BOUNDARIES_PARCELS_LABEL]: feature.getId(),
-      }
+      };
       text.getText()?.setFont(getFont(11));
       text.getText()?.setText(`${textByLayer[layer]}`);
       textFill.setColor(COLORS.GRAY);
