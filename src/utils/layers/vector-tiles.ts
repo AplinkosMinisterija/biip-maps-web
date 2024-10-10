@@ -3,9 +3,8 @@ import VectorTileSource from 'ol/source/VectorTile';
 import { MVT } from 'ol/format';
 import { Feature } from 'ol';
 import { projection3857 } from '../constants';
-import { cdnHost, qgisTilesUrl, smalsuolisApiHost } from '@/config';
+import { boundariesHost, cdnHost, qgisTilesUrl, smalsuolisApiHost } from '@/config';
 import { vectorTileStyles } from './styling';
-import LayerGroup from 'ol/layer/Group';
 // @ts-expect-error pmtiles doesn't have types :(
 import { PMTilesVectorSource } from 'ol-pmtiles';
 
@@ -57,50 +56,54 @@ export const municipalitiesServiceVT = {
   layer: getVectorTileLayer('boundaries', '', {
     idProperty: 'code',
     declutter: true,
-    url: 'https://boundaries.startupgov.lt/pmtiles/municipalities.pmtiles',
+    url: `${boundariesHost}/tiles/municipalities.pmtiles`,
     tileSourceClass: PMTilesVectorSource,
   }),
 };
 
-export const municipalitiesCentroidServiceVT = {
-  id: 'municipalitiesCentroidServiceVT',
-  name: 'Savivaldybės',
-  layer: getVectorTileLayer('boundaries', 'municipalities_centroid', {
-    idProperty: 'code',
+export const parcelsServiceVT = {
+  id: 'parcelsServiceVT',
+  name: 'Kadastriniai sklypai',
+
+  layer: getVectorTileLayer('boundaries', '', {
+    idProperty: 'unique_number',
     declutter: true,
+    url: `${boundariesHost}/tiles/parcels.pmtiles`,
+    tileSourceClass: PMTilesVectorSource,
   }),
 };
 
 export const eldershipsServiceVT = {
   id: 'eldershipsServiceVT',
   name: 'Seniūnijos',
-  layer: new LayerGroup({
-    layers: [
-      getVectorTileLayer('boundaries', 'elderships'),
-      getVectorTileLayer('boundaries', 'elderships_centroid'),
-    ],
+
+  layer: getVectorTileLayer('boundaries', '', {
+    idProperty: 'code',
+    declutter: true,
+    url: `${boundariesHost}/tiles/elderships.pmtiles`,
+    tileSourceClass: PMTilesVectorSource,
   }),
 };
 
 export const countiesServiceVT = {
   id: 'countiesServiceVT',
   name: 'Apskritys',
-  layer: new LayerGroup({
-    layers: [
-      getVectorTileLayer('boundaries', 'counties'),
-      getVectorTileLayer('boundaries', 'counties_centroid'),
-    ],
+  layer: getVectorTileLayer('boundaries', '', {
+    idProperty: 'code',
+    declutter: true,
+    url: `${boundariesHost}/tiles/counties.pmtiles`,
+    tileSourceClass: PMTilesVectorSource,
   }),
 };
 
 export const residentialAreasServiceVT = {
   id: 'residentialAreasServiceVT',
   name: 'Gyvenamosios vietovės',
-  layer: new LayerGroup({
-    layers: [
-      getVectorTileLayer('boundaries', 'residential_areas'),
-      getVectorTileLayer('boundaries', 'residential_areas_centroid'),
-    ],
+  layer: getVectorTileLayer('boundaries', '', {
+    idProperty: 'code',
+    declutter: true,
+    url: `${boundariesHost}/tiles/residential-areas.pmtiles`,
+    tileSourceClass: PMTilesVectorSource,
   }),
 };
 
