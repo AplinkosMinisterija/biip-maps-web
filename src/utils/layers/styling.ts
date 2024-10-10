@@ -229,7 +229,7 @@ export function vectorTileStyles(options?: { layerPrefix: string }): any {
       textFill.setColor('#ffffff');
       styles[length++] = text;
     } else if ([LAYER_TYPE.HUNTING_FOOTPRINT_TRACKS].includes(layer)) {
-      stroke.setColor('#ff0000');
+      stroke.setColor('#e00000');
       stroke.setLineDash([5, 5]);
       stroke.setWidth(2);
       styles[length++] = line;

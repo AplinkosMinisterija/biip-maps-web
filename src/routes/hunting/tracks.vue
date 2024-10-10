@@ -18,6 +18,7 @@ import {
   huntingService,
   huntingFootprintTracksServiceVT,
   objectPropsToCamel,
+  huntingServiceVT,
 } from "@/utils";
 
 const mapLayers: any = inject("mapLayers");
@@ -27,6 +28,7 @@ await mapLayers
   .addBaseLayer(vectorBright.id)
   .addBaseLayer(vectorPositron.id)
   .addBaseLayer(geoportalOrto.id)
+  .add(huntingServiceVT.id)
   .add(huntingFootprintTracksServiceVT.id)
   .click(
     async ({ features }: any) => {
