@@ -44,7 +44,7 @@ import {
   projection3857,
   huntingPublicService,
   stvkService,
-  inspireParcelService,
+  parcelsServiceVT,
   vectorPositron,
   vectorBright,
 } from '@/utils';
@@ -113,7 +113,7 @@ function onToggleChange() {
   }
 }
 
-const toggleLayers = [huntingPublicService, inspireParcelService, stvkService];
+const toggleLayers = [huntingPublicService, parcelsServiceVT, stvkService];
 
 const setVisible = (layer: any, value: boolean) => {
   if (visibleLayer.value === layer.value && !value) {
@@ -146,7 +146,7 @@ mapLayers
   .addBaseLayer(vectorBright.id)
   .add(municipalitiesServiceVT.id)
   .add(stvkService.id, { isHidden: true })
-  .add(inspireParcelService.id, { isHidden: true })
+  .add(parcelsServiceVT.id, { isHidden: true })
   .add(huntingPublicService.id)
   .click(async ({ coordinate }: any) => {
     selectedFeatures.value = [];
