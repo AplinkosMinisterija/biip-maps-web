@@ -9,13 +9,15 @@ import { featureToPoint } from '../map';
 
 const LAYER_TYPE = {
   BOUNDARIES_MUNICIPALITIES: 'boundaries.municipalities',
-  BOUNDARIES_MUNICIPALITIES_LABEL: 'boundaries.municipalities_centroid',
+  BOUNDARIES_PARCELS: 'boundaries.parcels',
   BOUNDARIES_ELDERSHIPS: 'boundaries.elderships',
-  BOUNDARIES_ELDERSHIPS_LABEL: 'boundaries.elderships_centroid',
   BOUNDARIES_COUNTIES: 'boundaries.counties',
-  BOUNDARIES_COUNTIES_LABEL: 'boundaries.counties_centroid',
   BOUNDARIES_RESIDENTIAL_AREAS: 'boundaries.residential_areas',
-  BOUNDARIES_RESIDENTIAL_AREAS_LABEL: 'boundaries.residential_areas_centroid',
+  BOUNDARIES_MUNICIPALITIES_LABEL: 'boundaries.municipalities_label',
+  BOUNDARIES_PARCELS_LABEL: 'boundaries.parcels_label',
+  BOUNDARIES_ELDERSHIPS_LABEL: 'boundaries.elderships_label',
+  BOUNDARIES_COUNTIES_LABEL: 'boundaries.counties_label',
+  BOUNDARIES_RESIDENTIAL_AREAS_LABEL: 'boundaries.residential_areas_label',
   HUNTING_MPV: 'mpv.hunting_areas',
   UETK_MERGED_LABEL: 'uetk.uetk_merged.1',
   ZVEJYBA_FISHINGS: 'zvejyba.fishings',
@@ -30,6 +32,7 @@ const COLORS = {
   GRAY: '#0f0f0f',
   WHITE: '#ffffff',
   BLACK: '#000000',
+  RED: '#ff0000',
 };
 
 function getFont(size: number, type: 'normal' | 'bold' = 'bold', fontFamily: string = FONT_FAMILY) {
@@ -174,24 +177,39 @@ export function vectorTileStyles(options?: { layerPrefix: string }): any {
         LAYER_TYPE.BOUNDARIES_ELDERSHIPS,
         LAYER_TYPE.BOUNDARIES_COUNTIES,
         LAYER_TYPE.BOUNDARIES_RESIDENTIAL_AREAS,
+        LAYER_TYPE.BOUNDARIES_PARCELS,
       ].includes(layer)
     ) {
-      stroke.setColor(getColorWithOpacity(COLORS.GRAY, 0.3));
+      const colorByLayer = {
+        [LAYER_TYPE.BOUNDARIES_RESIDENTIAL_AREAS]: COLORS.GRAY,
+        [LAYER_TYPE.BOUNDARIES_MUNICIPALITIES]: COLORS.GRAY,
+        [LAYER_TYPE.BOUNDARIES_ELDERSHIPS]: COLORS.GRAY,
+        [LAYER_TYPE.BOUNDARIES_COUNTIES]: COLORS.GRAY,
+        [LAYER_TYPE.BOUNDARIES_PARCELS]: COLORS.RED,
+      };
+      stroke.setColor(getColorWithOpacity(colorByLayer[layer], 1));
       stroke.setWidth(2);
-      styles[length++] = line;
+      fill.setColor(getColorWithOpacity(colorByLayer[layer], 0.05));
+      styles[length++] = strokedPolygon;
     } else if (
       [
         LAYER_TYPE.BOUNDARIES_MUNICIPALITIES_LABEL,
         LAYER_TYPE.BOUNDARIES_ELDERSHIPS_LABEL,
         LAYER_TYPE.BOUNDARIES_COUNTIES_LABEL,
         LAYER_TYPE.BOUNDARIES_RESIDENTIAL_AREAS_LABEL,
+        LAYER_TYPE.BOUNDARIES_PARCELS_LABEL,
       ].includes(layer)
     ) {
-      text.getText()?.setText(feature.get('name'));
-      textFill.setColor(COLORS.GRAY);
+      const textByLayer = {
+        [LAYER_TYPE.BOUNDARIES_RESIDENTIAL_AREAS_LABEL]: feature.get('name'),
+        [LAYER_TYPE.BOUNDARIES_MUNICIPALITIES_LABEL]: feature.get('name'),
+        [LAYER_TYPE.BOUNDARIES_ELDERSHIPS_LABEL]: feature.get('name'),
+        [LAYER_TYPE.BOUNDARIES_COUNTIES_LABEL]: feature.get('name'),
+        [LAYER_TYPE.BOUNDARIES_PARCELS_LABEL]: feature.getId(),
+      };
       text.getText()?.setFont(getFont(11));
-      stroke.setColor(getColorWithOpacity(COLORS.WHITE, 0.3));
-      stroke.setWidth(2);
+      text.getText()?.setText(`${textByLayer[layer]}`);
+      textFill.setColor(COLORS.GRAY);
       styles[length++] = text;
     } else if ([LAYER_TYPE.ZUVINIMAS_FISH_STOCKINGS].includes(layer)) {
       const status = feature?.get('status');

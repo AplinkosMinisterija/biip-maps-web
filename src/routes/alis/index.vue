@@ -47,7 +47,7 @@ import {
   geoportalOrto,
   uetkService,
   stvkService,
-  municipalitiesService,
+  municipalitiesServiceVT,
   geoportalOrto1995,
   geoportalOrto2005,
   geoportalOrto2009,
@@ -66,7 +66,7 @@ import {
   artimaAplinkaVT,
   sentinelPlyniKirtimai,
   geoportalKvr,
-  inspireParcelService,
+  parcelsServiceVT,
   rusysGridService,
   sznsUetkService,
   srisService,
@@ -90,8 +90,8 @@ const toggleLayers = [
   rusysGridService,
   artimaAplinkaVT,
   geoportalKvr,
-  inspireParcelService,
-  municipalitiesService,
+  parcelsServiceVT,
+  municipalitiesServiceVT,
   geoportalOrto1995,
   geoportalOrto2005,
   geoportalOrto2009,
@@ -152,8 +152,8 @@ mapLayers
   .add(geoportalOrto2009.id, { isHidden: true })
   .add(geoportalOrto2005.id, { isHidden: true })
   .add(geoportalOrto1995.id, { isHidden: true })
-  .add(municipalitiesService.id, { isHidden: true })
-  .add(inspireParcelService.id, { isHidden: true })
+  .add(municipalitiesServiceVT.id, { isHidden: true })
+  .add(parcelsServiceVT.id, { isHidden: true })
   .add(geoportalKvr.id, { isHidden: true })
   .add(artimaAplinkaVT.id, { isHidden: true })
   .add(rusysGridService.id, { isHidden: true })

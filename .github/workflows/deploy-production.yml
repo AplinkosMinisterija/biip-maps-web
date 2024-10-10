@@ -22,3 +22,4 @@ jobs:
         VUE_APP_SMALSUOLIS_API_HOST=https://smalsuolis.lt/api
         VUE_APP_QGIS_SERVER=https://gis.biip.lt
         VUE_APP_CDN_HOST=https://cdn.biip.lt
+        VUE_APP_BOUNDARIES_HOST=https://boundaries.biip.lt
