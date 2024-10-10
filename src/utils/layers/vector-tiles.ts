@@ -141,6 +141,16 @@ export const huntingServiceVT = {
   }),
 };
 
+export const huntingFootprintTracksServiceVT = {
+  id: 'huntingFootprintTracksServiceVT',
+  layer: getVectorTileLayer('footprintTracks', '', {
+    idProperty: 'id',
+    declutter: true,
+    url: new URL('tiles/medziokle/pmtiles/footprint-tracks.pmtiles', cdnHost).toString(),
+    tileSourceClass: PMTilesVectorSource,
+  }),
+};
+
 export const forestCutsLkmpVT = {
   id: 'forestCutsLkmpVT',
   name: 'Kirtimų leidimai nuo 2024-05',

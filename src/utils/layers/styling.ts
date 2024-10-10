@@ -17,6 +17,7 @@ const LAYER_TYPE = {
   BOUNDARIES_RESIDENTIAL_AREAS: 'boundaries.residential_areas',
   BOUNDARIES_RESIDENTIAL_AREAS_LABEL: 'boundaries.residential_areas_centroid',
   HUNTING_MPV: 'mpv.hunting_areas',
+  HUNTING_FOOTPRINT_TRACKS: 'footprintTracks.footprint_tracks',
   UETK_MERGED_LABEL: 'uetk.uetk_merged.1',
   ZVEJYBA_FISHINGS: 'zvejyba.fishings',
   ZUVINIMAS_FISH_STOCKINGS: 'zuvinimas.fish_stockings',
@@ -209,6 +210,11 @@ export function vectorTileStyles(options?: { layerPrefix: string }): any {
       text.getText()?.setStroke(stroke);
       textFill.setColor('#ffffff');
       styles[length++] = text;
+    } else if ([LAYER_TYPE.HUNTING_FOOTPRINT_TRACKS].includes(layer)) {
+      stroke.setColor('#ff0000');
+      stroke.setLineDash([5, 5]);
+      stroke.setWidth(2);
+      styles[length++] = line;
     } else if ([LAYER_TYPE.FOREST_LUMBERING].includes(layer)) {
       const color = '#ff0000';
       stroke.setColor(color);
