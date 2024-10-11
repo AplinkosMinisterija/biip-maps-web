@@ -90,16 +90,6 @@ export const administrativeBoundariesLabelsService = {
   ],
 };
 
-export const huntingTracksService = {
-  id: 'huntingTracksService',
-  description: biipCopyright,
-  layer: getWMSImageLayer(
-    `${qgisServerUrl}/hunting_footprint_tracks`,
-    'footprint_tracks',
-    biipCopyright,
-  ),
-};
-
 export const zuvinimasService = {
   id: 'zuvinimasService',
   description: biipCopyright,

@@ -127,6 +127,7 @@ export class MapLayers extends Queues {
                 ...e,
                 features: map.getFeaturesAtPixel(e.pixel, {
                   layerFilter: (layer) => item.opts?.layers.includes(layer.get('id')),
+                  hitTolerance: 10,
                 }),
               });
             }
