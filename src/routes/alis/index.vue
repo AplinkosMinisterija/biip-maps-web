@@ -196,6 +196,7 @@ mapLayers
 
 events.on("type", (type: any) => {
   if (Object.values(availableModes).includes(type)) {
+    filtersStore.open('');
     mode.value = type;
     Object.keys(layersByType).forEach((key) => {
       layersByType[key].forEach((layer: string | number) => {
