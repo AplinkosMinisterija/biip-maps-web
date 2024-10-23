@@ -1,6 +1,10 @@
 <template>
   <div v-for="item in matchCoordinates" v-if="!!matchCoordinates.length" :key="item.id">
-    <SearchBox :name="item.name" :description="item.description" @click="zoomToMatch(item)">
+    <SearchBox
+      :name="item.name"
+      :description="item.description"
+      @click="zoomToMatch(item)"
+    >
       <template v-if="item.content">
         {{ item.content }}
       </template>
@@ -40,6 +44,7 @@ import {
   searchUETK,
   parseGeomFromString,
   searchRusys,
+  searchBoundariesParcels,
 } from '@/utils';
 
 const props = defineProps({
@@ -178,6 +183,11 @@ const tabs = computed(() => {
       type: 'geoportal',
       name: 'Vietovardžiai',
       searchFn: searchGeoportalData,
+    },
+    {
+      type: 'boundaries.parcels',
+      name: 'Kadastriniai sklypai',
+      searchFn: searchBoundariesParcels,
     },
   ];
 

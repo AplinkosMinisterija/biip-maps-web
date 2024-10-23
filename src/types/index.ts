@@ -1,7 +1,7 @@
 export type SearchResult = {
   id?: number | string;
-  x: number;
-  y: number;
+  x?: number;
+  y?: number;
   name: string;
   description: string;
   content?: string;

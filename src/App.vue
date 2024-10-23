@@ -20,7 +20,7 @@
 <script setup lang="ts">
 import { computed, inject, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { canvasToImage, projection3857 } from "@/utils";
+import { canvasToImage } from "@/utils";
 const events: any = inject("events");
 const mapLayers: any = inject("mapLayers");
 
