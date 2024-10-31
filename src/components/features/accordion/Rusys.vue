@@ -306,12 +306,6 @@ const rows: any[] = [
     show: (feature: any) => (config.user.isAdmin || config.user.isExpert) && checkFeatureId(stebejimaiFeatureId)(feature)
   },
   {
-    name: 'Tyrinėta, bet nerasta priežastis',
-    fn: getValue,
-    fnParams: ['no_quantity_reason_translate'],
-    show: (feature: any) => checkFeatureId(stebejimaiFeatureId)(feature) && !isEndangeredSpeciesType(feature),
-  },
-  {
     name: 'Plotas',
     fn: (feature: any) => {
       const area = feature?.area;
