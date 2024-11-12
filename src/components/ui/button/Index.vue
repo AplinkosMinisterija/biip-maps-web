@@ -88,7 +88,7 @@ const typesActive: any = {
 };
 
 const buttonTitles: any = {
-  measure: 'Matuoti atstumą',
+  measure: 'Matavimai',
   legend: 'Legenda',
   layers: 'Sluoksniai',
   filter: 'Filtrai',
