@@ -210,7 +210,10 @@ function tableContent(
         acc.push({
           name: `${year} m.`,
           tableRows: [
-            { key: "Bendras kiekis, vnt", value: () => zuvinimasInfo.value?.count || 0 },
+            {
+              key: "Bendras kiekis, vnt",
+              value: () => zuvinimasInfo.value.byYear[year]?.count || 0,
+            },
             ...fishes,
           ],
         });
