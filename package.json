@@ -11,7 +11,8 @@
     "type-check": "vue-tsc --noEmit",
     "lint": "eslint . --ext .js,.vue,.ts",
     "lint:sarif": "set SARIF_ESLINT_EMBED=true && yarn run lint --format @microsoft/eslint-formatter-sarif --output-file eslint-results.sarif",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "openapi-ts:boundaries": "openapi-ts -f openapi-ts.boundaries.config.ts"
   },
   "dependencies": {
     "@sentry/vue": "^7.60.1",
@@ -19,6 +20,7 @@
     "@turf/center": "^6.5.0",
     "@vueform/multiselect": "^2.6.3",
     "@vueuse/core": "^10.9.0",
+    "buffer": "^6.0.3",
     "geojsonjs": "^0.1.2",
     "lodash": "^4.17.21",
     "mitt": "^3.0.0",
@@ -26,13 +28,17 @@
     "ol": "^9.1.0",
     "ol-mapbox-style": "^12.3.0",
     "ol-pmtiles": "^0.5.0",
+    "openapi-fetch": "^0.12.2",
     "pinia": "^2.0.32",
+    "process": "^0.11.10",
     "proj4": "^2.9.0",
     "shpjs": "^6.1.0",
+    "util": "^0.12.5",
     "vue": "^3.2.47",
     "vue-markdown-render": "^2.1.1",
     "vue-router": "^4.1.6",
-    "vue3-popper": "^1.5.0"
+    "vue3-popper": "^1.5.0",
+    "wkx": "^0.5.0"
   },
   "eslintConfig": {
     "extends": [
@@ -41,6 +47,7 @@
   },
   "devDependencies": {
     "@aplinkosministerija/biip-prettier-config": "^1.1.0",
+    "@hey-api/openapi-ts": "^0.53.9",
     "@microsoft/eslint-formatter-sarif": "^3.0.0",
     "@types/lodash": "^4.14.192",
     "@types/node": "^18.15.11",
