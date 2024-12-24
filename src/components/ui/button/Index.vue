@@ -94,6 +94,9 @@ const buttonTitles: any = {
   filter: 'Filtrai',
   globe: 'Visa šalis',
   'current-location': 'Mano vieta',
+  point: 'Įvesti tašką',
+  line: 'Įvesti liniją',
+  polygon: 'Įvesti plotą',
 };
 
 const size = props.size || 'md';
