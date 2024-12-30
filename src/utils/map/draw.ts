@@ -43,6 +43,9 @@ export class MapDraw extends Queues {
     condition: click,
     multi: false,
     style: this._styleFn('secondary'),
+    layers: (layer) => {
+      return layer === this._layer;
+    },
   });
   private _modifySelect: Modify = new Modify({
     features: this._select?.getFeatures(),
@@ -142,9 +145,9 @@ export class MapDraw extends Queues {
   ) {
     return this._applyStyles({
       showMeasurements: {
-        length: opts?.length,
-        area: opts?.area,
-        segments: opts?.segments,
+        length: opts?.length || false,
+        area: opts?.area || false,
+        segments: opts?.segments || false,
       },
     });
   }

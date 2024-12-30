@@ -4,6 +4,7 @@
       <template #filters>
         <UiButtonIcon icon="layers" @click="filtersStore.toggle('layers')" />
         <UiButtonIcon icon="legend" @click="filtersStore.toggle('legend')" />
+        <UiMapMeasure />
       </template>
       <template v-if="filtersStore.active" #filtersContent>
         <UiMapLayerToggle v-if="filtersStore.isActive('layers')" :layers="toggleLayers" />
@@ -84,7 +85,7 @@ mapLayers
   .addBaseLayer(geoportalOrto.id)
   .add(geoportalGrpk.id, { isHidden: true })
   .add(administrativeBoundariesLabelsService.id, { isHidden: true })
-  .add(inspireParcelService.id, { isHidden: true })
+  .add(inspireParcelService.id)
   .add(uetkService.id, { isHidden: true })
   .add(sznsUetkService.id)
   .click(async ({ coordinate }: any) => {
@@ -105,6 +106,7 @@ mapLayers
 
 mapLayers.waitForLoaded.then(() => {
   filtersStore.toggle('layers');
+  mapLayers.setOpacity(inspireParcelService.id, 0.8);
 });
 
 if (query.cadastralId) {
@@ -123,3 +125,9 @@ if (query.cadastralId) {
   await mapLayers.zoom(uetkService.id, { addStroke: true, filters });
 }
 </script>
+
+<style>
+.ol-layer {
+  cursor: help;
+}
+</style>

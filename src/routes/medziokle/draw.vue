@@ -32,6 +32,7 @@ import {
   convertFeatureCollectionProjection,
   vectorPositron,
   vectorBright,
+  huntingServiceVT,
 } from "@/utils";
 
 const filtersStore = useFiltersStore();
@@ -52,7 +53,8 @@ mapLayers
   .addBaseLayer(vectorPositron.id)
   .addBaseLayer(vectorBright.id)
   .addBaseLayer(geoportalOrto.id)
-  .add(huntingService.id);
+  .add(huntingServiceVT.id)
+  .add(huntingService.id, { isHidden: true });
 
 if (query.mpvId) {
   huntingServiceFilters.on("mpv_info_geom").set("mpv_id", query.mpvId);

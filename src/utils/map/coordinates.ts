@@ -88,7 +88,7 @@ export function convertCoordinatesToProjection(
       data = [lastEl, firstEl];
     }
 
-    return transform(data, dataProjection || projection4326, projection);
+    return transform(data, dataProjection || projection4326, featureProjection || projection);
   };
 
   return transformCoordinates(coordinates);
@@ -334,9 +334,17 @@ export function convertFeatureCollectionProjection(data: any, from: string, to: 
     featureProjection: to,
   });
 
-  if (dataIsString) {
-    return new GeoJSON().writeFeatures(features);
+  const options: any = {};
+
+  if (to === projection4326) {
+    options.decimals = 7;
+  } else if (to === projection) {
+    options.decimals = 2;
   }
 
-  return new GeoJSON().writeFeaturesObject(features);
+  if (dataIsString) {
+    return new GeoJSON().writeFeatures(features, options);
+  }
+
+  return new GeoJSON().writeFeaturesObject(features, options);
 }

@@ -6,6 +6,7 @@ import { useConfigStore } from '@/stores/config';
 import { getCopyrightLabel } from '../utils';
 import { qgisServerUrl, rusysApiHost } from '../../config';
 import { getVectorLayer, getWMSImageLayer } from './utils';
+import { projection } from '../constants';
 
 const config = () => {
   return useConfigStore();
@@ -89,16 +90,6 @@ export const administrativeBoundariesLabelsService = {
   ],
 };
 
-export const huntingTracksService = {
-  id: 'huntingTracksService',
-  description: biipCopyright,
-  layer: getWMSImageLayer(
-    `${qgisServerUrl}/hunting_footprint_tracks`,
-    'footprint_tracks',
-    biipCopyright,
-  ),
-};
-
 export const zuvinimasService = {
   id: 'zuvinimasService',
   description: biipCopyright,
@@ -170,11 +161,11 @@ export const sznsUetkService = {
   sublayers: [
     {
       value: 'apsaugos_juostos',
-      name: 'Paviršinių vandens telkinių pakrančių apsaugos juostos (projektas)',
+      name: 'Paviršinių vandens telkinių pakrančių apsaugos juostos (NEPATVIRTINTAS PROJEKTAS)',
     },
     {
       value: 'apsaugos_zonos',
-      name: 'Paviršinių vandens telkinių apsaugos zonos (projektas)',
+      name: 'Paviršinių vandens telkinių apsaugos zonos (NEPATVIRTINTAS PROJEKTAS)',
     },
   ],
   layer: getWMSImageLayer(
@@ -198,11 +189,12 @@ export const stvkService = {
 export const inspireParcelService = {
   id: 'inspireParcelService',
   description: zudcCopyright,
-  title: 'Kadastriniai sklypai (INSPIRE duomenų rinkinys)',
+  title: 'Kadastriniai sklypai (atnaujinami kartą per metus)',
   layer: getWMSImageLayer(
     'https://www.geoportal.lt/mapproxy/gisc_inspire_geoserver/cp/wms',
     'CP.CadastralParcel,CP.CadastralZoning',
     zudcCopyright,
+    { serverType: 'geoserver' },
   ),
 };
 
@@ -217,7 +209,7 @@ const srisPrivateServiceImageLayer = getWMSImageLayer(
   `${rusysApiHost}/maps/qgisserver`,
   'radavietes,stebejimai_interpretuojami',
   biipCopyright,
-  () => srisPrivateService.getHeaders(),
+  { requestHeaders: () => srisPrivateService.getHeaders() },
 );
 srisPrivateServiceImageLayer.setVisible(false);
 export const srisPrivateService = {
@@ -285,6 +277,7 @@ export const rusysGridService = {
       color: 'rgba(0,70,80,0.8)',
       width: 1,
     },
+    dataProjection: projection
   }),
 };
 
@@ -382,6 +375,75 @@ export const rusysService = {
     ],
   }),
 };
+
+export const sznsPievosPelkesPatvirtinti = {
+  id: 'sznsPievosPelkesPatvirtinti',
+  title: 'Patvirtinti',
+  sublayers: [
+    {
+      value: 'Naturaliu_pievu_ir_ganyklu_zemelapis__patvirtintas',
+      name: 'Natūralių pievų ir ganyklų žemėlapis (patvirtintas)',
+    },
+    {
+      value: 'Pelkiu_ir_saltinynu_zemelapis__patvirtintas',
+      name: 'Pelkių ir šaltinynų žemėlapis (patvirtintas)',
+    },
+  ],
+  layer: getWMSImageLayer(
+    'https://www.geoportal.lt/mapproxy/vstt_pievos_pelkes',
+    'Patvirtinti',
+    vsttCopyright,
+  ),
+};
+sznsPievosPelkesPatvirtinti.layer.set('id', 'sznsPievosPelkesPatvirtinti');
+
+export const sznsPievosPelkesRuosiami = {
+  id: 'sznsPievosPelkesRuosiami',
+  title: 'Ruošiami tvirtinimui',
+  sublayers: [
+    {
+      value: 'Panaikinamis_teritorijos',
+      name: 'Panaikinamos teritorijos',
+    },
+    {
+      value: 'Naujos_keiciamos_Naturaliu_pievu_ir_ganyklu_teritorijos',
+      name: 'Naujos/keičiamos Natūralių pievų ir ganyklų teritorijos',
+    },
+    {
+      value: 'Naujos_keiciamos_Pelkiu_ir_saltinynu_teritorijos',
+      name: 'Naujos/keičiamos Pelkių ir šaltinynų teritorijos',
+    },
+  ],
+  layer: getWMSImageLayer(
+    'https://www.geoportal.lt/mapproxy/vstt_pievos_pelkes',
+    'Panaikinamis_teritorijos,Naujos_keiciamos_Naturaliu_pievu_ir_ganyklu_teritorijos,Naujos_keiciamos_Pelkiu_ir_saltinynu_teritorijos',
+    vsttCopyright,
+  ),
+};
+sznsPievosPelkesRuosiami.layer.set('id', 'sznsPievosPelkesRuosiami');
+
+export const sznsPievosPelkes = {
+  id: 'sznsPievosPelkes',
+  title:
+    'Natūralių pievų ir ganyklų, pelkių ir šaltinynų teritorijos, kuriose nustatomos specialiosios žemės naudojimo sąlygos',
+  description: vsttCopyright,
+  sublayers: [
+    {
+      name: 'Patvirtinti',
+      layer: sznsPievosPelkesPatvirtinti.layer,
+      id: sznsPievosPelkesPatvirtinti.id,
+    },
+    {
+      name: 'Ruošiami tvirtinimui',
+      layer: sznsPievosPelkesRuosiami.layer,
+      id: sznsPievosPelkesRuosiami.id,
+    },
+  ],
+  layer: new LayerGroup({
+    layers: [sznsPievosPelkesPatvirtinti.layer, sznsPievosPelkesRuosiami.layer],
+  }),
+};
+sznsPievosPelkes.layer.set('id', 'sznsPievosPelkes');
 
 // https://wmsgisservice.biomon.lt/opengisservice/gamtotvarka?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetCapabilities
 
@@ -941,6 +1003,27 @@ export const gamtotvarkaNatura2000 = {
   ),
 };
 gamtotvarkaNatura2000.layer.set('id', 'gamtotvarkaNatura2000');
+
+export const biomonNatura2000Rengiami = {
+  id: 'biomonNatura2000Rengiami',
+  title: 'Biomon',
+  sublayers: [
+    {
+      value: 'at_rengiamos_web_viesinimui_materiali',
+      name: 'BAST rengiamos apsaugos tikslų vertybės (D1-317)',
+    },
+    {
+      value: 'vietoviu_rengiamos_web_viesinimui_materiali',
+      name: 'BAST rengiamos vietovėse esančios vertybės (D1-210)',
+    },
+  ],
+  layer: getWMSImageLayer(
+    'https://wmsgisservice.biomon.lt/opengisservice/apsaugos_tikslai_rengiami',
+    'at_rengiamos_web_viesinimui_materiali,vietoviu_rengiamos_web_viesinimui_materiali',
+    vsttCopyright,
+  ),
+};
+biomonNatura2000Rengiami.layer.set('id', 'biomonNatura2000Rengiami');
 
 export const stvkGpoService = {
   id: 'stvkGpoService',

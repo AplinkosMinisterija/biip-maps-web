@@ -100,6 +100,7 @@ const query = parseRouteParams($route.query, [
   'autoZoom',
   'bufferMin',
   'bufferMax',
+  'closeOnSearch',
 ]);
 const isPreview = !!query.preview;
 
@@ -192,7 +193,7 @@ const featureBufferSize = computed({
 });
 
 const selectSearch = (match: any) => {
-  if (match?.cleanOnSelect) {
+  if (match?.cleanOnSelect || query.closeOnSearch) {
     filtersStore.clearSearch();
   }
   if (!match?.geom) return;

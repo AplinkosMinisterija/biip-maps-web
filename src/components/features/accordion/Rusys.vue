@@ -12,7 +12,14 @@
         <UiTableRow v-for="(r, key) in filteredRows(feature)" :key="key">
           <UiTableCell>{{ r.name }}</UiTableCell>
           <UiTableCell>
-            <div v-if="r.fn" v-html="r.fn(feature, ...(r.fnParams || [])) || ''"></div>
+            <UiImages
+              v-if="r.images"
+              :images="r.fn(feature, ...(r.fnParams || []))"
+            ></UiImages>
+            <div
+              v-else-if="r.fn"
+              v-html="r.fn(feature, ...(r.fnParams || [])) || ''"
+            ></div>
             <span
               v-else-if="r.link"
               class="border-b border-b-black hover:border-b-gray-700 hover:text-gray-700 cursor-pointer"
@@ -20,7 +27,7 @@
             >
               {{ r.link }}
             </span>
-            <template v-else>{{ feature[r.prop] || '' }}</template>
+            <template v-else>{{ feature[r.prop] || "" }}</template>
           </UiTableCell>
         </UiTableRow>
       </UiTable>
@@ -113,11 +120,29 @@ const getTextFromProps = (item: any, type: string) => {
   return `${getValue(props, propByType.name)} (<i>lot. ${getValue(props, propByType.latin)}</i>)`;
 };
 
-const getDate = (item: any, prop: string) => {
+const getDate = (item: any, props: string | string[]) => {
+  if (!Array.isArray(props)) {
+    props = [props];
+  }
+  const prop = props.find((p) => !!item[p]) || '';
+
   const date = item[prop] || '';
   if (!date) return '-';
 
   return moment(date).format('YYYY-MM-DD');
+};
+
+const getImages = (item: any, props: string | string[]) => {
+  if (!Array.isArray(props)) {
+    props = [props];
+  }
+  const prop = props.find((p) => !!item[p]) || '';
+
+  const photos: any[] = item[prop] || [];
+
+  if (!photos?.length) return [];
+
+  return photos.map(p => p.url);
 };
 
 const getValue = (item: any, props: string | string[], translates?: any) => {
@@ -182,13 +207,13 @@ const rows: any[] = [
   {
     name: 'Pirmas stebėjimas',
     fn: getDate,
-    fnParams: ['Sukūrimo data'],
+    fnParams: ['first_observed_at'],
     show: checkFeatureId(radavietesFeatureIds),
   },
   {
     name: 'Stebėjimo data',
     fn: getDate,
-    fnParams: ['observed_at'],
+    fnParams: [['observed_at', 'Stebėjimo data']],
     show: checkFeatureId(interpretuojamiStebejimaiFeatureId),
   },
   {
@@ -196,12 +221,6 @@ const rows: any[] = [
     show: checkFeatureId(radavietesFeatureIds),
     fn: getDate,
     fnParams: ['Atnaujinimo data'],
-  },
-  {
-    name: 'Sunaikinta / Išnykus',
-    fn: getDate,
-    fnParams: ['Ištrynimo data'],
-    show: checkFeatureId(radavietesFeatureIds),
   },
   {
     name: 'Centro koordinatės',
@@ -219,6 +238,59 @@ const rows: any[] = [
     click: selectFeature,
     show: (feature: any) =>
       (config.user.isAdmin || config.user.isExpert) && isFeaturePlace(feature),
+  },
+  {
+    name: 'Individų skaičius (gausumas)',
+    fn: getValue,
+    fnParams: ['Gausumas (vnt.)'],
+    show: checkFeatureId(interpretuojamiStebejimaiFeatureId),
+  },
+  {
+    name: 'Veiklos požymiai',
+    fn: getValue,
+    fnParams: ['activity_translate'],
+    show: checkFeatureId(interpretuojamiStebejimaiFeatureId),
+  },
+  {
+    name: 'Vystymosi stadija',
+    fn: getValue,
+    fnParams: ['evolution_translate'],
+    show: checkFeatureId(interpretuojamiStebejimaiFeatureId),
+  },
+  {
+    name: 'Nuotraukos',
+    images: true,
+    fn: getImages,
+    fnParams: ['photos'],
+    show: checkFeatureId(interpretuojamiStebejimaiFeatureId),
+  },
+  {
+    name: 'Šaltinis',
+    fn: getValue,
+    fnParams: ['source'],
+    show: checkFeatureId(interpretuojamiStebejimaiFeatureId),
+  },
+  {
+    name: 'Buveinė, elgsena, ūkinė veikla ir kita informacija',
+    fn: getValue,
+    fnParams: ['Buveinės aprašymas'],
+    show: checkFeatureId(interpretuojamiStebejimaiFeatureId),
+  },
+  {
+    name: 'Stebėtojas',
+    fn: getValue,
+    fnParams: ['observed_by'],
+    show: (feature: any) => (config.user.isAdmin || config.user.isExpert) && checkFeatureId(interpretuojamiStebejimaiFeatureId)(feature)
+  },
+  {
+    name: 'Plotas',
+    fn: (feature: any) => {
+      const area = feature?.area;
+      if (!area) return '-';
+
+      return `${area} m2`;
+    },
+    show: checkFeatureId(radavietesFeatureIds),
   },
 ];
 

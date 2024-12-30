@@ -1,26 +1,30 @@
 import { Overlay, type Map, Feature, Geolocation } from 'ol';
-import { MapFilters } from './filters';
-import { checkAuth, loadWFSLayer, loadWMSLayer, splitUrlIfNeeded } from '../requests';
-import { MapDraw } from '.';
-import { projection } from '../constants';
-import type { Type as DrawType } from 'ol/geom/Geometry';
-import _ from 'lodash';
 import {
+  checkAuth,
+  loadWFSLayer,
+  loadWMSLayer,
+  splitUrlIfNeeded,
+  MapFilters,
+  projection,
   dataToFeatureCollection,
   featureCollectionToExtent,
   getGeometriesFromFeaturesArray,
   getPropertiesFromFeaturesArray,
   WMSFeatureQuery,
   WMSLegendRequest,
-} from './utils';
-import LayerGroup from 'ol/layer/Group';
-import {
   convertCoordinates,
   convertCoordinatesToProjection,
   convertFeatureCollectionProjection,
-} from './coordinates';
+} from '@/utils';
+import { MapDraw } from '.';
+import type { Type as DrawType } from 'ol/geom/Geometry';
+import _ from 'lodash';
+import LayerGroup from 'ol/layer/Group';
 import { getCenter } from 'ol/extent';
 import { Queues } from './queues';
+import { GeoJSON } from 'ol/format';
+import { Point, Circle } from 'ol/geom';
+import type BaseEvent from 'ol/events/Event';
 
 type LayerOptions = {
   opacity?: number;
@@ -43,6 +47,7 @@ const vectorsLayerId = 'vectorsLayer';
 const fixedHighlightLayerId = 'fixedHighlightLayer';
 const highlightLayerId = 'highlightLayer';
 const drawLayerId = 'drawLayer';
+const myLocationLayerId = 'myLocationLayer';
 
 export class MapLayers extends Queues {
   map: Map | undefined;
@@ -102,20 +107,32 @@ export class MapLayers extends Queues {
       this.centerMap();
 
       this._processQueue();
+      map.getViewport().addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        const pixel = map.getEventPixel(e);
+        const coordinate = map.getCoordinateFromPixel(pixel);
+        this._clickCallbacks
+          .filter((i) => !!i?.opts?.right)
+          .map((item) => item.cb({ pixel, coordinate }));
+      });
+
       map.on('singleclick', (e: any) => {
         const features = map.getFeaturesAtPixel(e.pixel);
         e.features = features;
-        this._clickCallbacks.map((item) => {
-          if (item?.opts?.layers) {
-            return item.cb({
-              ...e,
-              features: map.getFeaturesAtPixel(e.pixel, {
-                layerFilter: (layer) => item.opts?.layers.includes(layer.get('id')),
-              }),
-            });
-          }
-          return item.cb(e);
-        });
+        this._clickCallbacks
+          .filter((i) => !i?.opts?.right)
+          .map((item) => {
+            if (item?.opts?.layers) {
+              return item.cb({
+                ...e,
+                features: map.getFeaturesAtPixel(e.pixel, {
+                  layerFilter: (layer) => item.opts?.layers.includes(layer.get('id')),
+                  hitTolerance: 10,
+                }),
+              });
+            }
+            return item.cb(e);
+          });
       });
       map.on('pointermove', (e: any) => {
         clearTimeout(this._timeouts.hover);
@@ -159,7 +176,15 @@ export class MapLayers extends Queues {
 
   setOverlayElement(el: HTMLElement) {
     if (!el) return this;
-    this._overlayLayer = new Overlay({
+    const element = this.appendOverlayElement(el);
+    if (!element) return;
+    this._overlayLayer = element;
+    return this;
+  }
+
+  appendOverlayElement(el: HTMLElement) {
+    if (!el) return;
+    const overlayElement = new Overlay({
       element: el,
       autoPan: {
         animation: {
@@ -167,8 +192,9 @@ export class MapLayers extends Queues {
         },
       },
     });
-    this.map?.addOverlay(this._overlayLayer);
-    return this;
+    this.map?.addOverlay(overlayElement);
+
+    return overlayElement;
   }
 
   get overlayLayer() {
@@ -198,7 +224,7 @@ export class MapLayers extends Queues {
 
     let query: any;
     if (type === LayerType.WMS) {
-      query = WMSLegendRequest(sublayers, this.map?.getView().getProjection().getCode());
+      query = WMSLegendRequest(sublayers, this.getMapProjection());
     }
 
     if (!query) return;
@@ -308,8 +334,11 @@ export class MapLayers extends Queues {
     return this._draw;
   }
 
-  toggleMeasuring(opts?: any, type: DrawType = 'LineString', value?: boolean, id?: string) {
-    return this.getDraw(id).enableContinuousDraw().enableMeasurements(opts).toggle(type, value);
+  toggleMeasuring(type: DrawType = 'LineString', opts?: any, value?: boolean, id?: string) {
+    return this.getDraw(id)
+      .enableContinuousDraw(opts?.continuousDraw)
+      .enableMeasurements(opts)
+      .toggle(type, value);
   }
 
   getLayer(id: string) {
@@ -395,6 +424,7 @@ export class MapLayers extends Queues {
     }
 
     const parentGroup = options?.group;
+
     if (!this.isAdded(id, parentGroup)) {
       this._add(id, parentGroup);
     }
@@ -522,6 +552,7 @@ export class MapLayers extends Queues {
       filters?: any;
       cb?: Function;
       zoomFn?: Function;
+      zoomEmptyFilters?: boolean;
     } = {},
   ): Promise<any> {
     const filters = options?.filters || this.filters(id);
@@ -536,9 +567,9 @@ export class MapLayers extends Queues {
       return Promise.all(this.all(layer).map((layer: any) => this.zoom(layer.get('id'), options)));
     }
 
-    if (filters.isEmpty) return;
+    if (filters.isEmpty && !options?.zoomEmptyFilters) return;
 
-    const queryPromise: any = this._getZoomRequest(id, filters);
+    const queryPromise: any = this._getZoomRequest(id, filters, options);
 
     if (!queryPromise) return;
 
@@ -580,7 +611,7 @@ export class MapLayers extends Queues {
     const result = await this._getFeatureInfoRequest(id, coordinate, filters);
     if (!result || !cb) return;
 
-    const mapProjection = this.map.getView().getProjection().getCode();
+    const mapProjection = this.getMapProjection();
 
     const transformResponse = (data: any) => {
       if (mapProjection !== this._callbacksProjection) {
@@ -604,7 +635,7 @@ export class MapLayers extends Queues {
     cb(transformResponse(result));
   }
 
-  click(callback: Function, opts: { layers?: string[] } = {}) {
+  click(callback: Function, opts: { layers?: string[]; right?: boolean } = {}) {
     this._clickCallbacks.push({
       cb: callback,
       opts,
@@ -640,15 +671,9 @@ export class MapLayers extends Queues {
       return this._addToQueue('zoomToCoordinate', x, y, opts);
     }
 
-    const projection = opts?.defaultToMapProjection
-      ? this.map.getView().getProjection().getCode()
-      : opts?.projection;
+    const projection = opts?.defaultToMapProjection ? this.getMapProjection() : opts?.projection;
 
-    const coords = convertCoordinatesToProjection(
-      [x, y],
-      projection,
-      this.map.getView().getProjection().getCode(),
-    );
+    const coords = convertCoordinatesToProjection([x, y], projection, this.getMapProjection());
 
     this.map.getView().setCenter(coords);
     this.map.getView().setZoom(opts?.zoom || this._getZoomLevel());
@@ -706,7 +731,7 @@ export class MapLayers extends Queues {
 
     const { extent } = featureCollectionToExtent(data, this.map.getView().getProjection(), {
       applyBuffers: true,
-      dataProjection: options?.dataProjection
+      dataProjection: options?.dataProjection,
     });
 
     if (options.addStroke) {
@@ -718,6 +743,10 @@ export class MapLayers extends Queues {
     if (options?.cb && typeof options?.cb === 'function') {
       options.cb();
     }
+  }
+
+  getMapProjection() {
+    return this.map?.getView()?.getProjection().getCode() || '';
   }
 
   highlightFeatures(
@@ -738,11 +767,7 @@ export class MapLayers extends Queues {
     }
 
     data = dataToFeatureCollection(data);
-    data = convertCoordinatesToProjection(
-      data,
-      options?.dataProjection,
-      this.map.getView()?.getProjection().getCode(),
-    );
+    data = convertCoordinatesToProjection(data, options?.dataProjection, this.getMapProjection());
     const { source } = featureCollectionToExtent(data, this.map.getView().getProjection(), {
       dataProjection: options?.dataProjection,
     });
@@ -894,16 +919,35 @@ export class MapLayers extends Queues {
     return !!this._geolocation;
   }
 
+  updateMyLocationPoint(position: number[], accuracy?: number) {
+    const point = new Feature({ geometry: new Point(position) });
+    const source = this.getVectorLayer(myLocationLayerId).getSource();
+    source.clear();
+    source.addFeature(point);
+    if (accuracy) {
+      const accuracyFeature = new Feature({
+        geometry: new Circle(position, accuracy),
+        isAccuracy: true,
+      });
+      source.addFeature(accuracyFeature);
+    }
+  }
+
   zoomToUserLocation() {
     if (!this._geolocation) return;
 
     const positionCoords = this._geolocation.getPosition() as number[];
+    const accuracy = this._geolocation.getAccuracy();
+
     if (!positionCoords || positionCoords.length !== 2) return;
 
     this.zoomToCoordinate(positionCoords[0], positionCoords[1], {
       // Coordinates are in map projection
       defaultToMapProjection: true,
     });
+
+    this.toggleVisibility(myLocationLayerId, true);
+    this.updateMyLocationPoint(positionCoords, accuracy);
     return true;
   }
 
@@ -920,6 +964,19 @@ export class MapLayers extends Queues {
       projection: this.map?.getView().getProjection(),
     });
 
+    //TODO: add current location layer and make it hidden
+    this.add('myLocationLayer', { isHidden: true });
+    const eventHandler = (event: BaseEvent) => {
+      const visile = this.isVisible(myLocationLayerId);
+      if (visile) {
+        const values = event.target?.values_;
+        const position = values?.position;
+        const accuracy = values?.accuracy;
+        this.updateMyLocationPoint(position, accuracy);
+      }
+    };
+    this._geolocation.on('change:position', eventHandler);
+    this._geolocation.on('change:accuracy', eventHandler);
     return this;
   }
 
@@ -929,7 +986,7 @@ export class MapLayers extends Queues {
     this._eventsCallbacks[event].forEach((cb) => cb(...data));
   }
 
-  private _getZoomRequest(id: string, filters: MapFilters) {
+  private _getZoomRequest(id: string, filters: MapFilters, zoomOptions?: any) {
     const layer = this.getLayer(id);
     const type = layer.get('type');
     const url = layer?.getSource()?.getUrl();
@@ -941,6 +998,31 @@ export class MapLayers extends Queues {
     } else if (type === LayerType.WMS) {
       const query = WMSFeatureQuery(filters.toWMS(), filters.getLayersNames());
       return loadWMSLayer(`${url}?${query}`, options);
+    } else if (type === LayerType.GEOJSON) {
+      return new Promise((resolve) => {
+        function getFeaturesCollection() {
+          const features = layer?.getSource().getFeatures();
+          if (!features?.length) return;
+          return new GeoJSON().writeFeaturesObject(features);
+        }
+
+        const featureCollection = getFeaturesCollection();
+
+        if (featureCollection) {
+          return resolve(featureCollection);
+        }
+
+        layer.getSource().once('featuresloadend', () => {
+          // TODO: find a way to trigger this properly
+          this.zoomToFeatureCollection(getFeaturesCollection(), {
+            addStroke: zoomOptions?.addStroke,
+            cb: zoomOptions?.zoomFn,
+          });
+        });
+
+        // Needs to be resolved straight away in this case
+        return resolve('');
+      });
     }
   }
 
@@ -969,7 +1051,6 @@ export class MapLayers extends Queues {
             WITH_GEOMETRY: true,
           },
         );
-
       return loadWMSLayer(url, this._getRequestOptions(id), false);
     }
   }
@@ -987,6 +1068,7 @@ export class MapLayers extends Queues {
     const colors = { primary: '', secondary: '' };
 
     const isTemporary = !!this.visibleBaseLayer.invertColors;
+
     if (isTemporary) {
       colors.primary = '#ffd154';
       colors.secondary = '#ffbe0b';
