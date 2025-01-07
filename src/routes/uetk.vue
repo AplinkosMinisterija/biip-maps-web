@@ -46,32 +46,33 @@
   </div>
 </template>
 <script setup lang="ts">
-import { inject, ref } from 'vue';
 import { useFiltersStore } from '@/stores/filters';
 import {
-  geoportalTopo,
-  geoportalOrto,
-  geoportalTopoGray,
-  uetkService,
-  gamtotvarkaStvkService,
-  inspireParcelService,
   administrativeBoundariesLabelsService,
+  gamtotvarkaStvkService,
+  geoportalGrpk,
+  geoportalHybrid,
+  geoportalOrto,
   geoportalOrto1995,
   geoportalOrto2005,
   geoportalOrto2009,
   geoportalOrto2012,
   geoportalOrto2015,
   geoportalOrto2018,
-  geoportalHybrid,
-  geoportalGrpk,
-  parseRouteParams,
+  geoportalTopo,
+  geoportalTopoGray,
+  inspireParcelService,
   MapFilters,
+  parseRouteParams,
+  uetkService,
 } from '@/utils';
+import { inject, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
 const filtersStore = useFiltersStore();
 
 const mapLayers: any = inject('mapLayers');
+const events: any = inject('events');
 const selectedFeatures = ref([] as any[]);
 const $route = useRoute();
 
@@ -127,6 +128,7 @@ mapLayers
     mapLayers.getFeatureInfo(uetkService.id, coordinate, ({ geometries, properties }: any) => {
       mapLayers.highlightFeatures(geometries);
       selectedFeatures.value = properties;
+      postMessage('click', properties);
     });
   });
 
