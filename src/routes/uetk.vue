@@ -126,8 +126,10 @@ mapLayers
   .add(uetkService.id)
   .click(async ({ coordinate }: any) => {
     mapLayers.getFeatureInfo(uetkService.id, coordinate, ({ geometries, properties }: any) => {
-      mapLayers.highlightFeatures(geometries);
-      selectedFeatures.value = properties;
+      if (query.preview) {
+        mapLayers.highlightFeatures(geometries);
+        selectedFeatures.value = properties;
+      }
       postMessage('click', properties);
     });
   });
