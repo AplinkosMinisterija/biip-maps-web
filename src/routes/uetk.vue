@@ -72,7 +72,6 @@ import { useRoute } from 'vue-router';
 const filtersStore = useFiltersStore();
 
 const mapLayers: any = inject('mapLayers');
-const events: any = inject('events');
 const selectedFeatures = ref([] as any[]);
 const $route = useRoute();
 
