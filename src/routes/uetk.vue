@@ -77,7 +77,7 @@ const selectedFeatures = ref([] as any[]);
 const $route = useRoute();
 
 const query = parseRouteParams($route.query, ['cadastralId', 'preview', 'screenshot']);
-
+const events: any = inject('events');
 const isPreview = ref(!!query.preview);
 const isScreenshot = ref(!!query.screenshot);
 
@@ -134,7 +134,7 @@ mapLayers
     });
   });
 
-if (query.cadastralId) {
+const filterByCadastralId = async (cadastralId: string) => {
   const layers = mapLayers
     .getAllSublayers(uetkService.id)
     .filter(
@@ -144,11 +144,19 @@ if (query.cadastralId) {
   const filters = new MapFilters();
 
   layers.forEach((item: string) => {
-    filters.on(item).set('kadastro_id', `${query.cadastralId}`);
+    filters.on(item).set('kadastro_id', `${cadastralId}`);
   });
 
   await mapLayers.zoom(uetkService.id, { addStroke: true, filters });
+};
+
+if (query.cadastralId) {
+  await filterByCadastralId(query.cadastralId);
 }
+
+events.on('filter', ({ cadastralId }: any) => {
+  filterByCadastralId(cadastralId);
+});
 </script>
 
 <style>
