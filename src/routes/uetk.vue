@@ -154,8 +154,8 @@ if (query.cadastralId) {
   await filterByCadastralId(query.cadastralId);
 }
 
-events.on('filter', ({ cadastralId }: any) => {
-  filterByCadastralId(cadastralId);
+events.on('filter', async ({ cadastralId }: any) => {
+  await filterByCadastralId(cadastralId);
 });
 </script>
 
