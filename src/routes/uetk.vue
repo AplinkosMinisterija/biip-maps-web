@@ -73,11 +73,12 @@ const filtersStore = useFiltersStore();
 
 const mapLayers: any = inject('mapLayers');
 const postMessage: any = inject('postMessage');
+const events: any = inject('events');
+
 const selectedFeatures = ref([] as any[]);
 const $route = useRoute();
 
 const query = parseRouteParams($route.query, ['cadastralId', 'preview', 'screenshot']);
-const events: any = inject('events');
 const isPreview = ref(!!query.preview);
 const isScreenshot = ref(!!query.screenshot);
 
