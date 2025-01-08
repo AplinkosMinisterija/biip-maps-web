@@ -46,37 +46,44 @@
   </div>
 </template>
 <script setup lang="ts">
-import { inject, ref } from 'vue';
 import { useFiltersStore } from '@/stores/filters';
 import {
-  geoportalTopo,
-  geoportalOrto,
-  geoportalTopoGray,
-  uetkService,
-  gamtotvarkaStvkService,
-  inspireParcelService,
   administrativeBoundariesLabelsService,
+  gamtotvarkaStvkService,
+  geoportalGrpk,
+  geoportalHybrid,
+  geoportalOrto,
   geoportalOrto1995,
   geoportalOrto2005,
   geoportalOrto2009,
   geoportalOrto2012,
   geoportalOrto2015,
   geoportalOrto2018,
-  geoportalHybrid,
-  geoportalGrpk,
-  parseRouteParams,
+  geoportalTopo,
+  geoportalTopoGray,
+  inspireParcelService,
   MapFilters,
+  parseRouteParams,
+  uetkService,
 } from '@/utils';
+import { inject, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
 const filtersStore = useFiltersStore();
 
 const mapLayers: any = inject('mapLayers');
+const postMessage: any = inject('postMessage');
+const events: any = inject('events');
+
 const selectedFeatures = ref([] as any[]);
 const $route = useRoute();
 
-const query = parseRouteParams($route.query, ['cadastralId', 'preview', 'screenshot']);
-
+const query = parseRouteParams($route.query, [
+  'cadastralId',
+  'preview',
+  'screenshot',
+  'hideSidebar',
+]);
 const isPreview = ref(!!query.preview);
 const isScreenshot = ref(!!query.screenshot);
 
@@ -126,11 +133,16 @@ mapLayers
   .click(async ({ coordinate }: any) => {
     mapLayers.getFeatureInfo(uetkService.id, coordinate, ({ geometries, properties }: any) => {
       mapLayers.highlightFeatures(geometries);
-      selectedFeatures.value = properties;
+
+      if (!query.hideSidebar) {
+        selectedFeatures.value = properties;
+      }
+
+      postMessage('click', properties);
     });
   });
 
-if (query.cadastralId) {
+const filterByCadastralId = async (cadastralId: string) => {
   const layers = mapLayers
     .getAllSublayers(uetkService.id)
     .filter(
@@ -140,11 +152,19 @@ if (query.cadastralId) {
   const filters = new MapFilters();
 
   layers.forEach((item: string) => {
-    filters.on(item).set('kadastro_id', `${query.cadastralId}`);
+    filters.on(item).set('kadastro_id', `${cadastralId}`);
   });
 
   await mapLayers.zoom(uetkService.id, { addStroke: true, filters });
+};
+
+if (query.cadastralId) {
+  await filterByCadastralId(query.cadastralId);
 }
+
+events.on('filter', async ({ cadastralId }: any) => {
+  await filterByCadastralId(cadastralId);
+});
 </script>
 
 <style>
