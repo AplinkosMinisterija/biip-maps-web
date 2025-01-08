@@ -78,7 +78,12 @@ const events: any = inject('events');
 const selectedFeatures = ref([] as any[]);
 const $route = useRoute();
 
-const query = parseRouteParams($route.query, ['cadastralId', 'preview', 'screenshot']);
+const query = parseRouteParams($route.query, [
+  'cadastralId',
+  'preview',
+  'screenshot',
+  'hideSidebar',
+]);
 const isPreview = ref(!!query.preview);
 const isScreenshot = ref(!!query.screenshot);
 
