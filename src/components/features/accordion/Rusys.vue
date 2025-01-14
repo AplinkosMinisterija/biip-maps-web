@@ -220,7 +220,7 @@ const rows: any[] = [
     name: 'Naujausias stebėjimas',
     show: checkFeatureId(radavietesFeatureIds),
     fn: getDate,
-    fnParams: ['Atnaujinimo data'],
+    fnParams: ['last_observed_at'],
   },
   {
     name: 'Centro koordinatės',
