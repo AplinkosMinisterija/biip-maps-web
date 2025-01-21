@@ -352,6 +352,7 @@ https://maps.biip.lt/uetk
 | ------------- | ----------------------- | --------- | ------- |
 | `cadastralId` | Filters by cadastral ID | `Filter`  | -       |
 | `preview`     | Enables preview         | `Boolean` | false   |
+| `hideSidebar` | Hides the sidebar       | `Boolean` | false   |
 
 ## Zuvinimas
 
