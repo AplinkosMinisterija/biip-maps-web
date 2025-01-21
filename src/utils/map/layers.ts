@@ -1,27 +1,30 @@
 import { Overlay, type Map, Feature, Geolocation } from 'ol';
-import { MapFilters } from './filters';
-import { checkAuth, loadWFSLayer, loadWMSLayer, splitUrlIfNeeded } from '../requests';
-import { MapDraw } from '.';
-import { projection } from '../constants';
-import type { Type as DrawType } from 'ol/geom/Geometry';
-import _ from 'lodash';
 import {
+  checkAuth,
+  loadWFSLayer,
+  loadWMSLayer,
+  splitUrlIfNeeded,
+  MapFilters,
+  projection,
   dataToFeatureCollection,
   featureCollectionToExtent,
   getGeometriesFromFeaturesArray,
   getPropertiesFromFeaturesArray,
   WMSFeatureQuery,
   WMSLegendRequest,
-} from './utils';
-import LayerGroup from 'ol/layer/Group';
-import {
   convertCoordinates,
   convertCoordinatesToProjection,
   convertFeatureCollectionProjection,
-} from './coordinates';
+} from '@/utils';
+import { MapDraw } from '.';
+import type { Type as DrawType } from 'ol/geom/Geometry';
+import _ from 'lodash';
+import LayerGroup from 'ol/layer/Group';
 import { getCenter } from 'ol/extent';
 import { Queues } from './queues';
 import { GeoJSON } from 'ol/format';
+import { Point, Circle } from 'ol/geom';
+import type BaseEvent from 'ol/events/Event';
 
 type LayerOptions = {
   opacity?: number;
@@ -44,6 +47,7 @@ const vectorsLayerId = 'vectorsLayer';
 const fixedHighlightLayerId = 'fixedHighlightLayer';
 const highlightLayerId = 'highlightLayer';
 const drawLayerId = 'drawLayer';
+const myLocationLayerId = 'myLocationLayer';
 
 export class MapLayers extends Queues {
   map: Map | undefined;
@@ -123,6 +127,7 @@ export class MapLayers extends Queues {
                 ...e,
                 features: map.getFeaturesAtPixel(e.pixel, {
                   layerFilter: (layer) => item.opts?.layers.includes(layer.get('id')),
+                  hitTolerance: 10,
                 }),
               });
             }
@@ -419,6 +424,7 @@ export class MapLayers extends Queues {
     }
 
     const parentGroup = options?.group;
+
     if (!this.isAdded(id, parentGroup)) {
       this._add(id, parentGroup);
     }
@@ -913,16 +919,35 @@ export class MapLayers extends Queues {
     return !!this._geolocation;
   }
 
+  updateMyLocationPoint(position: number[], accuracy?: number) {
+    const point = new Feature({ geometry: new Point(position) });
+    const source = this.getVectorLayer(myLocationLayerId).getSource();
+    source.clear();
+    source.addFeature(point);
+    if (accuracy) {
+      const accuracyFeature = new Feature({
+        geometry: new Circle(position, accuracy),
+        isAccuracy: true,
+      });
+      source.addFeature(accuracyFeature);
+    }
+  }
+
   zoomToUserLocation() {
     if (!this._geolocation) return;
 
     const positionCoords = this._geolocation.getPosition() as number[];
+    const accuracy = this._geolocation.getAccuracy();
+
     if (!positionCoords || positionCoords.length !== 2) return;
 
     this.zoomToCoordinate(positionCoords[0], positionCoords[1], {
       // Coordinates are in map projection
       defaultToMapProjection: true,
     });
+
+    this.toggleVisibility(myLocationLayerId, true);
+    this.updateMyLocationPoint(positionCoords, accuracy);
     return true;
   }
 
@@ -939,6 +964,19 @@ export class MapLayers extends Queues {
       projection: this.map?.getView().getProjection(),
     });
 
+    //TODO: add current location layer and make it hidden
+    this.add('myLocationLayer', { isHidden: true });
+    const eventHandler = (event: BaseEvent) => {
+      const visile = this.isVisible(myLocationLayerId);
+      if (visile) {
+        const values = event.target?.values_;
+        const position = values?.position;
+        const accuracy = values?.accuracy;
+        this.updateMyLocationPoint(position, accuracy);
+      }
+    };
+    this._geolocation.on('change:position', eventHandler);
+    this._geolocation.on('change:accuracy', eventHandler);
     return this;
   }
 
@@ -1013,7 +1051,6 @@ export class MapLayers extends Queues {
             WITH_GEOMETRY: true,
           },
         );
-
       return loadWMSLayer(url, this._getRequestOptions(id), false);
     }
   }
@@ -1031,6 +1068,7 @@ export class MapLayers extends Queues {
     const colors = { primary: '', secondary: '' };
 
     const isTemporary = !!this.visibleBaseLayer.invertColors;
+
     if (isTemporary) {
       colors.primary = '#ffd154';
       colors.secondary = '#ffbe0b';

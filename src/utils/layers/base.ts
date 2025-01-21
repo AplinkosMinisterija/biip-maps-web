@@ -36,14 +36,14 @@ export const vectorBright = {
   id: 'vectorBright',
   title: 'Topografinis (šviesus)',
   layer: new MapboxVectorLayer({
-    styleUrl: 'https://basemap.startupgov.lt/vector/styles/bright/style.json',
+    styleUrl: 'https://basemap.biip.lt/styles/bright/style.json',
   }),
 };
 export const vectorPositron = {
   id: 'vectorPositron',
   title: 'Pilkas',
   layer: new MapboxVectorLayer({
-    styleUrl: 'https://basemap.startupgov.lt/vector/styles/positron/style.json',
+    styleUrl: 'https://basemap.biip.lt/styles/positron/style.json',
   }),
 };
 
@@ -332,7 +332,7 @@ export const geoportalForests = {
       attributions: geoportalCopyright('vmt_mkd'),
       ratio: 1,
       params: {
-        LAYERS: 'show:0,1,2,4,5,7,8,9',
+        LAYERS: 'show:0,1,2,4,5,9',
       },
       url: `${geoportalUrl('vmt_mkd')}/MapServer`,
     }),
@@ -414,3 +414,21 @@ export const geoportalKvr = {
 };
 
 geoportalKvr.layer.set('type', 'ARCGIS');
+
+export const sentinelPlyniKirtimai = {
+  id: 'sentinelPlyniKirtimai',
+  title: 'Sentinel 2 plyni kirtimai',
+  description: getCopyrightLabel('Valstybinė miškų tarnyba', 'https://amvmt.lrv.lt'),
+  layer: new ImageLayer({
+    source: new ImageArcGISRest({
+      attributions: getCopyrightLabel('Valstybinė miškų tarnyba', 'https://amvmt.lrv.lt'),
+      ratio: 1,
+      params: {
+        LAYERS: 'show:0,1,2',
+      },
+      url: `https://kadastras.amvmt.lt/arcgis/rest/services/Webmaps/sentinel_plyni_kirtimai/MapServer`,
+    }),
+  }),
+};
+
+sentinelPlyniKirtimai.layer.set('type', 'ARCGIS');

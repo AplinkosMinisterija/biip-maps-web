@@ -11,6 +11,7 @@
       roundedProp,
     ]"
     :disabled="disabled"
+    :title="buttonTitles[icon]"
     @click="onClick"
   >
     <UiIcon v-if="loading || icon" :name="loading ? 'spinner' : icon" :size="iconSizes[size]" />
@@ -84,6 +85,18 @@ const typesActive: any = {
   success: '',
   default: 'bg-blue-100',
   white: 'bg-gray-200 hover:bg-gray-200',
+};
+
+const buttonTitles: any = {
+  measure: 'Matavimai',
+  legend: 'Legenda',
+  layers: 'Sluoksniai',
+  filter: 'Filtrai',
+  globe: 'Visa šalis',
+  'current-location': 'Mano vieta',
+  point: 'Įvesti tašką',
+  line: 'Įvesti liniją',
+  polygon: 'Įvesti plotą',
 };
 
 const size = props.size || 'md';

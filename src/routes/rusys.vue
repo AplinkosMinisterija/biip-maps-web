@@ -70,6 +70,7 @@ import {
   geoportalTopo,
   geoportalTopoGray,
   highlightLayerRusys,
+  inspireParcelService,
   invaService,
   municipalitiesService,
   parseRouteParams,
@@ -185,6 +186,7 @@ const toggleLayers = [
   geoportalForests,
   sznsPievosPelkes,
   gamtotvarkaService,
+  inspireParcelService,
 ];
 
 const filterById = (key: string, id: any) => {
@@ -267,6 +269,7 @@ mapLayers
   .addBaseLayer(geoportalTopoGray.id)
   .addBaseLayer(geoportalTopo.id)
   .addBaseLayer(geoportalOrto.id)
+  .add(inspireParcelService.id, { isHidden: true })
   .add(stvkService.id, { isHidden: true })
   .add(geoportalForests.id, { isHidden: true })
   .add(geoportalGrpk.id, { isHidden: true })
