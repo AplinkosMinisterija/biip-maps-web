@@ -147,13 +147,17 @@ if (!user && query.auth) {
 config.setRusysUser(user || {});
 
 if (user?.type !== "ADMIN" && !user?.isExpert) {
-  const sublayer: any = invaService.sublayers.find(
-    (s) => s.value === "radavietes_svetimzemes"
+  const sublayers: any[] = invaService.sublayers.filter((s) =>
+    ["radavietes_svetimzemes", "stebejimai_tyrineta_nerasta_svetimzemes"].includes(
+      s.value
+    )
   );
 
-  if (sublayer?.name) {
-    sublayer.isHidden = true;
-  }
+  sublayers.forEach((sublayer) => {
+    if (sublayer?.name) {
+      sublayer.isHidden = true;
+    }
+  });
 }
 
 isPreview.value = !!query.preview;
@@ -178,6 +182,8 @@ const filters = computed(() =>
     .onAll([
       "radavietes",
       "stebejimai_interpretuojami",
+      "stebejimai_tyrineta_nerasta_invazines",
+      "stebejimai_tyrineta_nerasta_svetimzemes",
       "radavietes_invazines",
       "radavietes_svetimzemes",
     ])
