@@ -15,10 +15,7 @@
         <UiButtonIcon icon="layers" @click="filtersStore.toggle('layers')" />
         <UiMapMeasure />
         <UiBox v-if="config.user.isUser && !config.user.isExpert">
-          <UiInputCheckbox
-            v-model="config.srisShowAllPlaces"
-            @change="toggleAmateurLayers"
-          >
+          <UiInputCheckbox v-model="config.srisShowAllPlaces" @change="toggleAmateurLayers">
             Rodyti visas radavietes
           </UiInputCheckbox>
         </UiBox>
@@ -64,9 +61,9 @@
   </div>
 </template>
 <script setup lang="ts">
-import { inject, computed, ref, watch } from "vue";
-import { useRoute } from "vue-router";
-import { useFiltersStore } from "@/stores/filters";
+import { inject, computed, ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
+import { useFiltersStore } from '@/stores/filters';
 import {
   geoportalTopo,
   geoportalOrto,
@@ -89,18 +86,18 @@ import {
   gamtotvarkaService,
   highlightLayerRusys,
   inspireParcelService,
-} from "@/utils";
+} from '@/utils';
 
-import { useConfigStore } from "@/stores/config";
-import { rusysApiHost } from "@/config";
-import { getItemsByRequest } from "@/utils/requests/rusys";
+import { useConfigStore } from '@/stores/config';
+import { rusysApiHost } from '@/config';
+import { getItemsByRequest } from '@/utils/requests/rusys';
 
 const GRID_TO_SERVICE_LEVEL = 5;
 const filtersStore = useFiltersStore();
-const mapLayers: any = inject("mapLayers");
-const events: any = inject("events");
-const eventBus: any = inject("eventBus");
-const postMessage: any = inject("postMessage");
+const mapLayers: any = inject('mapLayers');
+const events: any = inject('events');
+const eventBus: any = inject('eventBus');
+const postMessage: any = inject('postMessage');
 const $route = useRoute();
 const emptyModalRef = ref();
 const config = useConfigStore();
@@ -108,31 +105,32 @@ const isPreview = ref(false);
 const selectedFeatures = ref([] as any[]);
 
 const query = parseRouteParams($route.query, [
-  "place",
-  "kingdom",
-  "species",
-  "type",
-  "auth",
-  "informationalForm",
-  "preview",
-  "amateur",
-  "request",
-  "screenshot",
+  'place',
+  'kingdom',
+  'species',
+  'type',
+  'auth',
+  'informationalForm',
+  'preview',
+  'amateur',
+  'request',
+  'screenshot',
+  'hideGrid',
 ]);
 
 const isVisibleSrisLayer = ref(true);
 const isVisibleRusysLayer = ref(true);
 
-srisService.layer.on("change:visible", () => {
+srisService.layer.on('change:visible', () => {
   isVisibleSrisLayer.value = mapLayers.isVisible(srisService.id);
 });
-rusysService.layer.on("change:visible", () => {
+rusysService.layer.on('change:visible', () => {
   isVisibleRusysLayer.value = mapLayers.isVisible(rusysService.id);
 });
 
-if (query.type === "sris") {
+if (query.type === 'sris') {
   mapLayers.toggleVisibility(invaService.id, false);
-} else if (query.type === "inva") {
+} else if (query.type === 'inva') {
   mapLayers.toggleVisibility(srisService.id, false);
 }
 
@@ -140,16 +138,14 @@ config.setSrisToken(query.auth);
 const user = await validateSrisAuth(query.auth);
 
 if (!user && query.auth) {
-  postMessage("auth", { valid: false });
-  window.location.href = "/rusys";
+  postMessage('auth', { valid: false });
+  window.location.href = '/rusys';
 }
 
 config.setRusysUser(user || {});
 
-if (user?.type !== "ADMIN" && !user?.isExpert) {
-  const sublayer: any = invaService.sublayers.find(
-    (s) => s.value === "radavietes_svetimzemes"
-  );
+if (user?.type !== 'ADMIN' && !user?.isExpert) {
+  const sublayer: any = invaService.sublayers.find((s) => s.value === 'radavietes_svetimzemes');
 
   if (sublayer?.name) {
     sublayer.isHidden = true;
@@ -162,28 +158,24 @@ const isScreenshot = ref(!!query.screenshot);
 const filtersPlacesGrid = computed(() =>
   mapLayers
     .filters(rusysGridService.id)
-    .onAll(["radavietes", "radavietes_invazines", "radavietes_svetimzemes"])
+    .onAll(['radavietes', 'radavietes_invazines', 'radavietes_svetimzemes']),
 );
-const filtersPlacesSris = computed(() =>
-  mapLayers.filters(srisService.id).on("radavietes")
-);
+const filtersPlacesSris = computed(() => mapLayers.filters(srisService.id).on('radavietes'));
 const filtersPlacesInva = computed(() =>
-  mapLayers
-    .filters(invaService.id)
-    .onAll(["radavietes_invazines", "radavietes_svetimzemes"])
+  mapLayers.filters(invaService.id).onAll(['radavietes_invazines', 'radavietes_svetimzemes']),
 );
 const filters = computed(() =>
   mapLayers
     .filters(rusysService.id)
     .onAll([
-      "radavietes",
-      "stebejimai_interpretuojami",
-      "radavietes_invazines",
-      "radavietes_svetimzemes",
-    ])
+      'radavietes',
+      'stebejimai_interpretuojami',
+      'radavietes_invazines',
+      'radavietes_svetimzemes',
+    ]),
 );
 const filtersSrisInformational = computed(() =>
-  mapLayers.filters(srisService.id).on("stebejimai_interpretuojami")
+  mapLayers.filters(srisService.id).on('stebejimai_interpretuojami'),
 );
 const toggleLayers = [
   rusysService,
@@ -203,30 +195,24 @@ const filterById = (key: string, id: any) => {
   filtersPlacesGrid.value.set(key, id);
 };
 
-if (query.place) filterById("id", query.place);
+if (query.place) filterById('id', query.place);
 if (query.kingdom) {
-  filterById("kingdomId", query.kingdom);
-  filtersSrisInformational.value.set("kingdomId", query.species);
+  filterById('kingdomId', query.kingdom);
+  filtersSrisInformational.value.set('kingdomId', query.species);
 }
 if (query.species) {
-  filterById("speciesId", query.species);
-  filtersSrisInformational.value.set("speciesId", query.species);
+  filterById('speciesId', query.species);
+  filtersSrisInformational.value.set('speciesId', query.species);
 }
 if (query.informationalForm) {
-  filtersSrisInformational.value.set("id", query.informationalForm);
-  filtersPlacesGrid.value.set("forms", query.informationalForm);
+  filtersSrisInformational.value.set('id', query.informationalForm);
+  filtersPlacesGrid.value.set('forms', query.informationalForm);
 }
 if (query.request) {
   // toggle all
-  mapLayers.setSublayers(invaService.id, [
-    "radavietes_invazines",
-    "radavietes_svetimzemes",
-  ]);
+  mapLayers.setSublayers(invaService.id, ['radavietes_invazines', 'radavietes_svetimzemes']);
 
-  rusysRequestService.layer.set(
-    "url",
-    `${rusysApiHost}/maps/requests/${query.request}/geom`
-  );
+  rusysRequestService.layer.set('url', `${rusysApiHost}/maps/requests/${query.request}/geom`);
   const itemsByRequest = await getItemsByRequest(query.request);
 
   const getIdInValue = (items: number[]) => {
@@ -234,18 +220,14 @@ if (query.request) {
     return items;
   };
 
-  filterById("id", { $in: getIdInValue(itemsByRequest.places) });
-  filtersSrisInformational.value.set("id", { $in: getIdInValue(itemsByRequest.forms) });
-  filtersPlacesGrid.value.set("forms", { $in: getIdInValue(itemsByRequest.forms) });
+  filterById('id', { $in: getIdInValue(itemsByRequest.places) });
+  filtersSrisInformational.value.set('id', { $in: getIdInValue(itemsByRequest.forms) });
+  filtersPlacesGrid.value.set('forms', { $in: getIdInValue(itemsByRequest.forms) });
 }
 function toggleGrid(value: boolean) {
   const level = value ? Number.NEGATIVE_INFINITY : GRID_TO_SERVICE_LEVEL;
 
-  mapLayers.applyZoomLevel(
-    [rusysGridService.id],
-    [srisPrivateService.id, invaService.id],
-    level
-  );
+  mapLayers.applyZoomLevel([rusysGridService.id], [srisPrivateService.id, invaService.id], level);
 }
 
 const toggleAmateurLayers = (value: boolean) => {
@@ -255,7 +237,7 @@ const toggleAmateurLayers = (value: boolean) => {
   mapLayers.updateLayerQuery(rusysGridService.id);
 };
 
-events.on("filter", ({ places, species, kingdoms, classes, phylums, zoom }: any) => {
+events.on('filter', ({ places, species, kingdoms, classes, phylums, zoom }: any) => {
   // todo: fix
   const setData = (key: string, items: any, filtersInstance: any = filters) => {
     if (Array.isArray(items)) {
@@ -265,22 +247,18 @@ events.on("filter", ({ places, species, kingdoms, classes, phylums, zoom }: any)
   };
   filters.value.clear();
 
-  if (places) setData("id", places, filtersPlacesSris);
-  if (species) setData("speciesId", species);
-  if (kingdoms) setData("kingdomId", kingdoms);
-  if (classes) setData("classId", classes);
-  if (phylums) setData("phylumId", phylums);
+  if (places) setData('id', places, filtersPlacesSris);
+  if (species) setData('speciesId', species);
+  if (kingdoms) setData('kingdomId', kingdoms);
+  if (classes) setData('classId', classes);
+  if (phylums) setData('phylumId', phylums);
   if (zoom) mapLayers.zoom(rusysService.id);
 });
 
 function togglePrivateSrisService(show: boolean) {
   const level = show ? GRID_TO_SERVICE_LEVEL : Number.POSITIVE_INFINITY;
 
-  mapLayers.applyZoomLevel(
-    [rusysGridService.id],
-    [srisPrivateService.id, invaService.id],
-    level
-  );
+  mapLayers.applyZoomLevel([rusysGridService.id], [srisPrivateService.id, invaService.id], level);
 
   mapLayers.toggleVisibility(srisPrivateService.id, show);
 }
@@ -302,42 +280,35 @@ mapLayers
   .add(rusysService.id)
   .click(async ({ coordinate }: any) => {
     selectedFeatures.value = [];
-    eventBus.emit("uiSidebar", { open: false });
+    eventBus.emit('uiSidebar', { open: false });
     mapLayers.highlightFeatures(null, { layer: highlightLayerName });
-    mapLayers.getFeatureInfo(
-      rusysService.id,
-      coordinate,
-      ({ properties, geometries }: any) => {
-        selectedFeatures.value.push(...properties);
-        mapLayers.highlightFeatures(geometries, {
-          merge: true,
-          layer: highlightLayerName,
-        });
-        eventBus.emit("uiSidebar", { open: !!selectedFeatures.value.length });
-      }
-    );
+    mapLayers.getFeatureInfo(rusysService.id, coordinate, ({ properties, geometries }: any) => {
+      selectedFeatures.value.push(...properties);
+      mapLayers.highlightFeatures(geometries, {
+        merge: true,
+        layer: highlightLayerName,
+      });
+      eventBus.emit('uiSidebar', { open: !!selectedFeatures.value.length });
+    });
   })
   .toggleVisibility(srisAccessService.id, !!query.amateur);
 
 if (query.place) {
-  mapLayers.setSublayers(srisService.id, "radavietes");
-  mapLayers.setSublayers(invaService.id, [
-    "radavietes_invazines",
-    "radavietes_svetimzemes",
-  ]);
+  mapLayers.setSublayers(srisService.id, 'radavietes');
+  mapLayers.setSublayers(invaService.id, ['radavietes_invazines', 'radavietes_svetimzemes']);
 } else if (query.informationalForm) {
-  mapLayers.setSublayers(srisService.id, "stebejimai_interpretuojami");
+  mapLayers.setSublayers(srisService.id, 'stebejimai_interpretuojami');
   mapLayers.toggleVisibility(invaService.id, false);
 }
 
 mapLayers
   .filters(rusysGridService.id)
-  .on("all")
-  .set("layers", mapLayers.getInnerVisibleLayers(rusysService.id));
+  .on('all')
+  .set('layers', mapLayers.getInnerVisibleLayers(rusysService.id));
 
 mapLayers.updateLayerQuery(rusysService.id);
 
-events.on("geom", (data: any) => {
+events.on('geom', (data: any) => {
   mapLayers.zoomToFeatureCollection(data, { addStroke: true });
 });
 
@@ -357,15 +328,15 @@ function onChangeSublayers(layer: any) {
 
   mapLayers
     .filters(rusysGridService.id)
-    .on("all")
-    .set("layers", mapLayers.getInnerVisibleLayers(rusysService.id));
+    .on('all')
+    .set('layers', mapLayers.getInnerVisibleLayers(rusysService.id));
 }
 
 if (query.place || query.informationalForm) {
   await mapLayers.zoom(rusysService.id);
 }
 
-if (query.request && user) {
+if (query.hideGrid && user) {
   toggleGrid(true);
   // do not await this
   await mapLayers.zoom(rusysRequestService.id, { zoomEmptyFilters: true });

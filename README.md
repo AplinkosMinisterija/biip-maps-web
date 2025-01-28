@@ -308,6 +308,7 @@ https://maps.biip.lt/rusys
 | `preview`           | Enables preview             | `Boolean`    | false   |
 | `amateur`           | Enables amateur mode        | `Boolean`    | false   |
 | `request`           | Filters by request          | `Number`     | -       |
+| `hideGrid`          | Hides the grid              | `Boolean`    | false   |
 
 ### Events
 
