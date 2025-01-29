@@ -336,7 +336,7 @@ if (query.place || query.informationalForm) {
   await mapLayers.zoom(rusysService.id);
 }
 
-if (query.hideGrid && user) {
+if ((query.hideGrid || query.request) && user) {
   toggleGrid(true);
   // do not await this
   await mapLayers.zoom(rusysRequestService.id, { zoomEmptyFilters: true });
