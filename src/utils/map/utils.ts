@@ -186,23 +186,22 @@ function toPointByLineCenter(lineString: LineString) {
 function toPointByMultiLineCenter(multiLine: MultiLineString) {
   const lineStrings = multiLine.getLineStrings();
 
-  let totalLength = 0;
-  lineStrings.forEach((line) => {
-    totalLength += line.getLength();
-  });
+  if (lineStrings.length === 0) {
+    return [431194.04, 6115464.68];
+  }
 
-  let traveledLength = 0;
+  let longestLine = lineStrings[0];
+  let maxLength = longestLine.getLength();
 
   for (const line of lineStrings) {
-    let lineLength = line.getLength();
-    traveledLength += lineLength;
-
-    if (traveledLength >= totalLength / 2) {
-      return line.getCoordinateAt(0.5);
+    const length = line.getLength();
+    if (length > maxLength) {
+      longestLine = line;
+      maxLength = length;
     }
   }
 
-  return [431194.04, 6115464.68]; // Fallback case if no center is found
+  return toPointByLineCenter(longestLine);
 }
 export function featureToPoint(feature: Feature): Point | undefined {
   const geometry = feature?.getGeometry();
