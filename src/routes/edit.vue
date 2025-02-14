@@ -59,6 +59,7 @@
 </template>
 <script setup lang="ts">
 import { useFiltersStore } from '@/stores/filters';
+import type { Buffer } from '@/types';
 import {
   convertFeatureCollectionProjection,
   geoportalForests,
@@ -85,7 +86,6 @@ import { getFeatureCollection } from 'geojsonjs';
 import _ from 'lodash';
 import { computed, inject, ref } from 'vue';
 import { useRoute } from 'vue-router';
-import type { Buffer } from '@/types';
 const $route = useRoute();
 const events: any = inject('events');
 
@@ -253,21 +253,38 @@ if (enableContinuousDraw) {
   toggleDrawType(drawTypes.value[0].type);
 }
 
-events.on('geom', (data: any) => {
-  let geom = data.geom || data;
+let geom = {
+  type: 'FeatureCollection',
+  features: [
+    {
+      type: 'Feature',
+      geometry: {
+        type: 'MultiLineString',
+        coordinates: [
+          [
+            [317260, 6163252],
+            [317499, 6165739],
+          ],
+        ],
+      },
+      properties: {
+        bufferSize: 1,
+      },
+    },
+  ],
+};
 
-  if (typeof geom === 'string') {
-    try {
-      geom = JSON.parse(geom);
-    } catch (err) {
-      console.error(err);
-    }
+if (typeof geom === 'string') {
+  try {
+    geom = JSON.parse(geom);
+  } catch (err) {
+    console.error(err);
   }
+}
 
-  mapLayers.zoomToFeatureCollection(geom);
-  mapDraw.value.setFeatures(geom);
-  if (!isPreview) mapDraw.value.edit();
-});
+mapLayers.zoomToFeatureCollection(geom);
+mapDraw.value.setFeatures(geom);
+if (!isPreview) mapDraw.value.edit();
 
 events.on('address', (data: any) => {
   const address = data.address || data;

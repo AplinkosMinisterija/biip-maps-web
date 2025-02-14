@@ -202,7 +202,7 @@ function toPointByMultiLineCenter(multiLine: MultiLineString) {
     }
   }
 
-  return [0, 0]; // Fallback case if no center is found
+  return [431194.04, 6115464.68]; // Fallback case if no center is found
 }
 export function featureToPoint(feature: Feature): Point | undefined {
   const geometry = feature?.getGeometry();
