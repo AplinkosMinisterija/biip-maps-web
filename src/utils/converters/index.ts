@@ -1,4 +1,5 @@
 import type { GenericObject } from '@/types';
+import { upperFirst } from 'lodash';
 import shp from 'shpjs';
 function getValue(item: any, props: string | string[], translates?: any) {
   if (!Array.isArray(props)) {
@@ -149,5 +150,37 @@ export function readShapefileFromFile(file: File) {
     if (!geojson) return emptyResponse('Tuščias Shapefile failas');
 
     resolve(geojson);
+  });
+}
+
+export function getFishStockingInfoByYear(zuvinimasInfoByYear: any) {
+  const years = Object.keys(zuvinimasInfoByYear).sort((a, b) => `${b}`.localeCompare(`${a}`));
+
+  return years.map((year) => {
+    const items = Object.values(zuvinimasInfoByYear[year].byFish).map((fish: any) => {
+      const prefix = upperFirst(fish?.fishType?.label);
+
+      if (fish.byAge) {
+        return Object.values(fish.byAge).map((fishByAge: any) => {
+          return {
+            key: `${prefix} (${fishByAge.fishAge?.label?.toLowerCase()}), vnt.`,
+            value: fishByAge.count || 0,
+          };
+        });
+      }
+
+      return {
+        key: `${prefix}, vnt.`,
+        value: fish.count,
+      };
+    });
+
+    return {
+      group: `${year} m.`,
+      items: [
+        { key: 'Bendras kiekis, vnt', value: zuvinimasInfoByYear[year]?.count || 0 },
+        ...items.flat(),
+      ],
+    };
   });
 }

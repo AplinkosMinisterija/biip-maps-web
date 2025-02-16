@@ -64,35 +64,35 @@
   </div>
 </template>
 <script setup lang="ts">
-import { inject, computed, ref, watch } from "vue";
-import { useRoute } from "vue-router";
 import { useFiltersStore } from "@/stores/filters";
 import {
-  geoportalTopo,
-  geoportalOrto,
-  geoportalTopoGray,
-  parseRouteParams,
-  srisService,
-  rusysService,
-  validateSrisAuth,
-  rusysGridService,
-  invaService,
-  srisPrivateService,
-  stvkService,
-  municipalitiesService,
-  srisAccessService,
-  rusysRequestService,
-  uetkService,
-  geoportalGrpk,
-  geoportalForests,
-  sznsPievosPelkes,
   gamtotvarkaService,
+  geoportalForests,
+  geoportalGrpk,
+  geoportalOrto,
+  geoportalTopo,
+  geoportalTopoGray,
   highlightLayerRusys,
   inspireParcelService,
+  invaService,
+  municipalitiesService,
+  parseRouteParams,
+  rusysGridService,
+  rusysRequestService,
+  rusysService,
+  srisAccessService,
+  srisPrivateService,
+  srisService,
+  stvkService,
+  sznsPievosPelkes,
+  uetkService,
+  validateSrisAuth,
 } from "@/utils";
+import { computed, inject, ref, watch } from "vue";
+import { useRoute } from "vue-router";
 
-import { useConfigStore } from "@/stores/config";
 import { rusysApiHost } from "@/config";
+import { useConfigStore } from "@/stores/config";
 import { getItemsByRequest } from "@/utils/requests/rusys";
 
 const GRID_TO_SERVICE_LEVEL = 5;
@@ -118,6 +118,7 @@ const query = parseRouteParams($route.query, [
   "amateur",
   "request",
   "screenshot",
+  "hideGrid",
 ]);
 
 const isVisibleSrisLayer = ref(true);
@@ -371,7 +372,7 @@ if (query.place || query.informationalForm) {
   await mapLayers.zoom(rusysService.id);
 }
 
-if (query.request && user) {
+if ((query.hideGrid || query.request) && user) {
   toggleGrid(true);
   // do not await this
   await mapLayers.zoom(rusysRequestService.id, { zoomEmptyFilters: true });
