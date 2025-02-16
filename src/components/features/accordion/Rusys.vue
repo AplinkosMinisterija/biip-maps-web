@@ -50,7 +50,7 @@ const config = useConfigStore();
 const postMessage: any = inject('postMessage');
 
 const radavietesFeatureIds = ['radavietes', 'radavietes_invazines', 'radavietes_svetimzemes'];
-const interpretuojamiStebejimaiFeatureId = 'stebejimai_interpretuojami';
+const stebejimaiFeatureId = ['stebejimai_interpretuojami', 'stebejimai_tyrineta_nerasta_invazines', 'stebejimai_tyrineta_nerasta_svetimzemes'];
 
 const getFeatureName = (feature: any) => {
   return feature.featureId.split('.')[0];
@@ -73,7 +73,19 @@ function isFeaturePlace(feature: any) {
 function isFeatureForm(feature: any) {
   const featureName = getFeatureName(feature);
 
-  return [interpretuojamiStebejimaiFeatureId].includes(featureName);
+  return stebejimaiFeatureId.includes(featureName);
+}
+
+function getSpeciesType(feature: any) {
+  return getValue(feature, ['Apsaugos grupė', 'species_type']);
+}
+
+function isEndangeredSpeciesType(feature: any) {
+  return getSpeciesType(feature) === 'ENDANGERED';
+}
+
+function isInvasiveSpeciesType(feature: any) {
+  return getSpeciesType(feature) === 'INVASIVE';
 }
 
 const getDescription = (feature: any) => {
@@ -82,7 +94,12 @@ const getDescription = (feature: any) => {
     const type = getValue(feature, ['Apsaugos grupė', 'species_type'], SpeciesTypes);
     return `${text} (${type} radavietė)`;
   } else if (isFeatureForm(feature)) {
-    return 'Radavietė (pavienis stebėjimas)';
+    if (isEndangeredSpeciesType(feature)) {
+      return 'Radavietė (pavienis stebėjimas)';
+    } else if (isInvasiveSpeciesType(feature)) {
+      return 'Tyrinėta, bet nerasta (invazinė)'
+    }
+    return 'Tyrinėta, bet nerasta (svetimžemė)'
   }
 
   return;
@@ -214,7 +231,7 @@ const rows: any[] = [
     name: 'Stebėjimo data',
     fn: getDate,
     fnParams: [['observed_at', 'Stebėjimo data']],
-    show: checkFeatureId(interpretuojamiStebejimaiFeatureId),
+    show: checkFeatureId(stebejimaiFeatureId),
   },
   {
     name: 'Naujausias stebėjimas',
@@ -243,44 +260,50 @@ const rows: any[] = [
     name: 'Individų skaičius (gausumas)',
     fn: getValue,
     fnParams: ['Gausumas (vnt.)'],
-    show: checkFeatureId(interpretuojamiStebejimaiFeatureId),
+    show: (feature: any) => checkFeatureId(stebejimaiFeatureId)(feature) && isEndangeredSpeciesType(feature),
   },
   {
     name: 'Veiklos požymiai',
     fn: getValue,
     fnParams: ['activity_translate'],
-    show: checkFeatureId(interpretuojamiStebejimaiFeatureId),
+    show: (feature: any) => checkFeatureId(stebejimaiFeatureId)(feature) && isEndangeredSpeciesType(feature),
+  },
+  {
+    name: 'Metodas',
+    fn: getValue,
+    fnParams: ['method_translate'],
+    show: (feature: any) => checkFeatureId(stebejimaiFeatureId)(feature) && !isEndangeredSpeciesType(feature),
   },
   {
     name: 'Vystymosi stadija',
     fn: getValue,
     fnParams: ['evolution_translate'],
-    show: checkFeatureId(interpretuojamiStebejimaiFeatureId),
+    show: (feature: any) => checkFeatureId(stebejimaiFeatureId)(feature) && isEndangeredSpeciesType(feature),
   },
   {
     name: 'Nuotraukos',
     images: true,
     fn: getImages,
     fnParams: ['photos'],
-    show: checkFeatureId(interpretuojamiStebejimaiFeatureId),
+    show: checkFeatureId(stebejimaiFeatureId),
   },
   {
     name: 'Šaltinis',
     fn: getValue,
     fnParams: ['source'],
-    show: checkFeatureId(interpretuojamiStebejimaiFeatureId),
+    show: checkFeatureId(stebejimaiFeatureId),
   },
   {
     name: 'Buveinė, elgsena, ūkinė veikla ir kita informacija',
     fn: getValue,
     fnParams: ['Buveinės aprašymas'],
-    show: checkFeatureId(interpretuojamiStebejimaiFeatureId),
+    show: checkFeatureId(stebejimaiFeatureId),
   },
   {
     name: 'Stebėtojas',
     fn: getValue,
     fnParams: ['observed_by'],
-    show: (feature: any) => (config.user.isAdmin || config.user.isExpert) && checkFeatureId(interpretuojamiStebejimaiFeatureId)(feature)
+    show: (feature: any) => (config.user.isAdmin || config.user.isExpert) && checkFeatureId(stebejimaiFeatureId)(feature)
   },
   {
     name: 'Plotas',
