@@ -175,7 +175,12 @@ const filtersPlacesSris = computed(() =>
 const filtersPlacesInva = computed(() =>
   mapLayers
     .filters(invaService.id)
-    .onAll(["radavietes_invazines", "radavietes_svetimzemes"])
+    .onAll([
+      "radavietes_invazines",
+      "radavietes_svetimzemes",
+      "stebejimai_tyrineta_nerasta_svetimzemes",
+      "stebejimai_tyrineta_nerasta_invazines",
+    ])
 );
 const filters = computed(() =>
   mapLayers
