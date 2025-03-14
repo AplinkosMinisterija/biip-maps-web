@@ -332,6 +332,14 @@ export const invaService = {
   layer: getWMSImageLayer(`${qgisServerUrl}/inva`, 'radavietes_invazines', biipCopyright),
   sublayers: [
     {
+      name: 'Buvo tyrinėta, bet nerasta',
+      value: 'stebejimai_tyrineta_nerasta_invazines',
+    },
+    {
+      name: 'Buvo tyrinėta, bet nerasta (svetimžemės)',
+      value: 'stebejimai_tyrineta_nerasta_svetimzemes',
+    },
+    {
       name: 'Radavietės',
       value: 'radavietes_invazines',
     },

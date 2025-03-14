@@ -43,6 +43,16 @@ const rows = ref([
     titleOne: 'svetimžemių rūšių radavietė',
     key: 'invaIntroducedPlaces',
   },
+  {
+    title: 'invazinių tyrinėta, bet nerasta vietos',
+    titleOne: 'invazinių tyrinėta, bet nerasta vieta',
+    key: 'invaNoQuantityForms',
+  },
+  {
+    title: 'svetimžemių tyrinėta, bet nerasta vietos',
+    titleOne: 'svetimžemių tyrinėta, bet nerasta vieta',
+    key: 'invaIntroducedNoQuantityForms',
+  },
 ] as any[]);
 
 const overlayLayer = ref();
