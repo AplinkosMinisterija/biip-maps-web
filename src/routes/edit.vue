@@ -25,7 +25,7 @@
               type="danger"
               class="shadow"
               icon="remove"
-              @click="mapDraw.remove(selectedFeature?.feature)"
+              @click="mapDraw.remove(selectedFeature?.feature, true)"
             />
           </UiButtonRow>
         </template>
@@ -82,10 +82,11 @@ import {
   uetkService,
 } from '@/utils';
 import { getFeatureCollection } from 'geojsonjs';
-import _ from 'lodash';
 import { computed, inject, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import type { Buffer } from '@/types';
+import _ from 'lodash';
+
 const $route = useRoute();
 const events: any = inject('events');
 
@@ -263,8 +264,9 @@ events.on('geom', (data: any) => {
       console.error(err);
     }
   }
-
-  mapLayers.zoomToFeatureCollection(geom);
+  if (query.autoZoom) {
+    mapLayers.zoomToFeatureCollection(geom);
+  }
   mapDraw.value.setFeatures(geom);
   if (!isPreview) mapDraw.value.edit();
 });
