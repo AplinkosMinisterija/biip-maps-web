@@ -151,8 +151,11 @@ const filterByCadastralId = async (cadastralId: string) => {
     );
   const filters = new MapFilters();
 
+  const cadastralIds = Array.isArray(cadastralId) ? cadastralId : [cadastralId];
+  const cadastralIdStrings = cadastralIds.map(String);
+
   layers.forEach((item: string) => {
-    filters.on(item).set('kadastro_id', `${cadastralId}`);
+    filters.on(item).set('kadastro_id', { $in: cadastralIdStrings });
   });
 
   await mapLayers.zoom(uetkService.id, { addStroke: true, filters });

@@ -349,11 +349,11 @@ https://maps.biip.lt/uetk
 
 ### Parameters
 
-| Name          | Desciption              | Type      | Default |
-| ------------- | ----------------------- | --------- | ------- |
-| `cadastralId` | Filters by cadastral ID | `Filter`  | -       |
-| `preview`     | Enables preview         | `Boolean` | false   |
-| `hideSidebar` | Hides the sidebar       | `Boolean` | false   |
+| Name          | Desciption                           | Type      | Default |
+| ------------- | ------------------------------------ | --------- | ------- |
+| `cadastralId` | Filters by one or more cadastral IDs | `Filter`  | -       |
+| `preview`     | Enables preview                      | `Boolean` | false   |
+| `hideSidebar` | Hides the sidebar                    | `Boolean` | false   |
 
 ## Zuvinimas
 
