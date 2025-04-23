@@ -25,7 +25,7 @@
       <div id="mapControlsLB" class="text-xxs text-gray-700 flex flex-col gap-2 items-start" />
 
       <UiDropdown
-        v-if="mapLayers.baseLayers?.length > 1 && !isPreview"
+        v-if="mapLayers.baseLayers?.length > 1 && !isPreview && showBaseLayersSwitch"
         v-model="mapLayers.visibleBaseLayerId"
         class="px-1 rounded border border-gray-400 bg-white pointer-events-auto"
       >
@@ -157,6 +157,10 @@ defineProps({
   showResults: {
     type: Boolean,
     default: false,
+  },
+  showBaseLayersSwitch: {
+    type: Boolean,
+    default: true,
   },
   markCenter: {
     type: Boolean,
