@@ -174,16 +174,17 @@ https://maps.biip.lt/edit
 
 ### Parameters
 
-| Name            | Desciption                        | Type                  | Default                                                                                                                                                                   |
-| --------------- | --------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `multi`         | Enables multi geometry            | `Boolean`             | false                                                                                                                                                                     |
-| `buffer`        | Enables buffers to geometry       | `Boolean` \| `String` | false. Possible values: `xs` (default if boolean, starts with 1 m), `sm` (starts with 10 m), `md` (starts with 100 m), `lg` (starts with 500 m), `xl` (starts with 1 km). |
-| `preview`       | Disables editing                  | `Boolean`             | false                                                                                                                                                                     |
-| `types`         | Enables specific draw types       | `String[]`            | `['point', 'polygon', 'line'`                                                                                                                                             |
-| `autoZoom`      | Enables auto zoom on change       | `Boolean`             | false                                                                                                                                                                     |
-| `closeOnSearch` | Closes search popup on select     | `Boolean`             | false                                                                                                                                                                     |
-| `bufferMin`     | Overrides buffer's starting value | `Number`              |                                                                                                                                                                           |
-| `bufferMax`     | Overrider buffer's ending value   | `Number`              |                                                                                                                                                                           |
+| Name            | Desciption                                       | Type                  | Default                                                                                                                                                                   |
+| --------------- | ------------------------------------------------ | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `multi`         | Enables multi geometry                           | `Boolean`             | false                                                                                                                                                                     |
+| `buffer`        | Enables buffers to geometry                      | `Boolean` \| `String` | false. Possible values: `xs` (default if boolean, starts with 1 m), `sm` (starts with 10 m), `md` (starts with 100 m), `lg` (starts with 500 m), `xl` (starts with 1 km). |
+| `preview`       | Disables editing                                 | `Boolean`             | false                                                                                                                                                                     |
+| `hideToolbar`   | Hides controls such as coordinates, layers, etc. | `Boolean`             | false                                                                                                                                                                     |
+| `types`         | Enables specific draw types                      | `String[]`            | `['point', 'polygon', 'line'`                                                                                                                                             |
+| `autoZoom`      | Enables auto zoom on change                      | `Boolean`             | false                                                                                                                                                                     |
+| `closeOnSearch` | Closes search popup on select                    | `Boolean`             | false                                                                                                                                                                     |
+| `bufferMin`     | Overrides buffer's starting value                | `Number`              |                                                                                                                                                                           |
+| `bufferMax`     | Overrider buffer's ending value                  | `Number`              |                                                                                                                                                                           |
 
 ### Events
 
