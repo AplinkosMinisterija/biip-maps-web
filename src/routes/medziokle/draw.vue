@@ -26,7 +26,6 @@ import {
   geoportalOrto,
   parseRouteParams,
   markerLayer,
-  huntingService,
   projection3857,
   projection,
   convertFeatureCollectionProjection,
@@ -34,6 +33,7 @@ import {
   vectorBright,
   huntingServiceVT,
 } from "@/utils";
+import { getMpvBbox } from "@/utils/requests/medziokle";
 
 const filtersStore = useFiltersStore();
 const postMessage: any = inject("postMessage");
@@ -43,7 +43,6 @@ const events: any = inject("events");
 const mapDraw = computed(() => mapLayers.getDraw(markerLayer.id).enableContinuousDraw());
 
 const query = parseRouteParams($route.query, ["preview", "mpvId"]);
-const huntingServiceFilters = mapLayers.filters(huntingService.id);
 
 events.on("geom", (data: any) => {
   mapDraw.value.setFeatures(data.geom || data, { dataProjection: projection });
@@ -53,12 +52,11 @@ mapLayers
   .addBaseLayer(vectorPositron.id)
   .addBaseLayer(vectorBright.id)
   .addBaseLayer(geoportalOrto.id)
-  .add(huntingServiceVT.id)
-  .add(huntingService.id, { isHidden: true });
+  .add(huntingServiceVT.id);
 
 if (query.mpvId) {
-  huntingServiceFilters.on("mpv_info_geom").set("mpv_id", query.mpvId);
-  await mapLayers.zoom(huntingService.id, { addStroke: false });
+  const geojson = await getMpvBbox({ query: JSON.stringify({ mpvId: query.mpvId }) });
+  mapLayers.zoomToFeatureCollection(geojson, { dataProjection: projection });
 }
 
 if (!query.preview) {

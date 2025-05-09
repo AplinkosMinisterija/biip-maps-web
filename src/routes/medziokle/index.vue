@@ -14,7 +14,6 @@ import { useRoute } from "vue-router";
 import { parse, GeometryType } from "geojsonjs";
 import {
   geoportalOrto,
-  huntingService,
   parseRouteParams,
   convertCoordinatesToProjection,
   projection3857,
@@ -25,6 +24,7 @@ import {
   convertFeatureCollectionProjection,
   projection,
 } from "@/utils";
+import { getMpvBbox } from "@/utils/requests/medziokle";
 
 const mapLayers: any = inject("mapLayers");
 const events: any = inject("events");
@@ -32,11 +32,6 @@ const postMessage: any = inject("postMessage");
 const $route = useRoute();
 
 const query = parseRouteParams($route.query, ["mpvId", "draw", "zoom", "points"]);
-const huntingServiceFilters = mapLayers.filters(huntingService.id);
-
-if (query.mpvId) {
-  huntingServiceFilters.on("mpv_info_geom").set("mpv_id", query.mpvId);
-}
 
 const colors: any = {
   current: "#004650",
@@ -65,9 +60,7 @@ await mapLayers
   .addBaseLayer(vectorBright.id)
   .addBaseLayer(vectorPositron.id)
   .addBaseLayer(geoportalOrto.id)
-  .add(huntingServiceVT.id)
-  .add(huntingService.id, { isHidden: true })
-  .zoom(huntingService.id, { addStroke: true, zoomFn });
+  .add(huntingServiceVT.id);
 
 const mapDraw = computed(() => mapLayers.getDraw());
 
@@ -107,5 +100,16 @@ mapDraw.value
 
 if (query.points) {
   parsePoints(query.points);
+}
+
+if (query.mpvId) {
+  mapLayers.setActiveFeatures(huntingServiceVT.id, query.mpvId);
+
+  if (zoomFn) {
+    zoomFn();
+  } else {
+    const geojson = await getMpvBbox({ query: JSON.stringify({ mpvId: query.mpvId }) });
+    mapLayers.zoomToFeatureCollection(geojson, { dataProjection: projection });
+  }
 }
 </script>
