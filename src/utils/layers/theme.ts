@@ -30,16 +30,6 @@ const rcCopyright = getCopyrightLabel(
   'https://www.registrucentras.lt',
 );
 
-export const huntingService = {
-  id: 'huntingService',
-  description: biipCopyright,
-  layer: getWMSImageLayer(
-    `${qgisServerUrl}/medziokle_mpv`,
-    'mpv_info_geom,mpv_info_geom_50k,mpv_info_geom_250k',
-    biipCopyright,
-  ),
-};
-
 export const administrativeBoundariesService = {
   id: 'administrativeBoundariesService',
   name: 'Administracinės ribos',
