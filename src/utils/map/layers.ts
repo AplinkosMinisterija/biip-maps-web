@@ -830,6 +830,20 @@ export class MapLayers extends Queues {
     return computeSublayers(layer.sublayers);
   }
 
+  setActiveFeatures(id: string, query: any, options?: { property?: string }) {
+    const layer = this.getLayer(id);
+    layer.getSource()?.on('tileloadend', ({ tile }: any) => {
+      tile?.getFeatures()?.forEach((feature: any) => {
+        const propertyValue = options?.property ? feature.get(options.property) : feature.getId();
+        if (['number', 'string'].includes(typeof query)) {
+          feature.set('isActive', propertyValue === query);
+        } else if (query?.$in?.length) {
+          feature.set('isActive', query.$in.includes(propertyValue));
+        }
+      });
+    });
+  }
+
   setAllSublayers(id: string) {
     const layer = this.get(id);
     if (!layer?.sublayers?.length) return;

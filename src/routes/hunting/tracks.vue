@@ -15,7 +15,6 @@ import {
   vectorBright,
   geoportalOrto,
   projection3857,
-  huntingService,
   huntingFootprintTracksServiceVT,
   objectPropsToCamel,
   huntingServiceVT,
@@ -43,5 +42,4 @@ await mapLayers
     },
     { layers: [huntingFootprintTracksServiceVT.id] }
   )
-  .zoom(huntingService.id, { addStroke: true });
 </script>

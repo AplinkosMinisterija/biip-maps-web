@@ -20,33 +20,35 @@
 </template>
 
 <script setup lang="ts">
-import { rusysService } from '@/utils';
-import { computed, inject } from 'vue';
-const mapLayers: any = inject('mapLayers');
+import { rusysService } from "@/utils";
+import { computed, inject } from "vue";
+const mapLayers: any = inject("mapLayers");
 
 const rusysServiceFilters = mapLayers.filters(rusysService.id);
 const filters = computed(() =>
   rusysServiceFilters.onAll([
-    'radavietes',
-    'stebejimai_interpretuojami',
-    'radavietes_svetimzemes',
-    'radavietes_invazines',
-  ]),
+    "radavietes",
+    "stebejimai_interpretuojami",
+    "stebejimai_tyrineta_nerasta_invazines",
+    "stebejimai_tyrineta_nerasta_svetimzemes",
+    "radavietes_svetimzemes",
+    "radavietes_invazines",
+  ])
 );
 
 const kingdoms = [
-  { id: 1, name: 'Augalai', icon: 'plants' },
-  { id: 2, name: 'Grybai', icon: 'mushrooms' },
-  { id: 3, name: 'Gyvūnai', icon: 'animals' },
+  { id: 1, name: "Augalai", icon: "plants" },
+  { id: 2, name: "Grybai", icon: "mushrooms" },
+  { id: 3, name: "Gyvūnai", icon: "animals" },
 ];
 
-const species = computed(() => filters.value.get('speciesId')?.$in || []);
+const species = computed(() => filters.value.get("speciesId")?.$in || []);
 
 function setSpecies(speciesIds: number[]) {
   if (!speciesIds.length) {
-    filters.value.remove('speciesId');
+    filters.value.remove("speciesId");
   } else {
-    filters.value.toggleOrReplace('speciesId', { $in: speciesIds });
+    filters.value.toggleOrReplace("speciesId", { $in: speciesIds });
   }
 }
 </script>

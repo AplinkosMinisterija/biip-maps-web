@@ -34,6 +34,7 @@ const COLORS = {
   WHITE: '#ffffff',
   BLACK: '#000000',
   RED: '#ff0000',
+  STROKE: '#004650',
 };
 
 function getFont(size: number, type: 'normal' | 'bold' = 'bold', fontFamily: string = FONT_FAMILY) {
@@ -219,7 +220,9 @@ export function vectorTileStyles(options?: { layerPrefix: string }): any {
         align: 'top',
       });
     } else if ([LAYER_TYPE.HUNTING_MPV].includes(layer)) {
-      stroke.setColor('#ff0000');
+      const isActive = feature?.get('isActive');
+      line.setZIndex(isActive ? 10 : 1);
+      stroke.setColor(isActive ? COLORS.STROKE : COLORS.RED);
       stroke.setWidth(2);
       styles[length++] = line;
 

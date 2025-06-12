@@ -1,11 +1,11 @@
+import turfBuffer from '@turf/buffer';
+import type { Feature } from 'ol';
 import { extend, getCenter } from 'ol/extent';
 import { GeoJSON } from 'ol/format';
+import { Geometry, LineString, MultiLineString, Point } from 'ol/geom';
 import VectorSource from 'ol/source/Vector';
 import { projection, projection4326 } from '../constants';
 import { serializeQuery } from '../requests';
-import type { Feature } from 'ol';
-import { Geometry, LineString, Point } from 'ol/geom';
-import turfBuffer from '@turf/buffer';
 
 export function dataToFeatureCollection(data: any) {
   if (!data) return data;
@@ -175,14 +175,35 @@ function toPointCoordsByExtent(geometry: Geometry) {
   return coords;
 }
 
-function toPointByLineCenter(lineString: Geometry) {
-  let coords = (lineString as LineString).getCoordinateAt(0.5);
+function toPointByLineCenter(lineString: LineString) {
+  let coords = lineString.getCoordinateAt(0.5);
   if (Array.isArray(coords?.[0])) {
     coords = coords[0];
   }
   return coords;
 }
 
+function toPointByMultiLineCenter(multiLine: MultiLineString) {
+  const lineStrings = multiLine.getLineStrings();
+
+  let totalLength = 0;
+  lineStrings.forEach((line) => {
+    totalLength += line.getLength();
+  });
+
+  let traveledLength = 0;
+
+  for (const line of lineStrings) {
+    let lineLength = line.getLength();
+    traveledLength += lineLength;
+
+    if (traveledLength >= totalLength / 2) {
+      return line.getCoordinateAt(0.5);
+    }
+  }
+
+  return [431194.04, 6115464.68]; // Fallback case if no center is found
+}
 export function featureToPoint(feature: Feature): Point | undefined {
   const geometry = feature?.getGeometry();
   const type = geometry?.getType() || '';
@@ -191,8 +212,10 @@ export function featureToPoint(feature: Feature): Point | undefined {
 
   if (['Polygon', 'MultiPolygon', 'MultiPoint'].includes(type)) {
     return new Point(toPointCoordsByExtent(geometry));
-  } else if (['LineString', 'MultiLineString'].includes(type)) {
-    return new Point(toPointByLineCenter(geometry));
+  } else if (['MultiLineString'].includes(type)) {
+    return new Point(toPointByMultiLineCenter(geometry as MultiLineString));
+  } else if (['LineString'].includes(type)) {
+    return new Point(toPointByLineCenter(geometry as LineString));
   } else if (['Point'].includes(type)) {
     return geometry as Point;
   }
@@ -208,17 +231,18 @@ export function convertFeaturesToPoints(features: Feature[], types?: string[]) {
 
     if (!type) continue;
 
-    // for now - convert to points only!
-    if (!types.includes(type) && types.includes('Point')) {
+    // Add features if their type matches, or convert to points if possible; otherwise, skip.
+    if (types.includes(type)) {
+      resultFeatures.push(feature);
+    } else if (!types.includes(type) && types.includes('Point')) {
       const point = featureToPoint(feature);
       if (!point) {
         throw new Error(`Geometry type ${type} is not supported`);
       }
 
       feature.setGeometry(point);
+      resultFeatures.push(feature);
     }
-
-    resultFeatures.push(feature);
   }
 
   return resultFeatures;

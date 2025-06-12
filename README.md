@@ -174,16 +174,17 @@ https://maps.biip.lt/edit
 
 ### Parameters
 
-| Name            | Desciption                        | Type                  | Default                                                                                                                                                                   |
-| --------------- | --------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `multi`         | Enables multi geometry            | `Boolean`             | false                                                                                                                                                                     |
-| `buffer`        | Enables buffers to geometry       | `Boolean` \| `String` | false. Possible values: `xs` (default if boolean, starts with 1 m), `sm` (starts with 10 m), `md` (starts with 100 m), `lg` (starts with 500 m), `xl` (starts with 1 km). |
-| `preview`       | Disables editing                  | `Boolean`             | false                                                                                                                                                                     |
-| `types`         | Enables specific draw types       | `String[]`            | `['point', 'polygon', 'line'`                                                                                                                                             |
-| `autoZoom`      | Enables auto zoom on change       | `Boolean`             | false                                                                                                                                                                     |
-| `closeOnSearch` | Closes search popup on select     | `Boolean`             | false                                                                                                                                                                     |
-| `bufferMin`     | Overrides buffer's starting value | `Number`              |                                                                                                                                                                           |
-| `bufferMax`     | Overrider buffer's ending value   | `Number`              |                                                                                                                                                                           |
+| Name            | Desciption                                       | Type                  | Default                                                                                                                                                                   |
+| --------------- | ------------------------------------------------ | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `multi`         | Enables multi geometry                           | `Boolean`             | false                                                                                                                                                                     |
+| `buffer`        | Enables buffers to geometry                      | `Boolean` \| `String` | false. Possible values: `xs` (default if boolean, starts with 1 m), `sm` (starts with 10 m), `md` (starts with 100 m), `lg` (starts with 500 m), `xl` (starts with 1 km). |
+| `preview`       | Disables editing                                 | `Boolean`             | false                                                                                                                                                                     |
+| `hideToolbar`   | Hides controls such as coordinates, layers, etc. | `Boolean`             | false                                                                                                                                                                     |
+| `types`         | Enables specific draw types                      | `String[]`            | `['point', 'polygon', 'line'`                                                                                                                                             |
+| `autoZoom`      | Enables auto zoom on change                      | `Boolean`             | false                                                                                                                                                                     |
+| `closeOnSearch` | Closes search popup on select                    | `Boolean`             | false                                                                                                                                                                     |
+| `bufferMin`     | Overrides buffer's starting value                | `Number`              |                                                                                                                                                                           |
+| `bufferMax`     | Overrider buffer's ending value                  | `Number`              |                                                                                                                                                                           |
 
 ### Events
 
@@ -308,6 +309,7 @@ https://maps.biip.lt/rusys
 | `preview`           | Enables preview             | `Boolean`    | false   |
 | `amateur`           | Enables amateur mode        | `Boolean`    | false   |
 | `request`           | Filters by request          | `Number`     | -       |
+| `hideGrid`          | Hides the grid              | `Boolean`    | false   |
 
 ### Events
 
@@ -352,6 +354,7 @@ https://maps.biip.lt/uetk
 | ------------- | ----------------------- | --------- | ------- |
 | `cadastralId` | Filters by cadastral ID | `Filter`  | -       |
 | `preview`     | Enables preview         | `Boolean` | false   |
+| `hideSidebar` | Hides the sidebar       | `Boolean` | false   |
 
 ## Zuvinimas
 

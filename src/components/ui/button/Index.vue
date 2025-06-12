@@ -88,12 +88,15 @@ const typesActive: any = {
 };
 
 const buttonTitles: any = {
-  measure: 'Matuoti atstumą',
+  measure: 'Matavimai',
   legend: 'Legenda',
   layers: 'Sluoksniai',
   filter: 'Filtrai',
   globe: 'Visa šalis',
   'current-location': 'Mano vieta',
+  point: 'Įvesti tašką',
+  line: 'Įvesti liniją',
+  polygon: 'Įvesti plotą',
 };
 
 const size = props.size || 'md';

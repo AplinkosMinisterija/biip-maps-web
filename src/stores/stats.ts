@@ -47,7 +47,7 @@ const statsByType = {
   },
   zuvinimas: {
     uetk: {
-      url: `${zuvinimasApiHost}/public/uetk/statistics`,
+      url: `${zuvinimasApiHost}/public/uetk/statistics/byYear`,
       idProperty: 'uetkCadastralId',
       countProperty: 'count',
       transformFn: (data: any) =>
