@@ -6,6 +6,7 @@ import { getArea, getLength } from 'ol/sphere';
 import { transform } from 'ol/proj';
 import _ from 'lodash';
 import { projection, projection4326 } from '../constants';
+import wkx from 'wkx';
 
 const singleCoordPattern = '(-?\\d+(\\.\\d+)?)';
 
@@ -348,3 +349,16 @@ export function convertFeatureCollectionProjection(data: any, from: string, to: 
 
   return new GeoJSON().writeFeaturesObject(features, options);
 }
+
+export const wkbToGeoJSON = (wkbString: string) => {
+  const geometry = wkx.Geometry.parse(wkbString).toGeoJSON();
+  return {
+    type: 'FeatureCollection',
+    features: [
+      {
+        type: 'Feature',
+        geometry: geometry,
+      },
+    ],
+  };
+};

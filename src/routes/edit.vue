@@ -41,7 +41,7 @@
           :search-point="hasDrawType('point')"
           :search-line="hasDrawType('line')"
           :search-polygon="hasDrawType('polygon')"
-          :types="['geoportal']"
+          :types="['geoportal', 'boundaries.parcels']"
           @select="selectSearch"
         />
         <div v-else-if="showBufferChangeBox" class="flex flex-col gap-3">
