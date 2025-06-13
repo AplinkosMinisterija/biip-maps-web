@@ -10,6 +10,7 @@
         />
       </template>
     </UiMap>
+    <ZoomInfo :max-zoom="14" />
   </div>
 </template>
 <script setup lang="ts">
