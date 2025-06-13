@@ -20,6 +20,7 @@ Ministerija.
   - [Alis](#alis)
   - [Animals](#animals)
   - [Animals Draw](#animals-draw)
+  - [Animals Parcels](#animals-parcels)
   - [Edit](#edit)
   - [Medziokle](#medziokle)
   - [Medziokle Draw](#medziokle-draw)
@@ -165,6 +166,26 @@ https://maps.biip.lt/animals/draw
 | Name          | Desciption              | Type               |
 | ------------- | ----------------------- | ------------------ |
 | `userObjects` | Provides drawn features | Feature collection |
+
+## Animals parcels
+
+```
+https://maps.biip.lt/animals/parcels
+```
+
+### Parameters
+
+| Name      | Desciption            | Type      | Default |
+| --------- | --------------------- | --------- | ------- |
+| `preview` | Enables preview links | `Boolean` | `false` |
+
+### Events
+
+**Sends:**
+
+| Name             | Desciption                    | Type     |
+| ---------------- | ----------------------------- | -------- |
+| `selectedPermit` | Provides selected permit data | `Object` |
 
 ## Edit
 
