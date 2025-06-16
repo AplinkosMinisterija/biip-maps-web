@@ -19,11 +19,11 @@
 defineProps({
   icon: {
     type: String,
-    default: "",
+    default: '',
   },
   label: {
     type: String,
-    default: "",
+    default: '',
     required: true,
   },
 });

@@ -51,14 +51,7 @@
     fill="none"
     viewBox="0 0 24 24"
   >
-    <circle
-      class="opacity-25"
-      cx="12"
-      cy="12"
-      r="10"
-      stroke="currentColor"
-      stroke-width="4"
-    />
+    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
     <path
       class="opacity-75"
       fill="currentColor"
@@ -218,9 +211,7 @@
     xmlns="http://www.w3.org/2000/svg"
   >
     <path fill="none" d="M0 0h24v24H0V0z" />
-    <path
-      d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"
-    />
+    <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z" />
   </svg>
   <svg
     v-else-if="name === 'fullscreen'"
@@ -233,9 +224,7 @@
     xmlns="http://www.w3.org/2000/svg"
   >
     <path fill="none" d="M0 0h24v24H0V0z" />
-    <path
-      d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"
-    />
+    <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />
   </svg>
   <svg
     v-else-if="name === 'remove'"
@@ -610,6 +599,26 @@
     />
   </svg>
   <svg
+    v-else-if="name === 'download'"
+    width="18"
+    height="18"
+    viewBox="0 0 18 18"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <g clip-path="url(#clip0_12_197)">
+      <path
+        d="M13.5 11.25V13.5H4.5V11.25H3V13.5C3 14.325 3.675 15 4.5 15H13.5C14.325 15 15 14.325 15 13.5V11.25H13.5ZM12.75 8.25L11.6925 7.1925L9.75 9.1275V3H8.25V9.1275L6.3075 7.1925L5.25 8.25L9 12L12.75 8.25Z"
+        fill="#1F2937"
+      />
+    </g>
+    <defs>
+      <clipPath id="clip0_12_197">
+        <rect width="18" height="18" fill="white" />
+      </clipPath>
+    </defs>
+  </svg>
+  <svg
     v-else-if="name === 'link'"
     xmlns="http://www.w3.org/2000/svg"
     :width="size"
@@ -732,17 +741,17 @@
 </template>
 
 <script lang="ts" setup>
-import { computed } from "vue";
+import { computed } from 'vue';
 
 const props = defineProps({
   name: {
     type: String,
-    default: "",
+    default: '',
     required: true,
   },
   text: {
     type: String,
-    default: "",
+    default: '',
   },
   size: {
     type: Number,

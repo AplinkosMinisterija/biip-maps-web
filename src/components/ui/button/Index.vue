@@ -89,6 +89,7 @@ const typesActive: any = {
 
 const buttonTitles: any = {
   measure: 'Matavimai',
+  download: 'Eksportuoti',
   legend: 'Legenda',
   layers: 'Sluoksniai',
   filter: 'Filtrai',
