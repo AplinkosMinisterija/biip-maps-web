@@ -152,6 +152,12 @@ export class MapLayers extends Queues {
           });
         }, 50);
       });
+
+      // initial change
+      this._triggerEventCallbacks('zoom:change', {
+        current: this?.map?.getView()?.getZoom(),
+        maxAutoZoom: this._getZoomLevel(),
+      });
     }
 
     return this;
