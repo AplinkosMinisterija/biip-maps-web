@@ -21,7 +21,6 @@
     "@vueform/multiselect": "^2.6.3",
     "@vueuse/core": "^10.9.0",
     "buffer": "^6.0.3",
-    "canvg": "^4.0.3",
     "geojsonjs": "^0.1.2",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.1",
