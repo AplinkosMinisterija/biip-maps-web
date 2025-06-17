@@ -11,6 +11,11 @@ const statsByType = {
       idProperty: 'municipality.id',
       countProperty: 'permitsCount',
     },
+    parcels: {
+      url: `${gyvunaiApiHost}/public/permitsByCadastralIds/all`,
+      idProperty: 'cadastralNumber',
+      // countProperty: 'permitsCount',
+    },
     fostered: {
       url: `${gyvunaiApiHost}/public/fosteredAnimals/all`,
       idProperty: 'municipality.id',
