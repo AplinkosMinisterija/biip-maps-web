@@ -599,7 +599,7 @@
     />
   </svg>
   <svg
-    v-else-if="name === 'landscape'"
+    v-else-if="name === 'portrait'"
     width="16"
     height="16"
     viewBox="0 0 16 16"
@@ -622,7 +622,7 @@
     />
   </svg>
   <svg
-    v-else-if="name === 'portrait'"
+    v-else-if="name === 'landscape'"
     width="17"
     height="16"
     viewBox="0 0 17 16"
