@@ -599,6 +599,59 @@
     />
   </svg>
   <svg
+    v-else-if="name === 'landscape'"
+    width="16"
+    height="16"
+    viewBox="0 0 16 16"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M10 1.33325H4C3.64638 1.33325 3.30724 1.47373 3.05719 1.72378C2.80714 1.97382 2.66667 2.31296 2.66667 2.66659V13.3333C2.66667 13.6869 2.80714 14.026 3.05719 14.2761C3.30724 14.5261 3.64638 14.6666 4 14.6666H12C12.3536 14.6666 12.6928 14.5261 12.9428 14.2761C13.1929 14.026 13.3333 13.6869 13.3333 13.3333V4.66659L10 1.33325Z"
+      stroke="#9CA3AF"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <path
+      d="M9.33333 1.33325V3.99992C9.33333 4.35354 9.47381 4.69268 9.72386 4.94273C9.97391 5.19278 10.313 5.33325 10.6667 5.33325H13.3333"
+      stroke="#9CA3AF"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </svg>
+  <svg
+    v-else-if="name === 'portrait'"
+    width="17"
+    height="16"
+    viewBox="0 0 17 16"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <g clip-path="url(#clip0_12_229)">
+      <path
+        d="M14.9917 10.0001V4.00008C14.9917 3.64646 14.8512 3.30732 14.6011 3.05727C14.3511 2.80722 14.012 2.66675 13.6583 2.66675H2.99167C2.63805 2.66675 2.29891 2.80722 2.04886 3.05727C1.79881 3.30732 1.65834 3.64646 1.65834 4.00008V12.0001C1.65834 12.3537 1.79881 12.6928 2.04886 12.9429C2.29891 13.1929 2.63805 13.3334 2.99167 13.3334H11.6583L14.9917 10.0001Z"
+        stroke="#9CA3AF"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+      <path
+        d="M14.9917 9.33325H12.325C11.9714 9.33325 11.6322 9.47373 11.3822 9.72378C11.1321 9.97383 10.9917 10.313 10.9917 10.6666V13.3333"
+        stroke="#9CA3AF"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </g>
+    <defs>
+      <clipPath id="clip0_12_229">
+        <rect width="16" height="16" fill="white" transform="matrix(0 1 -1 0 16.325 0)" />
+      </clipPath>
+    </defs>
+  </svg>
+  <svg
     v-else-if="name === 'download'"
     width="18"
     height="18"
