@@ -140,6 +140,10 @@ import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { computed, nextTick, ref } from 'vue';
 
+const props = defineProps<{
+  name: string;
+}>();
+
 const pageSizes = ['A4', 'A3', 'A2'];
 const formats = ['PDF', 'JPG', 'SVG'];
 const dpis = [72, 150, 300];
@@ -234,6 +238,8 @@ function cropImage() {
         height * dpiScale,
       );
 
+      const fileName = `${props.name}-${Date.now()}`;
+
       if (selectedFormat.value === 'SVG') {
         const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${
           croppedCanvas.width
@@ -245,7 +251,7 @@ function cropImage() {
         const blob = new Blob([svg], { type: 'image/svg+xml' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        link.download = `zemelapis-${Date.now()}.svg`;
+        link.download = `${fileName}.svg`;
         link.click();
         return;
       }
@@ -266,7 +272,7 @@ function cropImage() {
         const x = (pageWidth - imgWidth) / 2;
         const y = (pageHeight - imgHeight) / 2;
         pdf.addImage(croppedCanvas, 'PNG', x, y, imgWidth, imgHeight);
-        pdf.save(`zemelapis-${Date.now()}.pdf`);
+        pdf.save(`${fileName}.pdf`);
         return;
       }
 
@@ -277,7 +283,7 @@ function cropImage() {
           const url = URL.createObjectURL(blob);
           const link = document.createElement('a');
           link.href = url;
-          link.download = `zemelapis-${Date.now()}.${selectedFormat.value.toLowerCase()}`;
+          link.download = `${fileName}.${selectedFormat.value.toLowerCase()}`;
           link.click();
           URL.revokeObjectURL(url);
         },

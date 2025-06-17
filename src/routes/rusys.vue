@@ -14,7 +14,7 @@
         <UiButtonIcon icon="filter" @click="filtersStore.toggle('filters')" />
         <UiButtonIcon icon="layers" @click="filtersStore.toggle('layers')" />
         <UiMapMeasure />
-        <UiMapDownload />
+        <UiMapDownload name="Rūšys" />
         <UiBox v-if="config.user.isUser && !config.user.isExpert">
           <UiInputCheckbox v-model="config.srisShowAllPlaces" @change="toggleAmateurLayers">
             Rodyti visas radavietes
