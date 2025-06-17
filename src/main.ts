@@ -35,7 +35,7 @@ if (import.meta.env.VUE_APP_SENTRY_DSN) {
 
 // Replace base depending on env variable
 // https://github.com/hey-api/openapi-ts/issues/368#issuecomment-2051374787
-OpenAPIBoundaries.BASE = import.meta.env.VUE_APP_BOUNDARIES_HOST;
+OpenAPIBoundaries.BASE = import.meta.env.VUE_APP_BOUNDARIES_HOST || 'https://boundaries.biip.lt';
 
 app
   .use(createPinia())
