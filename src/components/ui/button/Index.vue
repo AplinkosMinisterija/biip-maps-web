@@ -49,7 +49,7 @@ const sizes: any = {
   'icon-sm': 'p-1',
   xs: 'text-xxs gap-1',
   sm: 'px-3 py-1 text-xxs gap-1',
-  md: 'px-4 py-2 text-xs gap-2',
+  md: 'px-4 py-3 text-xs gap-2',
   lg: 'px-5 py-3',
   xl: 'px-7 py-5',
 };
@@ -75,7 +75,7 @@ const types: any = {
 };
 
 const typesNotActive: any = {
-  ghost: 'border border-transparent text-gray-800',
+  ghost: 'border border border-gray-200 text-gray-800',
   link: 'border-b border-transparent text-gray-500',
   green: 'bg-green-700 text-white border border-transparent',
   danger: 'bg-red-50 border border-transparent',
