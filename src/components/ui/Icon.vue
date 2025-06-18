@@ -598,8 +598,34 @@
       d="M160-240q-33 0-56.5-23.5T80-320v-320q0-33 23.5-56.5T160-720h640q33 0 56.5 23.5T880-640v320q0 33-23.5 56.5T800-240H160Zm0-80h640v-320H680v160h-80v-160h-80v160h-80v-160h-80v160h-80v-160H160v320Zm120-160h80-80Zm160 0h80-80Zm160 0h80-80Zm-120 0Z"
     />
   </svg>
+
   <svg
-    v-else-if="name === 'portrait'"
+    v-else-if="name === 'trashCan'"
+    width="13"
+    height="12"
+    viewBox="0 0 13 12"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path d="M2.14999 3H11.15" stroke="#FF0F0F" stroke-linecap="round" stroke-linejoin="round" />
+    <path
+      d="M10.15 3V10C10.15 10.5 9.64999 11 9.14999 11H4.14999C3.64999 11 3.14999 10.5 3.14999 10V3"
+      stroke="#FF0F0F"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <path
+      d="M4.64999 3V2C4.64999 1.5 5.14999 1 5.64999 1H7.64999C8.14999 1 8.64999 1.5 8.64999 2V3"
+      stroke="#FF0F0F"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <path d="M5.64999 5.5V8.5" stroke="#FF0F0F" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M7.64999 5.5V8.5" stroke="#FF0F0F" stroke-linecap="round" stroke-linejoin="round" />
+  </svg>
+
+  <svg
+    v-else-if="name === 'selectArea'"
     width="16"
     height="16"
     viewBox="0 0 16 16"
@@ -607,49 +633,35 @@
     xmlns="http://www.w3.org/2000/svg"
   >
     <path
-      d="M10 1.33325H4C3.64638 1.33325 3.30724 1.47373 3.05719 1.72378C2.80714 1.97382 2.66667 2.31296 2.66667 2.66659V13.3333C2.66667 13.6869 2.80714 14.026 3.05719 14.2761C3.30724 14.5261 3.64638 14.6666 4 14.6666H12C12.3536 14.6666 12.6928 14.5261 12.9428 14.2761C13.1929 14.026 13.3333 13.6869 13.3333 13.3333V4.66659L10 1.33325Z"
-      stroke="#9CA3AF"
-      stroke-width="1.5"
+      d="M8.02267 8.45395C7.99863 8.39366 7.9928 8.32765 8.00589 8.26407C8.01898 8.2005 8.05041 8.14216 8.09631 8.09626C8.14221 8.05037 8.20055 8.01893 8.26412 8.00584C8.32769 7.99276 8.39371 7.99859 8.454 8.02262L14.454 10.356C14.5183 10.3811 14.5733 10.4256 14.6112 10.4833C14.6491 10.541 14.6682 10.6091 14.6658 10.6781C14.6634 10.7471 14.6396 10.8137 14.5977 10.8686C14.5558 10.9235 14.4979 10.964 14.432 10.9846L12.136 11.6966C12.0324 11.7286 11.9382 11.7855 11.8615 11.8621C11.7848 11.9388 11.728 12.033 11.696 12.1366L10.9847 14.432C10.9641 14.4979 10.9235 14.5558 10.8686 14.5977C10.8137 14.6396 10.7472 14.6634 10.6781 14.6658C10.6091 14.6682 10.541 14.6491 10.4833 14.6112C10.4256 14.5732 10.3811 14.5183 10.356 14.454L8.02267 8.45395Z"
+      stroke="#075A9D"
       stroke-linecap="round"
       stroke-linejoin="round"
     />
     <path
-      d="M9.33333 1.33325V3.99992C9.33333 4.35354 9.47381 4.69268 9.72386 4.94273C9.97391 5.19278 10.313 5.33325 10.6667 5.33325H13.3333"
-      stroke="#9CA3AF"
-      stroke-width="1.5"
+      d="M3.33333 2C2.97971 2 2.64057 2.14048 2.39052 2.39052C2.14048 2.64057 2 2.97971 2 3.33333"
+      stroke="#075A9D"
       stroke-linecap="round"
       stroke-linejoin="round"
     />
-  </svg>
-  <svg
-    v-else-if="name === 'landscape'"
-    width="17"
-    height="16"
-    viewBox="0 0 17 16"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <g clip-path="url(#clip0_12_229)">
-      <path
-        d="M14.9917 10.0001V4.00008C14.9917 3.64646 14.8512 3.30732 14.6011 3.05727C14.3511 2.80722 14.012 2.66675 13.6583 2.66675H2.99167C2.63805 2.66675 2.29891 2.80722 2.04886 3.05727C1.79881 3.30732 1.65834 3.64646 1.65834 4.00008V12.0001C1.65834 12.3537 1.79881 12.6928 2.04886 12.9429C2.29891 13.1929 2.63805 13.3334 2.99167 13.3334H11.6583L14.9917 10.0001Z"
-        stroke="#9CA3AF"
-        stroke-width="1.5"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      />
-      <path
-        d="M14.9917 9.33325H12.325C11.9714 9.33325 11.6322 9.47373 11.3822 9.72378C11.1321 9.97383 10.9917 10.313 10.9917 10.6666V13.3333"
-        stroke="#9CA3AF"
-        stroke-width="1.5"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      />
-    </g>
-    <defs>
-      <clipPath id="clip0_12_229">
-        <rect width="16" height="16" fill="white" transform="matrix(0 1 -1 0 16.325 0)" />
-      </clipPath>
-    </defs>
+    <path
+      d="M12.6667 2C13.0203 2 13.3594 2.14048 13.6095 2.39052C13.8595 2.64057 14 2.97971 14 3.33333"
+      stroke="#075A9D"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <path
+      d="M3.33333 14.0001C2.97971 14.0001 2.64057 13.8596 2.39052 13.6096C2.14048 13.3595 2 13.0204 2 12.6667"
+      stroke="#075A9D"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <path d="M6 2H6.66667" stroke="#075A9D" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M6 14H7.33333" stroke="#075A9D" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M9.33333 2H10" stroke="#075A9D" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M2 6V6.66667" stroke="#075A9D" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M14 6V7.33333" stroke="#075A9D" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M2 9.33325V9.99992" stroke="#075A9D" stroke-linecap="round" stroke-linejoin="round" />
   </svg>
   <svg
     v-else-if="name === 'download'"

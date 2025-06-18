@@ -50,6 +50,7 @@ const sizes: any = {
   xs: 'text-xxs gap-1',
   sm: 'px-3 py-1 text-xxs gap-1',
   md: 'px-4 py-3 text-xs gap-2',
+  mdNoPadding: 'gap-2 text-xs',
   lg: 'px-5 py-3',
   xl: 'px-7 py-5',
 };
@@ -60,6 +61,7 @@ const iconSizes: any = {
   xs: 12,
   sm: 14,
   md: 16,
+  mdNoPadding: 16,
   lg: 20,
 };
 
@@ -72,6 +74,7 @@ const types: any = {
   link: 'hover:text-gray-800 border-b',
   white: 'text-gray-800 hover:text-gray-900 border-transparent',
   icon: 'text-gray-800 hover:text-gray-900 border-transparent',
+  blue: 'text-blue-800 bg-transparent',
 };
 
 const typesNotActive: any = {
