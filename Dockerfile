@@ -19,6 +19,7 @@ ARG VUE_APP_QGIS_SERVER=https://gis.biip.lt
 ARG VUE_APP_SMALSUOLIS_API_HOST=https://smalsuolis.lt/api
 ARG VUE_APP_CDN_HOST=https://cdn.biip.lt
 ARG VUE_APP_SENTRY_DSN
+ARG VUE_APP_BOUNDARIES_HOST=https://boundaries.biip.lt
 ARG NODE_ENV=production
 
 # Build and cleanup
