@@ -38,11 +38,11 @@
           </div>
         </div>
         <UiIcon
-          v-if="permit.linkData"
+          v-if="permit.doPostMessage"
           name="chevron-right"
           class="flex-shrink-0 cursor-pointer"
           :size="28"
-          @click="postMessage('selectedPermit', permit.linkData)"
+          @click="postMessage('selectedPermit', { id: permit.id })"
         />
       </div>
     </UiAccordionItem>

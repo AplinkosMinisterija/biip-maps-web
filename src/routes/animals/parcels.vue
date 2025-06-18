@@ -73,7 +73,7 @@ mapLayers
             const permits = (stats?.properties?.permits || []).map((permit: any) => {
               return {
                 ...permit,
-                linkData: query.preview ? { id: permit.id } : '',
+                doPostMessage: !!query.preview,
               };
             });
             return { ...item, permits };
