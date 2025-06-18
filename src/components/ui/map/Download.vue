@@ -4,7 +4,7 @@
       <template #action>
         <UiButtonIcon icon="download" />
       </template>
-      <template #default="{ open }" style="min-height: fit-content">
+      <template #default="{ close }" style="min-height: fit-content">
         <div class="p-0 text-sm max-w-[250px] space-y-4">
           <h3 class="font-bold">Išsaugojimo nustatymai</h3>
 
@@ -73,7 +73,12 @@
             class="w-full bg-gray-900 hover:bg-gray-800 text-white text-base py-3 px-4 flex justify-center items-center"
             centerText
             fontWeight="font-normal"
-            @click="generateFile"
+            @click="
+              () => {
+                generateFile();
+                close();
+              }
+            "
             :disabled="!canGenerate"
           >
             Generuoti
@@ -210,8 +215,8 @@ const canGenerate = computed(() => {
 function generateFile() {
   if (!canGenerate.value) return;
   cropImage();
-  showPopup.value = null;
   selection.value = null;
+  showPopup.value = null;
 }
 
 function cropImage() {
