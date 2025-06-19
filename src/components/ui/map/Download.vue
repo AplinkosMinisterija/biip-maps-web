@@ -145,7 +145,7 @@ import { computed, ref } from 'vue';
 
 const props = defineProps<{ name: string }>();
 
-const formats = ['PDF', 'JPG', 'SVG'];
+const formats = ['PDF', 'JPG'];
 const dpis = [72, 150, 300];
 const selectedFormat = ref('');
 const showPopup = ref<boolean | null>(null);
@@ -160,6 +160,7 @@ function startSelection() {
 
 function clearSelectionValue() {
   selection.value = null;
+  showPopup.value = null;
 }
 
 function onMouseDown(e: MouseEvent) {
@@ -251,22 +252,6 @@ function cropImage() {
     );
 
     const fileName = `${props.name}-${Date.now()}`;
-
-    if (selectedFormat.value === 'SVG') {
-      const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${croppedCanvas.width}' height='${
-        croppedCanvas.height
-      }' viewBox='0 0 ${croppedCanvas.width} ${
-        croppedCanvas.height
-      }' preserveAspectRatio='xMinYMin meet'>
-        <image href='${croppedCanvas.toDataURL('image/png')}' width='100%' height='100%'/>
-      </svg>`;
-      const blob = new Blob([svg], { type: 'image/svg+xml' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = `${fileName}.svg`;
-      link.click();
-      return;
-    }
 
     if (selectedFormat.value === 'PDF') {
       const pdf = new jsPDF({
