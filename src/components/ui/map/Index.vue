@@ -20,7 +20,7 @@
     </div>
 
     <div
-      class="absolute left-0 z-10 ml-2 mb-2 bottom-0 flex flex-col items-start gap-2 pointer-events-none"
+      class="absolute left-0 z-10 ml-2 mb-2 bottom-0 flex flex-col items-start gap-2 pointer-events-none bottomLeft"
     >
       <div id="mapControlsLB" class="text-xxs text-gray-700 flex flex-col gap-2 items-start" />
 
@@ -37,7 +37,7 @@
       <slot v-if="!isPreview" name="leftBottom" />
     </div>
     <div
-      class="absolute left-0 p-2 top-0 flex flex-col gap-2 items-start right-0 xs:right-auto z-20 max-h-screen justify-start pointer-events-none"
+      class="absolute left-0 p-2 top-0 flex flex-col gap-2 items-start right-0 xs:right-auto z-20 max-h-screen justify-start pointer-events-none leftTop"
     >
       <div v-if="$slots.leftTop && !isPreview" class="pointer-events-auto">
         <slot name="leftTop" />
@@ -85,7 +85,7 @@
       <slot v-if="!isPreview" name="rightTop" />
     </div>
     <div
-      class="absolute left-auto right-0 z-10 mr-2 mb-2 top-auto bottom-0 flex flex-col gap-2 items-end sm:max-w-[80vw] xs:max-w-[65vw] max-w-[50vw]"
+      class="absolute left-auto right-0 z-10 mr-2 mb-2 top-auto bottom-0 flex flex-col gap-2 items-end sm:max-w-[80vw] xs:max-w-[65vw] max-w-[50vw] rightBottom"
     >
       <UiButtonIcon
         v-if="isZoomToUserLocationEnabled && !isPreview"
@@ -112,8 +112,8 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, inject, ref } from 'vue';
 import { useFiltersStore } from '@/stores/filters';
+import { computed, inject, ref } from 'vue';
 
 const mapLayers: any = inject('mapLayers');
 const eventBus: any = inject('eventBus');
