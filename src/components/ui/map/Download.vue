@@ -1,6 +1,10 @@
 <template>
   <div>
-    <UiPopup :show="showPopup" style="min-height: fit-content">
+    <UiPopup
+      :show="showPopup"
+      style="min-height: fit-content"
+      :class="{ 'transparent-ui': selecting }"
+    >
       <template #action>
         <UiButtonIcon icon="download" />
       </template>
@@ -86,61 +90,36 @@
         </div>
       </template>
     </UiPopup>
-
-    <div
-      v-if="selecting || selection"
-      class="fixed inset-0 z-50 cursor-crosshair pointer-events-auto overflow-hidden"
-      @mousedown="onMouseDown"
-      @mousemove="onMouseMove"
-      @mouseup="onMouseUp"
-    >
+    <teleport to="body">
       <div
-        v-if="selection"
-        class="absolute z-50 border-2 border-red-500 no-export"
-        :style="selectionStyle"
+        v-if="selecting || selection"
+        class="fixed inset-0 z-50 cursor-crosshair overflow-hidden"
+        :style="{ pointerEvents: selecting ? 'auto' : 'none' }"
+        @mousedown="onMouseDown"
+        @mousemove="onMouseMove"
+        @mouseup="onMouseUp"
       >
+        <!-- Red selection rectangle -->
         <div
-          class="absolute bottom-0 right-0 bg-black bg-opacity-70 text-white text-xs p-1 no-export"
+          v-if="selection"
+          class="absolute z-50 border-2 border-red-500 no-export pointer-events-none"
+          :style="selectionStyle"
         >
-          {{ selectionSize }}
+          <div
+            class="absolute bottom-0 right-0 bg-black bg-opacity-70 text-white text-xs p-1 no-export"
+          >
+            {{ selectionSize }}
+          </div>
         </div>
       </div>
-
-      <div class="fixed inset-0 z-40 pointer-events-none">
-        <div
-          class="absolute"
-          :style="{ left: '0px', top: '0px', width: `${left}px`, height: '100vh' }"
-        />
-        <div
-          class="absolute"
-          :style="{ left: `${left}px`, top: '0px', width: `${width}px`, height: `${top}px` }"
-        />
-        <div
-          class="absolute"
-          :style="{
-            left: `${left}px`,
-            top: `${top + height}px`,
-            width: `${width}px`,
-            height: `calc(100vh - ${top + height}px)`,
-          }"
-        />
-        <div
-          class="absolute"
-          :style="{
-            left: `${left + width}px`,
-            top: '0px',
-            width: `calc(100vw - ${left + width}px)`,
-            height: '100vh',
-          }"
-        />
-      </div>
-    </div>
+    </teleport>
   </div>
 </template>
 
 <script lang="ts" setup>
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
+import moment from 'moment';
 import { computed, ref } from 'vue';
 
 const props = defineProps<{ name: string }>();
@@ -153,14 +132,26 @@ const selectedDPI = ref<number | null>(null);
 const selecting = ref(false);
 const selection = ref<null | { startX: number; startY: number; endX: number; endY: number }>(null);
 
+function toggleTargetVisibility(visible: boolean) {
+  const classList = ['leftTop', 'rightBottom', 'bottomLeft'];
+  classList.forEach((cls) => {
+    document.querySelectorAll(`.${cls}`).forEach((el) => {
+      (el as HTMLElement).style.visibility = visible ? 'visible' : 'hidden';
+    });
+  });
+}
+
 function startSelection() {
   showPopup.value = true;
   selecting.value = true;
+  toggleTargetVisibility(false);
 }
 
 function clearSelectionValue() {
   selection.value = null;
   showPopup.value = null;
+  selecting.value = false;
+  toggleTargetVisibility(true);
 }
 
 function onMouseDown(e: MouseEvent) {
@@ -178,6 +169,7 @@ function onMouseMove(e: MouseEvent) {
 function onMouseUp() {
   if (selecting.value && selection.value) {
     selecting.value = false;
+    toggleTargetVisibility(true);
   }
 }
 
@@ -229,16 +221,37 @@ function cropImage() {
 
   const dpiScale = selectedDPI.value! / 96;
 
-  html2canvas(document.body, {
+  const canvasEl = document.querySelector('canvas') as HTMLCanvasElement;
+
+  html2canvas(canvasEl, {
     allowTaint: true,
     useCORS: true,
     scale: dpiScale,
     ignoreElements: (element) => element.classList.contains('no-export'),
   }).then((canvas) => {
+    const lineHeight = 20 * dpiScale;
     const croppedCanvas = document.createElement('canvas');
     croppedCanvas.width = widthPx * dpiScale;
-    croppedCanvas.height = heightPx * dpiScale;
+    croppedCanvas.height = heightPx * dpiScale + lineHeight;
+
     const ctx = croppedCanvas.getContext('2d')!;
+
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, croppedCanvas.width, lineHeight);
+
+    ctx.fillStyle = 'black';
+    ctx.font = `${12 * dpiScale}px sans-serif`;
+    ctx.textBaseline = 'middle';
+
+    ctx.fillText(props.name, 8 * dpiScale, lineHeight / 2);
+
+    const currentUrl = window.location.origin;
+    const currentDate = moment().format('YYYY-MM-DD');
+    const rightText = `Žemėlapis sukurtas ${currentUrl} svetainėje, ${currentDate}`;
+
+    const textWidth = ctx.measureText(rightText).width;
+    ctx.fillText(rightText, croppedCanvas.width - textWidth - 8 * dpiScale, lineHeight / 2);
+
     ctx.drawImage(
       canvas,
       leftPx * dpiScale,
@@ -246,11 +259,10 @@ function cropImage() {
       widthPx * dpiScale,
       heightPx * dpiScale,
       0,
-      0,
+      lineHeight,
       widthPx * dpiScale,
       heightPx * dpiScale,
     );
-
     const fileName = `${props.name}-${Date.now()}`;
 
     if (selectedFormat.value === 'PDF') {
@@ -290,9 +302,3 @@ function cropImage() {
   });
 }
 </script>
-
-<style scoped>
-button:focus {
-  outline: none;
-}
-</style>
