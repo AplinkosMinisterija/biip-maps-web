@@ -291,6 +291,7 @@ mapLayers
   .add(sznsPievosPelkes.id, { isHidden: true })
   .add(gamtotvarkaService.id, { isHidden: true })
   .add(rusysService.id)
+  .enableLocationTracking()
   .click(async ({ coordinate }: any) => {
     selectedFeatures.value = [];
     eventBus.emit('uiSidebar', { open: false });
