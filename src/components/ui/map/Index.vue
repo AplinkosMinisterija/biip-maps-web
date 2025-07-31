@@ -27,7 +27,7 @@
         v-if="mapLayers.baseLayers?.length > 1 && !isPreview && showBaseLayersSwitch"
         v-model="mapLayers.visibleBaseLayerId"
         class="px-1 rounded border border-gray-400 bg-white pointer-events-auto"
-        aria-label="Pasirinkite pagrindo sluoksnį"
+        :aria-label="'Pasirinkite pagrindo sluoksnį'"
       >
         <UiDropdownItem v-for="l in mapLayers.baseLayers" :key="l.id" :value="`${l.id}`">
           {{ l.title }}

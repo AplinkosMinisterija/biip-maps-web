@@ -5,7 +5,7 @@
     </div>
     <select
       v-model="value"
-      v-bind="$attrs"
+      :aria-label="ariaLabel"
       :class="[sizes[size || 'default']?.value]"
       class="p-1 bg-transparent outline-none text-gray-700 w-full max-w-full overflow-hidden"
     >
@@ -22,6 +22,7 @@ const props = defineProps({
   value: { type: String, default: '' },
   label: { type: String, default: '' },
   size: { type: String, default: 'default' },
+  ariaLabel: { type: String, default: '' }, // <-- naujas props
 });
 
 const sizes: Record<string, { label: string; value: string }> = {
