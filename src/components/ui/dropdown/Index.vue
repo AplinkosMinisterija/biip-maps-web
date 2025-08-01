@@ -22,7 +22,7 @@ const props = defineProps({
   value: { type: String, default: '' },
   label: { type: String, default: '' },
   size: { type: String, default: 'default' },
-  ariaLabel: { type: String, default: '' }, // <-- naujas props
+  ariaLabel: { type: String, default: '' },
 });
 
 const sizes: Record<string, { label: string; value: string }> = {
