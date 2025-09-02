@@ -3,8 +3,8 @@
     <UiAccordionItem
       v-for="feature in features"
       :key="feature.featureId"
-      :title="feature['3. Paviršinio vandens telkinio pavadinimas'] || feature['1. Pavadinimas']"
-      :subtitle="feature['1. Specialioji sąlyga'] || feature['3. Kategorija']"
+      :title="getFeatureTitle(feature)"
+      :subtitle="getFeatureSubtitle(feature)"
     >
       <UiTable class="text-xs">
         <UiTableRow v-for="item in getSorted(feature)" :key="item.id">
@@ -12,7 +12,9 @@
             {{ item.name }}
           </UiTableCell>
           <UiTableCell class="w-1/2">
-            {{ item.value }}
+            <div>
+              {{ formatValue(item) }}
+            </div>
           </UiTableCell>
         </UiTableRow>
       </UiTable>
@@ -38,6 +40,10 @@ defineProps({
 });
 
 const urlAttribute = '6. Papildoma informacija';
+const valueToRoundAttributes = [
+  'Rengiamų pakrantės apsaugos juostų dydis (ha)',
+  'Rengiamų paviršinių vandens telkinių apsaugos zonų dydis (ha)',
+];
 
 const getSorted = (properties: any) => {
   return Object.entries(properties)
@@ -51,5 +57,27 @@ const getSorted = (properties: any) => {
       return a.id.localeCompare(b.id);
     })
     .filter((item: any) => !['featureId', '_layerTitle', urlAttribute].includes(item.name));
+};
+
+const getFeatureTitle = (feature: any) => {
+  return (
+    feature['3. Paviršinio vandens telkinio pavadinimas'] ||
+    feature['1. Pavadinimas'] ||
+    feature['Unikalus ID']
+  );
+};
+
+const getFeatureSubtitle = (feature: any) => {
+  return feature['1. Specialioji sąlyga'] || feature['3. Kategorija'] || feature['Kadastro Nr.'];
+};
+
+const formatValue = (item: any) => {
+  if (valueToRoundAttributes.includes(item.name)) {
+    if (item.value == 0) {
+      return 'Teritorija nenustatyta';
+    }
+    return Number(item.value).toFixed(3);
+  }
+  return item.value;
 };
 </script>

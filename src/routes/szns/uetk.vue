@@ -45,7 +45,7 @@ import {
   geoportalTopoGray,
   uetkService,
   sznsUetkService,
-  inspireParcelService,
+  sznsUetkParcelsService,
   administrativeBoundariesLabelsService,
   geoportalHybrid,
   geoportalGrpk,
@@ -73,8 +73,8 @@ function onSearch(search: string) {
 
 const toggleLayers = [
   sznsUetkService,
+  sznsUetkParcelsService,
   uetkService,
-  inspireParcelService,
   administrativeBoundariesLabelsService,
   geoportalGrpk,
 ];
@@ -85,9 +85,9 @@ mapLayers
   .addBaseLayer(geoportalOrto.id)
   .add(geoportalGrpk.id, { isHidden: true })
   .add(administrativeBoundariesLabelsService.id, { isHidden: true })
-  .add(inspireParcelService.id)
   .add(uetkService.id, { isHidden: true })
   .add(sznsUetkService.id)
+  .add(sznsUetkParcelsService.id)
   .click(async ({ coordinate }: any) => {
     selectedFeatures.value = [];
     selectedGeometries.value = [];
@@ -102,11 +102,19 @@ mapLayers
       mapLayers.highlightFeatures(selectedGeometries.value);
       selectedFeatures.value = [...selectedFeatures.value, ...properties];
     });
+    mapLayers.getFeatureInfo(
+      sznsUetkParcelsService.id,
+      coordinate,
+      ({ geometries, properties }: any) => {
+        selectedGeometries.value = [...selectedGeometries.value, ...geometries];
+        mapLayers.highlightFeatures(selectedGeometries.value);
+        selectedFeatures.value = [...selectedFeatures.value, ...properties];
+      },
+    );
   });
 
 mapLayers.waitForLoaded.then(() => {
   filtersStore.toggle('layers');
-  mapLayers.setOpacity(inspireParcelService.id, 0.8);
 });
 
 if (query.cadastralId) {
