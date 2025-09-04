@@ -1,5 +1,11 @@
 <template>
   <div>
+    <UiModal ref="noResultsModal" title="Sklypas nerastas" size="xs" :show-close-btn="false">
+      <p>
+        Sklypas pagal Jūsų nuorodytą unikalų numerį {{ formattedParcelId }} nerastas. Pasitikrinkite
+        unikalų numerį, ar tikrai teisingai jį suvedėte ir bandykite dar kartą.
+      </p>
+    </UiModal>
     <UiMap
       :show-search="activeMainSearch"
       :show-scale-line="true"
@@ -71,6 +77,8 @@ import {
   geoportalGrpk,
   parseRouteParams,
   MapFilters,
+  getGeometriesFromFeaturesArray,
+  getPropertiesFromFeaturesArray,
 } from '@/utils';
 import { useRoute, useRouter } from 'vue-router';
 
@@ -81,6 +89,8 @@ const selectedFeatures = ref([] as any[]);
 const selectedGeometries = ref([] as any[]);
 const $route = useRoute();
 const router = useRouter();
+
+const noResultsModal = ref();
 
 const query = parseRouteParams($route.query, ['cadastralId', 'parcelId']);
 const parcelId = ref('');
@@ -179,11 +189,29 @@ const filterByParcelId = async (parcelIdValue: string) => {
     filters.on(item).set('unikalus_nr', `${parcelIdValue}`);
   });
 
-  await mapLayers.zoom(sznsUetkParcelsService.id, { addStroke: true, filters });
+  const filteredFeatures = await mapLayers.zoom(sznsUetkParcelsService.id, {
+    addStroke: true,
+    filters,
+  });
+
+  if (filteredFeatures && filteredFeatures.length) {
+    const callbackData = {
+      geometries: getGeometriesFromFeaturesArray(filteredFeatures.features || filteredFeatures),
+      properties: getPropertiesFromFeaturesArray(filteredFeatures.features || filteredFeatures),
+    };
+
+    selectedGeometries.value = [...selectedGeometries.value, ...callbackData.geometries];
+    mapLayers.highlightFeatures(selectedGeometries.value);
+    selectedFeatures.value = [...selectedFeatures.value, ...callbackData.properties];
+  } else {
+    selectedFeatures.value = [];
+    noResultsModal.value?.open();
+  }
 };
 
 const searchParcel = () => {
   mapLayers.cleanHighlighs();
+  selectedFeatures.value = [];
 
   const isValidFormat = /^\d{12}$/.test(parcelId.value);
 
