@@ -1,15 +1,34 @@
 <template>
   <div>
-    <UiMap :show-scale-line="true" :show-coordinates="true" :show-search="true" @search="onSearch">
+    <UiMap
+      :show-search="activeMainSearch"
+      :show-scale-line="true"
+      :show-coordinates="true"
+      @search="onSearch"
+    >
       <template #filters>
+        <UiBox v-if="activeParcelSearch">
+          Sklypo paieška:
+          <input
+            type="text"
+            :value="formattedParcelId"
+            placeholder="4400-2510-9595"
+            class="tracking-widest text-center px-1 rounded border-2 focus:outline-none"
+            @input="handleParcelInput"
+          />
+        </UiBox>
+        <UiButtonIcon icon="search" @click="toggleMainSearch()" v-if="activeParcelSearch" />
+        <UiButtonIcon icon="pin-outline" @click="toggleParcelSearch()" v-if="activeMainSearch" />
         <UiButtonIcon icon="layers" @click="filtersStore.toggle('layers')" />
         <UiButtonIcon icon="legend" @click="filtersStore.toggle('legend')" />
         <UiMapMeasure />
       </template>
+
       <template v-if="filtersStore.active" #filtersContent>
         <UiMapLayerToggle v-if="filtersStore.isActive('layers')" :layers="toggleLayers" />
+
         <Search
-          v-else-if="filtersStore.isActive('search')"
+          v-else-if="filtersStore.isActive('search') && activeMainSearch"
           :value="filtersStore.search"
           :add-stroke="true"
           :types="['uetk', 'geoportal']"
@@ -19,6 +38,7 @@
             { type: 'upė', weight: 2 },
           ]"
         />
+
         <UiMapLegend
           v-if="filtersStore.isActive('legend')"
           :layer="sznsUetkService.id"
@@ -37,7 +57,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { inject, ref } from 'vue';
+import { inject, ref, computed } from 'vue';
 import { useFiltersStore } from '@/stores/filters';
 import {
   geoportalTopo,
@@ -52,7 +72,7 @@ import {
   parseRouteParams,
   MapFilters,
 } from '@/utils';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 
 const filtersStore = useFiltersStore();
 
@@ -60,8 +80,10 @@ const mapLayers: any = inject('mapLayers');
 const selectedFeatures = ref([] as any[]);
 const selectedGeometries = ref([] as any[]);
 const $route = useRoute();
+const router = useRouter();
 
-const query = parseRouteParams($route.query, ['cadastralId']);
+const query = parseRouteParams($route.query, ['cadastralId', 'parcelId']);
+const parcelId = ref('');
 
 function onSearch(search: string) {
   filtersStore.search = search;
@@ -69,6 +91,18 @@ function onSearch(search: string) {
   if (!search) {
     mapLayers.cleanHighlighs();
   }
+}
+
+const activeMainSearch = ref(false);
+function toggleMainSearch() {
+  activeMainSearch.value = !activeMainSearch.value;
+  activeParcelSearch.value = !activeParcelSearch.value;
+}
+
+const activeParcelSearch = ref(true);
+function toggleParcelSearch() {
+  activeParcelSearch.value = !activeParcelSearch.value;
+  activeMainSearch.value = !activeMainSearch.value;
 }
 
 const toggleLayers = [
@@ -124,6 +158,7 @@ if (query.cadastralId) {
       (item: string) =>
         !['upiu_pabaseiniai', 'upiu_baseinu_rajonai', 'upiu_baseinai'].includes(item),
     );
+
   const filters = new MapFilters();
 
   layers.forEach((item: string) => {
@@ -132,6 +167,59 @@ if (query.cadastralId) {
 
   await mapLayers.zoom(uetkService.id, { addStroke: true, filters });
 }
+
+const filterByParcelId = async (parcelIdValue: string) => {
+  const layers = mapLayers
+    .getSublayers(sznsUetkParcelsService.id)
+    .filter((item: string) => !['apskritys', 'savivaldybes', 'seniunijos'].includes(item));
+
+  const filters = new MapFilters();
+
+  layers.forEach((item: string) => {
+    filters.on(item).set('unikalus_nr', `${parcelIdValue}`);
+  });
+
+  await mapLayers.zoom(sznsUetkParcelsService.id, { addStroke: true, filters });
+};
+
+const searchParcel = () => {
+  mapLayers.cleanHighlighs();
+
+  const isValidFormat = /^\d{12}$/.test(parcelId.value);
+
+  if (isValidFormat) {
+    router.push({
+      query: {
+        ...$route.query,
+        parcelId: parcelId.value,
+      },
+    });
+    filterByParcelId(parcelId.value);
+  } else if (parcelId.value === '') {
+    const { parcelId: _, ...restQuery } = $route.query;
+    router.push({
+      query: restQuery,
+    });
+  }
+};
+
+if (query.parcelId) {
+  parcelId.value = query.parcelId as string;
+  filterByParcelId(parcelId.value);
+}
+
+const formattedParcelId = computed(() => {
+  if (!parcelId.value) return '';
+  const digits = parcelId.value.toString().replace(/\D/g, '');
+  if (digits.length <= 4) return digits;
+  if (digits.length <= 8) return `${digits.slice(0, 4)}-${digits.slice(4)}`;
+  return `${digits.slice(0, 4)}-${digits.slice(4, 8)}-${digits.slice(8, 12)}`;
+});
+
+const handleParcelInput = (event: any) => {
+  parcelId.value = event.target.value.replace(/\D/g, '').slice(0, 12);
+  searchParcel();
+};
 </script>
 
 <style>
