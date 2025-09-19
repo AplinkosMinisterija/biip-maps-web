@@ -167,7 +167,7 @@ export const sznsUetkService = {
 
 export const sznsUetkParcelsService = {
   id: 'sznsUetkParcelsService',
-  title: 'Vandens juostų ir zonų statistika žemės sklypams',
+  title: 'Žemės sklypų ribos',
   description: [aaaCopyright, biipCopyright],
   layer: getWMSImageLayer(
     `${qgisServerUrl}/uetk_szns_parcels`,

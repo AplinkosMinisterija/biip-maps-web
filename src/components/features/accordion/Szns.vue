@@ -20,7 +20,7 @@
       </UiTable>
       <div>
         <UiButton v-if="feature[urlAttribute]" class="mt-2 text-left" size="sm">
-          <a target="_blank" :href="feature['6. Papildoma informacija']">
+          <a target="_blank" :href="feature['Papildoma informacija']">
             Specialiosios žemės naudojimo sąlygos (draudimai ir apribojimai)
           </a>
         </UiButton>
@@ -39,29 +39,65 @@ defineProps({
   },
 });
 
-const urlAttribute = '6. Papildoma informacija';
+const urlAttribute = 'Papildoma informacija';
 const valueToRoundAttributes = [
-  'Rengiamų pakrantės apsaugos juostų dydis (ha)',
-  'Rengiamų paviršinių vandens telkinių apsaugos zonų dydis (ha)',
+  'Paviršinių vandens telkinių apsaugos zonos plotas (ha)',
+  'Paviršinių vandens telkinių pakrančių apsaugos juostos plotas (ha)',
+  'Specialiosios sąlygos plotas (ha)',
+];
+
+const attributeOrder = [
+  // SZNS
+  'Specialioji sąlyga',
+  'Specialiosios sąlygos plotas (ha)',
+  'Paviršinio vandens telkinio pavadinimas',
+  'Paviršinio vandens telkinio UETK kodas',
+  'SŽNS teritorijos ID',
+  'Papildoma informacija',
+  // UETK
+  '1. Pavadinimas',
+  '2. Kadastro identifikavimo kodas',
+  '3. Kategorija',
+  '4. Upės pabaseinis',
+  '5. Centro X koordinatė (LKS-94), m',
+  '6. Centro Y koordinatė (LKS-94), m',
+  '7. Vandens paviršiaus be salų plotas, ha',
+  '8. Kranto linijos ilgis, km',
+  '9. Kadastro objekto registravimo data',
+  '10. Kita informacija',
+  // Parcels
+  'Unikalus ID',
+  'Kadastro Nr.',
+  'Savivaldybė',
+  'Seniūnija',
+  'Paviršinių vandens telkinių apsaugos zonos plotas (ha)',
+  'Paviršinių vandens telkinių pakrančių apsaugos juostos plotas (ha)',
 ];
 
 const getSorted = (properties: any) => {
-  return Object.entries(properties)
-    .reduce((acc: any, [key, value]) => {
-      let id: number | string = parseInt(key.split('.')[0]);
-      if (isNaN(id)) id = key;
-      return [...acc, { name: key, value, id }];
-    }, [])
-    .sort((a: any, b: any) => {
-      if (isInteger(a.id)) return a.id - b.id;
-      return a.id.localeCompare(b.id);
-    })
+  const items = Object.entries(properties)
+    .map(([key, value]) => ({ name: key, value, id: key }))
     .filter((item: any) => !['featureId', '_layerTitle', urlAttribute].includes(item.name));
+
+  return items.sort((a: any, b: any) => {
+    const positionA = attributeOrder.indexOf(a.name);
+    const positionB = attributeOrder.indexOf(b.name);
+
+    if (positionA !== -1 && positionB !== -1) {
+      return positionA - positionB;
+    }
+
+    if (positionA !== -1) return -1;
+
+    if (positionB !== -1) return 1;
+
+    return a.name.localeCompare(b.name);
+  });
 };
 
 const getFeatureTitle = (feature: any) => {
   return (
-    feature['3. Paviršinio vandens telkinio pavadinimas'] ||
+    feature['Paviršinio vandens telkinio pavadinimas'] ||
     feature['1. Pavadinimas'] ||
     feature['Unikalus ID']
   );
@@ -76,7 +112,7 @@ const formatValue = (item: any) => {
     if (item.value == 0) {
       return 'Teritorija nenustatyta';
     }
-    return Number(item.value).toFixed(3);
+    return Number(item.value).toFixed(4);
   }
   return item.value;
 };
