@@ -99,12 +99,12 @@ const getFeatureTitle = (feature: any) => {
   return (
     feature['Paviršinio vandens telkinio pavadinimas'] ||
     feature['1. Pavadinimas'] ||
-    feature['Unikalus ID']
+    'Žemės sklypas'
   );
 };
 
 const getFeatureSubtitle = (feature: any) => {
-  return feature['1. Specialioji sąlyga'] || feature['3. Kategorija'] || feature['Kadastro Nr.'];
+  return feature['Specialioji sąlyga'] || feature['3. Kategorija'] || feature['Unikalus ID'];
 };
 
 const formatValue = (item: any) => {
