@@ -30,16 +30,6 @@ const rcCopyright = getCopyrightLabel(
   'https://www.registrucentras.lt',
 );
 
-export const huntingService = {
-  id: 'huntingService',
-  description: biipCopyright,
-  layer: getWMSImageLayer(
-    `${qgisServerUrl}/medziokle_mpv`,
-    'mpv_info_geom,mpv_info_geom_50k,mpv_info_geom_250k',
-    biipCopyright,
-  ),
-};
-
 export const administrativeBoundariesService = {
   id: 'administrativeBoundariesService',
   name: 'Administracinės ribos',
@@ -331,6 +321,14 @@ export const invaService = {
   description: biipCopyright,
   layer: getWMSImageLayer(`${qgisServerUrl}/inva`, 'radavietes_invazines', biipCopyright),
   sublayers: [
+    {
+      name: 'Buvo tyrinėta, bet nerasta',
+      value: 'stebejimai_tyrineta_nerasta_invazines',
+    },
+    {
+      name: 'Buvo tyrinėta, bet nerasta (svetimžemės)',
+      value: 'stebejimai_tyrineta_nerasta_svetimzemes',
+    },
     {
       name: 'Radavietės',
       value: 'radavietes_invazines',

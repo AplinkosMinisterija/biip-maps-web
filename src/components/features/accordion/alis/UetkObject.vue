@@ -14,15 +14,15 @@
       <template #default="{ activeTab }">
         <UiLoader v-if="isLoading(activeTab)" type="table" />
         <template v-for="group in tableContent(activeTab)" v-else :key="group">
-          <div v-if="group" class="text-xs mb-1">{{ group.name }}</div>
-          <UiTable v-if="group.tableRows?.length" class="text-xs">
-            <UiTableRow v-for="item in group.tableRows" :key="item.key">
+          <div v-if="group" class="text-xs mb-1 mt-3">{{ group.group }}</div>
+          <UiTable v-if="group.items?.length" class="text-xs">
+            <UiTableRow v-for="item in group.items" :key="item.key">
               <UiTableCell class="w-1/2">
                 {{ item.key }}
               </UiTableCell>
               <UiTableCell class="w-1/2">
                 <template v-if="!item.link">
-                  {{ item.value() }}
+                  {{ typeof item.value === "function" ? item.value() : item.value }}
                 </template>
                 <a
                   v-else
@@ -45,10 +45,14 @@
 import { computed, inject } from "vue";
 import { getWaterBodyInfoUrl } from "@/utils/requests/alis";
 import { getFishTypesInfoByYearUrl } from "@/utils/requests/zuvinimas";
-import { convertCoordinates, projection, projection4326 } from "@/utils";
+import {
+  convertCoordinates,
+  getFishStockingInfoByYear,
+  projection,
+  projection4326,
+} from "@/utils";
 import { useFetch } from "@vueuse/core";
 
-import { upperFirst } from "lodash";
 import { useRoute } from "vue-router";
 
 const postMessage: any = inject("postMessage");
@@ -189,37 +193,16 @@ const basicInfo = [
 function tableContent(
   activeTab: string
 ): Array<{
-  name?: string;
-  tableRows?: any[];
+  group?: string;
+  items?: any[];
 }> {
   if (activeTab === "info") {
-    return [{ tableRows: basicInfo.filter((i) => !!i.value()) }];
+    return [{ items: basicInfo.filter((i) => !!i.value()) }];
   } else if (activeTab === "fishstocking") {
-    const noInfo = [{ name: "Nėra informacijos" }];
+    const noInfo = [{ group: "Nėra informacijos" }];
     if (!zuvinimasInfo.value?.byYear) return noInfo;
 
-    const data = Object.keys(zuvinimasInfo.value.byYear)
-      .sort((a, b) => `${b}`.localeCompare(`${a}`))
-      .reduce((acc: any[], year: number | string) => {
-        const fishes = Object.values(zuvinimasInfo.value.byYear[year].byFish).map(
-          (i: any) => ({
-            key: `${upperFirst(i?.fishType?.label)}, vnt`,
-            value: () => i?.count,
-          })
-        );
-        acc.push({
-          name: `${year} m.`,
-          tableRows: [
-            {
-              key: "Bendras kiekis, vnt",
-              value: () => zuvinimasInfo.value.byYear[year]?.count || 0,
-            },
-            ...fishes,
-          ],
-        });
-
-        return acc;
-      }, []);
+    const data = getFishStockingInfoByYear(zuvinimasInfo.value?.byYear);
 
     if (!data?.length) return noInfo;
 

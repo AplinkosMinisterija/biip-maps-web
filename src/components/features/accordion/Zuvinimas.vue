@@ -13,7 +13,11 @@
               {{ item.translate }}
             </UiTableCell>
             <UiTableCell class="w-1/2">
-              {{ item.fn ? item.fn(_.get(feature, item.key), feature) : _.get(feature, item.key) }}
+              {{
+                item.fn
+                  ? item.fn(_.get(feature, item.key), feature)
+                  : _.get(feature, item.key)
+              }}
             </UiTableCell>
           </UiTableRow>
 
@@ -22,7 +26,7 @@
               v-for="(subitem, subindex) in item.subitemsFn(feature[item.key], feature)"
               :key="subindex"
             >
-              <UiTableCell class="w-1/2" v-html="subitem.name" />
+              <UiTableCell class="w-1/2" v-html="subitem.key" />
               <UiTableCell class="w-1/2">
                 {{ subitem.value }}
               </UiTableCell>
@@ -30,11 +34,26 @@
           </template>
         </template>
       </UiTable>
+
+      <template v-if="feature?.byYear">
+        <template v-for="item in getInfoByYear(feature)" :key="item.group">
+          <div class="mt-3 mb-1 text-xs">{{ item.group }}</div>
+          <UiTable class="text-xs">
+            <UiTableRow v-for="subitem in item.items" :key="subitem.key">
+              <UiTableCell class="w-1/2" v-html="subitem.key" />
+              <UiTableCell class="w-1/2">
+                {{ subitem.value }}
+              </UiTableCell>
+            </UiTableRow>
+          </UiTable>
+        </template>
+      </template>
     </UiAccordionItem>
   </UiAccordion>
 </template>
 
 <script setup lang="ts">
+import { getFishStockingInfoByYear } from '@/utils';
 import _ from 'lodash';
 
 defineProps({
@@ -44,10 +63,14 @@ defineProps({
   },
 });
 
+function getInfoByYear(feature:any) {
+  return getFishStockingInfoByYear(feature.byYear)
+}
+
 const rows: any[] = [
   { key: 'uetk.municipality', translate: 'Savivaldybė' },
   { key: 'uetk.id', translate: 'UETK kadastro ID' },
-  { key: 'count', translate: 'Bendras kiekis', fn: (value: any) => `${value} vnt.` },
+  { key: 'count', translate: 'Bendras kiekis, vnt.', fn: (value: any) => `${value}` },
   {
     key: 'byFishes',
     translate: '',

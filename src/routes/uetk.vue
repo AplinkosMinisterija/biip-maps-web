@@ -142,7 +142,7 @@ mapLayers
     });
   });
 
-const filterByCadastralId = async (cadastralId: string) => {
+const filterByCadastralId = async (cadastralId: any) => {
   const layers = mapLayers
     .getAllSublayers(uetkService.id)
     .filter(
@@ -151,8 +151,12 @@ const filterByCadastralId = async (cadastralId: string) => {
     );
   const filters = new MapFilters();
 
+  if (typeof cadastralId === 'number') {
+    cadastralId = cadastralId.toString();
+  }
+
   layers.forEach((item: string) => {
-    filters.on(item).set('kadastro_id', `${cadastralId}`);
+    filters.on(item).set('kadastro_id', cadastralId);
   });
 
   await mapLayers.zoom(uetkService.id, { addStroke: true, filters });

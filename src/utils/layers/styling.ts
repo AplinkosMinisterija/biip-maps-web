@@ -34,6 +34,7 @@ const COLORS = {
   WHITE: '#ffffff',
   BLACK: '#000000',
   RED: '#ff0000',
+  STROKE: '#004650',
 };
 
 function getFont(size: number, type: 'normal' | 'bold' = 'bold', fontFamily: string = FONT_FAMILY) {
@@ -188,10 +189,12 @@ export function vectorTileStyles(options?: { layerPrefix: string }): any {
         [LAYER_TYPE.BOUNDARIES_COUNTIES]: COLORS.GRAY,
         [LAYER_TYPE.BOUNDARIES_PARCELS]: COLORS.RED,
       };
-      stroke.setColor(getColorWithOpacity(colorByLayer[layer], 1));
-      stroke.setWidth(2);
-      fill.setColor(getColorWithOpacity(colorByLayer[layer], 0.05));
-      styles[length++] = strokedPolygon;
+      if (!feature.get('isHidden')) {
+        stroke.setColor(getColorWithOpacity(colorByLayer[layer], 1));
+        stroke.setWidth(2);
+        fill.setColor(getColorWithOpacity(colorByLayer[layer], 0.05));
+        styles[length++] = strokedPolygon;
+      }
     } else if (
       [
         LAYER_TYPE.BOUNDARIES_MUNICIPALITIES_LABEL,
@@ -208,10 +211,12 @@ export function vectorTileStyles(options?: { layerPrefix: string }): any {
         [LAYER_TYPE.BOUNDARIES_COUNTIES_LABEL]: feature.get('name'),
         [LAYER_TYPE.BOUNDARIES_PARCELS_LABEL]: feature.getId(),
       };
-      text.getText()?.setFont(getFont(11));
-      text.getText()?.setText(`${textByLayer[layer]}`);
-      textFill.setColor(COLORS.GRAY);
-      styles[length++] = text;
+      if (!feature.get('isHidden')) {
+        text.getText()?.setFont(getFont(11));
+        text.getText()?.setText(`${textByLayer[layer]}`);
+        textFill.setColor(COLORS.GRAY);
+        styles[length++] = text;
+      }
     } else if ([LAYER_TYPE.ZUVINIMAS_FISH_STOCKINGS].includes(layer)) {
       const status = feature?.get('status');
 
@@ -219,7 +224,9 @@ export function vectorTileStyles(options?: { layerPrefix: string }): any {
         align: 'top',
       });
     } else if ([LAYER_TYPE.HUNTING_MPV].includes(layer)) {
-      stroke.setColor('#ff0000');
+      const isActive = feature?.get('isActive');
+      line.setZIndex(isActive ? 10 : 1);
+      stroke.setColor(isActive ? COLORS.STROKE : COLORS.RED);
       stroke.setWidth(2);
       styles[length++] = line;
 

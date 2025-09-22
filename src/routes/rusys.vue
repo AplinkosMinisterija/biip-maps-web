@@ -116,6 +116,7 @@ const query = parseRouteParams($route.query, [
   'amateur',
   'request',
   'screenshot',
+  'hideGrid',
 ]);
 
 const isVisibleSrisLayer = ref(true);
@@ -145,11 +146,15 @@ if (!user && query.auth) {
 config.setRusysUser(user || {});
 
 if (user?.type !== 'ADMIN' && !user?.isExpert) {
-  const sublayer: any = invaService.sublayers.find((s) => s.value === 'radavietes_svetimzemes');
+  const sublayers: any[] = invaService.sublayers.filter((s) =>
+    ['radavietes_svetimzemes', 'stebejimai_tyrineta_nerasta_svetimzemes'].includes(s.value),
+  );
 
-  if (sublayer?.name) {
-    sublayer.isHidden = true;
-  }
+  sublayers.forEach((sublayer) => {
+    if (sublayer?.name) {
+      sublayer.isHidden = true;
+    }
+  });
 }
 
 isPreview.value = !!query.preview;
@@ -162,7 +167,14 @@ const filtersPlacesGrid = computed(() =>
 );
 const filtersPlacesSris = computed(() => mapLayers.filters(srisService.id).on('radavietes'));
 const filtersPlacesInva = computed(() =>
-  mapLayers.filters(invaService.id).onAll(['radavietes_invazines', 'radavietes_svetimzemes']),
+  mapLayers
+    .filters(invaService.id)
+    .onAll([
+      'radavietes_invazines',
+      'radavietes_svetimzemes',
+      'stebejimai_tyrineta_nerasta_svetimzemes',
+      'stebejimai_tyrineta_nerasta_invazines',
+    ]),
 );
 const filters = computed(() =>
   mapLayers
@@ -170,6 +182,8 @@ const filters = computed(() =>
     .onAll([
       'radavietes',
       'stebejimai_interpretuojami',
+      'stebejimai_tyrineta_nerasta_invazines',
+      'stebejimai_tyrineta_nerasta_svetimzemes',
       'radavietes_invazines',
       'radavietes_svetimzemes',
     ]),
@@ -198,7 +212,7 @@ const filterById = (key: string, id: any) => {
 if (query.place) filterById('id', query.place);
 if (query.kingdom) {
   filterById('kingdomId', query.kingdom);
-  filtersSrisInformational.value.set('kingdomId', query.species);
+  filtersSrisInformational.value.set('kingdomId', query.kingdom);
 }
 if (query.species) {
   filterById('speciesId', query.species);
@@ -278,6 +292,7 @@ mapLayers
   .add(sznsPievosPelkes.id, { isHidden: true })
   .add(gamtotvarkaService.id, { isHidden: true })
   .add(rusysService.id)
+  .enableLocationTracking()
   .click(async ({ coordinate }: any) => {
     selectedFeatures.value = [];
     eventBus.emit('uiSidebar', { open: false });
@@ -336,7 +351,7 @@ if (query.place || query.informationalForm) {
   await mapLayers.zoom(rusysService.id);
 }
 
-if (query.request && user) {
+if ((query.hideGrid || query.request) && user) {
   toggleGrid(true);
   // do not await this
   await mapLayers.zoom(rusysRequestService.id, { zoomEmptyFilters: true });

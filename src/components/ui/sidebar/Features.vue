@@ -13,7 +13,8 @@ import FeaturesAccordionRusys from '@/components/features/accordion/Rusys.vue';
 import FeaturesAccordionUETK from '@/components/features/accordion/UETK.vue';
 import FeaturesAccordionHunting from '@/components/features/accordion/Hunting.vue';
 import FeaturesAccordionGamtotvarka from '@/components/features/accordion/Gamtotvarka.vue';
-import FeaturesAccordionAnimals from '@/components/features/accordion/Animals.vue';
+import FeaturesAccordionAnimals from '@/components/features/accordion/animals/Index.vue';
+import FeaturesAccordionAnimalsParcels from '@/components/features/accordion/animals/Parcels.vue';
 import FeaturesAccordionTourism from '@/components/features/accordion/Tourism.vue';
 import FeaturesAccordionZvejyba from '@/components/features/accordion/Zvejyba.vue';
 import FeaturesAccordionZuvinimas from '@/components/features/accordion/Zuvinimas.vue';
@@ -36,6 +37,7 @@ const componentByType = computed(() => {
   else if (props.type === 'hunting') return FeaturesAccordionHunting;
   else if (props.type === 'gamtotvarka') return FeaturesAccordionGamtotvarka;
   else if (props.type === 'animals') return FeaturesAccordionAnimals;
+  else if (props.type === 'animals_parcels') return FeaturesAccordionAnimalsParcels;
   else if (props.type === 'tourism') return FeaturesAccordionTourism;
   else if (props.type === 'zvejyba') return FeaturesAccordionZvejyba;
   else if (props.type === 'zuvinimas') return FeaturesAccordionZuvinimas;

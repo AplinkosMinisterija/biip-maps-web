@@ -5,6 +5,13 @@
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>BĮIP Žemėlapiai</title>
+    <script type="module">
+      import { Buffer } from 'buffer';
+      import process from 'process';
+
+      window.Buffer = Buffer;
+      window.process = process;
+    </script>
   </head>
   <body>
     <div id="app"></div>

@@ -1,8 +1,9 @@
 import type { SearchOptions, SearchResults } from '@/types';
 import { serializeQuery } from '.';
 import { rusysApiHost, uetkApiHost } from '../../config';
-import { getElementFromCoordinates } from '../map';
+import { getElementFromCoordinates, wkbToGeoJSON } from '../map';
 import { SpeciesTypes } from '../utils';
+import { parcelsSearch } from '../boundaries';
 
 export function searchUETK(value: string, options?: SearchOptions): Promise<SearchResults> {
   const searchParams = new URLSearchParams({
@@ -41,6 +42,30 @@ export function searchRusys(value: string, options?: SearchOptions): Promise<Sea
         total: data.total,
       };
     });
+}
+
+export async function searchBoundariesParcels(
+  value: string,
+  options?: SearchOptions,
+): Promise<SearchResults> {
+  return parcelsSearch({
+    requestBody: {
+      filters: [{ parcels: { unique_number: { contains: value } } }],
+    },
+    size: options?.pageSize || 11, // hack since pagination is not implemented
+  }).then((r) => {
+    return {
+      rows: r.items
+        .map((item) => ({
+          id: item.unique_number,
+          name: `${item.unique_number}`,
+          geom: wkbToGeoJSON(item.geometry.data),
+          description: `${item.cadastral_number} (${item.area_ha} ha)`,
+        }))
+        .slice(0, 10), // hack since pagination is not implemented
+      total: r.items?.length,
+    };
+  });
 }
 
 export function searchGeoportal(
