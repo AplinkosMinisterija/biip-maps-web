@@ -51,14 +51,7 @@
     fill="none"
     viewBox="0 0 24 24"
   >
-    <circle
-      class="opacity-25"
-      cx="12"
-      cy="12"
-      r="10"
-      stroke="currentColor"
-      stroke-width="4"
-    />
+    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
     <path
       class="opacity-75"
       fill="currentColor"
@@ -218,9 +211,7 @@
     xmlns="http://www.w3.org/2000/svg"
   >
     <path fill="none" d="M0 0h24v24H0V0z" />
-    <path
-      d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"
-    />
+    <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z" />
   </svg>
   <svg
     v-else-if="name === 'fullscreen'"
@@ -233,9 +224,7 @@
     xmlns="http://www.w3.org/2000/svg"
   >
     <path fill="none" d="M0 0h24v24H0V0z" />
-    <path
-      d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"
-    />
+    <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />
   </svg>
   <svg
     v-else-if="name === 'remove'"
@@ -598,6 +587,27 @@
     />
   </svg>
   <svg
+    v-else-if="name === 'pin-outline'"
+    xmlns="http://www.w3.org/2000/svg"
+    :height="size"
+    viewBox="0 0 24 24"
+    :width="size"
+    stroke="currentColor"
+    stroke-width="1.5"
+    fill="none"
+  >
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+    />
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"
+    />
+  </svg>
+  <svg
     v-else-if="name === 'measure'"
     xmlns="http://www.w3.org/2000/svg"
     :height="size"
@@ -732,17 +742,17 @@
 </template>
 
 <script lang="ts" setup>
-import { computed } from "vue";
+import { computed } from 'vue';
 
 const props = defineProps({
   name: {
     type: String,
-    default: "",
+    default: '',
     required: true,
   },
   text: {
     type: String,
-    default: "",
+    default: '',
   },
   size: {
     type: Number,
