@@ -103,6 +103,7 @@ const emptyModalRef = ref();
 const config = useConfigStore();
 const isPreview = ref(false);
 const selectedFeatures = ref([] as any[]);
+const mapDraw = computed(() => mapLayers.getDraw());
 
 const query = parseRouteParams($route.query, [
   'place',
@@ -361,5 +362,6 @@ const selectSearch = (match: any) => {
 
   filtersStore.clearSearch();
   mapLayers.zoomToFeatureCollection(match.geom);
+  mapDraw.value.setFeatures(match.geom);
 };
 </script>
