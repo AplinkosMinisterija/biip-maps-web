@@ -165,6 +165,17 @@ export const sznsUetkService = {
   ),
 };
 
+export const sznsUetkParcelsService = {
+  id: 'sznsUetkParcelsService',
+  title: 'Žemės sklypų ribos',
+  description: [aaaCopyright, biipCopyright],
+  layer: getWMSImageLayer(
+    `${qgisServerUrl}/uetk_szns_parcels`,
+    'sklypai,seniunijos,savivaldybes,apskritys',
+    `${aaaCopyright} ${biipCopyright}`,
+  ),
+};
+
 export const stvkService = {
   id: 'stvkService',
   description: vsttCopyright,
@@ -267,7 +278,7 @@ export const rusysGridService = {
       color: 'rgba(0,70,80,0.8)',
       width: 1,
     },
-    dataProjection: projection
+    dataProjection: projection,
   }),
 };
 
