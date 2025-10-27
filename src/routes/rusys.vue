@@ -254,10 +254,13 @@ const toggleAmateurLayers = (value: boolean) => {
 events.on('filter', ({ places, species, kingdoms, classes, phylums, zoom }: any) => {
   // todo: fix
   const setData = (key: string, items: any, filtersInstance: any = filters) => {
-    if (Array.isArray(items)) {
-      items = { $in: items };
-    }
-    filtersInstance.value.set(key, items);
+    const values = Array.isArray(items) ? items : [items];
+
+    const orCondition = {
+      $or: values.map((value) => ({ [key]: value })),
+    };
+
+    filtersInstance.value.set(key, orCondition);
   };
   filters.value.clear();
 
