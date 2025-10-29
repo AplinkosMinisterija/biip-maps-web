@@ -127,7 +127,7 @@ export function getLayerStyles(opts: {
         showSegments: opts?.showMeasurements?.segments,
         showLength: opts?.showMeasurements?.length,
         showArea: opts?.showMeasurements?.area,
-        projection: opts?.projection,
+        projection,
       });
 
       stylesToReturn.push(...measurementStyles);
