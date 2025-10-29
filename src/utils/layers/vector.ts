@@ -1,16 +1,16 @@
-import VectorLayer from 'ol/layer/Vector';
-import Style from 'ol/style/Style';
-import Stroke from 'ol/style/Stroke';
-import LayerGroup from 'ol/layer/Group';
-import { Fill, Circle, Icon } from 'ol/style';
-import VectorSource from 'ol/source/Vector';
-import { GeoJSON } from 'ol/format';
 import { projection, renderIconHtml } from '@/utils';
-import { vectorLayerStyles } from './styling';
-import { getMeasurementStyles } from './styles/measurements';
+import { GeoJSON } from 'ol/format';
+import LayerGroup from 'ol/layer/Group';
+import VectorLayer from 'ol/layer/Vector';
 import { getPointResolution } from 'ol/proj';
-import { featureToPoint } from '../map';
+import VectorSource from 'ol/source/Vector';
+import { Circle, Fill, Icon } from 'ol/style';
 import CircleStyle from 'ol/style/Circle';
+import Stroke from 'ol/style/Stroke';
+import Style from 'ol/style/Style';
+import { featureToPoint } from '../map';
+import { getMeasurementStyles } from './styles/measurements';
+import { vectorLayerStyles } from './styling';
 
 const color = 'rgba(0,70,80,0.8)';
 const colorFill = 'rgba(0,70,80,0.2)';
@@ -33,6 +33,7 @@ export function getLayerStyles(opts: {
 }) {
   const primaryColor = opts?.colors?.primary || '#326a72';
   const secondaryColor = opts?.colors?.secondary || '#002a30';
+
   function getStyle(
     color: string,
     icon?: string,
@@ -91,6 +92,8 @@ export function getLayerStyles(opts: {
         return getStyle(color, icon, { ...(opts?.opts || {}), width: radius });
       }
 
+      const stylesToReturn: any[] = [defaultStyle];
+
       if (bufferSize) {
         const styleClone = defaultStyle.clone();
         const circle = styleClone.getImage() as Circle;
@@ -98,6 +101,7 @@ export function getLayerStyles(opts: {
 
         const featureAsPoint = featureToPoint(feature);
         let pointResolution = 1;
+
         if (featureAsPoint) {
           pointResolution = getPointResolution(
             opts?.projection,
@@ -108,25 +112,27 @@ export function getLayerStyles(opts: {
 
         const width = (bufferSize * 2) / resolution / pointResolution;
 
-        if (width > 4000) return styleClone;
+        if (width <= 4000) {
+          const bufferStroke = new Stroke({
+            color: lightColor,
+            width,
+          });
+          circle.setStroke(bufferStroke);
+        }
 
-        const bufferStroke = new Stroke({
-          color: lightColor,
-          width,
-        });
-
-        circle.setStroke(bufferStroke);
-        return styleClone;
+        stylesToReturn.push(styleClone);
       }
 
       const measurementStyles = getMeasurementStyles(feature, {
         showSegments: opts?.showMeasurements?.segments,
         showLength: opts?.showMeasurements?.length,
         showArea: opts?.showMeasurements?.area,
-        projection,
+        projection: opts?.projection,
       });
 
-      return [defaultStyle, ...measurementStyles];
+      stylesToReturn.push(...measurementStyles);
+
+      return stylesToReturn;
     };
   }
 
