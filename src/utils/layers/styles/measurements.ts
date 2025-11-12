@@ -1,7 +1,10 @@
+import { projection4326 } from '@/utils/constants';
+import * as turf from '@turf/turf';
 import type { Feature } from 'ol';
 import { getCenter } from 'ol/extent';
 import { Circle, LineString, Point, Polygon } from 'ol/geom';
 import { fromCircle } from 'ol/geom/Polygon';
+import { transform } from 'ol/proj';
 import { getArea, getLength } from 'ol/sphere';
 import { Fill, RegularShape, Style, Text } from 'ol/style';
 
@@ -41,8 +44,6 @@ const segmentStyle = new Style({
   }),
 });
 
-let segmentStyles: Style[] = [];
-
 const formatLength = (line: LineString, projection?: string) => {
   const length = getLength(line, { projection });
   return length > 100
@@ -73,32 +74,35 @@ export function getMeasurementStyles(
   const styles: Style[] = [];
   let point: Point | undefined;
   let label: string | undefined;
-  let line: LineString | any;
-
-  segmentStyles = [];
+  let line: LineString | undefined;
 
   if (type === 'Polygon' && opts?.showArea) {
     point = (geometry as Polygon).getInteriorPoint();
     label = formatArea(geometry as Polygon, opts?.projection);
     line = new LineString((geometry as Polygon).getCoordinates()[0]);
   } else if (type === 'LineString') {
-    line = geometry;
+    line = geometry as LineString;
     if (opts?.showLength) {
-      point = new Point((geometry as LineString).getLastCoordinate());
-      label = formatLength(geometry as LineString, opts?.projection);
+      point = new Point(line.getLastCoordinate());
+      label = formatLength(line, opts?.projection);
     }
 
     const bufferSize = feature.get('bufferSize');
     if (bufferSize && opts?.showArea) {
-      const length = getLength(geometry as LineString, { projection: opts?.projection });
-      const approxArea = length * 2 * bufferSize;
-      label =
-        approxArea > 10000
-          ? (Math.round((approxArea / 1000000) * 100) / 100).toFixed(2) + ' km²'
-          : (Math.round(approxArea * 100) / 100).toFixed(2) + ' m²';
+      const coords4326 = line
+        .getCoordinates()
+        .map((c) => transform(c, opts?.projection, projection4326));
+      const turfLine = turf.lineString(coords4326);
 
-      const extent = geometry.getExtent();
-      point = new Point(getCenter(extent));
+      const turfBuffer = turf.buffer(turfLine, bufferSize, { units: 'meters' });
+
+      const bufferCoords = (turfBuffer?.geometry.coordinates as number[][][]).map((ring) =>
+        ring.map((c) => transform(c as [number, number], projection4326, opts?.projection)),
+      );
+
+      const bufferPolygon = new Polygon(bufferCoords);
+      label = formatArea(bufferPolygon, opts?.projection);
+      point = new Point(getCenter(bufferPolygon.getExtent()));
     }
   } else if (type === 'Point' && opts?.showArea) {
     const bufferSize = feature.get('bufferSize');
@@ -111,7 +115,7 @@ export function getMeasurementStyles(
   }
 
   if (opts?.showSegments && line) {
-    (line as LineString).forEachSegment((a, b) => {
+    line.forEachSegment((a, b) => {
       const segment = new LineString([a, b]);
       const segLabel = formatLength(segment, opts?.projection);
       const segPoint = new Point(segment.getCoordinateAt(0.5));
