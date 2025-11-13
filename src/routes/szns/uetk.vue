@@ -155,7 +155,8 @@ mapLayers
         selectedFeatures.value = [...selectedFeatures.value, ...properties];
       },
     );
-  });
+  })
+  .enableLocationTracking();
 
 mapLayers.waitForLoaded.then(() => {
   filtersStore.toggle('layers');

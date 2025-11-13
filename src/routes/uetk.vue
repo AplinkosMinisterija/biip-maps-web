@@ -144,7 +144,8 @@ mapLayers
 
       postMessage('click', properties);
     });
-  });
+  })
+  .enableLocationTracking();
 
 const filterByCadastralId = async (cadastralId: any) => {
   const layers = mapLayers
