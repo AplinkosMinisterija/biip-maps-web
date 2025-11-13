@@ -5,6 +5,7 @@ import { getCopyrightLabel } from '../utils';
 import { projection, projection3857 } from '../constants';
 import ImageLayer from 'ol/layer/Image';
 import ImageArcGISRest from 'ol/source/ImageArcGISRest';
+import LayerGroup from 'ol/layer/Group';
 import { MapboxVectorLayer } from 'ol-mapbox-style';
 
 const geoportalUrl = (type: string) => {
@@ -157,7 +158,7 @@ export const geoportalOrto1995 = {
         resolutions: [
           793.7515875031751, 529.1677250021168, 264.5838625010584, 132.2919312505292,
           66.1459656252646, 26.458386250105836, 13.229193125052918, 6.614596562526459,
-          2.6458386250105836,
+          2.6458386250105836, 1.3229193125052918, 0.5291677250021167, 0.26458386250105836,
         ],
         tileSize: [256, 256],
       }),
@@ -179,7 +180,7 @@ export const geoportalOrto2005 = {
         resolutions: [
           793.7515875031751, 529.1677250021168, 264.5838625010584, 132.2919312505292,
           66.1459656252646, 26.458386250105836, 13.229193125052918, 6.614596562526459,
-          2.6458386250105836,
+          2.6458386250105836, 1.3229193125052918, 0.5291677250021167, 0.26458386250105836,
         ],
         tileSize: [256, 256],
       }),
@@ -202,7 +203,7 @@ export const geoportalOrto2009 = {
         resolutions: [
           793.7515875031751, 529.1677250021168, 264.5838625010584, 132.2919312505292,
           66.1459656252646, 26.458386250105836, 13.229193125052918, 6.614596562526459,
-          2.6458386250105836,
+          2.6458386250105836, 1.3229193125052918, 0.5291677250021167, 0.26458386250105836,
         ],
         tileSize: [256, 256],
       }),
@@ -224,7 +225,7 @@ export const geoportalOrto2012 = {
         resolutions: [
           793.7515875031751, 529.1677250021168, 264.5838625010584, 132.2919312505292,
           66.1459656252646, 26.458386250105836, 13.229193125052918, 6.614596562526459,
-          2.6458386250105836,
+          2.6458386250105836, 1.3229193125052918, 0.5291677250021167, 0.26458386250105836,
         ],
         tileSize: [256, 256],
       }),
@@ -246,7 +247,8 @@ export const geoportalOrto2015 = {
         resolutions: [
           793.7515875031751, 529.1677250021168, 264.5838625010584, 132.2919312505292,
           66.1459656252646, 26.458386250105836, 13.229193125052918, 6.614596562526459,
-          2.6458386250105836,
+          2.6458386250105836, 1.3229193125052918, 0.5291677250021167, 0.26458386250105836,
+          0.13229193125052918,
         ],
         tileSize: [256, 256],
       }),
@@ -269,12 +271,121 @@ export const geoportalOrto2018 = {
         resolutions: [
           793.7515875031751, 529.1677250021168, 264.5838625010584, 132.2919312505292,
           66.1459656252646, 26.458386250105836, 13.229193125052918, 6.614596562526459,
-          2.6458386250105836,
+          2.6458386250105836, 1.3229193125052918, 0.5291677250021167, 0.26458386250105836,
+          0.13229193125052918,
         ],
         tileSize: [256, 256],
       }),
       projection,
     }),
+  }),
+};
+
+export const geoportalOrto2021 = {
+  id: 'geoportalOrto2021',
+  title: 'ORT10LT 2021-2023',
+  layer: new TileLayer({
+    source: new XYZ({
+      crossOrigin,
+      attributions: nztCopyright,
+      url: nztUrl('nzt_ort10lt_2021_2023'),
+      tileGrid: new TileGrid({
+        extent: [125559.50331997534, 5922338.972788963, 846285.9447728583, 6303868.902515489],
+        origin: [-5122000, 10000100],
+        resolutions: [
+          793.7515875031751, 529.1677250021168, 264.5838625010584, 132.2919312505292,
+          66.1459656252646, 26.458386250105836, 13.229193125052918, 6.614596562526459,
+          2.6458386250105836, 1.3229193125052918, 0.5291677250021167, 0.26458386250105836,
+          0.13229193125052918,
+        ],
+        tileSize: [256, 256],
+      }),
+      projection,
+    }),
+  }),
+};
+
+export const geoportalOrto2024 = {
+  id: 'geoportalOrto2024',
+  title: 'ORT10LT 2024-2026',
+  layer: new TileLayer({
+    source: new XYZ({
+      crossOrigin,
+      attributions: nztCopyright,
+      url: nztUrl('nzt_ort10lt_2024_2026'),
+      tileGrid: new TileGrid({
+        extent: [125559.50331997534, 5922338.972788963, 846285.9447728583, 6303868.902515489],
+        origin: [-5122000, 10000100],
+        resolutions: [
+          793.7515875031751, 529.1677250021168, 264.5838625010584, 132.2919312505292,
+          66.1459656252646, 26.458386250105836, 13.229193125052918, 6.614596562526459,
+          2.6458386250105836, 1.3229193125052918, 0.5291677250021167, 0.26458386250105836,
+          0.13229193125052918,
+        ],
+        tileSize: [256, 256],
+      }),
+      projection,
+    }),
+  }),
+};
+
+export const geoportalOrtoGroup = {
+  id: 'geoportalOrtoGroup',
+  title: 'Ortofotografiniai žemėlapiai',
+  description: nztCopyright,
+  sublayers: [
+    {
+      name: 'ORT10LT 1995-2001',
+      layer: geoportalOrto1995.layer,
+      id: geoportalOrto1995.id,
+    },
+    {
+      name: 'ORT10LT 2005-2006',
+      layer: geoportalOrto2005.layer,
+      id: geoportalOrto2005.id,
+    },
+    {
+      name: 'ORT10LT 2009-2010',
+      layer: geoportalOrto2009.layer,
+      id: geoportalOrto2009.id,
+    },
+    {
+      name: 'ORT10LT 2012-2013',
+      layer: geoportalOrto2012.layer,
+      id: geoportalOrto2012.id,
+    },
+    {
+      name: 'ORT10LT 2015-2017',
+      layer: geoportalOrto2015.layer,
+      id: geoportalOrto2015.id,
+    },
+    {
+      name: 'ORT10LT 2018-2020',
+      layer: geoportalOrto2018.layer,
+      id: geoportalOrto2018.id,
+    },
+    {
+      name: 'ORT10LT 2021-2023',
+      layer: geoportalOrto2021.layer,
+      id: geoportalOrto2021.id,
+    },
+    {
+      name: 'ORT10LT 2024-2026',
+      layer: geoportalOrto2024.layer,
+      id: geoportalOrto2024.id,
+    },
+  ],
+  layer: new LayerGroup({
+    layers: [
+      geoportalOrto1995.layer,
+      geoportalOrto2005.layer,
+      geoportalOrto2009.layer,
+      geoportalOrto2012.layer,
+      geoportalOrto2015.layer,
+      geoportalOrto2018.layer,
+      geoportalOrto2021.layer,
+      geoportalOrto2024.layer,
+    ],
   }),
 };
 
