@@ -14,6 +14,7 @@
         <UiButtonIcon icon="layers" @click="filtersStore.toggle('layers')" />
         <UiButtonIcon icon="legend" @click="filtersStore.toggle('legend')" />
         <UiMapMeasure />
+        <UiButtonIcon icon="download" @click="handleExportMap()" title="Atsisiųsti žemėlapį" />
       </template>
       <template v-if="filtersStore.active" #filtersContent>
         <UiMapLayerToggle v-if="filtersStore.isActive('layers')" :layers="toggleLayers" />
@@ -47,6 +48,7 @@
 </template>
 <script setup lang="ts">
 import { useFiltersStore } from '@/stores/filters';
+import { useMapExport } from '@/composables/useMapExport';
 import {
   administrativeBoundariesLabelsService,
   gamtotvarkaStvkService,
@@ -70,10 +72,12 @@ import { inject, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
 const filtersStore = useFiltersStore();
+const { exportMapToPNG } = useMapExport();
 
 const mapLayers: any = inject('mapLayers');
 const postMessage: any = inject('postMessage');
 const events: any = inject('events');
+const eventBus: any = inject('eventBus');
 
 const selectedFeatures = ref([] as any[]);
 const $route = useRoute();
@@ -169,6 +173,22 @@ if (query.cadastralId) {
 events.on('filter', async ({ cadastralId }: any) => {
   await filterByCadastralId(cadastralId);
 });
+
+const handleExportMap = async () => {
+  try {
+    await exportMapToPNG(mapLayers.map, 'uetk_zemelapis');
+    eventBus?.emit('uiToast', {
+      type: 'success',
+      title: 'Žemėlapio paveikslėlis sugeneruotas',
+    });
+  } catch (error) {
+    eventBus?.emit('uiToast', {
+      type: 'danger',
+      title: 'Nepavyko išsaugoti žemėlapio paveikslėlio',
+      description: 'Pabandykite perkrauti naršyklės langą ir bandyti dar kartą.',
+    });
+  }
+};
 </script>
 
 <style>
