@@ -64,6 +64,7 @@ import {
   geoportalOrtoGroup,
   geoportalTopo,
   geoportalTopoGray,
+  rcSzns,
   inspireParcelService,
   MapFilters,
   parseRouteParams,
@@ -105,6 +106,7 @@ function onSearch(search: string) {
 const toggleLayers = [
   uetkService,
   inspireParcelService,
+  rcSzns,
   gamtotvarkaStvkService,
   administrativeBoundariesLabelsService,
   geoportalOrtoGroup,
@@ -129,6 +131,7 @@ mapLayers
   .add(geoportalOrto2024.id, { isHidden: true })
   .add(administrativeBoundariesLabelsService.id, { isHidden: true })
   .add(gamtotvarkaStvkService.id, { isHidden: true })
+  .add(rcSzns.id, { isHidden: true })
   .add(inspireParcelService.id, { isHidden: true })
   .add(uetkService.id)
   .click(async ({ coordinate }: any) => {

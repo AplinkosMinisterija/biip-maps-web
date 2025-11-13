@@ -25,6 +25,8 @@ const nztCopyright = getCopyrightLabel(
   'https://www.nzt.lt/',
 );
 
+const rcCopyright = getCopyrightLabel('VĮ Registrų centras', 'https://www.rc.lt/');
+
 const nztUrl = (type: string) => {
   return `${geoportalUrl(type)}/MapServer/tile/{z}/{y}/{x}`;
 };
@@ -493,6 +495,32 @@ export const geoportalForests = {
 };
 
 geoportalForests.layer.set('type', 'ARCGIS');
+
+export const rcSzns = {
+  id: 'rcSzns',
+  title: 'Specialiųjų žemės naudojimo sąlygų (SŽNS) duomenų rinkinys',
+  layer: new TileLayer({
+    source: new XYZ({
+      crossOrigin,
+      attributions: rcCopyright,
+      url: geoportalTileUrl('rc_szns'),
+      tileGrid: new TileGrid({
+        extent: [189017.85510000214, 5973241.050000006, 680153.2719000028, 6257863.444000006],
+        origin: [18900, 6258000],
+        resolutions: [
+          1587.5031750063501, 793.7515875031751, 529.1677250021168, 264.5838625010584,
+          132.2919312505292, 52.91677250021167, 26.458386250105836, 13.229193125052918,
+          6.614596562526459, 2.6458386250105836, 1.3229193125052918, 0.5291677250021167,
+          0.26458386250105836,
+        ],
+        tileSize: [512, 512],
+      }),
+      projection,
+    }),
+  }),
+};
+
+rcSzns.layer.set('type', 'ARCGIS');
 
 export const geoportalKvr = {
   id: 'geoportalKvr',
