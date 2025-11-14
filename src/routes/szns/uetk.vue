@@ -71,6 +71,8 @@ import {
   geoportalTopoGray,
   uetkService,
   sznsUetkService,
+  sznsUetkServiceApproved,
+  sznsUetkServicePreparing,
   sznsUetkParcelsService,
   administrativeBoundariesLabelsService,
   geoportalHybrid,
@@ -130,7 +132,10 @@ mapLayers
   .add(geoportalGrpk.id, { isHidden: true })
   .add(administrativeBoundariesLabelsService.id, { isHidden: true })
   .add(uetkService.id, { isHidden: true })
+
   .add(sznsUetkService.id)
+  .add(sznsUetkServiceApproved.id)
+  .add(sznsUetkServicePreparing.id)
   .add(sznsUetkParcelsService.id)
   .click(async ({ coordinate }: any) => {
     selectedFeatures.value = [];
