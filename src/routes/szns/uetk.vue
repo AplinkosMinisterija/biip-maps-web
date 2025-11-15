@@ -75,7 +75,6 @@ import {
   sznsUetkServicePreparing,
   sznsUetkParcelsService,
   administrativeBoundariesLabelsService,
-  geoportalHybrid,
   geoportalGrpk,
   parseRouteParams,
   MapFilters,
