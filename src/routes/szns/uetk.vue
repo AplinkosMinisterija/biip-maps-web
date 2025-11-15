@@ -47,8 +47,13 @@
 
         <UiMapLegend
           v-if="filtersStore.isActive('legend')"
-          :layer="sznsUetkService.id"
-          title="Sutartiniai ženklai"
+          :layer="sznsUetkServicePreparing.id"
+          title="Tvirtinamos teritorijos"
+        />
+        <UiMapLegend
+          v-if="filtersStore.isActive('legend')"
+          :layer="sznsUetkServiceApproved.id"
+          title="Patvirtintos teritorijos"
         />
       </template>
       <template #sidebar>
