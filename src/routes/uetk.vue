@@ -61,8 +61,12 @@ import {
   geoportalOrto2012,
   geoportalOrto2015,
   geoportalOrto2018,
+  geoportalOrto2021,
+  geoportalOrto2024,
+  geoportalOrtoGroup,
   geoportalTopo,
   geoportalTopoGray,
+  rcSzns,
   inspireParcelService,
   MapFilters,
   parseRouteParams,
@@ -106,14 +110,10 @@ function onSearch(search: string) {
 const toggleLayers = [
   uetkService,
   inspireParcelService,
+  rcSzns,
   gamtotvarkaStvkService,
   administrativeBoundariesLabelsService,
-  geoportalOrto1995,
-  geoportalOrto2005,
-  geoportalOrto2009,
-  geoportalOrto2012,
-  geoportalOrto2015,
-  geoportalOrto2018,
+  geoportalOrtoGroup,
   geoportalHybrid,
   geoportalGrpk,
 ];
@@ -124,14 +124,18 @@ mapLayers
   .addBaseLayer(geoportalOrto.id)
   .add(geoportalGrpk.id, { isHidden: true })
   .add(geoportalHybrid.id, { isHidden: true })
-  .add(geoportalOrto2018.id, { isHidden: true })
-  .add(geoportalOrto2015.id, { isHidden: true })
-  .add(geoportalOrto2012.id, { isHidden: true })
-  .add(geoportalOrto2009.id, { isHidden: true })
-  .add(geoportalOrto2005.id, { isHidden: true })
+  .add(geoportalOrtoGroup.id, { isHidden: true })
   .add(geoportalOrto1995.id, { isHidden: true })
+  .add(geoportalOrto2005.id, { isHidden: true })
+  .add(geoportalOrto2009.id, { isHidden: true })
+  .add(geoportalOrto2012.id, { isHidden: true })
+  .add(geoportalOrto2015.id, { isHidden: true })
+  .add(geoportalOrto2018.id, { isHidden: true })
+  .add(geoportalOrto2021.id, { isHidden: true })
+  .add(geoportalOrto2024.id, { isHidden: true })
   .add(administrativeBoundariesLabelsService.id, { isHidden: true })
   .add(gamtotvarkaStvkService.id, { isHidden: true })
+  .add(rcSzns.id, { isHidden: true })
   .add(inspireParcelService.id, { isHidden: true })
   .add(uetkService.id)
   .click(async ({ coordinate }: any) => {
@@ -144,7 +148,8 @@ mapLayers
 
       postMessage('click', properties);
     });
-  });
+  })
+  .enableLocationTracking();
 
 const filterByCadastralId = async (cadastralId: any) => {
   const layers = mapLayers

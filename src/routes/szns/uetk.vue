@@ -48,8 +48,13 @@
 
         <UiMapLegend
           v-if="filtersStore.isActive('legend')"
-          :layer="sznsUetkService.id"
-          title="Sutartiniai ženklai"
+          :layer="sznsUetkServicePreparing.id"
+          title="Tvirtinamos teritorijos"
+        />
+        <UiMapLegend
+          v-if="filtersStore.isActive('legend')"
+          :layer="sznsUetkServiceApproved.id"
+          title="Patvirtintos teritorijos"
         />
       </template>
       <template #sidebar>
@@ -70,12 +75,22 @@ import { useMapExport } from '@/composables/useMapExport';
 import {
   geoportalTopo,
   geoportalOrto,
+  geoportalOrto1995,
+  geoportalOrto2005,
+  geoportalOrto2009,
+  geoportalOrto2012,
+  geoportalOrto2015,
+  geoportalOrto2018,
+  geoportalOrto2021,
+  geoportalOrto2024,
+  geoportalOrtoGroup,
   geoportalTopoGray,
   uetkService,
   sznsUetkService,
+  sznsUetkServiceApproved,
+  sznsUetkServicePreparing,
   sznsUetkParcelsService,
   administrativeBoundariesLabelsService,
-  geoportalHybrid,
   geoportalGrpk,
   parseRouteParams,
   MapFilters,
@@ -123,6 +138,7 @@ const toggleLayers = [
   sznsUetkService,
   sznsUetkParcelsService,
   uetkService,
+  geoportalOrtoGroup,
   administrativeBoundariesLabelsService,
   geoportalGrpk,
 ];
@@ -132,9 +148,20 @@ mapLayers
   .addBaseLayer(geoportalTopo.id)
   .addBaseLayer(geoportalOrto.id)
   .add(geoportalGrpk.id, { isHidden: true })
+  .add(geoportalOrtoGroup.id, { isHidden: true })
+  .add(geoportalOrto1995.id, { isHidden: true })
+  .add(geoportalOrto2005.id, { isHidden: true })
+  .add(geoportalOrto2009.id, { isHidden: true })
+  .add(geoportalOrto2012.id, { isHidden: true })
+  .add(geoportalOrto2015.id, { isHidden: true })
+  .add(geoportalOrto2018.id, { isHidden: true })
+  .add(geoportalOrto2021.id, { isHidden: true })
+  .add(geoportalOrto2024.id, { isHidden: true })
   .add(administrativeBoundariesLabelsService.id, { isHidden: true })
   .add(uetkService.id, { isHidden: true })
   .add(sznsUetkService.id)
+  .add(sznsUetkServiceApproved.id)
+  .add(sznsUetkServicePreparing.id)
   .add(sznsUetkParcelsService.id)
   .click(async ({ coordinate }: any) => {
     selectedFeatures.value = [];
