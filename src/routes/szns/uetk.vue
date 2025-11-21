@@ -28,6 +28,7 @@
         <UiButtonIcon icon="layers" @click="filtersStore.toggle('layers')" />
         <UiButtonIcon icon="legend" @click="filtersStore.toggle('legend')" />
         <UiMapMeasure />
+        <UiButtonIcon icon="download" @click="handleExportMap()" title="Atsisiųsti žemėlapį" />
       </template>
 
       <template v-if="filtersStore.active" #filtersContent>
@@ -65,6 +66,7 @@
 <script setup lang="ts">
 import { inject, ref, computed } from 'vue';
 import { useFiltersStore } from '@/stores/filters';
+import { useMapExport } from '@/composables/useMapExport';
 import {
   geoportalTopo,
   geoportalOrto,
@@ -83,12 +85,14 @@ import {
 import { useRoute, useRouter } from 'vue-router';
 
 const filtersStore = useFiltersStore();
+const { exportMapToPNG } = useMapExport();
 
 const mapLayers: any = inject('mapLayers');
 const selectedFeatures = ref([] as any[]);
 const selectedGeometries = ref([] as any[]);
 const $route = useRoute();
 const router = useRouter();
+const eventBus: any = inject('eventBus');
 
 const noResultsModal = ref();
 
@@ -155,7 +159,8 @@ mapLayers
         selectedFeatures.value = [...selectedFeatures.value, ...properties];
       },
     );
-  });
+  })
+  .enableLocationTracking();
 
 mapLayers.waitForLoaded.then(() => {
   filtersStore.toggle('layers');
@@ -247,6 +252,22 @@ const formattedParcelId = computed(() => {
 const handleParcelInput = (event: any) => {
   parcelId.value = event.target.value.replace(/\D/g, '').slice(0, 12);
   searchParcel();
+};
+
+const handleExportMap = async () => {
+  try {
+    await exportMapToPNG(mapLayers.map, 'szns_zemelapis');
+    eventBus?.emit('uiToast', {
+      type: 'success',
+      title: 'Žemėlapio paveikslėlis sugeneruotas',
+    });
+  } catch (error) {
+    eventBus?.emit('uiToast', {
+      type: 'danger',
+      title: 'Nepavyko išsaugoti žemėlapio paveikslėlio',
+      description: 'Pabandykite perkrauti naršyklės langą ir bandyti dar kartą.',
+    });
+  }
 };
 </script>
 
