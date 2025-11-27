@@ -28,6 +28,7 @@
         <UiButtonIcon icon="layers" @click="filtersStore.toggle('layers')" />
         <UiButtonIcon icon="legend" @click="filtersStore.toggle('legend')" />
         <UiMapMeasure />
+        <UiButtonIcon icon="download" @click="handleExportMap()" title="Atsisiųsti žemėlapį" />
       </template>
 
       <template v-if="filtersStore.active" #filtersContent>
@@ -47,8 +48,13 @@
 
         <UiMapLegend
           v-if="filtersStore.isActive('legend')"
-          :layer="sznsUetkService.id"
-          title="Sutartiniai ženklai"
+          :layer="sznsUetkServicePreparing.id"
+          title="Tvirtinamos teritorijos"
+        />
+        <UiMapLegend
+          v-if="filtersStore.isActive('legend')"
+          :layer="sznsUetkServiceApproved.id"
+          title="Patvirtintos teritorijos"
         />
       </template>
       <template #sidebar>
@@ -65,15 +71,26 @@
 <script setup lang="ts">
 import { inject, ref, computed } from 'vue';
 import { useFiltersStore } from '@/stores/filters';
+import { useMapExport } from '@/composables/useMapExport';
 import {
   geoportalTopo,
   geoportalOrto,
+  geoportalOrto1995,
+  geoportalOrto2005,
+  geoportalOrto2009,
+  geoportalOrto2012,
+  geoportalOrto2015,
+  geoportalOrto2018,
+  geoportalOrto2021,
+  geoportalOrto2024,
+  geoportalOrtoGroup,
   geoportalTopoGray,
   uetkService,
   sznsUetkService,
+  sznsUetkServiceApproved,
+  sznsUetkServicePreparing,
   sznsUetkParcelsService,
   administrativeBoundariesLabelsService,
-  geoportalHybrid,
   geoportalGrpk,
   parseRouteParams,
   MapFilters,
@@ -83,12 +100,14 @@ import {
 import { useRoute, useRouter } from 'vue-router';
 
 const filtersStore = useFiltersStore();
+const { exportMapToPNG } = useMapExport();
 
 const mapLayers: any = inject('mapLayers');
 const selectedFeatures = ref([] as any[]);
 const selectedGeometries = ref([] as any[]);
 const $route = useRoute();
 const router = useRouter();
+const eventBus: any = inject('eventBus');
 
 const noResultsModal = ref();
 
@@ -119,6 +138,7 @@ const toggleLayers = [
   sznsUetkService,
   sznsUetkParcelsService,
   uetkService,
+  geoportalOrtoGroup,
   administrativeBoundariesLabelsService,
   geoportalGrpk,
 ];
@@ -128,9 +148,20 @@ mapLayers
   .addBaseLayer(geoportalTopo.id)
   .addBaseLayer(geoportalOrto.id)
   .add(geoportalGrpk.id, { isHidden: true })
+  .add(geoportalOrtoGroup.id, { isHidden: true })
+  .add(geoportalOrto1995.id, { isHidden: true })
+  .add(geoportalOrto2005.id, { isHidden: true })
+  .add(geoportalOrto2009.id, { isHidden: true })
+  .add(geoportalOrto2012.id, { isHidden: true })
+  .add(geoportalOrto2015.id, { isHidden: true })
+  .add(geoportalOrto2018.id, { isHidden: true })
+  .add(geoportalOrto2021.id, { isHidden: true })
+  .add(geoportalOrto2024.id, { isHidden: true })
   .add(administrativeBoundariesLabelsService.id, { isHidden: true })
   .add(uetkService.id, { isHidden: true })
   .add(sznsUetkService.id)
+  .add(sznsUetkServiceApproved.id)
+  .add(sznsUetkServicePreparing.id)
   .add(sznsUetkParcelsService.id)
   .click(async ({ coordinate }: any) => {
     selectedFeatures.value = [];
@@ -155,7 +186,8 @@ mapLayers
         selectedFeatures.value = [...selectedFeatures.value, ...properties];
       },
     );
-  });
+  })
+  .enableLocationTracking();
 
 mapLayers.waitForLoaded.then(() => {
   filtersStore.toggle('layers');
@@ -247,6 +279,22 @@ const formattedParcelId = computed(() => {
 const handleParcelInput = (event: any) => {
   parcelId.value = event.target.value.replace(/\D/g, '').slice(0, 12);
   searchParcel();
+};
+
+const handleExportMap = async () => {
+  try {
+    await exportMapToPNG(mapLayers.map, 'szns_zemelapis');
+    eventBus?.emit('uiToast', {
+      type: 'success',
+      title: 'Žemėlapio paveikslėlis sugeneruotas',
+    });
+  } catch (error) {
+    eventBus?.emit('uiToast', {
+      type: 'danger',
+      title: 'Nepavyko išsaugoti žemėlapio paveikslėlio',
+      description: 'Pabandykite perkrauti naršyklės langą ir bandyti dar kartą.',
+    });
+  }
 };
 </script>
 

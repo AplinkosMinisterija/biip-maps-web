@@ -14,6 +14,7 @@
         <UiButtonIcon icon="layers" @click="filtersStore.toggle('layers')" />
         <UiButtonIcon icon="legend" @click="filtersStore.toggle('legend')" />
         <UiMapMeasure />
+        <UiButtonIcon icon="download" @click="handleExportMap()" title="Atsisiųsti žemėlapį" />
       </template>
       <template v-if="filtersStore.active" #filtersContent>
         <UiMapLayerToggle v-if="filtersStore.isActive('layers')" :layers="toggleLayers" />
@@ -47,6 +48,7 @@
 </template>
 <script setup lang="ts">
 import { useFiltersStore } from '@/stores/filters';
+import { useMapExport } from '@/composables/useMapExport';
 import {
   administrativeBoundariesLabelsService,
   gamtotvarkaStvkService,
@@ -59,8 +61,12 @@ import {
   geoportalOrto2012,
   geoportalOrto2015,
   geoportalOrto2018,
+  geoportalOrto2021,
+  geoportalOrto2024,
+  geoportalOrtoGroup,
   geoportalTopo,
   geoportalTopoGray,
+  rcSzns,
   inspireParcelService,
   MapFilters,
   parseRouteParams,
@@ -70,10 +76,12 @@ import { inject, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
 const filtersStore = useFiltersStore();
+const { exportMapToPNG } = useMapExport();
 
 const mapLayers: any = inject('mapLayers');
 const postMessage: any = inject('postMessage');
 const events: any = inject('events');
+const eventBus: any = inject('eventBus');
 
 const selectedFeatures = ref([] as any[]);
 const $route = useRoute();
@@ -102,14 +110,10 @@ function onSearch(search: string) {
 const toggleLayers = [
   uetkService,
   inspireParcelService,
+  rcSzns,
   gamtotvarkaStvkService,
   administrativeBoundariesLabelsService,
-  geoportalOrto1995,
-  geoportalOrto2005,
-  geoportalOrto2009,
-  geoportalOrto2012,
-  geoportalOrto2015,
-  geoportalOrto2018,
+  geoportalOrtoGroup,
   geoportalHybrid,
   geoportalGrpk,
 ];
@@ -120,14 +124,18 @@ mapLayers
   .addBaseLayer(geoportalOrto.id)
   .add(geoportalGrpk.id, { isHidden: true })
   .add(geoportalHybrid.id, { isHidden: true })
-  .add(geoportalOrto2018.id, { isHidden: true })
-  .add(geoportalOrto2015.id, { isHidden: true })
-  .add(geoportalOrto2012.id, { isHidden: true })
-  .add(geoportalOrto2009.id, { isHidden: true })
-  .add(geoportalOrto2005.id, { isHidden: true })
+  .add(geoportalOrtoGroup.id, { isHidden: true })
   .add(geoportalOrto1995.id, { isHidden: true })
+  .add(geoportalOrto2005.id, { isHidden: true })
+  .add(geoportalOrto2009.id, { isHidden: true })
+  .add(geoportalOrto2012.id, { isHidden: true })
+  .add(geoportalOrto2015.id, { isHidden: true })
+  .add(geoportalOrto2018.id, { isHidden: true })
+  .add(geoportalOrto2021.id, { isHidden: true })
+  .add(geoportalOrto2024.id, { isHidden: true })
   .add(administrativeBoundariesLabelsService.id, { isHidden: true })
   .add(gamtotvarkaStvkService.id, { isHidden: true })
+  .add(rcSzns.id, { isHidden: true })
   .add(inspireParcelService.id, { isHidden: true })
   .add(uetkService.id)
   .click(async ({ coordinate }: any) => {
@@ -140,7 +148,8 @@ mapLayers
 
       postMessage('click', properties);
     });
-  });
+  })
+  .enableLocationTracking();
 
 const filterByCadastralId = async (cadastralId: any) => {
   const layers = mapLayers
@@ -169,6 +178,22 @@ if (query.cadastralId) {
 events.on('filter', async ({ cadastralId }: any) => {
   await filterByCadastralId(cadastralId);
 });
+
+const handleExportMap = async () => {
+  try {
+    await exportMapToPNG(mapLayers.map, 'uetk_zemelapis');
+    eventBus?.emit('uiToast', {
+      type: 'success',
+      title: 'Žemėlapio paveikslėlis sugeneruotas',
+    });
+  } catch (error) {
+    eventBus?.emit('uiToast', {
+      type: 'danger',
+      title: 'Nepavyko išsaugoti žemėlapio paveikslėlio',
+      description: 'Pabandykite perkrauti naršyklės langą ir bandyti dar kartą.',
+    });
+  }
+};
 </script>
 
 <style>
