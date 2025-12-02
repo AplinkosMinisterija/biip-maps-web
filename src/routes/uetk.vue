@@ -3,7 +3,7 @@
     <UiMap
       :show-scale-line="true"
       :show-coordinates="true"
-      :show-search="true"
+      :show-search="activeMainSearch"
       :attribution-options="{
         collapsible: !isPreview || !isScreenshot,
       }"
@@ -11,6 +11,28 @@
       @search="onSearch"
     >
       <template #filters>
+        <UiBox v-if="activeParcelSearch">
+          Sklypo paieška:
+          <input
+            type="text"
+            :value="formattedParcelId"
+            placeholder="4400-2510-9595"
+            class="tracking-widest text-center px-1 rounded border-2 focus:outline-none"
+            @input="handleParcelInput"
+          />
+        </UiBox>
+        <UiButtonIcon
+          icon="search"
+          @click="toggleMainSearch()"
+          v-if="activeParcelSearch"
+          title="Pagrindinė paieška"
+        />
+        <UiButtonIcon
+          icon="pin-outline"
+          @click="toggleParcelSearch()"
+          v-if="activeMainSearch"
+          title="Sklypų paieška"
+        />
         <UiButtonIcon icon="layers" @click="filtersStore.toggle('layers')" />
         <UiButtonIcon icon="legend" @click="filtersStore.toggle('legend')" />
         <UiMapMeasure />
@@ -97,6 +119,12 @@
         </div>
       </div>
     </UiModal>
+    <UiModal ref="noResultsModal" title="Sklypas nerastas" size="xs" :show-close-btn="false">
+      <p>
+        Sklypas pagal Jūsų nuorodytą unikalų numerį {{ formattedParcelId }} nerastas. Pasitikrinkite
+        unikalų numerį, ar tikrai teisingai jį suvedėte ir bandykite dar kartą.
+      </p>
+    </UiModal>
   </div>
 </template>
 <script setup lang="ts">
@@ -120,13 +148,15 @@ import {
   geoportalTopo,
   geoportalTopoGray,
   rcSzns,
-  inspireParcelService,
+  sznsUetkParcelsService,
   MapFilters,
   parseRouteParams,
   uetkService,
+  getGeometriesFromFeaturesArray,
+  getPropertiesFromFeaturesArray,
 } from '@/utils';
-import { inject, ref } from 'vue';
-import { useRoute } from 'vue-router';
+import { inject, ref, computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
 const filtersStore = useFiltersStore();
 const { exportMapToPNG } = useMapExport();
@@ -137,17 +167,22 @@ const events: any = inject('events');
 const eventBus: any = inject('eventBus');
 
 const selectedFeatures = ref([] as any[]);
+const selectedGeometries = ref([] as any[]);
 const $route = useRoute();
+const router = useRouter();
 
 const query = parseRouteParams($route.query, [
   'cadastralId',
+  'parcelId',
   'preview',
   'screenshot',
   'hideSidebar',
 ]);
 const isPreview = ref(!!query.preview);
 const isScreenshot = ref(!!query.screenshot);
+const parcelId = ref('');
 
+const noResultsModal = ref();
 const downloadDataModal = ref();
 
 if (isPreview.value && isScreenshot.value) {
@@ -162,9 +197,21 @@ function onSearch(search: string) {
   }
 }
 
+const activeMainSearch = ref(true);
+function toggleMainSearch() {
+  activeMainSearch.value = !activeMainSearch.value;
+  activeParcelSearch.value = !activeParcelSearch.value;
+}
+
+const activeParcelSearch = ref(false);
+function toggleParcelSearch() {
+  activeParcelSearch.value = !activeParcelSearch.value;
+  activeMainSearch.value = !activeMainSearch.value;
+}
+
 const toggleLayers = [
   uetkService,
-  inspireParcelService,
+  sznsUetkParcelsService,
   rcSzns,
   gamtotvarkaStvkService,
   administrativeBoundariesLabelsService,
@@ -191,7 +238,7 @@ mapLayers
   .add(administrativeBoundariesLabelsService.id, { isHidden: true })
   .add(gamtotvarkaStvkService.id, { isHidden: true })
   .add(rcSzns.id, { isHidden: true })
-  .add(inspireParcelService.id, { isHidden: true })
+  .add(sznsUetkParcelsService.id)
   .add(uetkService.id)
   .click(async ({ coordinate }: any) => {
     mapLayers.getFeatureInfo(uetkService.id, coordinate, ({ geometries, properties }: any) => {
@@ -203,6 +250,19 @@ mapLayers
 
       postMessage('click', properties);
     });
+    mapLayers.getFeatureInfo(
+      sznsUetkParcelsService.id,
+      coordinate,
+      ({ geometries, properties }: any) => {
+        mapLayers.highlightFeatures(geometries);
+
+        if (!query.hideSidebar) {
+          selectedFeatures.value = properties;
+        }
+
+        postMessage('click', properties);
+      },
+    );
   })
   .enableLocationTracking();
 
@@ -253,6 +313,77 @@ const handleExportMap = async () => {
 const handleExportData = async () => {
   downloadDataModal.value?.open();
 };
+
+const filterByParcelId = async (parcelIdValue: string) => {
+  const layers = mapLayers
+    .getSublayers(sznsUetkParcelsService.id)
+    .filter((item: string) => !['apskritys', 'savivaldybes', 'seniunijos'].includes(item));
+
+  const filters = new MapFilters();
+
+  layers.forEach((item: string) => {
+    filters.on(item).set('unikalus_nr', `${parcelIdValue}`);
+  });
+
+  const filteredFeatures = await mapLayers.zoom(sznsUetkParcelsService.id, {
+    addStroke: true,
+    filters,
+  });
+
+  if (filteredFeatures && filteredFeatures.length) {
+    const callbackData = {
+      geometries: getGeometriesFromFeaturesArray(filteredFeatures.features || filteredFeatures),
+      properties: getPropertiesFromFeaturesArray(filteredFeatures.features || filteredFeatures),
+    };
+
+    selectedGeometries.value = [...selectedGeometries.value, ...callbackData.geometries];
+    mapLayers.highlightFeatures(selectedGeometries.value);
+    selectedFeatures.value = [...selectedFeatures.value, ...callbackData.properties];
+  } else {
+    selectedFeatures.value = [];
+    noResultsModal.value?.open();
+  }
+};
+
+const formattedParcelId = computed(() => {
+  if (!parcelId.value) return '';
+  const digits = parcelId.value.toString().replace(/\D/g, '');
+  if (digits.length <= 4) return digits;
+  if (digits.length <= 8) return `${digits.slice(0, 4)}-${digits.slice(4)}`;
+  return `${digits.slice(0, 4)}-${digits.slice(4, 8)}-${digits.slice(8, 12)}`;
+});
+
+const handleParcelInput = (event: any) => {
+  parcelId.value = event.target.value.replace(/\D/g, '').slice(0, 12);
+  searchParcel();
+};
+
+const searchParcel = () => {
+  mapLayers.cleanHighlighs();
+  selectedFeatures.value = [];
+
+  const isValidFormat = /^\d{12}$/.test(parcelId.value);
+
+  if (isValidFormat) {
+    router.push({
+      query: {
+        ...$route.query,
+        parcelId: parcelId.value,
+      },
+    });
+    filterByParcelId(parcelId.value);
+  } else if (parcelId.value === '') {
+    const { parcelId: _, ...restQuery } = $route.query;
+    router.push({
+      query: restQuery,
+    });
+  }
+};
+
+if (query.parcelId) {
+  parcelId.value = query.parcelId as string;
+  filterByParcelId(parcelId.value);
+}
 </script>
 
 <style>
