@@ -241,12 +241,13 @@ mapLayers
   .add(sznsUetkParcelsService.id)
   .add(uetkService.id)
   .click(async ({ coordinate }: any) => {
-    mapLayers.getFeatureInfo(uetkService.id, coordinate, ({ geometries, properties }: any) => {
-      mapLayers.highlightFeatures(geometries);
+    selectedFeatures.value = [];
+    selectedGeometries.value = [];
 
-      if (!query.hideSidebar) {
-        selectedFeatures.value = properties;
-      }
+    mapLayers.getFeatureInfo(uetkService.id, coordinate, ({ geometries, properties }: any) => {
+      selectedGeometries.value = [...selectedGeometries.value, ...geometries];
+      mapLayers.highlightFeatures(selectedGeometries.value);
+      selectedFeatures.value = [...selectedFeatures.value, ...properties];
 
       postMessage('click', properties);
     });
@@ -254,13 +255,9 @@ mapLayers
       sznsUetkParcelsService.id,
       coordinate,
       ({ geometries, properties }: any) => {
-        mapLayers.highlightFeatures(geometries);
-
-        if (!query.hideSidebar) {
-          selectedFeatures.value = properties;
-        }
-
-        postMessage('click', properties);
+        selectedGeometries.value = [...selectedGeometries.value, ...geometries];
+        mapLayers.highlightFeatures(selectedGeometries.value);
+        selectedFeatures.value = [...selectedFeatures.value, ...properties];
       },
     );
   })
