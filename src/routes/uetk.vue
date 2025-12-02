@@ -14,7 +14,12 @@
         <UiButtonIcon icon="layers" @click="filtersStore.toggle('layers')" />
         <UiButtonIcon icon="legend" @click="filtersStore.toggle('legend')" />
         <UiMapMeasure />
-        <UiButtonIcon icon="download" @click="handleExportMap()" title="Atsisiųsti žemėlapį" />
+        <UiButtonIcon
+          icon="image"
+          @click="handleExportMap()"
+          title="Atsisiųsti žemėlapio iškarpą"
+        />
+        <UiButtonIcon icon="download" @click="handleExportData()" title="Atsisiųsti duomenis" />
       </template>
       <template v-if="filtersStore.active" #filtersContent>
         <UiMapLayerToggle v-if="filtersStore.isActive('layers')" :layers="toggleLayers" />
@@ -44,6 +49,54 @@
         />
       </template>
     </UiMap>
+    <UiModal
+      ref="downloadDataModal"
+      title="Duomenų atsisiuntimas"
+      size="xs"
+      :show-close-btn="false"
+    >
+      <div class="space-y-4">
+        <div>
+          <h3 class="font-medium text-gray-900 mb-2">Erdviniai duomenys</h3>
+          <p class="text-gray-700">
+            Atsisiųskite
+            <a
+              class="text-sky-700 hover:text-sky-900 transition-colors"
+              target="_blank"
+              href="http://opengis.lt/projects/aaa/uetk/uetk_gdb.zip"
+            >
+              GDB formatu
+            </a>
+            (zip archyvas)
+          </p>
+          <p class="text-sm text-gray-600 mt-2">
+            <a
+              class="text-sky-700 hover:text-sky-900 inline-flex items-center gap-1 transition-colors"
+              target="_blank"
+              href="https://aaa.lrv.lt/public/canonical/1737623109/3063/UETK_Erdviniu_duomenu_aprasymas.pdf"
+            >
+              <UiIcon name="document" class="flex-shrink-0 cursor-pointer" :size="14" />
+              Erdvinių duomenų aprašymas (PDF)
+            </a>
+          </p>
+        </div>
+
+        <div class="pt-3 border-t border-gray-200">
+          <h3 class="font-medium text-gray-900 mb-2">Tekstiniai duomenys</h3>
+          <p class="text-gray-700">
+            Atsisiųskite
+            <a
+              class="text-sky-700 hover:text-sky-900 transition-colors"
+              target="_blank"
+              href="http://opengis.lt/projects/aaa/uetk/uetk_xls.zip"
+            >
+              XLS formatu
+            </a>
+            (zip archyvas)
+          </p>
+        </div>
+      </div>
+    </UiModal>
   </div>
 </template>
 <script setup lang="ts">
@@ -94,6 +147,8 @@ const query = parseRouteParams($route.query, [
 ]);
 const isPreview = ref(!!query.preview);
 const isScreenshot = ref(!!query.screenshot);
+
+const downloadDataModal = ref();
 
 if (isPreview.value && isScreenshot.value) {
   filtersStore.toggle('legend', true);
@@ -193,6 +248,10 @@ const handleExportMap = async () => {
       description: 'Pabandykite perkrauti naršyklės langą ir bandyti dar kartą.',
     });
   }
+};
+
+const handleExportData = async () => {
+  downloadDataModal.value?.open();
 };
 </script>
 
