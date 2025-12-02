@@ -85,7 +85,7 @@
             <a
               class="text-sky-700 hover:text-sky-900 transition-colors"
               target="_blank"
-              href="http://opengis.lt/projects/aaa/uetk/uetk_gdb.zip"
+              href="https://opengis.lt/projects/aaa/uetk/uetk_gdb.zip"
             >
               GDB formatu
             </a>
@@ -110,7 +110,7 @@
             <a
               class="text-sky-700 hover:text-sky-900 transition-colors"
               target="_blank"
-              href="http://opengis.lt/projects/aaa/uetk/uetk_xls.zip"
+              href="https://opengis.lt/projects/aaa/uetk/uetk_xls.zip"
             >
               XLS formatu
             </a>
