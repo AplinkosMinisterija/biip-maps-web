@@ -3,7 +3,7 @@
     <UiAccordionItem
       v-for="feature in features"
       :key="feature.featureId"
-      :title="getValue(feature, ['1. Pavadinimas'])"
+      :title="getFeatureTitle(feature)"
       :subtitle="getSubtitle(feature)"
     >
       <UiTable class="text-xs">
@@ -80,5 +80,9 @@ const getSorted = (properties: any) => {
       return a.id.localeCompare(b.id);
     })
     .filter((item: any) => !['featureId', '_layerTitle'].includes(item.name));
+};
+
+const getFeatureTitle = (feature: any) => {
+  return feature['1. Pavadinimas'] || feature['_layerTitle'] || 'Žemės sklypas';
 };
 </script>

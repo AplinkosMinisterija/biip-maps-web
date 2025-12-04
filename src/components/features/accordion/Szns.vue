@@ -99,6 +99,7 @@ const getFeatureTitle = (feature: any) => {
   return (
     feature['Paviršinio vandens telkinio pavadinimas'] ||
     feature['1. Pavadinimas'] ||
+    feature['_layerTitle'] ||
     'Žemės sklypas'
   );
 };

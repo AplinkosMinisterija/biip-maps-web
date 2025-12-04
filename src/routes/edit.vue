@@ -32,6 +32,7 @@
         </template>
 
         <UiButtonIcon icon="layers" @click="filtersStore.toggle('layers')" />
+        <UiButtonIcon icon="upload" @click="uploadRef?.modal?.open?.()" />
       </template>
       <template v-if="filtersStore.active || showBufferChangeBox" #filtersContent>
         <UiMapLayerToggle v-if="filtersStore.isActive('layers')" :layers="toggleLayers" />
@@ -56,6 +57,7 @@
         </div>
       </template>
     </UiMap>
+    <CoordsUpload ref="uploadRef" />
   </div>
 </template>
 <script setup lang="ts">
@@ -89,7 +91,7 @@ import { computed, inject, ref } from 'vue';
 import { useRoute } from 'vue-router';
 const $route = useRoute();
 const events: any = inject('events');
-
+const uploadRef = ref();
 const mapLayers: any = inject('mapLayers');
 const postMessage: any = inject('postMessage');
 
