@@ -105,9 +105,11 @@ const query = parseRouteParams($route.query, [
   'bufferMin',
   'bufferMax',
   'closeOnSearch',
+  'showArea',
 ]);
 const isPreview = !!query.preview;
 const doHideToolbar = !!query.hideToolbar;
+const showArea = !!query.showArea;
 
 const activeDrawType = computed(() => mapDraw.value.activeType);
 const selectedFeature = ref({} as any);
@@ -215,7 +217,9 @@ const toggleDrawType = (type: string) => {
   if (activeDrawType.value === type) {
     return mapDraw.value.end();
   }
-  mapDraw.value.start(type);
+
+  const draw = mapDraw.value.start(type);
+  if (showArea) draw.enableMeasurements({ area: true });
 };
 
 mapLayers
