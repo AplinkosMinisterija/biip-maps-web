@@ -1,12 +1,12 @@
+import _ from 'lodash';
 import { boundingExtent, getCenter } from 'ol/extent';
 import { GeoJSON } from 'ol/format';
 import { Geometry, LineString, Point, Polygon } from 'ol/geom';
-import { dataToFeatureCollection } from './utils';
-import { getArea, getLength } from 'ol/sphere';
 import { transform } from 'ol/proj';
-import _ from 'lodash';
-import { projection, projection4326 } from '../constants';
+import { getArea, getLength } from 'ol/sphere';
 import wkx from 'wkx';
+import { projection, projection4326 } from '../constants';
+import { dataToFeatureCollection } from './utils';
 
 const singleCoordPattern = '(-?\\d+(\\.\\d+)?)';
 
@@ -221,9 +221,36 @@ export function parseCoordinatesArray(data: number[][]) {
     center: getCenter(extent),
   };
 }
+// --- CLEAN COORDINATES --- //
+function cleanCoordinateList(coords: number[][]) {
+  const seen = new Set<string>();
+  const cleaned: number[][] = [];
 
+  // remove duplicates
+  for (const c of coords) {
+    const key = `${c[0]},${c[1]}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      cleaned.push(c);
+    }
+  }
+
+  // auto-close polygon when 3+ points
+  if (cleaned.length > 2) {
+    const first = cleaned[0];
+    const last = cleaned[cleaned.length - 1];
+    if (first[0] !== last[0] || first[1] !== last[1]) {
+      cleaned.push([...first]);
+    }
+  }
+
+  return cleaned;
+}
+
+// --- MAIN FUNCTION --- //
 export function parseGeomFromString(input: string) {
   input = fixCoordinatesText(input);
+
   const coordinatesPairs =
     input
       .match(coordPairRegex)
@@ -235,6 +262,10 @@ export function parseGeomFromString(input: string) {
           .map((item) => parseFloat(item)),
       )
       .map((item) => (!isWGSCoordinates(item[0], item[1]) ? [item[1], item[0]] : item)) || [];
+
+  // --- APPLY FIXES HERE ---
+  const fixedPairs = cleanCoordinateList(coordinatesPairs);
+  // -------------------------
 
   const results: Array<{
     type: 'LineString' | 'Point' | 'Polygon';
@@ -262,14 +293,16 @@ export function parseGeomFromString(input: string) {
       coordinates,
     };
   };
-  if (!coordinatesPairs.length) return results;
-  else if (coordinatesPairs.length < 2) {
+
+  if (!fixedPairs.length) return results;
+  else if (fixedPairs.length < 2) {
     const {
       item: point,
       coordinates: pointCoordinates,
       extent,
       center,
-    } = getElementFromCoordinates('Point', coordinatesPairs[0]);
+    } = getElementFromCoordinates('Point', fixedPairs[0]);
+
     results.push({
       ...getElement('Point', point, pointCoordinates),
       extent,
@@ -280,13 +313,15 @@ export function parseGeomFromString(input: string) {
       item: lineString,
       extent,
       center,
-    } = getElementFromCoordinates('LineString', coordinatesPairs);
+    } = getElementFromCoordinates('LineString', fixedPairs);
 
-    const startMatchEnd = coordinatesPairs[0] === coordinatesPairs[coordinatesPairs.length - 1];
+    const first = fixedPairs[0];
+    const last = fixedPairs[fixedPairs.length - 1];
+    const startMatchEnd = first[0] === last[0] && first[1] === last[1];
 
     if (!startMatchEnd) {
       results.push({
-        ...getElement('LineString', lineString, coordinatesPairs, {
+        ...getElement('LineString', lineString, fixedPairs, {
           distance: formatLength(lineString as LineString),
         }),
         center,
@@ -294,11 +329,8 @@ export function parseGeomFromString(input: string) {
       });
     }
 
-    if (coordinatesPairs.length > 2) {
-      const polygonCoordinates = _.cloneDeep(coordinatesPairs);
-      if (!startMatchEnd) {
-        polygonCoordinates.push(coordinatesPairs[0]);
-      }
+    if (fixedPairs.length > 2) {
+      const polygonCoordinates = _.cloneDeep(fixedPairs);
 
       const {
         item: polygon,
