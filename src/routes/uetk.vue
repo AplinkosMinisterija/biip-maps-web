@@ -238,7 +238,7 @@ mapLayers
   .add(administrativeBoundariesLabelsService.id, { isHidden: true })
   .add(gamtotvarkaStvkService.id, { isHidden: true })
   .add(rcSzns.id, { isHidden: true })
-  .add(sznsUetkParcelsService.id)
+  .add(sznsUetkParcelsService.id, { isHidden: true })
   .add(uetkService.id)
   .click(async ({ coordinate }: any) => {
     selectedFeatures.value = [];
