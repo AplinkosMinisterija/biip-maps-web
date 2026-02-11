@@ -16,6 +16,13 @@
           </UiTableCell>
         </UiTableRow>
       </UiTable>
+      <div>
+        <UiButton v-if="feature[urlAttribute]" class="mt-2 text-left" size="sm">
+          <a target="_blank" :href="feature['Papildoma informacija']">
+            Specialiosios žemės naudojimo sąlygos (draudimai ir apribojimai)
+          </a>
+        </UiButton>
+      </div>
     </UiAccordionItem>
   </UiAccordion>
 </template>
@@ -29,6 +36,8 @@ defineProps({
     default: [],
   },
 });
+
+const urlAttribute = 'Papildoma informacija';
 
 function getSubtitle(feature: any) {
   const cadastralId = getValue(feature, [
@@ -79,7 +88,7 @@ const getSorted = (properties: any) => {
       if (isInteger(a.id)) return a.id - b.id;
       return a.id.localeCompare(b.id);
     })
-    .filter((item: any) => !['featureId', '_layerTitle'].includes(item.name));
+    .filter((item: any) => !['featureId', '_layerTitle', urlAttribute].includes(item.name));
 };
 
 const getFeatureTitle = (feature: any) => {
