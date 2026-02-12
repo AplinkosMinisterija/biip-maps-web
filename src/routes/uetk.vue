@@ -148,6 +148,9 @@ import {
   geoportalTopo,
   geoportalTopoGray,
   rcSzns,
+  sznsUetkService,
+  sznsUetkServiceApproved,
+  sznsUetkServicePreparing,
   sznsUetkParcelsService,
   MapFilters,
   parseRouteParams,
@@ -212,6 +215,7 @@ function toggleParcelSearch() {
 const toggleLayers = [
   uetkService,
   sznsUetkParcelsService,
+  sznsUetkService,
   rcSzns,
   gamtotvarkaStvkService,
   administrativeBoundariesLabelsService,
@@ -239,6 +243,9 @@ mapLayers
   .add(gamtotvarkaStvkService.id, { isHidden: true })
   .add(rcSzns.id, { isHidden: true })
   .add(sznsUetkParcelsService.id, { isHidden: true })
+  .add(sznsUetkService.id, { isHidden: true })
+  .add(sznsUetkServiceApproved.id, { isHidden: true })
+  .add(sznsUetkServicePreparing.id, { isHidden: true })
   .add(uetkService.id)
   .click(async ({ coordinate }: any) => {
     selectedFeatures.value = [];
@@ -260,6 +267,11 @@ mapLayers
         selectedFeatures.value = [...selectedFeatures.value, ...properties];
       },
     );
+    mapLayers.getFeatureInfo(sznsUetkService.id, coordinate, ({ geometries, properties }: any) => {
+      selectedGeometries.value = [...selectedGeometries.value, ...geometries];
+      mapLayers.highlightFeatures(selectedGeometries.value);
+      selectedFeatures.value = [...selectedFeatures.value, ...properties];
+    });
   })
   .enableLocationTracking();
 
