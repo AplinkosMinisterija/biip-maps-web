@@ -118,7 +118,7 @@
             href="https://e-tar.lt/portal/lt/legalAct/26a1f620b5e911eea5a28c81c82193a8/asr"
           >
             <UiIcon name="document" class="flex-shrink-0 cursor-pointer" :size="14" />
-            Erdvinių duomenų aprašymas (PDF)
+            Erdvinių duomenų rinkinio specifikacija
           </a>
         </div>
       </div>
