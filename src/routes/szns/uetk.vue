@@ -80,7 +80,7 @@
             <a
               class="text-sky-700 hover:text-sky-900 transition-colors"
               target="_blank"
-              href="http://opengis.lt/projects/aaa/szns/szns_vandens_telk_az.zip"
+              href="https://opengis.lt/projects/aaa/szns/szns_vandens_telk_az.zip"
             >
               Shape formatu (zip archyvas)
             </a>
