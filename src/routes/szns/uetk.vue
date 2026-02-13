@@ -1,11 +1,5 @@
 <template>
   <div>
-    <UiModal ref="noResultsModal" title="Sklypas nerastas" size="xs" :show-close-btn="false">
-      <p>
-        Sklypas pagal Jūsų nuorodytą unikalų numerį {{ formattedParcelId }} nerastas. Pasitikrinkite
-        unikalų numerį, ar tikrai teisingai jį suvedėte ir bandykite dar kartą.
-      </p>
-    </UiModal>
     <UiMap
       :show-search="activeMainSearch"
       :show-scale-line="true"
@@ -28,7 +22,13 @@
         <UiButtonIcon icon="layers" @click="filtersStore.toggle('layers')" />
         <UiButtonIcon icon="legend" @click="filtersStore.toggle('legend')" />
         <UiMapMeasure />
-        <UiButtonIcon icon="download" @click="handleExportMap()" title="Atsisiųsti žemėlapį" />
+
+        <UiButtonIcon
+          icon="image"
+          @click="handleExportMap()"
+          title="Atsisiųsti žemėlapio iškarpą"
+        />
+        <UiButtonIcon icon="download" @click="handleExportData()" title="Atsisiųsti duomenis" />
       </template>
 
       <template v-if="filtersStore.active" #filtersContent>
@@ -66,6 +66,55 @@
         />
       </template>
     </UiMap>
+    <UiModal
+      ref="downloadDataModal"
+      title="Duomenų atsisiuntimas"
+      size="xs"
+      :show-close-btn="false"
+    >
+      <div class="space-y-4">
+        <div>
+          <h3 class="font-medium text-gray-900 mb-2">Erdviniai duomenys</h3>
+          <p class="text-gray-700 mb-2">
+            Paviršinių vandens telkinių apsaugos zonos:<br />
+            <a
+              class="text-sky-700 hover:text-sky-900 transition-colors"
+              target="_blank"
+              href="http://opengis.lt/projects/aaa/szns/szns_vandens_telk_az.zip"
+            >
+              Shape formatu (zip archyvas)
+            </a>
+          </p>
+          <p class="text-gray-700 mb-2">
+            Paviršinių vandens telkinių pakrantės apsaugos juostos:<br />
+            <a
+              class="text-sky-700 hover:text-sky-900 transition-colors"
+              target="_blank"
+              href="https://www.opengis.lt/projects/aaa/szns/szns_vandens_telk_juost.zip"
+            >
+              Shape formatu (zip archyvas)
+            </a>
+          </p>
+        </div>
+
+        <div class="pt-3 border-t border-gray-200">
+          <a
+            class="text-sky-700 hover:text-sky-900 inline-flex items-center gap-1 transition-colors mt-2"
+            target="_blank"
+            href="https://e-tar.lt/portal/lt/legalAct/26a1f620b5e911eea5a28c81c82193a8/asr"
+          >
+            <UiIcon name="document" class="flex-shrink-0 cursor-pointer" :size="14" />
+            Erdvinių duomenų aprašymas (PDF)
+          </a>
+        </div>
+      </div>
+    </UiModal>
+    <UiModal ref="noResultsModal" title="Sklypas nerastas" size="xs" :show-close-btn="false">
+      <p>
+        Sklypas pagal Jūsų nuorodytą unikalų numerį {{ formattedParcelId }} nerastas. Pasitikrinkite
+        unikalų numerį, ar tikrai teisingai jį suvedėte ir bandykite dar kartą.
+      </p>
+    </UiModal>
   </div>
 </template>
 <script setup lang="ts">
@@ -110,6 +159,7 @@ const router = useRouter();
 const eventBus: any = inject('eventBus');
 
 const noResultsModal = ref();
+const downloadDataModal = ref();
 
 const query = parseRouteParams($route.query, ['cadastralId', 'parcelId']);
 const parcelId = ref('');
@@ -295,6 +345,10 @@ const handleExportMap = async () => {
       description: 'Pabandykite perkrauti naršyklės langą ir bandyti dar kartą.',
     });
   }
+};
+
+const handleExportData = async () => {
+  downloadDataModal.value?.open();
 };
 </script>
 
