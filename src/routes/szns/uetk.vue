@@ -98,6 +98,20 @@
         </div>
 
         <div class="pt-3 border-t border-gray-200">
+          <h3 class="font-medium text-gray-900 mb-2">Erdvinių duomenų el. paslaugos</h3>
+          <p class="text-gray-700 mb-2">
+            Paviršinių vandens telkinių pakrantės apsaugos juostų ir zonų el. paslauga:<br />
+            <a
+              class="text-sky-700 hover:text-sky-900 transition-colors"
+              target="_blank"
+              href="https://gis.biip.lt/qgisserver/uetk_szns?REQUEST=GetCapabilities&SERVICE=WMS"
+            >
+              WMS (angl. web map service) formatu
+            </a>
+          </p>
+        </div>
+
+        <div class="pt-3 border-t border-gray-200">
           <a
             class="text-sky-700 hover:text-sky-900 inline-flex items-center gap-1 transition-colors mt-2"
             target="_blank"
