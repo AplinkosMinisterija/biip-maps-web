@@ -53,6 +53,7 @@ const attributeOrder = [
   'Paviršinio vandens telkinio pavadinimas',
   'Paviršinio vandens telkinio UETK kodas',
   'SŽNS teritorijos ID',
+  'Unikalus numeris Nekilnojamojo turto registre',
   'Papildoma informacija',
   // UETK
   '1. Pavadinimas',
