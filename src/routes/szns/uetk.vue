@@ -80,7 +80,7 @@
             <a
               class="text-sky-700 hover:text-sky-900 transition-colors"
               target="_blank"
-              href="https://aaa.lrv.lt/public/canonical/1771318339/4490/Zona_szns_vandens_telk.zip"
+              href="https://aaa.lrv.lt/public/canonical/1771504323/4499/Zona_szns_vandens_telk.zip"
             >
               Shape formatu (zip archyvas)
             </a>
