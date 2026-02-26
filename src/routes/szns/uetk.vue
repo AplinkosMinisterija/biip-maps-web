@@ -1,11 +1,5 @@
 <template>
   <div>
-    <UiModal ref="noResultsModal" title="Sklypas nerastas" size="xs" :show-close-btn="false">
-      <p>
-        Sklypas pagal Jūsų nuorodytą unikalų numerį {{ formattedParcelId }} nerastas. Pasitikrinkite
-        unikalų numerį, ar tikrai teisingai jį suvedėte ir bandykite dar kartą.
-      </p>
-    </UiModal>
     <UiMap
       :show-search="activeMainSearch"
       :show-scale-line="true"
@@ -28,6 +22,13 @@
         <UiButtonIcon icon="layers" @click="filtersStore.toggle('layers')" />
         <UiButtonIcon icon="legend" @click="filtersStore.toggle('legend')" />
         <UiMapMeasure />
+
+        <UiButtonIcon
+          icon="image"
+          @click="handleExportMap()"
+          title="Atsisiųsti žemėlapio iškarpą"
+        />
+        <UiButtonIcon icon="download" @click="handleExportData()" title="Atsisiųsti duomenis" />
       </template>
 
       <template v-if="filtersStore.active" #filtersContent>
@@ -47,8 +48,13 @@
 
         <UiMapLegend
           v-if="filtersStore.isActive('legend')"
-          :layer="sznsUetkService.id"
-          title="Sutartiniai ženklai"
+          :layer="sznsUetkServicePreparing.id"
+          title="Tvirtinamos teritorijos"
+        />
+        <UiMapLegend
+          v-if="filtersStore.isActive('legend')"
+          :layer="sznsUetkServiceApproved.id"
+          title="Patvirtintos teritorijos"
         />
       </template>
       <template #sidebar>
@@ -60,20 +66,94 @@
         />
       </template>
     </UiMap>
+    <UiModal
+      ref="downloadDataModal"
+      title="Duomenų atsisiuntimas"
+      size="xs"
+      :show-close-btn="false"
+    >
+      <div class="space-y-4">
+        <div>
+          <h3 class="font-medium text-gray-900 mb-2">Erdviniai duomenys</h3>
+          <p class="text-gray-700 mb-2">
+            Paviršinių vandens telkinių apsaugos zonos:<br />
+            <a
+              class="text-sky-700 hover:text-sky-900 transition-colors"
+              target="_blank"
+              href="https://aaa.lrv.lt/public/canonical/1771504323/4499/Zona_szns_vandens_telk.zip"
+            >
+              Shape formatu (zip archyvas)
+            </a>
+          </p>
+          <p class="text-gray-700 mb-2">
+            Paviršinių vandens telkinių pakrantės apsaugos juostos:<br />
+            <a
+              class="text-sky-700 hover:text-sky-900 transition-colors"
+              target="_blank"
+              href="https://aaa.lrv.lt/public/canonical/1771318292/4489/Juosta_szns_vandens_telk.zip"
+            >
+              Shape formatu (zip archyvas)
+            </a>
+          </p>
+        </div>
+
+        <div class="pt-3 border-t border-gray-200">
+          <h3 class="font-medium text-gray-900 mb-2">Erdvinių duomenų el. paslaugos</h3>
+          <p class="text-gray-700 mb-2">
+            Paviršinių vandens telkinių pakrantės apsaugos juostų ir zonų el. paslauga:<br />
+            <a
+              class="text-sky-700 hover:text-sky-900 transition-colors"
+              target="_blank"
+              href="https://gis.biip.lt/qgisserver/uetk_szns?REQUEST=GetCapabilities&SERVICE=WMS"
+            >
+              WMS (angl. web map service) formatu
+            </a>
+          </p>
+        </div>
+
+        <div class="pt-3 border-t border-gray-200">
+          <a
+            class="text-sky-700 hover:text-sky-900 inline-flex items-center gap-1 transition-colors mt-2"
+            target="_blank"
+            href="https://e-tar.lt/portal/lt/legalAct/26a1f620b5e911eea5a28c81c82193a8/asr"
+          >
+            <UiIcon name="document" class="flex-shrink-0 cursor-pointer" :size="14" />
+            Erdvinių duomenų rinkinio specifikacija
+          </a>
+        </div>
+      </div>
+    </UiModal>
+    <UiModal ref="noResultsModal" title="Sklypas nerastas" size="xs" :show-close-btn="false">
+      <p>
+        Sklypas pagal Jūsų nuorodytą unikalų numerį {{ formattedParcelId }} nerastas. Pasitikrinkite
+        unikalų numerį, ar tikrai teisingai jį suvedėte ir bandykite dar kartą.
+      </p>
+    </UiModal>
   </div>
 </template>
 <script setup lang="ts">
 import { inject, ref, computed } from 'vue';
 import { useFiltersStore } from '@/stores/filters';
+import { useMapExport } from '@/composables/useMapExport';
 import {
   geoportalTopo,
   geoportalOrto,
+  geoportalOrto1995,
+  geoportalOrto2005,
+  geoportalOrto2009,
+  geoportalOrto2012,
+  geoportalOrto2015,
+  geoportalOrto2018,
+  geoportalOrto2021,
+  geoportalOrto2024,
+  geoportalOrtoGroup,
   geoportalTopoGray,
   uetkService,
   sznsUetkService,
+  sznsUetkServiceApproved,
+  sznsUetkServicePreparing,
   sznsUetkParcelsService,
   administrativeBoundariesLabelsService,
-  geoportalHybrid,
   geoportalGrpk,
   parseRouteParams,
   MapFilters,
@@ -83,14 +163,17 @@ import {
 import { useRoute, useRouter } from 'vue-router';
 
 const filtersStore = useFiltersStore();
+const { exportMapToPNG } = useMapExport();
 
 const mapLayers: any = inject('mapLayers');
 const selectedFeatures = ref([] as any[]);
 const selectedGeometries = ref([] as any[]);
 const $route = useRoute();
 const router = useRouter();
+const eventBus: any = inject('eventBus');
 
 const noResultsModal = ref();
+const downloadDataModal = ref();
 
 const query = parseRouteParams($route.query, ['cadastralId', 'parcelId']);
 const parcelId = ref('');
@@ -119,6 +202,7 @@ const toggleLayers = [
   sznsUetkService,
   sznsUetkParcelsService,
   uetkService,
+  geoportalOrtoGroup,
   administrativeBoundariesLabelsService,
   geoportalGrpk,
 ];
@@ -128,9 +212,20 @@ mapLayers
   .addBaseLayer(geoportalTopo.id)
   .addBaseLayer(geoportalOrto.id)
   .add(geoportalGrpk.id, { isHidden: true })
+  .add(geoportalOrtoGroup.id, { isHidden: true })
+  .add(geoportalOrto1995.id, { isHidden: true })
+  .add(geoportalOrto2005.id, { isHidden: true })
+  .add(geoportalOrto2009.id, { isHidden: true })
+  .add(geoportalOrto2012.id, { isHidden: true })
+  .add(geoportalOrto2015.id, { isHidden: true })
+  .add(geoportalOrto2018.id, { isHidden: true })
+  .add(geoportalOrto2021.id, { isHidden: true })
+  .add(geoportalOrto2024.id, { isHidden: true })
   .add(administrativeBoundariesLabelsService.id, { isHidden: true })
   .add(uetkService.id, { isHidden: true })
   .add(sznsUetkService.id)
+  .add(sznsUetkServiceApproved.id)
+  .add(sznsUetkServicePreparing.id)
   .add(sznsUetkParcelsService.id)
   .click(async ({ coordinate }: any) => {
     selectedFeatures.value = [];
@@ -155,7 +250,8 @@ mapLayers
         selectedFeatures.value = [...selectedFeatures.value, ...properties];
       },
     );
-  });
+  })
+  .enableLocationTracking();
 
 mapLayers.waitForLoaded.then(() => {
   filtersStore.toggle('layers');
@@ -247,6 +343,26 @@ const formattedParcelId = computed(() => {
 const handleParcelInput = (event: any) => {
   parcelId.value = event.target.value.replace(/\D/g, '').slice(0, 12);
   searchParcel();
+};
+
+const handleExportMap = async () => {
+  try {
+    await exportMapToPNG(mapLayers.map, 'szns_zemelapis');
+    eventBus?.emit('uiToast', {
+      type: 'success',
+      title: 'Žemėlapio paveikslėlis sugeneruotas',
+    });
+  } catch (error) {
+    eventBus?.emit('uiToast', {
+      type: 'danger',
+      title: 'Nepavyko išsaugoti žemėlapio paveikslėlio',
+      description: 'Pabandykite perkrauti naršyklės langą ir bandyti dar kartą.',
+    });
+  }
+};
+
+const handleExportData = async () => {
+  downloadDataModal.value?.open();
 };
 </script>
 
