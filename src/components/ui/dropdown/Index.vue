@@ -5,6 +5,7 @@
     </div>
     <select
       v-model="value"
+      :aria-label="ariaLabel"
       :class="[sizes[size || 'default']?.value]"
       class="p-1 bg-transparent outline-none text-gray-700 w-full max-w-full overflow-hidden"
     >
@@ -21,14 +22,16 @@ const props = defineProps({
   value: { type: String, default: '' },
   label: { type: String, default: '' },
   size: { type: String, default: 'default' },
+  ariaLabel: { type: String, default: '' },
 });
 
-const sizes: any = {
+const sizes: Record<string, { label: string; value: string }> = {
   default: { label: 'text-xs', value: 'text-sm' },
   xs: { label: 'text-xxs', value: 'text-xs' },
 };
 
 const emit = defineEmits(['update:modelValue', 'change']);
+
 const value = computed({
   get: () => props.modelValue || props.value,
   set: (value) => {

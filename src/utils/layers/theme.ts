@@ -144,23 +144,76 @@ export const uetkService = {
   ),
 };
 
+export const sznsUetkServiceApproved = {
+  id: 'sznsUetkServiceApproved',
+  title: 'Paviršinių vandens telkinių apsaugos zonos ir juostos (patvirtintos)',
+  description: [aaaCopyright, biipCopyright],
+  sublayers: [
+    {
+      value: 'apsaugos_zonos_patvirtintos',
+      name: 'Paviršinių vandens telkinių apsaugos zonos',
+    },
+    {
+      value: 'apsaugos_juostos_patvirtintos',
+      name: 'Paviršinių vandens telkinių pakrančių apsaugos juostos',
+    },
+  ],
+  layer: getWMSImageLayer(
+    `${qgisServerUrl}/uetk_szns`,
+    'apsaugos_juostos_patvirtintos,apsaugos_zonos_patvirtintos,apreptis_patvirtintos',
+    `${aaaCopyright} ${biipCopyright}`,
+  ),
+};
+
+export const sznsUetkServicePreparing = {
+  id: 'sznsUetkServicePreparing',
+  title: 'Paviršinių vandens telkinių apsaugos zonos ir juostos (tvirtinamos)',
+  description: [aaaCopyright, biipCopyright],
+  sublayers: [
+    {
+      value: 'apsaugos_zonos_tvirtinamos',
+      name: 'Paviršinių vandens telkinių apsaugos zonos (NEPATVIRTINTAS PROJEKTAS)',
+    },
+    {
+      value: 'apsaugos_juostos_tvirtinamos',
+      name: 'Paviršinių vandens telkinių pakrančių apsaugos juostos (NEPATVIRTINTAS PROJEKTAS)',
+    },
+  ],
+  layer: getWMSImageLayer(
+    `${qgisServerUrl}/uetk_szns`,
+    'apsaugos_juostos_tvirtinamos,apsaugos_zonos_tvirtinamos,apreptis_tvirtinamos',
+    `${aaaCopyright} ${biipCopyright}`,
+  ),
+};
+
 export const sznsUetkService = {
   id: 'sznsUetkService',
   title: 'Paviršinių vandens telkinių apsaugos zonos ir juostos',
   description: [aaaCopyright, biipCopyright],
   sublayers: [
     {
-      value: 'apsaugos_juostos',
-      name: 'Paviršinių vandens telkinių pakrančių apsaugos juostos (NEPATVIRTINTAS PROJEKTAS)',
+      name: sznsUetkServicePreparing.title,
+      layer: sznsUetkServicePreparing.layer,
+      id: sznsUetkServicePreparing.id,
     },
     {
-      value: 'apsaugos_zonos',
-      name: 'Paviršinių vandens telkinių apsaugos zonos (NEPATVIRTINTAS PROJEKTAS)',
+      name: sznsUetkServiceApproved.title,
+      layer: sznsUetkServiceApproved.layer,
+      id: sznsUetkServiceApproved.id,
     },
   ],
+  layer: new LayerGroup({
+    layers: [sznsUetkServiceApproved.layer, sznsUetkServicePreparing.layer],
+  }),
+};
+
+export const sznsUetkParcelsService = {
+  id: 'sznsUetkParcelsService',
+  title: 'Žemės sklypų ribos',
+  description: [aaaCopyright, biipCopyright],
   layer: getWMSImageLayer(
-    `${qgisServerUrl}/uetk_szns`,
-    'apsaugos_juostos,apsaugos_zonos,apreptis',
+    `${qgisServerUrl}/uetk_szns_parcels`,
+    'sklypai,seniunijos,savivaldybes,apskritys',
     `${aaaCopyright} ${biipCopyright}`,
   ),
 };
@@ -267,7 +320,7 @@ export const rusysGridService = {
       color: 'rgba(0,70,80,0.8)',
       width: 1,
     },
-    dataProjection: projection
+    dataProjection: projection,
   }),
 };
 

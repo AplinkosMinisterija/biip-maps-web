@@ -1,15 +1,41 @@
 <template>
   <div>
-    <UiMap :show-scale-line="true" :show-coordinates="true" :show-search="true" @search="onSearch">
+    <UiMap
+      :show-search="activeMainSearch"
+      :show-scale-line="true"
+      :show-coordinates="true"
+      @search="onSearch"
+    >
       <template #filters>
+        <UiBox v-if="activeParcelSearch">
+          Sklypo paieška:
+          <input
+            type="text"
+            :value="formattedParcelId"
+            placeholder="4400-2510-9595"
+            class="tracking-widest text-center px-1 rounded border-2 focus:outline-none"
+            @input="handleParcelInput"
+          />
+        </UiBox>
+        <UiButtonIcon icon="search" @click="toggleMainSearch()" v-if="activeParcelSearch" />
+        <UiButtonIcon icon="pin-outline" @click="toggleParcelSearch()" v-if="activeMainSearch" />
         <UiButtonIcon icon="layers" @click="filtersStore.toggle('layers')" />
         <UiButtonIcon icon="legend" @click="filtersStore.toggle('legend')" />
         <UiMapMeasure />
+
+        <UiButtonIcon
+          icon="image"
+          @click="handleExportMap()"
+          title="Atsisiųsti žemėlapio iškarpą"
+        />
+        <UiButtonIcon icon="download" @click="handleExportData()" title="Atsisiųsti duomenis" />
       </template>
+
       <template v-if="filtersStore.active" #filtersContent>
         <UiMapLayerToggle v-if="filtersStore.isActive('layers')" :layers="toggleLayers" />
+
         <Search
-          v-else-if="filtersStore.isActive('search')"
+          v-else-if="filtersStore.isActive('search') && activeMainSearch"
           :value="filtersStore.search"
           :add-stroke="true"
           :types="['uetk', 'geoportal']"
@@ -19,10 +45,16 @@
             { type: 'upė', weight: 2 },
           ]"
         />
+
         <UiMapLegend
           v-if="filtersStore.isActive('legend')"
-          :layer="sznsUetkService.id"
-          title="Sutartiniai ženklai"
+          :layer="sznsUetkServicePreparing.id"
+          title="Tvirtinamos teritorijos"
+        />
+        <UiMapLegend
+          v-if="filtersStore.isActive('legend')"
+          :layer="sznsUetkServiceApproved.id"
+          title="Patvirtintos teritorijos"
         />
       </template>
       <template #sidebar>
@@ -34,34 +66,117 @@
         />
       </template>
     </UiMap>
+    <UiModal
+      ref="downloadDataModal"
+      title="Duomenų atsisiuntimas"
+      size="xs"
+      :show-close-btn="false"
+    >
+      <div class="space-y-4">
+        <div>
+          <h3 class="font-medium text-gray-900 mb-2">Erdviniai duomenys</h3>
+          <p class="text-gray-700 mb-2">
+            Paviršinių vandens telkinių apsaugos zonos:<br />
+            <a
+              class="text-sky-700 hover:text-sky-900 transition-colors"
+              target="_blank"
+              href="https://aaa.lrv.lt/public/canonical/1771504323/4499/Zona_szns_vandens_telk.zip"
+            >
+              Shape formatu (zip archyvas)
+            </a>
+          </p>
+          <p class="text-gray-700 mb-2">
+            Paviršinių vandens telkinių pakrantės apsaugos juostos:<br />
+            <a
+              class="text-sky-700 hover:text-sky-900 transition-colors"
+              target="_blank"
+              href="https://aaa.lrv.lt/public/canonical/1771318292/4489/Juosta_szns_vandens_telk.zip"
+            >
+              Shape formatu (zip archyvas)
+            </a>
+          </p>
+        </div>
+
+        <div class="pt-3 border-t border-gray-200">
+          <h3 class="font-medium text-gray-900 mb-2">Erdvinių duomenų el. paslaugos</h3>
+          <p class="text-gray-700 mb-2">
+            Paviršinių vandens telkinių pakrantės apsaugos juostų ir zonų el. paslauga:<br />
+            <a
+              class="text-sky-700 hover:text-sky-900 transition-colors"
+              target="_blank"
+              href="https://gis.biip.lt/qgisserver/uetk_szns?REQUEST=GetCapabilities&SERVICE=WMS"
+            >
+              WMS (angl. web map service) formatu
+            </a>
+          </p>
+        </div>
+
+        <div class="pt-3 border-t border-gray-200">
+          <a
+            class="text-sky-700 hover:text-sky-900 inline-flex items-center gap-1 transition-colors mt-2"
+            target="_blank"
+            href="https://e-tar.lt/portal/lt/legalAct/26a1f620b5e911eea5a28c81c82193a8/asr"
+          >
+            <UiIcon name="document" class="flex-shrink-0 cursor-pointer" :size="14" />
+            Erdvinių duomenų rinkinio specifikacija
+          </a>
+        </div>
+      </div>
+    </UiModal>
+    <UiModal ref="noResultsModal" title="Sklypas nerastas" size="xs" :show-close-btn="false">
+      <p>
+        Sklypas pagal Jūsų nuorodytą unikalų numerį {{ formattedParcelId }} nerastas. Pasitikrinkite
+        unikalų numerį, ar tikrai teisingai jį suvedėte ir bandykite dar kartą.
+      </p>
+    </UiModal>
   </div>
 </template>
 <script setup lang="ts">
-import { inject, ref } from 'vue';
+import { inject, ref, computed } from 'vue';
 import { useFiltersStore } from '@/stores/filters';
+import { useMapExport } from '@/composables/useMapExport';
 import {
   geoportalTopo,
   geoportalOrto,
+  geoportalOrto1995,
+  geoportalOrto2005,
+  geoportalOrto2009,
+  geoportalOrto2012,
+  geoportalOrto2015,
+  geoportalOrto2018,
+  geoportalOrto2021,
+  geoportalOrto2024,
+  geoportalOrtoGroup,
   geoportalTopoGray,
   uetkService,
   sznsUetkService,
-  inspireParcelService,
+  sznsUetkServiceApproved,
+  sznsUetkServicePreparing,
+  sznsUetkParcelsService,
   administrativeBoundariesLabelsService,
-  geoportalHybrid,
   geoportalGrpk,
   parseRouteParams,
   MapFilters,
+  getGeometriesFromFeaturesArray,
+  getPropertiesFromFeaturesArray,
 } from '@/utils';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 
 const filtersStore = useFiltersStore();
+const { exportMapToPNG } = useMapExport();
 
 const mapLayers: any = inject('mapLayers');
 const selectedFeatures = ref([] as any[]);
 const selectedGeometries = ref([] as any[]);
 const $route = useRoute();
+const router = useRouter();
+const eventBus: any = inject('eventBus');
 
-const query = parseRouteParams($route.query, ['cadastralId']);
+const noResultsModal = ref();
+const downloadDataModal = ref();
+
+const query = parseRouteParams($route.query, ['cadastralId', 'parcelId']);
+const parcelId = ref('');
 
 function onSearch(search: string) {
   filtersStore.search = search;
@@ -71,10 +186,23 @@ function onSearch(search: string) {
   }
 }
 
+const activeMainSearch = ref(false);
+function toggleMainSearch() {
+  activeMainSearch.value = !activeMainSearch.value;
+  activeParcelSearch.value = !activeParcelSearch.value;
+}
+
+const activeParcelSearch = ref(true);
+function toggleParcelSearch() {
+  activeParcelSearch.value = !activeParcelSearch.value;
+  activeMainSearch.value = !activeMainSearch.value;
+}
+
 const toggleLayers = [
   sznsUetkService,
+  sznsUetkParcelsService,
   uetkService,
-  inspireParcelService,
+  geoportalOrtoGroup,
   administrativeBoundariesLabelsService,
   geoportalGrpk,
 ];
@@ -84,10 +212,21 @@ mapLayers
   .addBaseLayer(geoportalTopo.id)
   .addBaseLayer(geoportalOrto.id)
   .add(geoportalGrpk.id, { isHidden: true })
+  .add(geoportalOrtoGroup.id, { isHidden: true })
+  .add(geoportalOrto1995.id, { isHidden: true })
+  .add(geoportalOrto2005.id, { isHidden: true })
+  .add(geoportalOrto2009.id, { isHidden: true })
+  .add(geoportalOrto2012.id, { isHidden: true })
+  .add(geoportalOrto2015.id, { isHidden: true })
+  .add(geoportalOrto2018.id, { isHidden: true })
+  .add(geoportalOrto2021.id, { isHidden: true })
+  .add(geoportalOrto2024.id, { isHidden: true })
   .add(administrativeBoundariesLabelsService.id, { isHidden: true })
-  .add(inspireParcelService.id)
   .add(uetkService.id, { isHidden: true })
   .add(sznsUetkService.id)
+  .add(sznsUetkServiceApproved.id)
+  .add(sznsUetkServicePreparing.id)
+  .add(sznsUetkParcelsService.id)
   .click(async ({ coordinate }: any) => {
     selectedFeatures.value = [];
     selectedGeometries.value = [];
@@ -102,11 +241,20 @@ mapLayers
       mapLayers.highlightFeatures(selectedGeometries.value);
       selectedFeatures.value = [...selectedFeatures.value, ...properties];
     });
-  });
+    mapLayers.getFeatureInfo(
+      sznsUetkParcelsService.id,
+      coordinate,
+      ({ geometries, properties }: any) => {
+        selectedGeometries.value = [...selectedGeometries.value, ...geometries];
+        mapLayers.highlightFeatures(selectedGeometries.value);
+        selectedFeatures.value = [...selectedFeatures.value, ...properties];
+      },
+    );
+  })
+  .enableLocationTracking();
 
 mapLayers.waitForLoaded.then(() => {
   filtersStore.toggle('layers');
-  mapLayers.setOpacity(inspireParcelService.id, 0.8);
 });
 
 if (query.cadastralId) {
@@ -116,6 +264,7 @@ if (query.cadastralId) {
       (item: string) =>
         !['upiu_pabaseiniai', 'upiu_baseinu_rajonai', 'upiu_baseinai'].includes(item),
     );
+
   const filters = new MapFilters();
 
   layers.forEach((item: string) => {
@@ -124,6 +273,97 @@ if (query.cadastralId) {
 
   await mapLayers.zoom(uetkService.id, { addStroke: true, filters });
 }
+
+const filterByParcelId = async (parcelIdValue: string) => {
+  const layers = mapLayers
+    .getSublayers(sznsUetkParcelsService.id)
+    .filter((item: string) => !['apskritys', 'savivaldybes', 'seniunijos'].includes(item));
+
+  const filters = new MapFilters();
+
+  layers.forEach((item: string) => {
+    filters.on(item).set('unikalus_nr', `${parcelIdValue}`);
+  });
+
+  const filteredFeatures = await mapLayers.zoom(sznsUetkParcelsService.id, {
+    addStroke: true,
+    filters,
+  });
+
+  if (filteredFeatures && filteredFeatures.length) {
+    const callbackData = {
+      geometries: getGeometriesFromFeaturesArray(filteredFeatures.features || filteredFeatures),
+      properties: getPropertiesFromFeaturesArray(filteredFeatures.features || filteredFeatures),
+    };
+
+    selectedGeometries.value = [...selectedGeometries.value, ...callbackData.geometries];
+    mapLayers.highlightFeatures(selectedGeometries.value);
+    selectedFeatures.value = [...selectedFeatures.value, ...callbackData.properties];
+  } else {
+    selectedFeatures.value = [];
+    noResultsModal.value?.open();
+  }
+};
+
+const searchParcel = () => {
+  mapLayers.cleanHighlighs();
+  selectedFeatures.value = [];
+
+  const isValidFormat = /^\d{12}$/.test(parcelId.value);
+
+  if (isValidFormat) {
+    router.push({
+      query: {
+        ...$route.query,
+        parcelId: parcelId.value,
+      },
+    });
+    filterByParcelId(parcelId.value);
+  } else if (parcelId.value === '') {
+    const { parcelId: _, ...restQuery } = $route.query;
+    router.push({
+      query: restQuery,
+    });
+  }
+};
+
+if (query.parcelId) {
+  parcelId.value = query.parcelId as string;
+  filterByParcelId(parcelId.value);
+}
+
+const formattedParcelId = computed(() => {
+  if (!parcelId.value) return '';
+  const digits = parcelId.value.toString().replace(/\D/g, '');
+  if (digits.length <= 4) return digits;
+  if (digits.length <= 8) return `${digits.slice(0, 4)}-${digits.slice(4)}`;
+  return `${digits.slice(0, 4)}-${digits.slice(4, 8)}-${digits.slice(8, 12)}`;
+});
+
+const handleParcelInput = (event: any) => {
+  parcelId.value = event.target.value.replace(/\D/g, '').slice(0, 12);
+  searchParcel();
+};
+
+const handleExportMap = async () => {
+  try {
+    await exportMapToPNG(mapLayers.map, 'szns_zemelapis');
+    eventBus?.emit('uiToast', {
+      type: 'success',
+      title: 'Žemėlapio paveikslėlis sugeneruotas',
+    });
+  } catch (error) {
+    eventBus?.emit('uiToast', {
+      type: 'danger',
+      title: 'Nepavyko išsaugoti žemėlapio paveikslėlio',
+      description: 'Pabandykite perkrauti naršyklės langą ir bandyti dar kartą.',
+    });
+  }
+};
+
+const handleExportData = async () => {
+  downloadDataModal.value?.open();
+};
 </script>
 
 <style>

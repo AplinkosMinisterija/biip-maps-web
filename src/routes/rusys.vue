@@ -20,12 +20,13 @@
             Rodyti visas radavietes
           </UiInputCheckbox>
         </UiBox>
-        <UiBox
-          v-if="
-            (config.user.isAdmin || config.user.isExpert || !isVisibleSrisLayer) &&
-            isVisibleRusysLayer
-          "
-        >
+        <UiBox v-if="canShowPlaceBox">
+          <UiInputCheckbox v-model="showPlaceChecked" @change="showPlace">
+            Rodyti tik šią radavietę.
+          </UiInputCheckbox>
+        </UiBox>
+
+        <UiBox v-if="canShowGridBox">
           <UiInputCheckbox @change="toggleGrid">Išjungti gardelę</UiInputCheckbox>
         </UiBox>
       </template>
@@ -101,9 +102,11 @@ const eventBus: any = inject('eventBus');
 const postMessage: any = inject('postMessage');
 const $route = useRoute();
 const emptyModalRef = ref();
+const showPlaceChecked = ref(true);
 const config = useConfigStore();
 const isPreview = ref(false);
 const selectedFeatures = ref([] as any[]);
+const mapDraw = computed(() => mapLayers.getDraw());
 
 const query = parseRouteParams($route.query, [
   'place',
@@ -159,6 +162,16 @@ if (user?.type !== 'ADMIN' && !user?.isExpert) {
 
 isPreview.value = !!query.preview;
 const isScreenshot = ref(!!query.screenshot);
+
+const userCanSeeBoxes = computed(
+  () =>
+    (config.user.isAdmin || config.user.isExpert || !isVisibleSrisLayer.value) &&
+    isVisibleRusysLayer.value,
+);
+
+const canShowPlaceBox = computed(() => userCanSeeBoxes.value && !!query.place);
+
+const canShowGridBox = computed(() => userCanSeeBoxes.value);
 
 const filtersPlacesGrid = computed(() =>
   mapLayers
@@ -244,6 +257,18 @@ function toggleGrid(value: boolean) {
   mapLayers.applyZoomLevel([rusysGridService.id], [srisPrivateService.id, invaService.id], level);
 }
 
+async function showPlace(value: boolean) {
+  if (value) {
+    filterById('id', query.place);
+    mapLayers.updateLayerQuery(rusysService.id);
+    await mapLayers.zoom(rusysService.id);
+  } else {
+    filtersPlacesInva.value.clear();
+    filtersPlacesSris.value.clear();
+    filtersPlacesGrid.value.clear();
+  }
+}
+
 const toggleAmateurLayers = (value: boolean) => {
   mapLayers.toggleVisibility(srisAccessService.id, !value);
   togglePrivateSrisService(!value);
@@ -292,6 +317,7 @@ mapLayers
   .add(sznsPievosPelkes.id, { isHidden: true })
   .add(gamtotvarkaService.id, { isHidden: true })
   .add(rusysService.id)
+  .enableLocationTracking()
   .click(async ({ coordinate }: any) => {
     selectedFeatures.value = [];
     eventBus.emit('uiSidebar', { open: false });
@@ -361,5 +387,6 @@ const selectSearch = (match: any) => {
 
   filtersStore.clearSearch();
   mapLayers.zoomToFeatureCollection(match.geom);
+  mapDraw.value.setFeatures(match.geom);
 };
 </script>

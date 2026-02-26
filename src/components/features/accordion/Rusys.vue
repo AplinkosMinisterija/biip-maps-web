@@ -12,14 +12,8 @@
         <UiTableRow v-for="(r, key) in filteredRows(feature)" :key="key">
           <UiTableCell>{{ r.name }}</UiTableCell>
           <UiTableCell>
-            <UiImages
-              v-if="r.images"
-              :images="r.fn(feature, ...(r.fnParams || []))"
-            ></UiImages>
-            <div
-              v-else-if="r.fn"
-              v-html="r.fn(feature, ...(r.fnParams || [])) || ''"
-            ></div>
+            <UiImages v-if="r.images" :images="r.fn(feature, ...(r.fnParams || []))"></UiImages>
+            <div v-else-if="r.fn" v-html="r.fn(feature, ...(r.fnParams || [])) || ''"></div>
             <span
               v-else-if="r.link"
               class="border-b border-b-black hover:border-b-gray-700 hover:text-gray-700 cursor-pointer"
@@ -27,7 +21,7 @@
             >
               {{ r.link }}
             </span>
-            <template v-else>{{ feature[r.prop] || "" }}</template>
+            <template v-else>{{ feature[r.prop] || '' }}</template>
           </UiTableCell>
         </UiTableRow>
       </UiTable>
@@ -36,9 +30,9 @@
 </template>
 
 <script setup lang="ts">
+import { useConfigStore } from '@/stores/config';
 import { SpeciesTypes } from '@/utils';
 import moment from 'moment';
-import { useConfigStore } from '@/stores/config';
 import { computed, inject } from 'vue';
 const props = defineProps({
   features: {
@@ -50,7 +44,11 @@ const config = useConfigStore();
 const postMessage: any = inject('postMessage');
 
 const radavietesFeatureIds = ['radavietes', 'radavietes_invazines', 'radavietes_svetimzemes'];
-const stebejimaiFeatureId = ['stebejimai_interpretuojami', 'stebejimai_tyrineta_nerasta_invazines', 'stebejimai_tyrineta_nerasta_svetimzemes'];
+const stebejimaiFeatureId = [
+  'stebejimai_interpretuojami',
+  'stebejimai_tyrineta_nerasta_invazines',
+  'stebejimai_tyrineta_nerasta_svetimzemes',
+];
 
 const getFeatureName = (feature: any) => {
   return feature.featureId.split('.')[0];
@@ -97,9 +95,9 @@ const getDescription = (feature: any) => {
     if (isEndangeredSpeciesType(feature)) {
       return 'Radavietė (pavienis stebėjimas)';
     } else if (isInvasiveSpeciesType(feature)) {
-      return 'Tyrinėta, bet nerasta (invazinė)'
+      return 'Tyrinėta, bet nerasta (invazinė)';
     }
-    return 'Tyrinėta, bet nerasta (svetimžemė)'
+    return 'Tyrinėta, bet nerasta (svetimžemė)';
   }
 
   return;
@@ -159,7 +157,7 @@ const getImages = (item: any, props: string | string[]) => {
 
   if (!photos?.length) return [];
 
-  return photos.map(p => p.url);
+  return photos.map((p) => p.url);
 };
 
 const getValue = (item: any, props: string | string[], translates?: any) => {
@@ -260,32 +258,38 @@ const rows: any[] = [
     name: 'Individų skaičius (gausumas)',
     fn: getValue,
     fnParams: ['Gausumas (vnt.)'],
-    show: (feature: any) => checkFeatureId(stebejimaiFeatureId)(feature) && isEndangeredSpeciesType(feature),
+    show: (feature: any) =>
+      checkFeatureId(stebejimaiFeatureId)(feature) && isEndangeredSpeciesType(feature),
   },
   {
     name: 'Veiklos požymiai',
     fn: getValue,
     fnParams: ['activity_translate'],
-    show: (feature: any) => checkFeatureId(stebejimaiFeatureId)(feature) && isEndangeredSpeciesType(feature),
+    show: (feature: any) =>
+      checkFeatureId([...stebejimaiFeatureId, ...radavietesFeatureIds]) &&
+      isEndangeredSpeciesType(feature),
   },
   {
     name: 'Metodas',
     fn: getValue,
     fnParams: ['method_translate'],
-    show: (feature: any) => checkFeatureId(stebejimaiFeatureId)(feature) && !isEndangeredSpeciesType(feature),
+    show: (feature: any) =>
+      checkFeatureId(stebejimaiFeatureId)(feature) && !isEndangeredSpeciesType(feature),
   },
   {
     name: 'Vystymosi stadija',
     fn: getValue,
     fnParams: ['evolution_translate'],
-    show: (feature: any) => checkFeatureId(stebejimaiFeatureId)(feature) && isEndangeredSpeciesType(feature),
+    show: (feature: any) =>
+      checkFeatureId([...stebejimaiFeatureId, ...radavietesFeatureIds]) &&
+      isEndangeredSpeciesType(feature),
   },
   {
     name: 'Nuotraukos',
     images: true,
     fn: getImages,
     fnParams: ['photos'],
-    show: checkFeatureId(stebejimaiFeatureId),
+    show: checkFeatureId([...stebejimaiFeatureId, ...radavietesFeatureIds]),
   },
   {
     name: 'Šaltinis',
@@ -300,10 +304,17 @@ const rows: any[] = [
     show: checkFeatureId(stebejimaiFeatureId),
   },
   {
+    name: 'Buveinė, elgsena, ūkinė veikla ir kita informacija',
+    fn: getValue,
+    fnParams: ['description'],
+    show: checkFeatureId(radavietesFeatureIds),
+  },
+  {
     name: 'Stebėtojas',
     fn: getValue,
     fnParams: ['observed_by'],
-    show: (feature: any) => (config.user.isAdmin || config.user.isExpert) && checkFeatureId(stebejimaiFeatureId)(feature)
+    show: (feature: any) =>
+      (config.user.isAdmin || config.user.isExpert) && checkFeatureId(stebejimaiFeatureId)(feature),
   },
   {
     name: 'Plotas',

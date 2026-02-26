@@ -23,11 +23,11 @@
       class="absolute left-0 z-10 ml-2 mb-2 bottom-0 flex flex-col items-start gap-2 pointer-events-none bottomLeft"
     >
       <div id="mapControlsLB" class="text-xxs text-gray-700 flex flex-col gap-2 items-start" />
-
       <UiDropdown
         v-if="mapLayers.baseLayers?.length > 1 && !isPreview && showBaseLayersSwitch"
         v-model="mapLayers.visibleBaseLayerId"
         class="px-1 rounded border border-gray-400 bg-white pointer-events-auto"
+        :aria-label="'Pasirinkite pagrindo sluoksnį'"
       >
         <UiDropdownItem v-for="l in mapLayers.baseLayers" :key="l.id" :value="`${l.id}`">
           {{ l.title }}
