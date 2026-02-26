@@ -619,6 +619,91 @@
       d="M160-240q-33 0-56.5-23.5T80-320v-320q0-33 23.5-56.5T160-720h640q33 0 56.5 23.5T880-640v320q0 33-23.5 56.5T800-240H160Zm0-80h640v-320H680v160h-80v-160h-80v160h-80v-160h-80v160h-80v-160H160v320Zm120-160h80-80Zm160 0h80-80Zm160 0h80-80Zm-120 0Z"
     />
   </svg>
+
+  <svg
+    v-else-if="name === 'trashCan'"
+    width="13"
+    height="12"
+    viewBox="0 0 13 12"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path d="M2.14999 3H11.15" stroke="#FF0F0F" stroke-linecap="round" stroke-linejoin="round" />
+    <path
+      d="M10.15 3V10C10.15 10.5 9.64999 11 9.14999 11H4.14999C3.64999 11 3.14999 10.5 3.14999 10V3"
+      stroke="#FF0F0F"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <path
+      d="M4.64999 3V2C4.64999 1.5 5.14999 1 5.64999 1H7.64999C8.14999 1 8.64999 1.5 8.64999 2V3"
+      stroke="#FF0F0F"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <path d="M5.64999 5.5V8.5" stroke="#FF0F0F" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M7.64999 5.5V8.5" stroke="#FF0F0F" stroke-linecap="round" stroke-linejoin="round" />
+  </svg>
+
+  <svg
+    v-else-if="name === 'selectArea'"
+    width="16"
+    height="16"
+    viewBox="0 0 16 16"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M8.02267 8.45395C7.99863 8.39366 7.9928 8.32765 8.00589 8.26407C8.01898 8.2005 8.05041 8.14216 8.09631 8.09626C8.14221 8.05037 8.20055 8.01893 8.26412 8.00584C8.32769 7.99276 8.39371 7.99859 8.454 8.02262L14.454 10.356C14.5183 10.3811 14.5733 10.4256 14.6112 10.4833C14.6491 10.541 14.6682 10.6091 14.6658 10.6781C14.6634 10.7471 14.6396 10.8137 14.5977 10.8686C14.5558 10.9235 14.4979 10.964 14.432 10.9846L12.136 11.6966C12.0324 11.7286 11.9382 11.7855 11.8615 11.8621C11.7848 11.9388 11.728 12.033 11.696 12.1366L10.9847 14.432C10.9641 14.4979 10.9235 14.5558 10.8686 14.5977C10.8137 14.6396 10.7472 14.6634 10.6781 14.6658C10.6091 14.6682 10.541 14.6491 10.4833 14.6112C10.4256 14.5732 10.3811 14.5183 10.356 14.454L8.02267 8.45395Z"
+      stroke="#075A9D"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <path
+      d="M3.33333 2C2.97971 2 2.64057 2.14048 2.39052 2.39052C2.14048 2.64057 2 2.97971 2 3.33333"
+      stroke="#075A9D"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <path
+      d="M12.6667 2C13.0203 2 13.3594 2.14048 13.6095 2.39052C13.8595 2.64057 14 2.97971 14 3.33333"
+      stroke="#075A9D"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <path
+      d="M3.33333 14.0001C2.97971 14.0001 2.64057 13.8596 2.39052 13.6096C2.14048 13.3595 2 13.0204 2 12.6667"
+      stroke="#075A9D"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <path d="M6 2H6.66667" stroke="#075A9D" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M6 14H7.33333" stroke="#075A9D" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M9.33333 2H10" stroke="#075A9D" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M2 6V6.66667" stroke="#075A9D" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M14 6V7.33333" stroke="#075A9D" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M2 9.33325V9.99992" stroke="#075A9D" stroke-linecap="round" stroke-linejoin="round" />
+  </svg>
+  <svg
+    v-else-if="name === 'download'"
+    width="18"
+    height="18"
+    viewBox="0 0 18 18"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <g clip-path="url(#clip0_12_197)">
+      <path
+        d="M13.5 11.25V13.5H4.5V11.25H3V13.5C3 14.325 3.675 15 4.5 15H13.5C14.325 15 15 14.325 15 13.5V11.25H13.5ZM12.75 8.25L11.6925 7.1925L9.75 9.1275V3H8.25V9.1275L6.3075 7.1925L5.25 8.25L9 12L12.75 8.25Z"
+        fill="#1F2937"
+      />
+    </g>
+    <defs>
+      <clipPath id="clip0_12_197">
+        <rect width="18" height="18" fill="white" />
+      </clipPath>
+    </defs>
+  </svg>
   <svg
     v-else-if="name === 'link'"
     xmlns="http://www.w3.org/2000/svg"
