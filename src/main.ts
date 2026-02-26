@@ -16,7 +16,6 @@ const eventBus = mitt();
 
 const app = createApp(App);
 
-app.config.unwrapInjectedRef = true;
 
 if (import.meta.env.VUE_APP_SENTRY_DSN) {
   Sentry.init({

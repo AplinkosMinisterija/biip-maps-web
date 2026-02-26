@@ -1,5 +1,6 @@
 import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
+import type { FeatureLike } from 'ol/Feature';
 import { Stroke, Style } from 'ol/style';
 import { geosjonLoaderFn, wmsImageLoaderFn } from '../requests';
 import { GeoJSON } from 'ol/format';
@@ -44,7 +45,7 @@ export function getVectorLayer(
     layer.setVisible(!!opts?.showOnUrlChange && !!url);
   });
 
-  layer.setSource(source);
+  layer.setSource(source as VectorSource<FeatureLike>);
   layer.setVisible(!!url);
   layer.set('type', 'geojson');
   return layer;
