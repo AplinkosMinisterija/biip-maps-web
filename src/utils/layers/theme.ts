@@ -1008,6 +1008,67 @@ export const gamtotvarkaService = {
 };
 gamtotvarkaService.layer.set('id', 'gamtotvarkaService');
 
+const wolfsSldBody = `<?xml version="1.0" encoding="UTF-8"?>
+<StyledLayerDescriptor version="1.0.0"
+  xmlns="http://www.opengis.net/sld"
+  xmlns:ogc="http://www.opengis.net/ogc"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.opengis.net/sld http://schemas.opengis.net/sld/1.0.0/StyledLayerDescriptor.xsd">
+  <NamedLayer>
+    <Name>wolfs</Name>
+    <UserStyle>
+      <FeatureTypeStyle>
+        <Rule>
+          <ogc:Filter>
+            <ogc:PropertyIsEqualTo>
+              <ogc:PropertyName>source</ogc:PropertyName>
+              <ogc:Literal>biomon</ogc:Literal>
+            </ogc:PropertyIsEqualTo>
+          </ogc:Filter>
+          <PointSymbolizer>
+            <Graphic>
+              <Mark>
+                <WellKnownName>circle</WellKnownName>
+                <Fill>
+                  <CssParameter name="fill">#FF6600</CssParameter>
+                </Fill>
+                <Stroke>
+                  <CssParameter name="stroke">#CC5200</CssParameter>
+                  <CssParameter name="stroke-width">1</CssParameter>
+                </Stroke>
+              </Mark>
+              <Size>8</Size>
+            </Graphic>
+          </PointSymbolizer>
+        </Rule>
+        <Rule>
+          <ogc:Filter>
+            <ogc:PropertyIsNotEqualTo>
+              <ogc:PropertyName>source</ogc:PropertyName>
+              <ogc:Literal>biomon</ogc:Literal>
+            </ogc:PropertyIsNotEqualTo>
+          </ogc:Filter>
+          <PointSymbolizer>
+            <Graphic>
+              <Mark>
+                <WellKnownName>circle</WellKnownName>
+                <Fill>
+                  <CssParameter name="fill">#808080</CssParameter>
+                </Fill>
+                <Stroke>
+                  <CssParameter name="stroke">#606060</CssParameter>
+                  <CssParameter name="stroke-width">1</CssParameter>
+                </Stroke>
+              </Mark>
+              <Size>8</Size>
+            </Graphic>
+          </PointSymbolizer>
+        </Rule>
+      </FeatureTypeStyle>
+    </UserStyle>
+  </NamedLayer>
+</StyledLayerDescriptor>`;
+
 export const huntingPublicService = {
   id: 'huntingPublicService',
   title: 'Medžioklė',
@@ -1031,6 +1092,7 @@ export const huntingPublicService = {
     `${qgisServerUrl}/hunting_public`,
     'wolfs,observations,damages',
     `${biipCopyright}`,
+    { extraParams: { SLD_BODY: wolfsSldBody } },
   ),
 };
 

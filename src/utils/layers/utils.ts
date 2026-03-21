@@ -58,6 +58,7 @@ export function getWMSImageLayer(
   opts?: {
     serverType?: ServerType;
     requestHeaders?: any;
+    extraParams?: Record<string, string>;
   },
 ) {
   const imageLoadFunction = wmsImageLoaderFn(opts?.requestHeaders);
@@ -69,6 +70,7 @@ export function getWMSImageLayer(
         LAYERS: layers,
         VERSION: '1.1.1',
         FILTER: '',
+        ...opts?.extraParams,
       },
       imageLoadFunction,
       crossOrigin: 'anonymous',
