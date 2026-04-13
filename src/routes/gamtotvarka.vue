@@ -43,6 +43,23 @@ import {
   geoportalTopoGray,
   inspireParcelService,
   gamtotvarkaPlanai,
+  gamtotvarkaPlanuPlotai,
+  gamtotvarkaPlanuTeritorijos,
+  gamtotvarkaProgramuPlotai,
+  gamtotvarkaProgramuTeritorijos,
+  gamtotvarkaTvarkymoProgramos,
+  gamtotvarkaTiksliniuProgramuPlotai,
+  gamtotvarkaTiksliniuProgramuTeritorijos,
+  gamtotvarkaTikslinesProgramos,
+  gamtotvarkaVeiksmuPlanuPlotai,
+  gamtotvarkaVeiksmuPlanuTeritorijos,
+  gamtotvarkaVeiksmuPlanai,
+  gamtotvarkaStTvarkymoPlanuPlotai,
+  gamtotvarkaStTvarkymoPlanuTeritorijos,
+  gamtotvarkaStTvarkymoPlanai,
+  gamtotvarkaInvaVeiksmuPlanuPlotai,
+  gamtotvarkaInvaVeiksmuPlanuTeritorijos,
+  gamtotvarkaInvaVeiksmuPlanai,
   municipalitiesService,
   geoportalGrpk,
   gamtotvarkaService,
@@ -143,12 +160,89 @@ mapLayers
   });
 
 if (query.gamtotvarkos_planas) {
-  gamtotvarkaPlanaiFilters
-    .onAll(['gamtotvarkos_plotai_patvirtintas', 'gamtotvarkos_teritorijos_patvirtintas'])
-    .set('tvark_ter_uuid', query.gamtotvarkos_planas);
-  await mapLayers.toggleVisibility(gamtotvarkaPlanai.id, true).zoom(gamtotvarkaPlanai.id, {
-    addStroke: false,
-    filters: gamtotvarkaPlanaiFilters,
-  });
+  const zoomOptions = { addStroke: false };
+
+  const layerGroups = [
+    {
+      group: gamtotvarkaPlanai,
+      plotai: gamtotvarkaPlanuPlotai,
+      teritorijos: gamtotvarkaPlanuTeritorijos,
+      plotaiLayers: ['gamtotvarkos_plotai_patvirtintas', 'gamtotvarkos_plotai_rengiamas'],
+      teritorijosLayers: [
+        'gamtotvarkos_teritorijos_patvirtintas',
+        'gamtotvarkos_teritorijos_rengiamas',
+      ],
+    },
+    {
+      group: gamtotvarkaTvarkymoProgramos,
+      plotai: gamtotvarkaProgramuPlotai,
+      teritorijos: gamtotvarkaProgramuTeritorijos,
+      plotaiLayers: ['tvarkymo_programu_plotai_patvirtintas', 'tvarkymo_programu_plotai_rengiamas'],
+      teritorijosLayers: [
+        'tvarkymo_programu_teritorijos_patvirtintas',
+        'tvarkymo_programu_teritorijos_rengiamas',
+      ],
+    },
+    {
+      group: gamtotvarkaTikslinesProgramos,
+      plotai: gamtotvarkaTiksliniuProgramuPlotai,
+      teritorijos: gamtotvarkaTiksliniuProgramuTeritorijos,
+      plotaiLayers: [
+        'tikslines_programos_plotai_patvirtintas',
+        'tikslines_programos_plotai_rengiamas',
+      ],
+      teritorijosLayers: [
+        'tiksliniu_programu_teritorijos_patvirtintas',
+        'tiksliniu_programu_teritorijos_rengiamas',
+      ],
+    },
+    {
+      group: gamtotvarkaVeiksmuPlanai,
+      plotai: gamtotvarkaVeiksmuPlanuPlotai,
+      teritorijos: gamtotvarkaVeiksmuPlanuTeritorijos,
+      plotaiLayers: [
+        'rusiu_veiksmu_planu_plotai_patvirtintas',
+        'rusiu_veiksmu_planu_plotai_rengiamas',
+      ],
+      teritorijosLayers: [
+        'rusiu_apsaugos_veiksmu_teritorijos_patvirtintas',
+        'rusiu_apsaugos_veiksmu_teritorijos_rengiamas',
+      ],
+    },
+    {
+      group: gamtotvarkaStTvarkymoPlanai,
+      plotai: gamtotvarkaStTvarkymoPlanuPlotai,
+      teritorijos: gamtotvarkaStTvarkymoPlanuTeritorijos,
+      plotaiLayers: ['st_tvarkymo_planu_plotai_patvirtintas', 'st_tvarkymo_planu_plotai_rengiamas'],
+      teritorijosLayers: [
+        'st_tvarkymo_planu_teritorijos_patvirtintas',
+        'st_tvarkymo_planu_teritorijos_rengiamas',
+      ],
+    },
+    {
+      group: gamtotvarkaInvaVeiksmuPlanai,
+      plotai: gamtotvarkaInvaVeiksmuPlanuPlotai,
+      teritorijos: gamtotvarkaInvaVeiksmuPlanuTeritorijos,
+      plotaiLayers: [
+        'invaziniu_rusiu_veiksmu_plotai_patvirtintas',
+        'invaziniu_rusiu_veiksmu_plotai_rengiamas',
+      ],
+      teritorijosLayers: [
+        'invaziniu_rusiu_veiksmu_planu_teritorijos_patvirtintas',
+        'invaziniu_rusiu_veiksmu_planu_teritorijos_rengiamas',
+      ],
+    },
+  ];
+
+  for (const { group, plotai, teritorijos, plotaiLayers, teritorijosLayers } of layerGroups) {
+    const filters = mapLayers.filters(group.id);
+    filters
+      .onAll([...plotaiLayers, ...teritorijosLayers])
+      .set('tvark_ter_uuid', query.gamtotvarkos_planas);
+    mapLayers.setSublayers(plotai.id, plotaiLayers);
+    mapLayers.setSublayers(teritorijos.id, teritorijosLayers);
+    mapLayers.toggleVisibility(group.id, true);
+    await mapLayers.zoom(group.id, { ...zoomOptions, filters });
+  }
 }
 </script>
