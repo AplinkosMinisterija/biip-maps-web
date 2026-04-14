@@ -14,7 +14,7 @@ jobs:
       packages: write
     with:
       environment: Staging
-      enable-sentry: false
+      enable-sentry: true
       docker-image: ghcr.io/AplinkosMinisterija/biip-maps-web
       build-args: |
         NODE_ENV=production
