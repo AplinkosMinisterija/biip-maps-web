@@ -502,3 +502,5 @@ https://maps.biip.lt?field={$lt:1}
 ```
 https://maps.biip.lt?field={$lte:1}
 ```
+
+Sentry
