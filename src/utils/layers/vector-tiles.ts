@@ -136,6 +136,7 @@ smalsuolisServiceVT.layer.set('type', 'vt');
 
 export const huntingServiceVT = {
   id: 'huntingServiceVT',
+  title: 'Medžioklės plotai',
   layer: getVectorTileLayer('mpv', '', {
     idProperty: 'id',
     declutter: true,
