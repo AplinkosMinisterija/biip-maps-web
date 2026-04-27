@@ -67,6 +67,7 @@ import Search from '@/components/search/Index.vue';
 import { useFiltersStore } from '@/stores/filters';
 import type { Buffer } from '@/types';
 import {
+  administrativeBoundariesLabelsService,
   convertFeatureCollectionProjection,
   geoportalForests,
   geoportalGrpk,
@@ -123,6 +124,7 @@ const toggleLayers = [
   uetkService,
   stvkService,
   municipalitiesService,
+  administrativeBoundariesLabelsService,
   geoportalGrpk,
   geoportalForests,
   geoportalOrto2018,
@@ -220,6 +222,7 @@ mapLayers
   .add(uetkService.id, { isHidden: true })
   .add(stvkService.id, { isHidden: true })
   .add(municipalitiesService.id, { isHidden: true })
+  .add(administrativeBoundariesLabelsService.id, { isHidden: true })
   .add(geoportalGrpk.id, { isHidden: true })
   .add(geoportalForests.id, { isHidden: true })
   .add(geoportalOrto2018.id, { isHidden: true })
