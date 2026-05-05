@@ -216,12 +216,18 @@ export class MapLayers extends Queues {
     }, {});
   }
 
-  getLegendData(id: string) {
+  getLegendData(id: string, opts: { visibleOnly?: boolean } = {}) {
     const layer = this.getLayer(id);
 
     if (!layer) return;
 
-    const sublayers = this.getAllSublayers(id);
+    const sublayers = opts.visibleOnly
+      ? this.getSublayers(id)
+      : this.getAllSublayers(id);
+
+    if (opts.visibleOnly && !sublayers.length) {
+      return Promise.resolve([]);
+    }
 
     const type = layer.get('type');
     const url = layer?.getSource()?.getUrl();
