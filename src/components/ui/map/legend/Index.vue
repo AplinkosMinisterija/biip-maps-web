@@ -20,6 +20,10 @@ const props = defineProps({
     default: 'Legenda',
     required: false,
   },
+  visibleOnly: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const mapLayers: any = inject('mapLayers');
@@ -27,8 +31,10 @@ const mapLayers: any = inject('mapLayers');
 const legendData = ref([] as any);
 
 if (props.layer) {
-  mapLayers.getLegendData(props.layer)?.then((data: any) => {
-    legendData.value = data || [];
-  });
+  mapLayers
+    .getLegendData(props.layer, { visibleOnly: props.visibleOnly })
+    ?.then((data: any) => {
+      legendData.value = data || [];
+    });
 }
 </script>

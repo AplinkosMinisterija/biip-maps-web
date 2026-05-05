@@ -1,5 +1,6 @@
 <template>
-  <div>
+  <div :class="screenshotLayout ? 'flex flex-col h-screen w-screen' : ''">
+    <div :class="screenshotLayout ? 'relative flex-1 min-h-0' : ''">
     <UiMap
       :show-scale-line="true"
       :show-coordinates="true"
@@ -43,7 +44,7 @@
         />
         <UiButtonIcon icon="download" @click="handleExportData()" title="Atsisiųsti duomenis" />
       </template>
-      <template v-if="filtersStore.active" #filtersContent>
+      <template v-if="filtersStore.active && !screenshotLayout" #filtersContent>
         <UiMapLayerToggle v-if="filtersStore.isActive('layers')" :layers="toggleLayers" />
         <Search
           v-else-if="filtersStore.isActive('search')"
@@ -71,6 +72,17 @@
         />
       </template>
     </UiMap>
+    </div>
+    <div
+      v-if="screenshotLayout"
+      class="bg-white border-t border-gray-200 p-3 max-h-[35%] overflow-y-auto"
+    >
+      <UiMapLegend
+        :layer="uetkService.id"
+        title="Sutartiniai ženklai"
+        :visible-only="true"
+      />
+    </div>
     <UiModal
       ref="downloadDataModal"
       title="Duomenų atsisiuntimas"
@@ -183,14 +195,11 @@ const query = parseRouteParams($route.query, [
 ]);
 const isPreview = ref(!!query.preview);
 const isScreenshot = ref(!!query.screenshot);
+const screenshotLayout = computed(() => isPreview.value && isScreenshot.value);
 const parcelId = ref('');
 
 const noResultsModal = ref();
 const downloadDataModal = ref();
-
-if (isPreview.value && isScreenshot.value) {
-  filtersStore.toggle('legend', true);
-}
 
 function onSearch(search: string) {
   filtersStore.search = search;
