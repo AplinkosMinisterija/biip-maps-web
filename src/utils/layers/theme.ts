@@ -1003,6 +1003,7 @@ export const gamtotvarkaService = {
       gamtotvarkaTikslinesProgramos.layer,
       gamtotvarkaVeiksmuPlanai.layer,
       gamtotvarkaStTvarkymoPlanai.layer,
+      gamtotvarkaInvaVeiksmuPlanai.layer,
     ],
   }),
 };
