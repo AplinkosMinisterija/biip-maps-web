@@ -48,10 +48,32 @@ $router.isReady().then(() => {
   }
 });
 
+const waitForLegend = (timeoutMs = 5000) =>
+  new Promise<void>((resolve) => {
+    if (typeof document === "undefined") return resolve();
+    if (document.body.dataset.legendReady !== "false") return resolve();
+
+    const observer = new MutationObserver(() => {
+      if (document.body.dataset.legendReady === "true") {
+        observer.disconnect();
+        resolve();
+      }
+    });
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ["data-legend-ready"],
+    });
+    setTimeout(() => {
+      observer.disconnect();
+      resolve();
+    }, timeoutMs);
+  });
+
 watch(
   isLoaded,
-  (value) => {
+  async (value) => {
     if (!value || !$route?.query?.screenshot) return;
+    await waitForLegend();
     canvasToImage();
   },
   { immediate: true }

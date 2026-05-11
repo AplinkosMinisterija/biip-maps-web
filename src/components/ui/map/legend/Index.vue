@@ -7,7 +7,7 @@
 </template>
 
 <script lang="ts" setup>
-import { inject, ref } from 'vue';
+import { inject, onUnmounted, ref } from 'vue';
 
 const props = defineProps({
   layer: {
@@ -30,11 +30,30 @@ const mapLayers: any = inject('mapLayers');
 
 const legendData = ref([] as any);
 
+const setReadyFlag = (value: 'true' | 'false') => {
+  if (typeof document === 'undefined') return;
+  document.body.dataset.legendReady = value;
+};
+
 if (props.layer) {
-  mapLayers
-    .getLegendData(props.layer, { visibleOnly: props.visibleOnly })
-    ?.then((data: any) => {
-      legendData.value = data || [];
-    });
+  setReadyFlag('false');
+  const result = mapLayers.getLegendData(props.layer, {
+    visibleOnly: props.visibleOnly,
+  });
+  if (result && typeof result.then === 'function') {
+    result
+      .then((data: any) => {
+        legendData.value = data || [];
+      })
+      .finally(() => setReadyFlag('true'));
+  } else {
+    setReadyFlag('true');
+  }
 }
+
+onUnmounted(() => {
+  if (typeof document !== 'undefined') {
+    delete document.body.dataset.legendReady;
+  }
+});
 </script>
