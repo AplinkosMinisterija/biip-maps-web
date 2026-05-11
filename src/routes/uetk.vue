@@ -1,5 +1,6 @@
 <template>
-  <div>
+  <div :class="screenshotLayout ? 'screenshot-mode flex flex-col h-screen w-screen' : ''">
+    <div :class="screenshotLayout ? 'relative flex-1 min-h-0 overflow-hidden' : ''">
     <UiMap
       :show-scale-line="true"
       :show-coordinates="true"
@@ -43,7 +44,7 @@
         />
         <UiButtonIcon icon="download" @click="handleExportData()" title="Atsisiųsti duomenis" />
       </template>
-      <template v-if="filtersStore.active" #filtersContent>
+      <template v-if="filtersStore.active && !screenshotLayout" #filtersContent>
         <UiMapLayerToggle v-if="filtersStore.isActive('layers')" :layers="toggleLayers" />
         <Search
           v-else-if="filtersStore.isActive('search')"
@@ -71,6 +72,18 @@
         />
       </template>
     </UiMap>
+    </div>
+    <div
+      v-if="screenshotLayout"
+      class="bg-white border-t border-gray-200 p-3 max-h-[35%] overflow-y-auto"
+    >
+      <UiMapLegend
+        :layer="uetkService.id"
+        title="Sutartiniai ženklai"
+        :visible-only="true"
+        :inline="true"
+      />
+    </div>
     <UiModal
       ref="downloadDataModal"
       title="Duomenų atsisiuntimas"
@@ -183,14 +196,11 @@ const query = parseRouteParams($route.query, [
 ]);
 const isPreview = ref(!!query.preview);
 const isScreenshot = ref(!!query.screenshot);
+const screenshotLayout = computed(() => isPreview.value && isScreenshot.value);
 const parcelId = ref('');
 
 const noResultsModal = ref();
 const downloadDataModal = ref();
-
-if (isPreview.value && isScreenshot.value) {
-  filtersStore.toggle('legend', true);
-}
 
 function onSearch(search: string) {
   filtersStore.search = search;
@@ -396,6 +406,41 @@ if (query.parcelId) {
 </script>
 
 <style>
+/* In screenshot mode the v-map directive hard-codes
+   height:100vh; width:100vw on the OL container, which overrides our
+   flex layout and pushes the legend off-screen. Force every wrapper
+   between .flex-1 and the .ol-viewport to fill its parent so the OL
+   map sizes to the available space above the legend. */
+.screenshot-mode .relative.flex-1 > div,
+.screenshot-mode .relative.flex-1 > div > div,
+.screenshot-mode .ol-viewport,
+.screenshot-mode [style*='100vh'] {
+  height: 100% !important;
+  width: 100% !important;
+}
+
+/* UiMap's base styles flip .ol-scale-line / .ol-attribution to
+   position:initial so they don't get caught in the OL absolute
+   layout. That's fine in the regular interactive view where they get
+   portaled into corner mapControls containers, but in screenshot
+   mode they end up at the top of the .ol-viewport. Re-anchor them
+   to the bottom of the map area, just above the legend panel. */
+.screenshot-mode .ol-viewport {
+  position: relative !important;
+}
+.screenshot-mode .ol-scale-line {
+  position: absolute !important;
+  bottom: 4px !important;
+  left: 8px !important;
+  z-index: 5;
+}
+.screenshot-mode .ol-attribution {
+  position: absolute !important;
+  bottom: 4px !important;
+  right: 8px !important;
+  z-index: 5;
+}
+
 .ol-layer {
   cursor: help;
 }
