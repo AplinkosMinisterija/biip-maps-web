@@ -1,7 +1,7 @@
 <template>
   <div class="text-xs">
     <p class="text-sm font-semibold mb-3">{{ title }}</p>
-    <UiMapLegendItems v-if="legendData.length" :items="legendData" />
+    <UiMapLegendItems v-if="legendData.length" :items="legendData" :inline="inline" />
     <UiIcon v-else name="spinner" />
   </div>
 </template>
@@ -21,6 +21,10 @@ const props = defineProps({
     required: false,
   },
   visibleOnly: {
+    type: Boolean,
+    default: false,
+  },
+  inline: {
     type: Boolean,
     default: false,
   },
