@@ -127,6 +127,7 @@ mapLayers
   .add(municipalitiesService.id, { isHidden: true })
   .add(inspireParcelService.id, { isHidden: true })
   .add(invaService.id, { isHidden: true })
+  .enableLocationTracking()
   .click(async ({ coordinate }: any) => {
     selectedFeatures.value = [];
     eventBus.emit('uiSidebar', { open: false });
