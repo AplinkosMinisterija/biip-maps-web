@@ -1,6 +1,6 @@
 <template>
-  <div :class="screenshotLayout ? 'flex flex-col h-screen w-screen' : ''">
-    <div :class="screenshotLayout ? 'relative flex-1 min-h-0' : ''">
+  <div :class="screenshotLayout ? 'screenshot-mode flex flex-col h-screen w-screen' : ''">
+    <div :class="screenshotLayout ? 'relative flex-1 min-h-0 overflow-hidden' : ''">
     <UiMap
       :show-scale-line="true"
       :show-coordinates="true"
@@ -405,6 +405,17 @@ if (query.parcelId) {
 </script>
 
 <style>
+/* In screenshot mode the OpenLayers map container hard-codes
+   height:100vh; width:100vw via the v-map directive, which overrides
+   our flex layout and pushes the legend off-screen while shifting the
+   scale/attribution into the middle of the page. Constrain it to the
+   parent so the flex column works as designed. */
+.screenshot-mode .ol-viewport,
+.screenshot-mode [style*='100vh'] {
+  height: 100% !important;
+  width: 100% !important;
+}
+
 .ol-layer {
   cursor: help;
 }
