@@ -406,11 +406,13 @@ if (query.parcelId) {
 </script>
 
 <style>
-/* In screenshot mode the OpenLayers map container hard-codes
-   height:100vh; width:100vw via the v-map directive, which overrides
-   our flex layout and pushes the legend off-screen while shifting the
-   scale/attribution into the middle of the page. Constrain it to the
-   parent so the flex column works as designed. */
+/* In screenshot mode the v-map directive hard-codes
+   height:100vh; width:100vw on the OL container, which overrides our
+   flex layout and pushes the legend off-screen. Force every wrapper
+   between .flex-1 and the .ol-viewport to fill its parent so the OL
+   map sizes to the available space above the legend. */
+.screenshot-mode .relative.flex-1 > div,
+.screenshot-mode .relative.flex-1 > div > div,
 .screenshot-mode .ol-viewport,
 .screenshot-mode [style*='100vh'] {
   height: 100% !important;
