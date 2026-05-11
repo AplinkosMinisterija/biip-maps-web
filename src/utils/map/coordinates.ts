@@ -166,15 +166,15 @@ const formatLength = function (line: LineString) {
 };
 
 const formatArea = function (polygon: Polygon) {
-  let length = getArea(polygon);
+  let area = getArea(polygon, { projection });
   let unit = 'm';
 
-  if (length > 10000) {
-    length = length / 10000;
+  if (area > 10000) {
+    area = area / 1000000;
     unit = 'km';
   }
 
-  return `${Math.round(length * 100) / 100} ${unit}<sup>2</sup>`;
+  return `${Math.round(area * 100) / 100} ${unit}<sup>2</sup>`;
 };
 
 export function isCoordinate(input: string, multi: boolean = false) {
