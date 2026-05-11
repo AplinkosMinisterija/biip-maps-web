@@ -154,7 +154,7 @@ function toGeoJSON(data: Geometry) {
 }
 
 const formatLength = function (line: LineString) {
-  let length = getLength(line);
+  let length = getLength(line, { projection });
   let unit = 'm';
 
   if (length > 1000) {
