@@ -419,6 +419,28 @@ if (query.parcelId) {
   width: 100% !important;
 }
 
+/* UiMap's base styles flip .ol-scale-line / .ol-attribution to
+   position:initial so they don't get caught in the OL absolute
+   layout. That's fine in the regular interactive view where they get
+   portaled into corner mapControls containers, but in screenshot
+   mode they end up at the top of the .ol-viewport. Re-anchor them
+   to the bottom of the map area, just above the legend panel. */
+.screenshot-mode .ol-viewport {
+  position: relative !important;
+}
+.screenshot-mode .ol-scale-line {
+  position: absolute !important;
+  bottom: 4px !important;
+  left: 8px !important;
+  z-index: 5;
+}
+.screenshot-mode .ol-attribution {
+  position: absolute !important;
+  bottom: 4px !important;
+  right: 8px !important;
+  z-index: 5;
+}
+
 .ol-layer {
   cursor: help;
 }
