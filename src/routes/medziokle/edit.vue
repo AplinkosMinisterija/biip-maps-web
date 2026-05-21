@@ -88,6 +88,7 @@ import {
 } from '@/utils';
 import { getFeatureCollection } from 'geojsonjs';
 import _ from 'lodash';
+import { GeoJSON } from 'ol/format';
 import { computed, inject, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
@@ -233,10 +234,15 @@ mapDraw.value
   .setMulti(!!query.multi)
   .enableBufferSize(!!query.buffer, bufferMin)
   .enableContinuousDraw(enableContinuousDraw)
-  .on(['change', 'remove'], ({ features, featuresJSON }: any) => {
-    if (features) {
-      features = convertFeatureCollectionProjection(features, projection3857, projection);
-    }
+  .on(['change', 'remove'], ({ source, featuresJSON }: any) => {
+    const olFeatures = source?.getFeatures?.() || [];
+    const features = olFeatures.length
+      ? new GeoJSON().writeFeatures(olFeatures, {
+          featureProjection: projection3857,
+          dataProjection: projection,
+          decimals: 2,
+        })
+      : null;
     postMessage('data', features);
     if (!!query.autoZoom && !!featuresJSON?.features?.length) {
       mapLayers.zoomToFeatureCollection(featuresJSON);
