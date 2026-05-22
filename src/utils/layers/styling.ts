@@ -37,6 +37,43 @@ const COLORS = {
   STROKE: '#004650',
 };
 
+const KIRTIMU_RUSIES_SPALVA: Record<string, string> = {
+  'Plynas kirtimas': '#ED5151',
+  'Jaunuolynų ugdymas': '#149ECE',
+  'Einamasis kirtimas': '#A7C636',
+  'Atrankinis sanitarinis kirtimas': '#9E559C',
+  Retinimas: '#FC921F',
+  'Kiti specialieji miško kirtimai (savo reikmėms)': '#FFDE3E',
+  'Atrankinis kirtimas': '#F789D8',
+  'Atvejinis kirtimas': '#B7814A',
+  'Plynas sanitarinis kirtimas': '#3CAF99',
+  'Atvejinių miško kirtimų paskutinis atvejis': '#6B6BD6',
+};
+const KIRTIMU_KITA_SPALVA = '#AAAAAA';
+const KIRTIMU_STROKE = 'rgba(5, 5, 5, 0.68)';
+const KIRTIMU_KITA_KEY = 'Kita';
+
+export const KIRTIMU_RUSYS_LIST = [...Object.keys(KIRTIMU_RUSIES_SPALVA), KIRTIMU_KITA_KEY];
+
+export const kirtimuRusysVisible: Record<string, boolean> = Object.fromEntries(
+  KIRTIMU_RUSYS_LIST.map((r) => [r, true]),
+);
+
+export function buildKirtimuSublayers(getLayer: () => any) {
+  return KIRTIMU_RUSYS_LIST.slice()
+    .reverse()
+    .map((rusis) => ({
+      value: rusis,
+      name: rusis,
+      virtual: true,
+      isVisible: () => kirtimuRusysVisible[rusis],
+      setVisible: (_self: any, value: boolean) => {
+        kirtimuRusysVisible[rusis] = value;
+        getLayer()?.changed?.();
+      },
+    }));
+}
+
 function getFont(size: number, type: 'normal' | 'bold' = 'bold', fontFamily: string = FONT_FAMILY) {
   return `${type ? `${type} ` : ''}${size}px ${fontFamily}`;
 }
@@ -241,10 +278,40 @@ export function vectorTileStyles(options?: { layerPrefix: string }): any {
       stroke.setWidth(2);
       styles[length++] = line;
     } else if ([LAYER_TYPE.FOREST_LUMBERING].includes(layer)) {
-      const color = '#ff0000';
-      stroke.setColor(color);
-      fill.setColor(getColorWithOpacity(color, 0.1));
-      stroke.setWidth(2);
+      let atrib: any = feature.get('__atrib');
+      if (atrib === undefined) {
+        const raw = feature.getId?.();
+        try {
+          atrib = raw ? JSON.parse(raw as string) : null;
+        } catch {
+          atrib = null;
+        }
+        feature.set('__atrib', atrib ?? null, true);
+      }
+      if (!atrib) {
+        styles.length = length;
+        return styles;
+      }
+
+      const today = new Date().toISOString().slice(0, 10);
+      const iki = atrib['Galioja iki'];
+      const nuo = atrib['Galioja nuo'];
+      if ((iki && iki < today) || (nuo && nuo > today)) {
+        styles.length = length;
+        return styles;
+      }
+
+      const rusis = atrib['Kirtimo rūšis'];
+      const knownColor = KIRTIMU_RUSIES_SPALVA[rusis];
+      const rusisKey = knownColor ? rusis : KIRTIMU_KITA_KEY;
+      if (!kirtimuRusysVisible[rusisKey]) {
+        styles.length = length;
+        return styles;
+      }
+      const color = knownColor ?? KIRTIMU_KITA_SPALVA;
+      stroke.setColor(KIRTIMU_STROKE);
+      stroke.setWidth(1);
+      fill.setColor(getColorWithOpacity(color, 0.69));
       styles[length++] = strokedPolygon;
     } else if ([LAYER_TYPE.SMALSUOLIS_EVENTS].includes(layer)) {
       const isCluster = feature.get('cluster');

@@ -4,7 +4,7 @@ import { MVT } from 'ol/format';
 import { Feature } from 'ol';
 import { projection3857 } from '../constants';
 import { boundariesHost, cdnHost, qgisTilesUrl, smalsuolisApiHost } from '@/config';
-import { vectorTileStyles } from './styling';
+import { vectorTileStyles, buildKirtimuSublayers } from './styling';
 // @ts-expect-error pmtiles doesn't have types :(
 import { PMTilesVectorSource } from 'ol-pmtiles';
 
@@ -155,15 +155,16 @@ export const huntingFootprintTracksServiceVT = {
   }),
 };
 
-export const forestCutsLkmpVT = {
+export const forestCutsLkmpVT: any = {
   id: 'forestCutsLkmpVT',
-  name: 'Kirtimų leidimai nuo 2024-05',
+  name: 'Galiojantys kirtimo leidimai',
   layer: getVectorTileLayer('forests', '', {
     idProperty: 'atributai',
     declutter: true,
     url: 'https://lkmp.alisas.lt/maps/kirtimai/{z}/{x}/{y}.pbf',
   }),
 };
+forestCutsLkmpVT.sublayers = buildKirtimuSublayers(() => forestCutsLkmpVT.layer);
 
 export const artimaAplinkaVT = {
   id: 'artimaAplinkaVT',
