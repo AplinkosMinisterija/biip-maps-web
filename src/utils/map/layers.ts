@@ -565,6 +565,7 @@ export class MapLayers extends Queues {
       cb?: Function;
       zoomFn?: Function;
       zoomEmptyFilters?: boolean;
+      maxZoom?: number;
     } = {},
   ): Promise<any> {
     const filters = options?.filters || this.filters(id);
@@ -589,7 +590,11 @@ export class MapLayers extends Queues {
 
     if (!result.length) return;
 
-    this.zoomToFeatureCollection(result, { addStroke: options?.addStroke, cb: options?.zoomFn });
+    this.zoomToFeatureCollection(result, {
+      addStroke: options?.addStroke,
+      cb: options?.zoomFn,
+      maxZoom: options?.maxZoom,
+    });
 
     return result;
   }
@@ -691,7 +696,10 @@ export class MapLayers extends Queues {
     this.map.getView().setZoom(opts?.zoom || this._getZoomLevel());
   }
 
-  zoomToExtent(extent: any, opts: { padding?: number; animate?: boolean } = {}) {
+  zoomToExtent(
+    extent: any,
+    opts: { padding?: number; animate?: boolean; maxZoom?: number } = {},
+  ) {
     if (!extent || !this.map) return;
 
     const width = this.map.getViewport().clientWidth;
@@ -708,7 +716,11 @@ export class MapLayers extends Queues {
     this.map.getView().fit(extent, {
       padding: [padding, padding, padding, padding],
       duration: opts?.animate ? 500 : 0,
-      maxZoom: this._getZoomLevel(),
+      // Explicit maxZoom (e.g. from screenshot mode) overrides the projection
+      // default from _getZoomLevel() — necessary to actually zoom OUT in
+      // EPSG:3346 where _getZoomLevel returns 10, which is already tight for
+      // a single fit-to-feature.
+      maxZoom: typeof opts?.maxZoom === 'number' ? opts.maxZoom : this._getZoomLevel(),
     });
   }
 
@@ -729,6 +741,7 @@ export class MapLayers extends Queues {
       cb?: Function;
       animate?: boolean;
       dataProjection?: string;
+      maxZoom?: number;
     } = {},
   ) {
     if (_.isEmpty(data)) return;
@@ -750,7 +763,10 @@ export class MapLayers extends Queues {
       this.highlightFeatures(data, { layer: fixedHighlightLayerId });
     }
 
-    this.zoomToExtent(extent, { animate: options?.animate });
+    this.zoomToExtent(extent, {
+      animate: options?.animate,
+      maxZoom: options?.maxZoom,
+    });
 
     if (options?.cb && typeof options?.cb === 'function') {
       options.cb();
