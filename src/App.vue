@@ -48,7 +48,11 @@ $router.isReady().then(() => {
   }
 });
 
-const waitForLegend = (timeoutMs = 5000) =>
+// 10s timeout — the UETK extract screenshot legend fetches one GetLegendGraphic
+// per visible WMS sublayer (~11 layers after basin sublayers were added). At
+// ~300-500ms per fetch on a cold QGIS server, 5s was tight enough to fire the
+// silent-fallback timer for some renders.
+const waitForLegend = (timeoutMs = 10000) =>
   new Promise<void>((resolve) => {
     if (typeof document === "undefined") return resolve();
     if (document.body.dataset.legendReady !== "false") return resolve();

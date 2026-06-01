@@ -2,7 +2,7 @@
   <div :class="inline ? 'flex flex-row flex-wrap gap-x-3 gap-y-1 items-center' : ''">
     <div class="flex items-center gap-2">
       <img v-if="icon" :src="`data:image/png;base64,${icon}`" />
-      <div v-if="title">{{ title }}</div>
+      <div v-if="title">{{ title }}{{ children?.length ? ':' : '' }}</div>
     </div>
     <div
       v-if="children?.length"

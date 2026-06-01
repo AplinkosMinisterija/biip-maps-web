@@ -75,13 +75,13 @@
     </div>
     <div
       v-if="screenshotLayout"
-      class="bg-white border-t border-gray-200 p-3 max-h-[35%] overflow-y-auto"
+      class="bg-white border-t border-gray-200 p-3 max-h-[45%] overflow-y-auto"
     >
       <UiMapLegend
         :layer="uetkService.id"
         title="Sutartiniai ženklai"
         :visible-only="true"
-        :inline="true"
+        :use-current-scale="true"
       />
     </div>
     <UiModal
@@ -256,7 +256,18 @@ mapLayers
   .add(sznsUetkService.id, { isHidden: true })
   .add(sznsUetkServiceApproved.id, { isHidden: true })
   .add(sznsUetkServicePreparing.id, { isHidden: true })
-  .add(uetkService.id)
+  .add(uetkService.id);
+
+// In screenshot mode the extract PDF map needs more context than the
+// interactive map's default 8 sublayers: enable upiu_pabaseiniai,
+// upiu_baseinai, upiu_baseinu_rajonai (declared in uetkService.sublayers
+// but not in the default LAYERS CSV) so they render and show up in the
+// legend's visible-only set. Must run after .add() so the source exists.
+if (screenshotLayout.value) {
+  mapLayers.setAllSublayers(uetkService.id);
+}
+
+mapLayers
   .click(async ({ coordinate }: any) => {
     selectedFeatures.value = [];
     selectedGeometries.value = [];
@@ -285,7 +296,7 @@ mapLayers
   })
   .enableLocationTracking();
 
-const filterByCadastralId = async (cadastralId: any) => {
+const filterByCadastralId = async (cadastralId: any, maxZoom?: number) => {
   const layers = mapLayers
     .getAllSublayers(uetkService.id)
     .filter(
@@ -302,11 +313,20 @@ const filterByCadastralId = async (cadastralId: any) => {
     filters.on(item).set('kadastro_id', cadastralId);
   });
 
-  await mapLayers.zoom(uetkService.id, { addStroke: true, filters });
+  await mapLayers.zoom(uetkService.id, { addStroke: true, filters, maxZoom });
 };
 
 if (query.cadastralId) {
-  await filterByCadastralId(query.cadastralId);
+  // For extract-PDF screenshots we cap maxZoom on the fit-to-extent call
+  // itself (rather than calling setZoom after the fact — that loses the
+  // recentering, races with the screenshot's loadend wait, and is dead
+  // anyway because _getZoomLevel returns 10 for EPSG:3346 so any post-fit
+  // currentZoom>13 check never fires). maxZoom 8 is loose enough to show
+  // inflow / outflow rivers + the basin polygons enabled above.
+  await filterByCadastralId(
+    query.cadastralId,
+    screenshotLayout.value ? 8 : undefined,
+  );
 }
 
 events.on('filter', async ({ cadastralId }: any) => {
