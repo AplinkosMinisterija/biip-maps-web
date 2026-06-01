@@ -216,7 +216,10 @@ export class MapLayers extends Queues {
     }, {});
   }
 
-  getLegendData(id: string, opts: { visibleOnly?: boolean } = {}) {
+  getLegendData(
+    id: string,
+    opts: { visibleOnly?: boolean; useCurrentScale?: boolean } = {},
+  ) {
     const layer = this.getLayer(id);
 
     if (!layer) return;
@@ -234,9 +237,22 @@ export class MapLayers extends Queues {
 
     const options = this._getRequestOptions(id);
 
+    // Convert the current OL view resolution into a WMS scale denominator
+    // (units = metres in EPSG:3346, standard CSS DPI = 96). When passed to
+    // GetLegendGraphic, QGIS server drops rules whose scalemindenom/scalemaxdenom
+    // don't bracket this scale — so e.g. the upes "<50 km" tier disappears
+    // from the legend at zoomed-out screenshot scales.
+    let scale: number | undefined;
+    if (opts.useCurrentScale && this.map) {
+      const resolution = this.map.getView().getResolution();
+      if (typeof resolution === 'number' && resolution > 0) {
+        scale = resolution * 96 / 0.0254;
+      }
+    }
+
     let query: any;
     if (type === LayerType.WMS) {
-      query = WMSLegendRequest(sublayers, this.getMapProjection());
+      query = WMSLegendRequest(sublayers, this.getMapProjection(), scale);
     }
 
     if (!query) return;

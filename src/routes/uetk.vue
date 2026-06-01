@@ -81,6 +81,7 @@
         :layer="uetkService.id"
         title="Sutartiniai ženklai"
         :visible-only="true"
+        :use-current-scale="true"
       />
     </div>
     <UiModal

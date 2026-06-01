@@ -117,19 +117,32 @@ export function WMSFeatureQuery(query: string, layers: string | string[]) {
   });
 }
 
-export function WMSLegendRequest(layers: string | string[], proj: string = projection) {
+export function WMSLegendRequest(
+  layers: string | string[],
+  proj: string = projection,
+  scale?: number,
+) {
   if (Array.isArray(layers)) {
     layers = layers.join(',');
   }
 
-  return serializeQuery({
+  const params: Record<string, any> = {
     SERVICE: 'WMS',
     VERSION: '1.1.1',
     REQUEST: 'GetLegendGraphic',
     LAYERS: layers,
     FORMAT: 'application/json',
     SRS: proj,
-  });
+  };
+
+  // QGIS server drops rules whose scalemindenom/scalemaxdenom don't match
+  // the requested scale, so the legend lists only the categories actually
+  // rendered at that zoom. Without SCALE every rule comes back regardless.
+  if (typeof scale === 'number' && scale > 0) {
+    params.SCALE = Math.round(scale);
+  }
+
+  return serializeQuery(params);
 }
 
 export function parseRouteParams(params: any, items: string[]) {

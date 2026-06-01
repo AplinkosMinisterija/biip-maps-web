@@ -28,6 +28,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  useCurrentScale: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const mapLayers: any = inject('mapLayers');
@@ -43,6 +47,7 @@ if (props.layer) {
   setReadyFlag('false');
   const result = mapLayers.getLegendData(props.layer, {
     visibleOnly: props.visibleOnly,
+    useCurrentScale: props.useCurrentScale,
   });
   if (result && typeof result.then === 'function') {
     result
