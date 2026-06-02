@@ -82,6 +82,7 @@
         title="Sutartiniai ženklai"
         :visible-only="true"
         :use-current-scale="true"
+        :inline="true"
       />
     </div>
     <UiModal
