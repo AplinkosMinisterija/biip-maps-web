@@ -235,6 +235,17 @@ const toggleLayers = [
   geoportalGrpk,
 ];
 
+// In screenshot mode, switch the UETK layer's WMS LAYERS list to all
+// 11 sublayers BEFORE the layer is added to the map. The previous
+// .add() → setSublayers ordering produced two render passes (8 then
+// 11 layers) and puppeteer captured both, doubling every basin label.
+// setAllSublayers operates on the WMS source created at module load,
+// so it works before .add(); the first render OL queues will already
+// use the full set.
+if (screenshotLayout.value) {
+  mapLayers.setAllSublayers(uetkService.id);
+}
+
 mapLayers
   .addBaseLayer(geoportalTopoGray.id)
   .addBaseLayer(geoportalTopo.id)
@@ -257,18 +268,7 @@ mapLayers
   .add(sznsUetkService.id, { isHidden: true })
   .add(sznsUetkServiceApproved.id, { isHidden: true })
   .add(sznsUetkServicePreparing.id, { isHidden: true })
-  .add(uetkService.id);
-
-// In screenshot mode the extract PDF map needs more context than the
-// interactive map's default 8 sublayers: enable upiu_pabaseiniai,
-// upiu_baseinai, upiu_baseinu_rajonai (declared in uetkService.sublayers
-// but not in the default LAYERS CSV) so they render and show up in the
-// legend's visible-only set. Must run after .add() so the source exists.
-if (screenshotLayout.value) {
-  mapLayers.setAllSublayers(uetkService.id);
-}
-
-mapLayers
+  .add(uetkService.id)
   .click(async ({ coordinate }: any) => {
     selectedFeatures.value = [];
     selectedGeometries.value = [];
