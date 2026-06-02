@@ -1,14 +1,11 @@
 <template>
-  <div :class="inline ? 'flex flex-row flex-wrap gap-x-3 gap-y-1 items-center' : ''">
+  <div class="flex flex-col gap-1">
     <div class="flex items-center gap-2">
       <img v-if="icon" :src="`data:image/png;base64,${icon}`" />
       <div v-if="title">{{ title }}{{ children?.length ? ':' : '' }}</div>
     </div>
-    <div
-      v-if="children?.length"
-      :class="inline ? 'ml-1' : 'pl-4 mt-1'"
-    >
-      <UiMapLegendItems :items="children" :inline="inline" />
+    <div v-if="children?.length" class="pl-4">
+      <UiMapLegendItems :items="children" :inline="false" />
     </div>
   </div>
 </template>
