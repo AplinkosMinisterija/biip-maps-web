@@ -328,6 +328,25 @@ if (query.cadastralId) {
     query.cadastralId,
     screenshotLayout.value ? 8 : undefined,
   );
+
+  // In screenshot mode, view.fit kicks off a second tile fetch at the new
+  // extent. mapLayers.waitForLoaded.once('loadend') already resolved on
+  // the initial render, so App.vue's canvasToImage would otherwise fire
+  // while the post-fit tiles are still streaming in — and the canvas
+  // ends up with leftover old tiles plus partial new tiles, doubling
+  // every basin label. Hold the route's async setup open until the
+  // post-fit loadend has fired so Suspense doesn't release until the
+  // canvas is fully painted.
+  if (screenshotLayout.value && mapLayers.map) {
+    await new Promise<void>((resolve) => {
+      const done = () => {
+        clearTimeout(timer);
+        resolve();
+      };
+      const timer = setTimeout(done, 10000); // safety net
+      mapLayers.map.once('loadend', done);
+    });
+  }
 }
 
 events.on('filter', async ({ cadastralId }: any) => {
