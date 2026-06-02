@@ -1,7 +1,20 @@
 <template>
   <div class="flex flex-col gap-1">
     <div class="flex items-center gap-2">
-      <span class="inline-flex h-5 w-5 shrink-0 items-center justify-center">
+      <!--
+        16x16 slot is enough to hold every WMS legend symbol the layer
+        emits (filled circle, open circle, triangle, line, square fill)
+        without distorting them, and is small enough that the variation
+        between symbol shapes doesn't read as inconsistent left padding.
+        Skip the slot entirely for grouped parents that come back from
+        WMS without an icon, so e.g. "Ežerai ir tvenkiniai:" sits flush
+        with "Upės ir kanalai:" instead of getting pushed 24px right by
+        an empty placeholder.
+      -->
+      <span
+        v-if="icon || !children?.length"
+        class="inline-flex h-4 w-4 shrink-0 items-center justify-center"
+      >
         <img
           v-if="icon"
           :src="`data:image/png;base64,${icon}`"
