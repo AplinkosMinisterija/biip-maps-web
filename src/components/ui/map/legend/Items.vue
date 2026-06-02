@@ -1,15 +1,23 @@
 <template>
   <!--
-    inline=true (screenshot legend) renders each top-level item as a
-    vertical block (parent + indented children) and wraps blocks
-    horizontally across the row, so the result matches the stakeholder's
-    grouped layout: "Upės ir kanaliai:" / >100 km / 50-100 km / <50 km
-    in one column, "Ežerai ir tvenkiniai:" in the next, single-symbol
-    layers as their own narrow columns. inline=false keeps the original
-    nested vertical list for the sidebar.
+    inline=true (screenshot legend) uses CSS multi-column flow so blocks
+    fill columns top-down then wrap left-to-right. Sorted upstream so
+    grouped items (parent + children — "Ežerai ir tvenkiniai", "Upės ir
+    kanalai") sit in the first columns and single-symbol items pack into
+    a tidy trailing column. break-inside: avoid keeps each parent glued
+    to its children. inline=false keeps the original nested vertical
+    list for the sidebar.
   -->
-  <div :class="inline ? 'flex flex-row flex-wrap gap-x-6 gap-y-2 items-start' : 'flex flex-col gap-1'">
-    <div v-for="(data, index) in items" :key="index">
+  <div
+    :class="inline ? 'columns-2 sm:columns-3 lg:columns-4' : 'flex flex-col gap-1'"
+    :style="inline ? { columnGap: '1.5rem' } : undefined"
+  >
+    <div
+      v-for="(data, index) in items"
+      :key="index"
+      :class="inline ? 'mb-3' : ''"
+      :style="inline ? { breakInside: 'avoid' } : undefined"
+    >
       <UiMapLegendItem
         :title="data.title"
         :icon="data.icon"

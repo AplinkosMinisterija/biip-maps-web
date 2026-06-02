@@ -194,7 +194,6 @@ const query = parseRouteParams($route.query, [
   'preview',
   'screenshot',
   'hideSidebar',
-  'label',
 ]);
 const isPreview = ref(!!query.preview);
 const isScreenshot = ref(!!query.screenshot);
@@ -315,75 +314,7 @@ const filterByCadastralId = async (cadastralId: any, maxZoom?: number) => {
     filters.on(item).set('kadastro_id', cadastralId);
   });
 
-  return mapLayers.zoom(uetkService.id, { addStroke: true, filters, maxZoom });
-};
-
-// Render the extract object's name + kadastro_id as an HTML overlay
-// anchored to the matched geometry. QGIS's scale-dependent label rules
-// don't render the object's label at the wide screenshot zoom, so this
-// gives the stakeholder the "in-map" label they asked for without
-// touching the QGIS project.
-const renderObjectLabel = async (features: any[], cadastralId: string) => {
-  if (!features?.length || !mapLayers.map) return;
-  const { getCenter } = await import('ol/extent');
-  const { default: GeoJSON } = await import('ol/format/GeoJSON');
-  const { Overlay } = await import('ol');
-
-  const fmt = new GeoJSON();
-  const mapProj = mapLayers.map.getView().getProjection();
-  const olFeatures = fmt.readFeatures(
-    { type: 'FeatureCollection', features },
-    { dataProjection: 'EPSG:3346', featureProjection: mapProj },
-  );
-  if (!olFeatures.length) return;
-
-  const first = olFeatures[0];
-  const props = first.getProperties();
-  const name = (query.label as string) || props.pavadinimas || props.name || '';
-  const code = props.kadastro_id || cadastralId;
-
-  // Compute centroid across all matched geometries (handles multi-feature rivers)
-  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-  olFeatures.forEach((f: any) => {
-    const ext = f.getGeometry()?.getExtent();
-    if (!ext) return;
-    minX = Math.min(minX, ext[0]); minY = Math.min(minY, ext[1]);
-    maxX = Math.max(maxX, ext[2]); maxY = Math.max(maxY, ext[3]);
-  });
-  if (!isFinite(minX)) return;
-  const center = getCenter([minX, minY, maxX, maxY]);
-
-  // Build the overlay DOM with createElement/textContent — never innerHTML —
-  // because `name` may originate from a WMS feature property whose contents
-  // we don't fully control.
-  const el = document.createElement('div');
-  el.style.cssText = [
-    'background: rgba(255, 255, 255, 0.92)',
-    'padding: 4px 8px',
-    'border-radius: 3px',
-    'font-family: sans-serif',
-    'font-size: 12px',
-    'line-height: 1.3',
-    'text-align: center',
-    'white-space: nowrap',
-    'pointer-events: none',
-    'transform: translate(-50%, -110%)',
-    'box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15)',
-  ].join(';');
-
-  const nameRow = document.createElement('div');
-  nameRow.style.fontWeight = '700';
-  nameRow.textContent = name || '';
-  el.appendChild(nameRow);
-
-  const codeRow = document.createElement('div');
-  codeRow.appendChild(document.createTextNode('Identifikavimo kodas: '));
-  const codeBold = document.createElement('b');
-  codeBold.textContent = String(code);
-  codeRow.appendChild(codeBold);
-  el.appendChild(codeRow);
-
-  mapLayers.map.addOverlay(new Overlay({ element: el, position: center, positioning: 'bottom-center', stopEvent: false }));
+  await mapLayers.zoom(uetkService.id, { addStroke: true, filters, maxZoom });
 };
 
 if (query.cadastralId) {
@@ -393,14 +324,10 @@ if (query.cadastralId) {
   // anyway because _getZoomLevel returns 10 for EPSG:3346 so any post-fit
   // currentZoom>13 check never fires). maxZoom 8 is loose enough to show
   // inflow / outflow rivers + the basin polygons enabled above.
-  const matched = await filterByCadastralId(
+  await filterByCadastralId(
     query.cadastralId,
     screenshotLayout.value ? 8 : undefined,
   );
-
-  if (screenshotLayout.value) {
-    await renderObjectLabel(matched, String(query.cadastralId));
-  }
 
   // In screenshot mode, view.fit kicks off a second tile fetch at the new
   // extent. mapLayers.waitForLoaded.once('loadend') already resolved on
