@@ -38,6 +38,13 @@ const mapLayers: any = inject('mapLayers');
 
 const legendData = ref([] as any);
 
+// Screenshot legend renders multi-column. Push grouped items (those with
+// children — Ežerai ir tvenkiniai / Upės ir kanalai) to the front so they
+// fill the first columns, and let single-symbol items flow as a tidy
+// trailing column instead of getting strewn across the top row.
+const sortGroupedFirst = (arr: any[]) =>
+  [...arr].sort((a, b) => (b?.children?.length ? 1 : 0) - (a?.children?.length ? 1 : 0));
+
 const setReadyFlag = (value: 'true' | 'false') => {
   if (typeof document === 'undefined') return;
   document.body.dataset.legendReady = value;
@@ -52,7 +59,8 @@ if (props.layer) {
   if (result && typeof result.then === 'function') {
     result
       .then((data: any) => {
-        legendData.value = data || [];
+        const arr = Array.isArray(data) ? data : [];
+        legendData.value = props.inline ? sortGroupedFirst(arr) : arr;
       })
       .finally(() => setReadyFlag('true'));
   } else {
