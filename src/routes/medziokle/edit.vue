@@ -203,6 +203,10 @@ const selectSearch = (match: any) => {
     .setFeatures(match.geom, {
       append: !!query.multi,
       types: drawTypes.value.map((i) => i.type),
+      // match.geom is in EPSG:3346 (LKS); without dataProjection setFeatures reads it
+      // as the 3857 view projection, so the emit handler double-transforms it
+      // (3857->3346) and the stored point lands outside Lithuania.
+      dataProjection: projection,
     })
     .edit();
 };
