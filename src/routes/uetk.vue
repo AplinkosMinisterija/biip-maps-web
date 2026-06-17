@@ -333,7 +333,7 @@ if (query.cadastralId) {
   // size while leaving the big-feature path untouched.
   await filterByCadastralId(
     query.cadastralId,
-    screenshotLayout.value ? 14 : undefined,
+    screenshotLayout.value ? 17 : undefined,
   );
 
   // In screenshot mode, view.fit kicks off a second tile fetch at the new
