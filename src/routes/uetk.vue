@@ -318,19 +318,6 @@ const filterByCadastralId = async (cadastralId: any, maxZoom?: number) => {
 };
 
 if (query.cadastralId) {
-  // For extract-PDF screenshots we cap maxZoom on the fit-to-extent call
-  // itself (rather than calling setZoom after the fact — that loses the
-  // recentering, races with the screenshot's loadend wait, and is dead
-  // anyway because _getZoomLevel returns 10 for EPSG:3346 so any post-fit
-  // currentZoom>13 check never fires).
-  //
-  // maxZoom is an UPPER BOUND on view.fit, not a forced zoom. Big
-  // features (Nemunas, Nevėžis, ...) still pick the smaller zoom they
-  // need to fit their extent into the viewport — the cap doesn't bite.
-  // Small features (a 200m pond, a 5km stream) used to bottom out at
-  // the cap with the actual geometry showing as a single highlight
-  // pixel; bumping the cap from 8 → 14 lets them zoom in to a readable
-  // size while leaving the big-feature path untouched.
   await filterByCadastralId(
     query.cadastralId,
     screenshotLayout.value ? 17 : undefined,
