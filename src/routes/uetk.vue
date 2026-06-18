@@ -83,6 +83,7 @@
         :visible-only="true"
         :use-current-scale="true"
         :inline="true"
+        :legend-url="uetkService.legendUrl"
       />
     </div>
     <UiModal

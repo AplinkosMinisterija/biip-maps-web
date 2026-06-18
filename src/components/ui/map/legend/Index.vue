@@ -32,6 +32,13 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  // Optional override — fetch GetLegendGraphic from this URL instead of
+  // the layer's own WMS source. Used by the extract-PDF screenshot
+  // route to pull a print-tuned legend from a separate QGIS project.
+  legendUrl: {
+    type: String,
+    default: '',
+  },
 });
 
 const mapLayers: any = inject('mapLayers');
@@ -55,6 +62,7 @@ if (props.layer) {
   const result = mapLayers.getLegendData(props.layer, {
     visibleOnly: props.visibleOnly,
     useCurrentScale: props.useCurrentScale,
+    legendUrl: props.legendUrl || undefined,
   });
   if (result && typeof result.then === 'function') {
     result
