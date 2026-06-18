@@ -321,7 +321,7 @@ const filterByCadastralId = async (cadastralId: any, maxZoom?: number) => {
 if (query.cadastralId) {
   await filterByCadastralId(
     query.cadastralId,
-    screenshotLayout.value ? 17 : undefined,
+    screenshotLayout.value ? 11 : undefined,
   );
 
   // In screenshot mode, view.fit kicks off a second tile fetch at the new
