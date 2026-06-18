@@ -218,7 +218,11 @@ export class MapLayers extends Queues {
 
   getLegendData(
     id: string,
-    opts: { visibleOnly?: boolean; useCurrentScale?: boolean } = {},
+    opts: {
+      visibleOnly?: boolean;
+      useCurrentScale?: boolean;
+      legendUrl?: string;
+    } = {},
   ) {
     const layer = this.getLayer(id);
 
@@ -233,7 +237,11 @@ export class MapLayers extends Queues {
     }
 
     const type = layer.get('type');
-    const url = layer?.getSource()?.getUrl();
+    // legendUrl override lets a caller pull GetLegendGraphic from a
+    // different QGIS project than GetMap (e.g. a print-only project
+    // with a polished legend layout). Falls back to the layer's own
+    // WMS source URL when not provided.
+    const url = opts.legendUrl ?? layer?.getSource()?.getUrl();
 
     const options = this._getRequestOptions(id);
 

@@ -120,12 +120,12 @@ export const uetkService = {
       name: 'Vandens tyrimų vietos',
     },
     {
-      value: 'zemiu_uztvanka',
-      name: 'Žemių užtvanka',
-    },
-    {
       value: 'vandens_pertekliaus_pralaida',
       name: 'Vandens pertekliaus pralaida',
+    },
+    {
+      value: 'zemiu_uztvanka',
+      name: 'Žemių užtvanka',
     },
     {
       value: 'zuvu_pralaida',
@@ -142,6 +142,11 @@ export const uetkService = {
     'upes,ezerai_tvenkiniai,vandens_matavimo_stotys,vandens_tyrimu_vietos,zemiu_uztvanka,vandens_pertekliaus_pralaida,zuvu_pralaida,hidroelektrines',
     `${aaaCopyright} ${biipCopyright}`,
   ),
+  // Extract-PDF legend pulls GetLegendGraphic from a separate QGIS
+  // project tuned for print output (cleaner per-rule symbols, no
+  // interactive-map clutter). GetMap tiles still come from uetk_public
+  // above — only the screenshot legend swaps to uetk_print.
+  legendUrl: `${qgisServerUrl}/uetk_print`,
 };
 
 export const sznsUetkServiceApproved = {
