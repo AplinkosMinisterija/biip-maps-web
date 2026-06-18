@@ -139,7 +139,7 @@ export const uetkService = {
 
   layer: getWMSImageLayer(
     `${qgisServerUrl}/uetk_public`,
-    'upes,ezerai_tvenkiniai,vandens_matavimo_stotys,vandens_tyrimu_vietos,vandens_pertekliaus_pralaida,zemiu_uztvanka,zuvu_pralaida,hidroelektrines',
+    'upes,ezerai_tvenkiniai,vandens_matavimo_stotys,vandens_tyrimu_vietos,zemiu_uztvanka,vandens_pertekliaus_pralaida,zuvu_pralaida,hidroelektrines',
     `${aaaCopyright} ${biipCopyright}`,
   ),
 };
