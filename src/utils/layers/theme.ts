@@ -120,12 +120,12 @@ export const uetkService = {
       name: 'Vandens tyrimų vietos',
     },
     {
-      value: 'vandens_pertekliaus_pralaida',
-      name: 'Vandens pertekliaus pralaida',
-    },
-    {
       value: 'zemiu_uztvanka',
       name: 'Žemių užtvanka',
+    },
+    {
+      value: 'vandens_pertekliaus_pralaida',
+      name: 'Vandens pertekliaus pralaida',
     },
     {
       value: 'zuvu_pralaida',
