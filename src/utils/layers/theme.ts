@@ -147,6 +147,26 @@ export const uetkService = {
   // interactive-map clutter). GetMap tiles still come from uetk_public
   // above — only the screenshot legend swaps to uetk_print.
   legendUrl: `${qgisServerUrl}/uetk_print`,
+  // Explicit print-legend order. The uetk_print QGIS project returns
+  // these 11 categories in its own internal order; the stakeholder
+  // wants them grouped by domain — base geography first, point
+  // hydro-structures next, administrative basins last — so the
+  // columns-3 layout packs into a meaningful 4-4-3 grid. Sort happens
+  // in <UiMapLegend> after the GetLegendGraphic fetch; names must
+  // match exactly what QGIS emits.
+  legendOrder: [
+    'Upės ir kanalai',
+    'Ežerai ir tvenkiniai',
+    'Vandens tyrimų vietos',
+    'Vandens matavimo stotys',
+    'Hidroelektrinės',
+    'Žuvų pralaidos',
+    'Žemių užtvankos',
+    'Vandens pertekliaus pralaidos',
+    'Upių pabaseiniai',
+    'Upių baseinai',
+    'Upių baseinų rajonai',
+  ],
 };
 
 export const sznsUetkServiceApproved = {

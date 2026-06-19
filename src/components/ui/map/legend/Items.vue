@@ -1,35 +1,25 @@
 <template>
   <!--
-    inline=true (screenshot legend): each grouped item (parent + children
-    like "Ežerai ir tvenkiniai", "Upės ir kanalai") becomes its own
-    vertical column at the front; single-symbol items pack into a
-    compact multi-column block at the end. Both kinds share the same
-    horizontal gap so the row reads as one tidy strip.
+    inline=true (screenshot legend): every item flows top-to-bottom into
+    one 3-column CSS columns block so the browser auto-balances the
+    list (e.g. 11 items → 4-4-3). The parent decides the order via
+    legendOrder; this component just respects it.
 
     inline=false (sidebar) keeps the original nested vertical list.
   -->
-  <div v-if="inline" class="flex flex-row flex-wrap items-start gap-x-6 gap-y-3">
-    <div v-for="(data, index) in groupedItems" :key="`g-${index}`">
+  <div v-if="inline" class="columns-3" :style="{ columnGap: '1.5rem' }">
+    <div
+      v-for="(data, index) in items"
+      :key="index"
+      class="mb-1"
+      :style="{ breakInside: 'avoid' }"
+    >
       <UiMapLegendItem
         :title="data.title"
         :icon="data.icon"
         :children="data.children"
         :inline="true"
       />
-    </div>
-    <div
-      v-if="singleItems.length"
-      class="columns-2 sm:columns-3"
-      :style="{ columnGap: '1.5rem' }"
-    >
-      <div
-        v-for="(data, index) in singleItems"
-        :key="`s-${index}`"
-        class="mb-1"
-        :style="{ breakInside: 'avoid' }"
-      >
-        <UiMapLegendItem :title="data.title" :icon="data.icon" :inline="true" />
-      </div>
     </div>
   </div>
   <div v-else class="flex flex-col gap-1">
@@ -45,9 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-
-const props = defineProps({
+defineProps({
   items: {
     type: Array<any>,
     default: [],
@@ -57,11 +45,4 @@ const props = defineProps({
     default: false,
   },
 });
-
-const groupedItems = computed(() =>
-  (props.items || []).filter((i: any) => i?.children?.length),
-);
-const singleItems = computed(() =>
-  (props.items || []).filter((i: any) => !i?.children?.length),
-);
 </script>

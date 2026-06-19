@@ -84,6 +84,7 @@
         :use-current-scale="true"
         :inline="true"
         :legend-url="uetkService.legendUrl"
+        :legend-order="uetkService.legendOrder"
       />
     </div>
     <UiModal
