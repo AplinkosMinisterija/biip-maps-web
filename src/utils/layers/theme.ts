@@ -90,6 +90,13 @@ export const uetkService = {
   id: 'uetkService',
   title: 'UETK',
   description: [aaaCopyright, biipCopyright],
+  // Order matches the LAYERS query the qgis-server uetk_print project
+  // expects: admin basins first, then point hydro-structures, then base
+  // geography last. QGIS reverses LAYERS into legend draw order (last
+  // requested → first displayed), so the print legend reads top-down
+  // as Upės → Ežerai → ... → Upių baseinų rajonai. Sidebar layer
+  // toggle and visible-only legend reuse the same array, so any reorder
+  // here also moves them.
   sublayers: [
     {
       value: 'upiu_baseinu_rajonai',
@@ -104,12 +111,20 @@ export const uetkService = {
       name: 'Upių pabaseiniai',
     },
     {
-      value: 'upes',
-      name: 'Upės',
+      value: 'vandens_pertekliaus_pralaida',
+      name: 'Vandens pertekliaus pralaida',
     },
     {
-      value: 'ezerai_tvenkiniai',
-      name: 'Ežerai ir tvenkiniai',
+      value: 'zemiu_uztvanka',
+      name: 'Žemių užtvanka',
+    },
+    {
+      value: 'zuvu_pralaida',
+      name: 'Žuvų pralaida',
+    },
+    {
+      value: 'hidroelektrines',
+      name: 'Hidroelektrinės',
     },
     {
       value: 'vandens_matavimo_stotys',
@@ -120,20 +135,12 @@ export const uetkService = {
       name: 'Vandens tyrimų vietos',
     },
     {
-      value: 'zemiu_uztvanka',
-      name: 'Žemių užtvanka',
+      value: 'ezerai_tvenkiniai',
+      name: 'Ežerai ir tvenkiniai',
     },
     {
-      value: 'vandens_pertekliaus_pralaida',
-      name: 'Vandens pertekliaus pralaida',
-    },
-    {
-      value: 'zuvu_pralaida',
-      name: 'Žuvų pralaida',
-    },
-    {
-      value: 'hidroelektrines',
-      name: 'Hidroelektrinės',
+      value: 'upes',
+      name: 'Upės',
     },
   ],
 
