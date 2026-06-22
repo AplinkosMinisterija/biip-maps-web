@@ -147,6 +147,27 @@ export const uetkService = {
   // interactive-map clutter). GetMap tiles still come from uetk_public
   // above — only the screenshot legend swaps to uetk_print.
   legendUrl: `${qgisServerUrl}/uetk_print`,
+  // LAYERS list sent to GetLegendGraphic against uetk_print. KEPT
+  // SEPARATE from sublayers[] on purpose: sublayers[] doubles as the
+  // sidebar layer toggle list AND the LAYERS payload that
+  // setAllSublayers writes onto the uetk_public WMS source in
+  // screenshot mode (routes/uetk.vue:246) — reordering it would flip
+  // the live uetk_public draw stack. This array only affects the print
+  // legend's left-to-right column order (QGIS-server reverses LAYERS
+  // into legend draw order: last requested → first displayed).
+  legendLayersOrder: [
+    'upiu_baseinu_rajonai',
+    'upiu_baseinai',
+    'upiu_pabaseiniai',
+    'vandens_pertekliaus_pralaida',
+    'zemiu_uztvanka',
+    'zuvu_pralaida',
+    'hidroelektrines',
+    'vandens_matavimo_stotys',
+    'vandens_tyrimu_vietos',
+    'ezerai_tvenkiniai',
+    'upes',
+  ],
 };
 
 export const sznsUetkServiceApproved = {

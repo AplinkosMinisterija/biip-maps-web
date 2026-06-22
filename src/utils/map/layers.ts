@@ -222,17 +222,25 @@ export class MapLayers extends Queues {
       visibleOnly?: boolean;
       useCurrentScale?: boolean;
       legendUrl?: string;
+      legendLayersOrder?: string[];
     } = {},
   ) {
     const layer = this.getLayer(id);
 
     if (!layer) return;
 
-    const sublayers = opts.visibleOnly
-      ? this.getSublayers(id)
-      : this.getAllSublayers(id);
+    // legendLayersOrder override lets a caller dictate the LAYERS list
+    // sent to GetLegendGraphic independently of sublayers[]. Needed
+    // when sublayers[] doubles as the live WMS draw stack (e.g.
+    // uetkService) and we want a different order on a print-legend
+    // QGIS project without disturbing the map.
+    const sublayers = opts.legendLayersOrder?.length
+      ? opts.legendLayersOrder
+      : opts.visibleOnly
+        ? this.getSublayers(id)
+        : this.getAllSublayers(id);
 
-    if (opts.visibleOnly && !sublayers.length) {
+    if (opts.visibleOnly && !opts.legendLayersOrder?.length && !sublayers.length) {
       return Promise.resolve([]);
     }
 

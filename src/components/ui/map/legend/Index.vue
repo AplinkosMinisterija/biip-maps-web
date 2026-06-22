@@ -39,6 +39,14 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  // Optional explicit LAYERS list for GetLegendGraphic. When supplied,
+  // bypasses the layer's sublayers[] (which doubles as the sidebar
+  // toggle list and the live WMS draw stack) so the print-legend
+  // order can be chosen independently of how the map renders.
+  legendLayersOrder: {
+    type: Array as () => string[],
+    default: () => [],
+  },
 });
 
 const mapLayers: any = inject('mapLayers');
@@ -63,6 +71,7 @@ if (props.layer) {
     visibleOnly: props.visibleOnly,
     useCurrentScale: props.useCurrentScale,
     legendUrl: props.legendUrl || undefined,
+    legendLayersOrder: props.legendLayersOrder.length ? props.legendLayersOrder : undefined,
   });
   if (result && typeof result.then === 'function') {
     result
