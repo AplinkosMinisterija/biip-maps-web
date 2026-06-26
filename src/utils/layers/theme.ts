@@ -293,6 +293,12 @@ export const srisPrivateService = {
 
 export const rusysGridService = {
   id: 'rusysGridService',
+  // The national gardelė covers the whole country, so it must never drive
+  // auto-zoom. Without this, zooming a group that contains it (e.g. the
+  // `/rusys?place=` view zooming `rusysService`) fits the all-Lithuania
+  // extent, then maxZoom caps it — centering on the country's middle instead
+  // of the actual radavietė. See MapLayers.zoom() group recursion.
+  excludeFromZoom: true,
   getHeaders: () => {
     return config().srisHeaders || {};
   },

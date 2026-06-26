@@ -262,7 +262,7 @@ export class MapLayers extends Queues {
     if (opts.useCurrentScale && this.map) {
       const resolution = this.map.getView().getResolution();
       if (typeof resolution === 'number' && resolution > 0) {
-        scale = resolution * 96 / 0.0254;
+        scale = (resolution * 96) / 0.0254;
       }
     }
 
@@ -609,7 +609,13 @@ export class MapLayers extends Queues {
     }
 
     if (this._isGroup(layer)) {
-      return Promise.all(this.all(layer).map((layer: any) => this.zoom(layer.get('id'), options)));
+      return Promise.all(
+        this.all(layer)
+          // Skip context layers (e.g. the national gardelė) that span the whole
+          // country and would otherwise hijack the group's zoom extent.
+          .filter((child: any) => !this.get(child.get('id'))?.excludeFromZoom)
+          .map((child: any) => this.zoom(child.get('id'), options)),
+      );
     }
 
     if (filters.isEmpty && !options?.zoomEmptyFilters) return;
@@ -728,10 +734,7 @@ export class MapLayers extends Queues {
     this.map.getView().setZoom(opts?.zoom || this._getZoomLevel());
   }
 
-  zoomToExtent(
-    extent: any,
-    opts: { padding?: number; animate?: boolean; maxZoom?: number } = {},
-  ) {
+  zoomToExtent(extent: any, opts: { padding?: number; animate?: boolean; maxZoom?: number } = {}) {
     if (!extent || !this.map) return;
 
     const width = this.map.getViewport().clientWidth;
