@@ -33,7 +33,7 @@
         </template>
 
         <UiButtonIcon icon="layers" @click="filtersStore.toggle('layers')" />
-        <UiButtonIcon icon="upload" @click="uploadRef?.modal?.open?.()" />
+        <UiButtonIcon v-if="!hideUpload" icon="upload" @click="uploadRef?.modal?.open?.()" />
       </template>
       <template v-if="filtersStore.active || showBufferChangeBox" #filtersContent>
         <UiMapLayerToggle v-if="filtersStore.isActive('layers')" :layers="toggleLayers" />
@@ -109,10 +109,12 @@ const query = parseRouteParams($route.query, [
   'bufferMax',
   'closeOnSearch',
   'showArea',
+  'hideUpload',
 ]);
 const isPreview = !!query.preview;
 const doHideToolbar = !!query.hideToolbar;
 const showArea = !!query.showArea;
+const hideUpload = !!query.hideUpload;
 
 const activeDrawType = computed(() => mapDraw.value.activeType);
 const selectedFeature = ref({} as any);
