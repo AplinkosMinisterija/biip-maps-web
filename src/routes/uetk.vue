@@ -1,77 +1,75 @@
 <template>
   <div :class="screenshotLayout ? 'screenshot-mode flex flex-col h-screen w-screen' : ''">
     <div :class="screenshotLayout ? 'relative flex-1 min-h-0 overflow-hidden' : ''">
-    <UiMap
-      :show-scale-line="true"
-      :show-coordinates="true"
-      :show-search="activeMainSearch"
-      :attribution-options="{
-        collapsible: !isPreview || !isScreenshot,
-      }"
-      :is-preview="!!isPreview"
-      @search="onSearch"
-    >
-      <template #filters>
-        <UiBox v-if="activeParcelSearch">
-          Sklypo paieška:
-          <input
-            type="text"
-            :value="formattedParcelId"
-            placeholder="4400-2510-9595"
-            class="tracking-widest text-center px-1 rounded border-2 focus:outline-none"
-            @input="handleParcelInput"
+      <UiMap
+        :show-scale-line="true"
+        :show-coordinates="true"
+        :show-search="activeMainSearch"
+        :attribution-options="{ collapsible: !isPreview || !isScreenshot }"
+        :is-preview="!!isPreview"
+        @search="onSearch"
+      >
+        <template #filters>
+          <UiBox v-if="activeParcelSearch">
+            Sklypo paieška:
+            <input
+              type="text"
+              :value="formattedParcelId"
+              placeholder="4400-2510-9595"
+              class="tracking-widest text-center px-1 rounded border-2 focus:outline-none"
+              @input="handleParcelInput"
+            />
+          </UiBox>
+          <UiButtonIcon
+            icon="search"
+            @click="toggleMainSearch()"
+            v-if="activeParcelSearch"
+            title="Pagrindinė paieška"
           />
-        </UiBox>
-        <UiButtonIcon
-          icon="search"
-          @click="toggleMainSearch()"
-          v-if="activeParcelSearch"
-          title="Pagrindinė paieška"
-        />
-        <UiButtonIcon
-          icon="pin-outline"
-          @click="toggleParcelSearch()"
-          v-if="activeMainSearch"
-          title="Sklypų paieška"
-        />
-        <UiButtonIcon icon="layers" @click="filtersStore.toggle('layers')" />
-        <UiButtonIcon icon="legend" @click="filtersStore.toggle('legend')" />
-        <UiMapMeasure />
-        <UiButtonIcon
-          icon="image"
-          @click="handleExportMap()"
-          title="Atsisiųsti žemėlapio iškarpą"
-        />
-        <UiButtonIcon icon="download" @click="handleExportData()" title="Atsisiųsti duomenis" />
-      </template>
-      <template v-if="filtersStore.active && !screenshotLayout" #filtersContent>
-        <UiMapLayerToggle v-if="filtersStore.isActive('layers')" :layers="toggleLayers" />
-        <Search
-          v-else-if="filtersStore.isActive('search')"
-          :value="filtersStore.search"
-          :add-stroke="true"
-          :types="['uetk', 'geoportal']"
-          :additional-geoportal-layers="[
-            { type: 'ežeras', weight: 2 },
-            { type: 'tvenkinys', weight: 2 },
-            { type: 'upė', weight: 2 },
-          ]"
-        />
-        <UiMapLegend
-          v-if="filtersStore.isActive('legend')"
-          :layer="uetkService.id"
-          title="Sutartiniai ženklai"
-        />
-      </template>
-      <template #sidebar>
-        <UiSidebarFeatures
-          :is-open="!!selectedFeatures.length"
-          :features="selectedFeatures"
-          type="uetk"
-          @close="selectedFeatures = []"
-        />
-      </template>
-    </UiMap>
+          <UiButtonIcon
+            icon="pin-outline"
+            @click="toggleParcelSearch()"
+            v-if="activeMainSearch"
+            title="Sklypų paieška"
+          />
+          <UiButtonIcon icon="layers" @click="filtersStore.toggle('layers')" />
+          <UiButtonIcon icon="legend" @click="filtersStore.toggle('legend')" />
+          <UiMapMeasure />
+          <UiButtonIcon
+            icon="image"
+            @click="handleExportMap()"
+            title="Atsisiųsti žemėlapio iškarpą"
+          />
+          <UiButtonIcon icon="download" @click="handleExportData()" title="Atsisiųsti duomenis" />
+        </template>
+        <template v-if="filtersStore.active && !screenshotLayout" #filtersContent>
+          <UiMapLayerToggle v-if="filtersStore.isActive('layers')" :layers="toggleLayers" />
+          <Search
+            v-else-if="filtersStore.isActive('search')"
+            :value="filtersStore.search"
+            :add-stroke="true"
+            :types="['uetk', 'geoportal']"
+            :additional-geoportal-layers="[
+              { type: 'ežeras', weight: 2 },
+              { type: 'tvenkinys', weight: 2 },
+              { type: 'upė', weight: 2 },
+            ]"
+          />
+          <UiMapLegend
+            v-if="filtersStore.isActive('legend')"
+            :layer="uetkService.id"
+            title="Sutartiniai ženklai"
+          />
+        </template>
+        <template #sidebar>
+          <UiSidebarFeatures
+            :is-open="!!selectedFeatures.length"
+            :features="selectedFeatures"
+            type="uetk"
+            @close="selectedFeatures = []"
+          />
+        </template>
+      </UiMap>
     </div>
     <div
       v-if="screenshotLayout"
@@ -101,7 +99,7 @@
             <a
               class="text-sky-700 hover:text-sky-900 transition-colors"
               target="_blank"
-              href="https://opengis.lt/projects/aaa/uetk/uetk_gdb.zip"
+              href="https://files.gamta.lt/uetk/uetk_gdb.zip"
             >
               GDB formatu
             </a>
@@ -126,7 +124,7 @@
             <a
               class="text-sky-700 hover:text-sky-900 transition-colors"
               target="_blank"
-              href="https://opengis.lt/projects/aaa/uetk/uetk_xls.zip"
+              href="https://files.gamta.lt/uetk/uetk_xls.zip"
             >
               XLS formatu
             </a>
@@ -320,10 +318,7 @@ const filterByCadastralId = async (cadastralId: any, maxZoom?: number) => {
 };
 
 if (query.cadastralId) {
-  await filterByCadastralId(
-    query.cadastralId,
-    screenshotLayout.value ? 11 : undefined,
-  );
+  await filterByCadastralId(query.cadastralId, screenshotLayout.value ? 11 : undefined);
 
   // In screenshot mode, view.fit kicks off a second tile fetch at the new
   // extent. mapLayers.waitForLoaded.once('loadend') already resolved on
