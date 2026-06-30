@@ -535,17 +535,13 @@ export const gamtotvarkaAtliktiDarbai = {
   title: 'Atlikti tvarkymo darbai',
   sublayers: [
     {
-      value: 'tvarkymo_darbu_pateikimo_busena',
-      name: 'Tvarkymo darbų pateikimo būsena',
-    },
-    {
       value: 'tvarkymo_darbai',
       name: 'Atlikti tvarkymo darbai',
     },
   ],
   layer: getWMSImageLayer(
     'https://wmsgisservice.biomon.lt/opengisservice/gamtotvarka',
-    'tvarkymo_darbai,tvarkymo_darbu_pateikimo_busena',
+    'tvarkymo_darbai',
     vsttCopyright,
   ),
 };
