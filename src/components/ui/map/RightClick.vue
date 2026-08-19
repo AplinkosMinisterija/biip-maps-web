@@ -61,9 +61,10 @@ function copyCoordinatesToClipboard(projection: string) {
     projection,
   );
 
+  const decimals = projection === projection4326 ? 6 : 2;
   const convertedCoordinates = convertedGeojson?.features?.[0]?.geometry?.coordinates
     ?.reverse()
-    ?.map((value: number) => value.toFixed(2))
+    ?.map((value: number) => value.toFixed(decimals))
     ?.join(' ');
 
   copy(convertedCoordinates);
