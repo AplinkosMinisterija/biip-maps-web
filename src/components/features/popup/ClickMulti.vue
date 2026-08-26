@@ -82,6 +82,8 @@ eventBus.on('multiFeaturesPopupClose', () => {
   togglePopup();
 });
 
+mapLayers.pointerCursor(props.layers);
+
 mapLayers.click(
   ({ features }: any) => {
     if (!mapLayers.overlayLayer) return;
