@@ -57,6 +57,7 @@ export class MapLayers extends Queues {
   private _filtersByLayer: { [id: string]: MapFilters } = {};
   private _clickCallbacks: { cb: Function; opts: any }[] = [];
   private _hoverCallbacks: Function[] = [];
+  private _pointerCursorLayers: string[] = [];
   private _eventsCallbacks: { [key: string]: Function[] } = {};
   private _layers: { [id: string]: any } = {};
   private _draw: MapDraw | undefined;
@@ -135,6 +136,7 @@ export class MapLayers extends Queues {
           });
       });
       map.on('pointermove', (e: any) => {
+        this._updatePointerCursor(e);
         clearTimeout(this._timeouts.hover);
         this._timeouts.hover = setTimeout(() => {
           const features = map.getFeaturesAtPixel(e.pixel);
@@ -701,6 +703,29 @@ export class MapLayers extends Queues {
   hover(callback: Function) {
     this._hoverCallbacks.push(callback);
     return this;
+  }
+
+  pointerCursor(layers: string[]) {
+    this._pointerCursorLayers = layers;
+    return this;
+  }
+
+  private _updatePointerCursor(e: any) {
+    if (!this.map || !this._pointerCursorLayers.length) return;
+
+    const viewport = this.map.getViewport();
+    if (!viewport) return;
+
+    const hasFeature =
+      !e.dragging &&
+      this.map.hasFeatureAtPixel(e.pixel, {
+        layerFilter: (layer) => this._pointerCursorLayers.includes(layer.get('id')),
+        // same tolerance the click handler uses, so the cursor never lies about a hit
+        hitTolerance: 10,
+      });
+
+    // inline, because .ol-viewport already carries `cursor: grab` from a class rule
+    viewport.style.cursor = hasFeature ? 'pointer' : '';
   }
 
   async validateLayer(id: string) {
