@@ -214,6 +214,14 @@ function zoomToUserLocation() {
   cursor: grabbing;
 }
 
+/* Overlays (popups, controls) live inside the viewport and cursor inherits, so
+   they picked up the map's grab cursor. They sit on top of the map, not in it —
+   they get the ordinary page cursor back. */
+.ol-overlaycontainer,
+.ol-overlaycontainer-stopevent {
+  cursor: auto;
+}
+
 .ol-zoom button,
 .ol-icon-button,
 .ol-attribution button {
