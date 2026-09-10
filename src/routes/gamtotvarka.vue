@@ -15,8 +15,8 @@
         <UiMapLayerToggle v-if="filtersStore.isActive('layers')" :layers="toggleLayers" />
         <GamtotvarkaFilters
           v-else-if="filtersStore.isActive('filters')"
-          :selected-year="selectedYear"
-          @update:selected-year="handleDateFilter"
+          :selected-years="selectedYears"
+          @update:selected-years="handleDateFilter"
         />
         <Search
           v-else-if="filtersStore.isActive('search')"
@@ -34,7 +34,7 @@
 </template>
 <script setup lang="ts">
 import Search from '@/components/search/Index.vue';
-import { inject, ref, computed } from 'vue';
+import { inject, ref } from 'vue';
 import { useFiltersStore } from '@/stores/filters';
 import GamtotvarkaFilters from '@/components/gamtotvarka/Filters.vue';
 import {
@@ -71,7 +71,6 @@ import {
   invaService,
 } from '@/utils';
 import { useRoute } from 'vue-router';
-import moment from 'moment';
 
 const eventBus: any = inject('eventBus');
 const filtersStore = useFiltersStore();
@@ -95,23 +94,31 @@ const toggleLayers = [
 ];
 
 const gamtotvarkaServiceFilters = mapLayers.filters(gamtotvarkaService.id);
-const gamtotvarkaPlanaiFilters = mapLayers.filters(gamtotvarkaPlanai.id);
 
-const filterByYear = (key: string, year: number) => {
-  const dateFrom = String(year);
-  const dateTo = String(year + 1);
-  gamtotvarkaServiceFilters.on(['tvarkymo_darbai']).set(key, {
-    $gte: dateFrom,
-    $lte: dateTo,
-  });
+// #2: pagal nutylėjimą rodomi visi atlikti darbai; galima filtruoti pagal kelis metus.
+// Tuščias metų sąrašas → nuimti „data“ filtrą (rodyti visus). Vienas metas →
+// vienas intervalas; keli metai → tų intervalų $or.
+const filterByYears = (years: number[]) => {
+  const filter = gamtotvarkaServiceFilters.on('tvarkymo_darbai');
+
+  if (!years.length) {
+    filter.remove('data');
+    return;
+  }
+
+  const ranges = years.map((year) => ({
+    $gte: String(year),
+    $lte: String(year + 1),
+  }));
+
+  filter.set('data', ranges.length === 1 ? ranges[0] : { $or: ranges });
 };
 
-const selectedYear = ref(parseInt(moment().startOf('year').format('YYYY')));
-filterByYear('data', selectedYear.value);
+const selectedYears = ref<number[]>([]);
 
-const handleDateFilter = (newDate: number) => {
-  selectedYear.value = newDate;
-  filterByYear('data', selectedYear.value);
+const handleDateFilter = (years: number[]) => {
+  selectedYears.value = years;
+  filterByYears(years);
 };
 
 mapLayers
@@ -131,11 +138,19 @@ mapLayers
   .click(async ({ coordinate }: any) => {
     selectedFeatures.value = [];
     eventBus.emit('uiSidebar', { open: false });
+    // #6: išvalom ankstesnį paryškinimą (bendrą ir aktyvaus ploto).
+    mapLayers.highlightFeatures(null);
+    mapLayers.highlightFeatures(null, { layer: 'gamtotvarkaHighlightLayer' });
     mapLayers.getFeatureInfo(
       gamtotvarkaService.id,
       coordinate,
       ({ geometries, properties }: any) => {
-        mapLayers.highlightFeatures(geometries);
+        // #6: kiekvienam įrašui prisegam jo geometriją (properties[i] ↔ geometries[i]),
+        // kad sąraše pasirinkus įrašą galėtume paryškinti būtent to ploto ribas.
+        properties.forEach((p: any, i: number) => {
+          p._geometry = geometries[i];
+        });
+        mapLayers.highlightFeatures(geometries, { merge: true });
         selectedFeatures.value.push(...properties);
         eventBus.emit('uiSidebar', { open: !!selectedFeatures.value.length });
       },
@@ -144,7 +159,12 @@ mapLayers
       gamtotvarkaNatura2000.id,
       coordinate,
       ({ geometries, properties }: any) => {
-        mapLayers.highlightFeatures(geometries);
+        // #6: kiekvienam įrašui prisegam jo geometriją (properties[i] ↔ geometries[i]),
+        // kad sąraše pasirinkus įrašą galėtume paryškinti būtent to ploto ribas.
+        properties.forEach((p: any, i: number) => {
+          p._geometry = geometries[i];
+        });
+        mapLayers.highlightFeatures(geometries, { merge: true });
         selectedFeatures.value.push(...properties);
         eventBus.emit('uiSidebar', { open: !!selectedFeatures.value.length });
       },
@@ -153,7 +173,12 @@ mapLayers
       gamtotvarkaStvkService.id,
       coordinate,
       ({ geometries, properties }: any) => {
-        mapLayers.highlightFeatures(geometries);
+        // #6: kiekvienam įrašui prisegam jo geometriją (properties[i] ↔ geometries[i]),
+        // kad sąraše pasirinkus įrašą galėtume paryškinti būtent to ploto ribas.
+        properties.forEach((p: any, i: number) => {
+          p._geometry = geometries[i];
+        });
+        mapLayers.highlightFeatures(geometries, { merge: true });
         selectedFeatures.value.push(...properties);
         eventBus.emit('uiSidebar', { open: !!selectedFeatures.value.length });
       },

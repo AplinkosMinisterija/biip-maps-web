@@ -9,9 +9,11 @@ import { watch } from 'vue';
 let map: Map;
 
 function getDiffKeys(obj1: any, obj2: any) {
-  return [...Object.keys(obj1 || {}), ...Object.keys(obj2 || {})]
+  const a = obj1 || {};
+  const b = obj2 || {};
+  return [...Object.keys(a), ...Object.keys(b)]
     .filter((value, index, array) => array.indexOf(value) === index)
-    .filter((key) => !_.isEqual(obj1[key], obj2[key]));
+    .filter((key) => !_.isEqual(a[key], b[key]));
 }
 
 export default {
