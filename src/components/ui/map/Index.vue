@@ -202,6 +202,26 @@ function zoomToUserLocation() {
 </script>
 
 <style>
+/* OpenLayers ships .ol-grab / .ol-grabbing, but only Modify and Translate ever
+   set them — DragPan does not, so panning the map showed the default arrow and
+   dragging gave no feedback at all. The :not() keeps those interactions in
+   charge whenever they do take over. */
+.ol-viewport:not(.ol-grab):not(.ol-grabbing) {
+  cursor: grab;
+}
+
+.ol-viewport:not(.ol-grab):not(.ol-grabbing):active {
+  cursor: grabbing;
+}
+
+/* Overlays (popups, controls) live inside the viewport and cursor inherits, so
+   they picked up the map's grab cursor. They sit on top of the map, not in it —
+   they get the ordinary page cursor back. */
+.ol-overlaycontainer,
+.ol-overlaycontainer-stopevent {
+  cursor: auto;
+}
+
 .ol-zoom button,
 .ol-icon-button,
 .ol-attribution button {

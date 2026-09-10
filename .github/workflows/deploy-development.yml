@@ -17,6 +17,8 @@ jobs:
       environment: Development
       enable-sentry: true
       docker-image: ghcr.io/AplinkosMinisterija/biip-maps-web
+      cache-from: type=registry,ref=ghcr.io/aplinkosministerija/biip-maps-web:buildcache
+      cache-to: type=registry,ref=ghcr.io/aplinkosministerija/biip-maps-web:buildcache,mode=max,image-manifest=true,oci-mediatypes=true,ignore-error=true
       build-args: |
         NODE_ENV=development
         VUE_APP_SENTRY_DSN=https://6bb481def89a4a3f842b278c693f0c21@sentry.biip.lt/13
