@@ -16,12 +16,12 @@
 </template>
 
 <script setup lang="ts">
-import { inject, ref, watch } from "vue";
-import { projection, convertFeatureCollectionProjection, projection4326 } from "@/utils";
-import { useClipboard, onClickOutside } from "@vueuse/core";
-import { getFeatureCollection } from "geojsonjs";
+import { inject, ref, watch } from 'vue';
+import { projection, convertFeatureCollectionProjection, projection4326 } from '@/utils';
+import { useClipboard, onClickOutside } from '@vueuse/core';
+import { getFeatureCollection } from 'geojsonjs';
 
-const mapLayers: any = inject("mapLayers");
+const mapLayers: any = inject('mapLayers');
 
 const overlayLayer = ref();
 const overlayLayerElement = ref();
@@ -42,7 +42,7 @@ mapLayers.click(
     togglePopup(coordinate);
     coordinates.value = coordinate;
   },
-  { right: true }
+  { right: true },
 );
 
 onClickOutside(overlayLayer, () => {
@@ -54,16 +54,18 @@ const { copy } = useClipboard();
 function copyCoordinatesToClipboard(projection: string) {
   const convertedGeojson = convertFeatureCollectionProjection(
     getFeatureCollection({
-      type: "Point",
+      type: 'Point',
       coordinates: [...coordinates.value],
     }),
     mapLayers.getMapProjection(),
-    projection
+    projection,
   );
 
+  const decimals = projection === projection4326 ? 6 : 2;
   const convertedCoordinates = convertedGeojson?.features?.[0]?.geometry?.coordinates
     ?.reverse()
-    ?.join(" ");
+    ?.map((value: number) => value.toFixed(decimals))
+    ?.join(' ');
 
   copy(convertedCoordinates);
   togglePopup();
