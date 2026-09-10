@@ -1392,6 +1392,142 @@ export const gamtotvarkaStvkService = {
 };
 gamtotvarkaStvkService.layer.set('id', 'gamtotvarkaStvkService');
 
+// Gamtotvarkos žemėlapiui atskiri STVK sub-servisai su savomis WMS instancijomis,
+// kad būtų galima įtraukti „Europos bendrijos buveinės" (eb_buveines) ir „Funkcinio
+// prioriteto zonos" nepaveikiant bendro gamtotvarkaStvkService (tourism/uetk).
+// Kiekvienas eksportuojamas atskirai, nes įdėtų posluoksnių meniu (useLayersToggle
+// mapSublayers) juos randa pagal id per mapLayers.get() iš `allLayers` registro –
+// vidiniai jungikliai (Draustiniai, Parkai, Natura 2000, Biosferos) renderinasi tik
+// kai sub-servisas eksportuotas ir turi savo `sublayers`.
+const STVK_WMS_URL = 'https://services.stvk.lt/wms/stvk-services';
+const STVK_FPZ_LAYERS =
+  'kpfz_rezervatai,kpfz_draustiniai,np_ekolog_aps_fpz,np_rekreac_fpz,np_zem_uk_fpz,' +
+  'np_misk_uk_fpz,np_bendr_naud_vand_uk_fpz,np_kitos_uk_fpz,np_gyv_pask_fpz,np_kitos_pask_fpz,' +
+  'rp_ekolog_aps_fpz,rp_rekreac_fpz,rp_zemes_uk_fpz,rp_misku_uk_fpz,rp_bendr_naud_vand_uk_fpz,' +
+  'rp_kitos_uk_fpz,rp_gyv_fpz,rp_kitos_fpz,eko_fpz,zemes_fpz,misku_fpz,ekosistem_fpz,' +
+  'vandens_fpz,kitos_paskirties_fpz';
+const STVK_GPO_LAYERS =
+  'botaniniai_gpo_t,geomorfologiniai_gpo_t,geologiniai_gpo_t,hidrogeologiniai_gpo_t,' +
+  'hidrografiniai_gpo_t,zoologiniai_gpo_t,botaniniai_gpo_p,geomorfologiniai_gpo_p,geologiniai_gpo_p,' +
+  'hidrogeologiniai_gpo_p,hidrografiniai_gpo_p,zoologiniai_gpo_p,sunyke_botaniniai_gpo_t,' +
+  'sunyke_geomorfologiniai_gpo_t,sunyke_geologiniai_gpo_t,sunyke_hidrogeologiniai_gpo_t,' +
+  'sunyke_hidrografiniai_gpo_t,sunyke_zoologiniai_gpo_t,sunyke_botaniniai_gpo_p,' +
+  'sunyke_geomorfologiniai_gpo_p,sunyke_geologiniai_gpo_p,sunyke_hidrogeologiniai_gpo_p,' +
+  'sunyke_hidrografiniai_gpo_p,sunyke_zoologiniai_gpo_p';
+
+function makeGamtotvarkaStvk(id: string, title: string, layers: string, sublayers?: any[]) {
+  const layer = getWMSImageLayer(STVK_WMS_URL, layers, vsttCopyright);
+  layer.set('id', id);
+  return { id, description: vsttCopyright, title, ...(sublayers ? { sublayers } : {}), layer };
+}
+
+export const gamtotvarkaStvkPajurio = makeGamtotvarkaStvk(
+  'gamtotvarkaStvkPajurio',
+  'Pajūrio juosta',
+  'pajurio',
+);
+export const gamtotvarkaStvkNatura2000 = makeGamtotvarkaStvk(
+  'gamtotvarkaStvkNatura2000',
+  'Natura 2000',
+  'past,bast',
+  [
+    { value: 'past', name: 'Paukščių apsaugai svarbios teritorijos' },
+    { value: 'bast', name: 'Buveinių apsaugai svarbios teritorijos' },
+  ],
+);
+export const gamtotvarkaStvkEbBuveines = makeGamtotvarkaStvk(
+  'gamtotvarkaStvkEbBuveines',
+  'Europos bendrijos buveinės',
+  'eb_buveines',
+);
+export const gamtotvarkaStvkFpz = makeGamtotvarkaStvk(
+  'gamtotvarkaStvkFpz',
+  'Funkcinio prioriteto zonos',
+  STVK_FPZ_LAYERS,
+);
+export const gamtotvarkaStvkBufApsZonos = makeGamtotvarkaStvk(
+  'gamtotvarkaStvkBufApsZonos',
+  'Buferinės apsaugos zonos',
+  'buf_apsaugos_zonos',
+);
+export const gamtotvarkaStvkGenetiniai = makeGamtotvarkaStvk(
+  'gamtotvarkaStvkGenetiniai',
+  'Genetiniai sklypai',
+  'genetiniai_sklypai',
+);
+export const gamtotvarkaStvkAtkuriamieji = makeGamtotvarkaStvk(
+  'gamtotvarkaStvkAtkuriamieji',
+  'Atkuriamieji sklypai',
+  'atkuriamieji_sklypai',
+);
+export const gamtotvarkaStvkBioStebesenos = makeGamtotvarkaStvk(
+  'gamtotvarkaStvkBioStebesenos',
+  'Biosferos stebėsenos (monitoringo) teritorijos',
+  'bio_rezervatai,bio_poligonai',
+  [
+    { value: 'bio_rezervatai', name: 'Biosferos rezervatai' },
+    { value: 'bio_poligonai', name: 'Biosferos poligonai' },
+  ],
+);
+export const gamtotvarkaStvkParkai = makeGamtotvarkaStvk(
+  'gamtotvarkaStvkParkai',
+  'Valstybiniai parkai',
+  'nac_parkai,reg_parkai',
+  [
+    { value: 'nac_parkai', name: 'Nacionaliniai parkai' },
+    { value: 'reg_parkai', name: 'Regioniniai parkai' },
+  ],
+);
+export const gamtotvarkaStvkDraustiniai = makeGamtotvarkaStvk(
+  'gamtotvarkaStvkDraustiniai',
+  'Draustiniai',
+  'valstybiniai_draustiniai,savivaldybiu_draustiniai',
+  [
+    { value: 'valstybiniai_draustiniai', name: 'Valstybiniai draustiniai' },
+    { value: 'savivaldybiu_draustiniai', name: 'Savivaldybių draustiniai' },
+  ],
+);
+export const gamtotvarkaStvkRezervatai = makeGamtotvarkaStvk(
+  'gamtotvarkaStvkRezervatai',
+  'Valstybiniai rezervatai',
+  'valstybiniai_rezervatai',
+);
+export const gamtotvarkaStvkGpo = makeGamtotvarkaStvk(
+  'gamtotvarkaStvkGpo',
+  'Gamtos paveldo objektai',
+  STVK_GPO_LAYERS,
+);
+
+const gamtotvarkaStvkSubServices = [
+  gamtotvarkaStvkPajurio,
+  gamtotvarkaStvkNatura2000,
+  gamtotvarkaStvkEbBuveines,
+  gamtotvarkaStvkFpz,
+  gamtotvarkaStvkBufApsZonos,
+  gamtotvarkaStvkGenetiniai,
+  gamtotvarkaStvkAtkuriamieji,
+  gamtotvarkaStvkBioStebesenos,
+  gamtotvarkaStvkParkai,
+  gamtotvarkaStvkDraustiniai,
+  gamtotvarkaStvkRezervatai,
+  gamtotvarkaStvkGpo,
+];
+
+export const gamtotvarkaStvkServiceExtended = {
+  id: 'gamtotvarkaStvkServiceExtended',
+  description: vsttCopyright,
+  title: 'Saugomų teritorijų valstybės kadastras',
+  sublayers: gamtotvarkaStvkSubServices.map(({ id, title, layer }) => ({
+    id,
+    name: title,
+    layer,
+  })),
+  layer: new LayerGroup({
+    layers: gamtotvarkaStvkSubServices.map((subService) => subService.layer),
+  }),
+};
+gamtotvarkaStvkServiceExtended.layer.set('id', 'gamtotvarkaStvkServiceExtended');
+
 export const tourismService = {
   id: 'tourismService',
   description: vsttCopyright,

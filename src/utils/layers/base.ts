@@ -496,6 +496,54 @@ export const geoportalForests = {
 
 geoportalForests.layer.set('type', 'ARCGIS');
 
+// Gamtotvarkos žemėlapiui atskira Miškų kadastro kopija su sava ArcGIS instancija:
+// meniu paliekami tik realiai gaunami sluoksniai (show:0,1,2,4,5,9), be „iki
+// 2022-12-31" dublikatų ir negrąžinamų sluoksnių. Bendras geoportalForests
+// nekeičiamas, nes jį naudoja ir alis/rusys/medziokle žemėlapiai.
+export const gamtotvarkaForests = {
+  id: 'gamtotvarkaForests',
+  title: 'Miškai',
+  layer: new ImageLayer({
+    source: new ImageArcGISRest({
+      attributions: geoportalCopyright('vmt_mkd'),
+      ratio: 1,
+      params: {
+        LAYERS: 'show:0,1,2,4,5,9',
+      },
+      url: `${geoportalUrl('vmt_mkd')}/MapServer`,
+    }),
+  }),
+  sublayers: [
+    {
+      name: 'VMU urėdijos regioniniai padaliniai',
+      value: '0',
+    },
+    {
+      name: 'Urėdijos',
+      value: '1',
+    },
+    {
+      name: 'Girininkijos',
+      value: '2',
+    },
+    {
+      name: 'Kertinės miško buveinės',
+      value: '4',
+    },
+    {
+      name: 'Kvartalai',
+      value: '5',
+    },
+    {
+      name: 'Miško sklypai',
+      value: '9',
+    },
+  ],
+};
+
+gamtotvarkaForests.layer.set('id', 'gamtotvarkaForests');
+gamtotvarkaForests.layer.set('type', 'ARCGIS');
+
 export const rcSzns = {
   id: 'rcSzns',
   title: 'Specialiųjų žemės naudojimo sąlygų (SŽNS) duomenų rinkinys',

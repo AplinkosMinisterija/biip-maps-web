@@ -16,7 +16,9 @@
         <GamtotvarkaFilters
           v-else-if="filtersStore.isActive('filters')"
           :selected-years="selectedYears"
+          :selected-measures="selectedMeasures"
           @update:selected-years="handleDateFilter"
+          @update:selected-measures="handleMeasureFilter"
         />
         <Search
           v-else-if="filtersStore.isActive('search')"
@@ -63,9 +65,8 @@ import {
   municipalitiesService,
   geoportalGrpk,
   gamtotvarkaService,
-  gamtotvarkaNatura2000,
-  gamtotvarkaStvkService,
-  geoportalForests,
+  gamtotvarkaStvkServiceExtended,
+  gamtotvarkaForests,
   geoportalKvr,
   parseRouteParams,
   invaService,
@@ -83,9 +84,8 @@ const isPreview = ref(!!query.preview);
 
 const toggleLayers = [
   gamtotvarkaService,
-  gamtotvarkaNatura2000,
-  gamtotvarkaStvkService,
-  geoportalForests,
+  gamtotvarkaStvkServiceExtended,
+  gamtotvarkaForests,
   geoportalKvr,
   inspireParcelService,
   municipalitiesService,
@@ -93,16 +93,21 @@ const toggleLayers = [
   invaService,
 ];
 
+const WORKS_SUBLAYER = 'tvarkymo_darbai';
+const YEAR_FIELD = 'data';
+const MEASURE_FIELD = 'priemones_id';
+const HIDDEN_ON_MAP_FIELD = 'neviesinti_zemelapyje';
+
 const gamtotvarkaServiceFilters = mapLayers.filters(gamtotvarkaService.id);
 
 // #2: pagal nutylėjimą rodomi visi atlikti darbai; galima filtruoti pagal kelis metus.
 // Tuščias metų sąrašas → nuimti „data“ filtrą (rodyti visus). Vienas metas →
 // vienas intervalas; keli metai → tų intervalų $or.
 const filterByYears = (years: number[]) => {
-  const filter = gamtotvarkaServiceFilters.on('tvarkymo_darbai');
+  const filter = gamtotvarkaServiceFilters.on(WORKS_SUBLAYER);
 
   if (!years.length) {
-    filter.remove('data');
+    filter.remove(YEAR_FIELD);
     return;
   }
 
@@ -111,14 +116,33 @@ const filterByYears = (years: number[]) => {
     $lte: String(year + 1),
   }));
 
-  filter.set('data', ranges.length === 1 ? ranges[0] : { $or: ranges });
+  filter.set(YEAR_FIELD, ranges.length === 1 ? ranges[0] : { $or: ranges });
+};
+
+// #3: filtras pagal gamtotvarkos priemones (priemones_id). Tuščias sąrašas →
+// nuimti filtrą (rodyti visas priemones).
+const filterByMeasures = (measureIds: number[]) => {
+  const filter = gamtotvarkaServiceFilters.on(WORKS_SUBLAYER);
+
+  if (!measureIds.length) {
+    filter.remove(MEASURE_FIELD);
+    return;
+  }
+
+  filter.set(MEASURE_FIELD, { $in: measureIds });
 };
 
 const selectedYears = ref<number[]>([]);
+const selectedMeasures = ref<number[]>([]);
 
 const handleDateFilter = (years: number[]) => {
   selectedYears.value = years;
   filterByYears(years);
+};
+
+const handleMeasureFilter = (measureIds: number[]) => {
+  selectedMeasures.value = measureIds;
+  filterByMeasures(measureIds);
 };
 
 mapLayers
@@ -127,9 +151,8 @@ mapLayers
   .addBaseLayer(geoportalOrto.id)
   .addBaseLayer(geoportalGrpk.id)
   .add(gamtotvarkaService.id)
-  .add(gamtotvarkaNatura2000.id, { isHidden: true })
-  .add(gamtotvarkaStvkService.id, { isHidden: true })
-  .add(geoportalForests.id, { isHidden: true })
+  .add(gamtotvarkaStvkServiceExtended.id, { isHidden: true })
+  .add(gamtotvarkaForests.id, { isHidden: true })
   .add(geoportalKvr.id, { isHidden: true })
   .add(municipalitiesService.id, { isHidden: true })
   .add(inspireParcelService.id, { isHidden: true })
@@ -156,21 +179,7 @@ mapLayers
       },
     );
     mapLayers.getFeatureInfo(
-      gamtotvarkaNatura2000.id,
-      coordinate,
-      ({ geometries, properties }: any) => {
-        // #6: kiekvienam įrašui prisegam jo geometriją (properties[i] ↔ geometries[i]),
-        // kad sąraše pasirinkus įrašą galėtume paryškinti būtent to ploto ribas.
-        properties.forEach((p: any, i: number) => {
-          p._geometry = geometries[i];
-        });
-        mapLayers.highlightFeatures(geometries, { merge: true });
-        selectedFeatures.value.push(...properties);
-        eventBus.emit('uiSidebar', { open: !!selectedFeatures.value.length });
-      },
-    );
-    mapLayers.getFeatureInfo(
-      gamtotvarkaStvkService.id,
+      gamtotvarkaStvkServiceExtended.id,
       coordinate,
       ({ geometries, properties }: any) => {
         // #6: kiekvienam įrašui prisegam jo geometriją (properties[i] ↔ geometries[i]),
@@ -184,6 +193,17 @@ mapLayers
       },
     );
   });
+
+// #7: neviešintinos priemonės žemėlapyje nerodomos. Slepiame tik pažymėtas
+// (neviesinti_zemelapyje = true); nepažymėtas (false) ir dar nepriskirtas
+// klasifikatoriui (null) priemones rodome. Filtras nuolatinis – „Panaikinti
+// filtrą" jo nenuima.
+// QGIS Server filtrų saugumo whitelist'as neleidžia operatoriaus „<>" nei
+// nekabučiuotų boolean literalų (mestų ServiceException ir sugadintų visą darbų
+// sluoksnio FILTER), todėl slepiame per NOT IN ( 'true' ) su kabučiuota reikšme.
+gamtotvarkaServiceFilters
+  .on(WORKS_SUBLAYER)
+  .set(HIDDEN_ON_MAP_FIELD, { $or: [{ $nin: ['true'] }, { $exists: false }] });
 
 if (query.gamtotvarkos_planas) {
   const zoomOptions = { addStroke: false };
