@@ -8,18 +8,29 @@ export interface GamtotvarkaMeasure {
 
 // Priemonių sąrašas #3 filtrui. Klasifikatorius (priemones_id → pavadinimas)
 // per WFS neeksponuojamas, todėl unikalias priemones surenkam iš pačių darbų
-// sluoksnio. WFS neturi DISTINCT, tad pasiimam tik du laukus ir dedublikuojam
+// sluoksnio. WFS neturi DISTINCT, tad pasiimam tik tris laukus ir dedublikuojam
 // kliento pusėje. Įrašai be priemones_id (nepriskirti klasifikatoriui) į sąrašą
 // nepatenka.
 const GAMTOTVARKA_WFS_URL = 'https://wmsgisservice.biomon.lt/opengisservice/gamtotvarka';
 const WORKS_LAYER = 'tvarkymo_darbai';
 const measuresUrl =
   `${GAMTOTVARKA_WFS_URL}?SERVICE=WFS&VERSION=1.1.0&REQUEST=GetFeature` +
-  `&TYPENAME=${WORKS_LAYER}&PROPERTYNAME=priemones_id,priemone&OUTPUTFORMAT=application/json`;
+  `&TYPENAME=${WORKS_LAYER}&PROPERTYNAME=priemones_id,priemone,neviesinti_zemelapyje` +
+  `&OUTPUTFORMAT=application/json`;
 
 interface WorksFeature {
-  properties?: { priemones_id?: number | null; priemone?: string | null };
+  properties?: {
+    priemones_id?: number | null;
+    priemone?: string | null;
+    neviesinti_zemelapyje?: boolean | string | null;
+  };
 }
+
+// WFS grąžina tikrą boolean, bet QGIS konfigūracijai pasikeitus gali atkeliauti
+// ir tekstinis 'true' – priimam abu, kad neviešintina priemonė netyčia nenutekėtų
+// į filtro sąrašą.
+const isHiddenOnMap = (value: boolean | string | null | undefined) =>
+  value === true || String(value).toLowerCase() === 'true';
 
 let cache: Promise<GamtotvarkaMeasure[]> | null = null;
 
@@ -29,6 +40,11 @@ function fetchMeasures(): Promise<GamtotvarkaMeasure[]> {
     features.forEach((feature) => {
       const id = feature?.properties?.priemones_id;
       const name = feature?.properties?.priemone;
+      // #3: filtre rodom tik tas priemones, kurios žemėlapyje realiai matomos.
+      // Žemėlapis slepia darbus su neviesinti_zemelapyje = true (žr. gamtotvarka.vue),
+      // tad praleidžiam juos ir čia – kitaip neviešintina priemonė liktų filtro
+      // sąraše, o ją pažymėjus žemėlapyje nebūtų rodoma nieko.
+      if (isHiddenOnMap(feature?.properties?.neviesinti_zemelapyje)) return;
       if (id === null || id === undefined || byId.has(id)) return;
       byId.set(id, name || String(id));
     });
