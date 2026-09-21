@@ -117,7 +117,7 @@ export function searchGeoportal(
     ],
   };
 
-  return fetch('https://www.geoportal.lt/map/proxy/elasticsearch', {
+  return fetch('https://www.geoportal.lt/mapproxy/elasticsearch', {
     method: 'POST',
     body: JSON.stringify(body),
     headers: {
