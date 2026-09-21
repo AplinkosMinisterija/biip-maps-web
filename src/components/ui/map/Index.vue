@@ -64,7 +64,7 @@
       </div>
       <div
         v-if="$slots.filtersContent && (!isPreview || filtersStore.active)"
-        class="bg-white rounded shadow md:max-w-md max-w-full overflow-y-auto h-full relative mb-10 pointer-events-auto"
+        class="bg-white rounded shadow min-w-72 md:max-w-md max-w-full overflow-y-auto h-full relative mb-10 pointer-events-auto"
       >
         <div class="relative h-full w-full">
           <div
