@@ -151,10 +151,15 @@ const applySearch = () => {
   tabs.value.map((t) => {
     matchesByType.value[t.type] = matchesByType.value[t.type] || {};
     matchesByType.value[t.type].loading = true;
-    t.searchFn?.(search.value).then((data) => {
-      matchesByType.value[t.type] = data;
-      matchesByType.value[t.type].loading = false;
-    });
+    t.searchFn?.(search.value)
+      .then((data) => {
+        matchesByType.value[t.type] = data;
+        matchesByType.value[t.type].loading = false;
+      })
+      .catch((err) => {
+        console.error(err);
+        matchesByType.value[t.type] = { rows: [], total: 0, loading: false };
+      });
   });
 };
 
