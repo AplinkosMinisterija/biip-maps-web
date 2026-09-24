@@ -266,7 +266,7 @@ const rows: any[] = [
     fn: getValue,
     fnParams: ['activity_translate'],
     show: (feature: any) =>
-      checkFeatureId([...stebejimaiFeatureId, ...radavietesFeatureIds]) &&
+      checkFeatureId([...stebejimaiFeatureId, ...radavietesFeatureIds])(feature) &&
       isEndangeredSpeciesType(feature),
   },
   {
@@ -281,7 +281,7 @@ const rows: any[] = [
     fn: getValue,
     fnParams: ['evolution_translate'],
     show: (feature: any) =>
-      checkFeatureId([...stebejimaiFeatureId, ...radavietesFeatureIds]) &&
+      checkFeatureId([...stebejimaiFeatureId, ...radavietesFeatureIds])(feature) &&
       isEndangeredSpeciesType(feature),
   },
   {

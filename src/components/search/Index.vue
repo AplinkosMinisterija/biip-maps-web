@@ -108,9 +108,20 @@ const search = computed(() => props.value);
 const emit = defineEmits(['select']);
 let searchTimeout: any;
 
+const multiSearch = computed(() => !!props.searchLine || !!props.searchPolygon);
+
+const isCoordinateSearch = computed(
+  () => props.searchCoordinates && isCoordinate(search.value, multiSearch.value),
+);
+
+const markTabsLoading = () => {
+  tabs.value.forEach((t) => {
+    matchesByType.value[t.type] = { ...matchesByType.value[t.type], loading: true };
+  });
+};
+
 const applySearch = () => {
-  const multiSearch = !!props.searchLine || !!props.searchPolygon;
-  if (props.searchCoordinates && isCoordinate(search.value, multiSearch)) {
+  if (isCoordinateSearch.value) {
     const results = parseGeomFromString(search.value);
 
     const translates: any = {
@@ -119,7 +130,7 @@ const applySearch = () => {
       Polygon: 'Plotas',
     };
 
-    if (!multiSearch) {
+    if (!multiSearch.value) {
       translates.Point = 'Koordinatės';
     }
 
@@ -149,12 +160,15 @@ const applySearch = () => {
   }
 
   tabs.value.map((t) => {
-    matchesByType.value[t.type] = matchesByType.value[t.type] || {};
-    matchesByType.value[t.type].loading = true;
-    t.searchFn?.(search.value).then((data) => {
-      matchesByType.value[t.type] = data;
-      matchesByType.value[t.type].loading = false;
-    });
+    t.searchFn?.(search.value)
+      .then((data) => {
+        matchesByType.value[t.type] = data;
+        matchesByType.value[t.type].loading = false;
+      })
+      .catch((err) => {
+        console.error(err);
+        matchesByType.value[t.type] = { rows: [], total: 0, loading: false };
+      });
   });
 };
 
@@ -224,6 +238,13 @@ watch(
     const action = search.value?.length > 2 ? 'open' : 'close';
 
     if (action === 'close') return;
+
+    if (isCoordinateSearch.value) {
+      applySearch();
+      return;
+    }
+
+    markTabsLoading();
     searchTimeout = setTimeout(applySearch, 150);
   },
   {
