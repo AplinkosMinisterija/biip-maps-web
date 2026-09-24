@@ -794,6 +794,17 @@ export class MapLayers extends Queues {
     });
   }
 
+  featureCollectionCenter(data: any, options: { dataProjection?: string } = {}) {
+    if (!this.map || _.isEmpty(data)) return;
+
+    const collection = convertCoordinatesToProjection(dataToFeatureCollection(data));
+    const { extent } = featureCollectionToExtent(collection, this.map.getView().getProjection(), {
+      dataProjection: options?.dataProjection,
+    });
+
+    return getCenter(extent);
+  }
+
   zoomToFeatureCollection(
     data: any,
     options: {

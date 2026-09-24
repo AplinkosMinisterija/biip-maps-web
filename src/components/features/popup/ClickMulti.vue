@@ -63,6 +63,7 @@ const props = defineProps({
 const overlayLayer = ref();
 const featureIndex = ref(1);
 const featuresData = ref([] as any[]);
+const pendingOpen = ref<{ features: any[]; coordinate: any } | undefined>();
 
 const selectedFeature = computed(() => {
   return featuresData.value[featureIndex.value];
@@ -71,16 +72,39 @@ const selectedFeature = computed(() => {
 watch(overlayLayer, (value) => {
   mapLayers.setOverlayElement(value.el);
   mapLayers.overlayLayer.setOffset([-18, 20]);
+
+  if (pendingOpen.value) {
+    const open = pendingOpen.value;
+    pendingOpen.value = undefined;
+    openPopup(open);
+  }
 });
 
 const togglePopup = (position?: any) => {
   mapLayers.overlayLayer.setPosition(position);
 };
 
+// The overlay element registers once the map is ready, which can be later than
+// the request to open it.
+const openPopup = ({ features, coordinate }: { features: any[]; coordinate: any }) => {
+  if (!coordinate || !features?.length) return;
+
+  if (!mapLayers.overlayLayer) {
+    pendingOpen.value = { features, coordinate };
+    return;
+  }
+
+  featureIndex.value = 0;
+  featuresData.value = features;
+  togglePopup(coordinate);
+};
+
 
 eventBus.on('multiFeaturesPopupClose', () => {
   togglePopup();
 });
+
+eventBus.on('multiFeaturesPopupOpen', (data: any) => openPopup(data));
 
 mapLayers.pointerCursor(props.layers);
 

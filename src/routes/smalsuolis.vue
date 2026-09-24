@@ -74,6 +74,28 @@ events.on("geom", (data: any) => {
   mapLayers.zoomToFeatureCollection(geom);
 });
 
+events.on("feature", (data: any) => {
+  let feature = data.feature || data;
+
+  if (typeof feature === "string") {
+    try {
+      feature = JSON.parse(feature);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  const { id, geom } = feature || {};
+  if (!id || !geom) return;
+
+  mapLayers.zoomToFeatureCollection(geom, { dataProjection: projection, animate: true });
+
+  const coordinate = mapLayers.featureCollectionCenter(geom, { dataProjection: projection });
+  if (!coordinate) return;
+
+  eventBus.emit("multiFeaturesPopupOpen", { features: [{ id }], coordinate });
+});
+
 events.on("filters", (data: any) => {
   let filters = data.filters || data;
 
