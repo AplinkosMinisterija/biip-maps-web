@@ -12,6 +12,7 @@
   <!-- Aktyvūs filtrai virš slankaus sąrašo – matyti be skrolinimo, nuimti po vieną (#72, 2 punktas) -->
   <ul
     v-if="selectedYearsList.length"
+    ref="yearsChipList"
     class="flex flex-wrap gap-1 mb-2"
     aria-label="Pasirinkti metai"
   >
@@ -20,14 +21,14 @@
         type="button"
         class="inline-flex items-center gap-1 rounded-full bg-blue-50 text-blue-800 text-xs px-2 py-0.5 hover:bg-blue-100"
         :aria-label="`Pašalinti metus ${year}`"
-        @click="toggleYear(year)"
+        @click="removeYearChip(year)"
       >
         {{ year }}
         <UiIcon name="close" :size="12" />
       </button>
     </li>
   </ul>
-  <div class="max-h-64 overflow-y-auto border rounded p-2 flex flex-col gap-1">
+  <div ref="yearsBox" class="max-h-64 overflow-y-auto border rounded p-2 flex flex-col gap-1">
     <label v-for="year in years" :key="year" class="flex items-center gap-2 text-sm cursor-pointer">
       <input
         type="checkbox"
@@ -53,6 +54,7 @@
   <!-- Aktyvūs filtrai virš slankaus sąrašo – matyti be skrolinimo, nuimti po vieną (#72, 2 punktas) -->
   <ul
     v-if="selectedMeasuresList.length && !measuresLoading"
+    ref="measuresChipList"
     class="flex flex-wrap gap-1 mb-2"
     aria-label="Pasirinktos priemonės"
   >
@@ -61,14 +63,14 @@
         type="button"
         class="inline-flex items-center gap-1 rounded-full bg-blue-50 text-blue-800 text-xs px-2 py-0.5 hover:bg-blue-100 text-left"
         :aria-label="`Pašalinti priemonę ${measureName(id)}`"
-        @click="toggleMeasure(id)"
+        @click="removeMeasureChip(id)"
       >
         {{ measureName(id) }}
         <UiIcon name="close" :size="12" />
       </button>
     </li>
   </ul>
-  <div class="max-h-64 overflow-y-auto border rounded p-2 flex flex-col gap-1">
+  <div ref="measuresBox" class="max-h-64 overflow-y-auto border rounded p-2 flex flex-col gap-1">
     <p v-if="measuresLoading" class="text-xs text-gray-500">Kraunamos priemonės...</p>
     <p v-else-if="measuresError" class="text-xs text-red-500">Nepavyko įkelti priemonių sąrašo.</p>
     <p v-else-if="!filteredMeasures.length" class="text-xs text-gray-500">Priemonių nerasta.</p>
@@ -88,7 +90,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, type PropType } from 'vue';
+import { ref, computed, onMounted, nextTick, type PropType, type Ref } from 'vue';
 import { useGamtotvarkaMeasures } from '@/composables/useGamtotvarkaMeasures';
 
 const props = defineProps({
@@ -148,6 +150,44 @@ const toggleMeasure = (id: number) => {
     selectedMeasuresList.value = [...selectedMeasuresList.value, id];
   }
   emit('update:selectedMeasures', [...selectedMeasuresList.value]);
+};
+
+// Žetonų sąrašai ir slankūs langeliai – reikia fokuso valdymui nuėmus žetoną (žr. žemiau).
+const yearsChipList = ref<HTMLUListElement | null>(null);
+const measuresChipList = ref<HTMLUListElement | null>(null);
+const yearsBox = ref<HTMLDivElement | null>(null);
+const measuresBox = ref<HTMLDivElement | null>(null);
+
+// Nuėmus žetoną, jo mygtukas dingsta iš DOM – be šito fokusas nukristų į <body> ir
+// klaviatūros/ekrano skaitytuvo vartotojas prarastų vietą sąraše. Todėl fokusą
+// perkeliame į kitą likusį žetoną (arba ankstesnį, jei nuimtas buvo paskutinis), o
+// kai žetonų nelieka – į to sąrašo pirmą žymimąjį langelį.
+async function focusAfterChipRemoval(
+  listRef: Ref<HTMLUListElement | null>,
+  boxRef: Ref<HTMLDivElement | null>,
+  removedIndex: number,
+) {
+  await nextTick();
+  const buttons = listRef.value?.querySelectorAll('button');
+  if (buttons && buttons.length) {
+    const nextIndex = Math.min(removedIndex, buttons.length - 1);
+    (buttons[nextIndex] as HTMLButtonElement | undefined)?.focus();
+    return;
+  }
+  const checkbox = boxRef.value?.querySelector('input[type="checkbox"]');
+  (checkbox as HTMLInputElement | null)?.focus();
+}
+
+const removeYearChip = (year: number) => {
+  const removedIndex = selectedYearsList.value.indexOf(year);
+  toggleYear(year);
+  focusAfterChipRemoval(yearsChipList, yearsBox, removedIndex);
+};
+
+const removeMeasureChip = (id: number) => {
+  const removedIndex = selectedMeasuresList.value.indexOf(id);
+  toggleMeasure(id);
+  focusAfterChipRemoval(measuresChipList, measuresBox, removedIndex);
 };
 
 const clearFilters = () => {

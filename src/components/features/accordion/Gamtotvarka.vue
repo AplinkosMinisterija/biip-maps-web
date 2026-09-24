@@ -6,7 +6,7 @@
       :title="getTitleHtml(feature)"
       @click="selectFeature(feature)"
     >
-      <UiTable class="text-xs table-fixed">
+      <UiTable class="text-xs">
         <UiTableRow v-for="item in getRows(feature)" :key="item.id">
           <UiTableCell class="w-2/5 align-top font-medium">
             {{ item.name }}
@@ -153,6 +153,8 @@ function getRows(feature: any): Row[] {
       href: d.link ? safeHref(feature[key]) : undefined,
     });
   });
+  // Jei nė vienas baltojo sąrašo lauko rakto neturi reikšmės – rodome vieną eilutę, o ne tuščią lentelę.
+  if (rows.length === 0) return [{ id: 'no-data', name: 'Duomenų nėra', value: '' }];
   return rows;
 }
 
