@@ -48,49 +48,68 @@ const translates: any = {
 };
 
 type Row = { id: string; name: string; value: any; href?: string };
-type FieldDef = { key: string; label: string; link?: boolean };
+type FieldDef = { keys: string[]; label: string; link?: boolean };
 
 // VSTT 2026-09-24 patvirtintas laukų sąrašas (biip-gamtotvarka-public#72, 3 punktas).
 // Tvarka – kliento, ne alfabetinė. Tuščios reikšmės slepiamos.
 //
-// SVARBU (patikrinta gyvai 2026-09-24 su yarn dev + Playwright prieš
-// b9a6778e-1bcc-4725-a2d4-63075c90b7ea planą): VSTT QGIS Server GetFeatureInfo
-// (WMS) grąžina JSON properties raktus kaip QGIS projekte sukonfigūruotus
-// LAUKŲ ALIASUS (lietuviškus, su tarpais/diakritika), o ne žalius DB stulpelių
-// pavadinimus – tie stulpelių pavadinimai matomi tik per WFS GetFeature (žr.
-// useGamtotvarkaMeasures.ts). Todėl FieldDef.key čia yra tiksli alias eilutė,
-// tokia, kokia atkeliauja per GetFeatureInfo – ne snake_case stulpelio vardas.
-// Kelios reikšmės (biosferospoligonai, biosferosrezervatai, rezervatai,
-// direkcija) aliaso neturi – ten key sutampa su žaliu stulpelio vardu.
+// SVARBU: VSTT QGIS Server GetFeatureInfo (WMS) grąžina JSON properties raktus
+// kaip QGIS projekte sukonfigūruotus LAUKŲ ALIASUS (lietuviškus, su tarpais/
+// diakritika), o ne žalius DB stulpelių pavadinimus – tie stulpelių pavadinimai
+// matomi tik per WFS GetFeature (žr. useGamtotvarkaMeasures.ts). Aliasų
+// sąrašas patikrintas gyvai 2026-09-24 prieš visas šešias planų tipų grupes
+// (teritorijos/plotai patvirtinta+rengiama × 6 tipai, ir tvarkymo_darbai) –
+// raktai sutampa tarp visų grupių. Kadangi aliasas – QGIS projekto
+// konfigūracijos dalykas, jį gali kas nors pakeisti/ištrinti nepranešęs, tad
+// FieldDef.keys yra prioriteto sąrašas: [alias, žalias_stulpelio_vardas] –
+// getRows() ima pirmą raktą, kurio reikšmė feature'e nėra tuščia. Kelios
+// reikšmės (biosferospoligonai, biosferosrezervatai, rezervatai, direkcija)
+// aliaso neturi – ten yra tik vienas (žalias) raktas.
 const PLANAVIMAS_FIELDS: FieldDef[] = [
-  { key: 'Tvarkymo dokumento pavadinimas', label: 'Tvarkymo teritorijos pavadinimas' },
-  { key: 'BAST teritorija', label: 'BAST teritorija' },
-  { key: 'BAST teritorijos kodas', label: 'BAST teritorijos kodas' },
-  { key: 'PAST teritorija', label: 'PAST teritorija' },
-  { key: 'PAST kodas', label: 'PAST teritorijos kodas' },
-  { key: 'Draustinis', label: 'Draustinis' },
-  { key: 'Parkas', label: 'Parkas' },
-  { key: 'biosferospoligonai', label: 'Biosferos poligonas' },
-  { key: 'biosferosrezervatai', label: 'Biosferos rezervatas' },
-  { key: 'rezervatai', label: 'Rezervatas' },
-  { key: 'Tvarkymo ploto numeris', label: 'Ploto numeris' },
-  { key: 'Plotas (ha)', label: 'Plotas (ha)' },
-  { key: 'Tvirtinimo dokumentas', label: 'Tvirtinimo dokumentas' },
-  { key: 'Nuoroda į dokumentą', label: 'Nuoroda į dokumento failą', link: true },
-  { key: 'Dokumento tipas', label: 'Dokumento tipas' },
-  { key: 'Dokumento patvirtinimo data', label: 'Dokumento patvirtinimo/parengimo data' },
-  { key: 'Dokumento statusas', label: 'Dokumento statusas' },
-  { key: 'Tvarkymo priemonių aprašymai', label: 'Tvarkymo priemonių aprašymai' },
-  { key: 'direkcija', label: 'Direkcija' },
+  {
+    keys: ['Tvarkymo dokumento pavadinimas', 'pavadinimas'],
+    label: 'Tvarkymo teritorijos pavadinimas',
+  },
+  { keys: ['BAST teritorija', 'bast'], label: 'BAST teritorija' },
+  { keys: ['BAST teritorijos kodas', 'bast_kodas'], label: 'BAST teritorijos kodas' },
+  { keys: ['PAST teritorija', 'past'], label: 'PAST teritorija' },
+  { keys: ['PAST kodas', 'past_kodas'], label: 'PAST teritorijos kodas' },
+  { keys: ['Draustinis', 'draustinis'], label: 'Draustinis' },
+  { keys: ['Parkas', 'parkas'], label: 'Parkas' },
+  { keys: ['biosferospoligonai'], label: 'Biosferos poligonas' },
+  { keys: ['biosferosrezervatai'], label: 'Biosferos rezervatas' },
+  { keys: ['rezervatai'], label: 'Rezervatas' },
+  { keys: ['Tvarkymo ploto numeris', 'ploto_nr'], label: 'Ploto numeris' },
+  { keys: ['Plotas (ha)', 'plotas_ha'], label: 'Plotas (ha)' },
+  { keys: ['Tvirtinimo dokumentas', 'tvirtinimo_dokumentas'], label: 'Tvirtinimo dokumentas' },
+  {
+    keys: ['Nuoroda į dokumentą', 'nuoroda_i_dokumenta'],
+    label: 'Nuoroda į dokumento failą',
+    link: true,
+  },
+  { keys: ['Dokumento tipas', 'dokumento_tipas'], label: 'Dokumento tipas' },
+  {
+    keys: ['Dokumento patvirtinimo data', 'dok_data'],
+    label: 'Dokumento patvirtinimo/parengimo data',
+  },
+  { keys: ['Dokumento statusas', 'statusas'], label: 'Dokumento statusas' },
+  {
+    keys: ['Tvarkymo priemonių aprašymai', 'tvarkymo_priemones'],
+    label: 'Tvarkymo priemonių aprašymai',
+  },
+  { keys: ['direkcija'], label: 'Direkcija' },
 ];
 
 const DARBAI_FIELDS: FieldDef[] = [
-  { key: 'Tvarkymo teritorijos pavadinimas', label: 'Tvarkymo teritorijos pavadinimas' },
-  { key: 'Priemonės pavadinimas', label: 'Priemonės pavadinimas' },
-  { key: 'Darbų atlikimo data', label: 'Darbų atlikimo data' },
-  { key: 'Tvarkymo dokumentas', label: 'Tvarkymo dokumentas' },
-  { key: 'Tvarkymo ploto numeris', label: 'Tvarkymo ploto numeris' },
-  { key: 'Sutvarkytas plotas (ha)', label: 'Sutvarkyta (ha)' },
+  {
+    keys: ['Tvarkymo teritorijos pavadinimas', 'pavadinimas'],
+    label: 'Tvarkymo teritorijos pavadinimas',
+  },
+  { keys: ['Priemonės pavadinimas', 'priemone'], label: 'Priemonės pavadinimas' },
+  { keys: ['Darbų atlikimo data', 'data'], label: 'Darbų atlikimo data' },
+  { keys: ['Tvarkymo dokumentas', 'dokumento_tipas'], label: 'Tvarkymo dokumentas' },
+  { keys: ['Tvarkymo ploto numeris', 'ploto_nr'], label: 'Tvarkymo ploto numeris' },
+  { keys: ['Sutvarkytas plotas (ha)', 'plotas_ha'], label: 'Sutvarkyta (ha)' },
 ];
 
 function layerOf(feature: any): string {
@@ -123,14 +142,18 @@ function getRows(feature: any): Row[] {
   const kind = kindOf(feature);
   if (!kind) return getGenericRows(feature);
   const defs = kind === 'darbai' ? DARBAI_FIELDS : PLANAVIMAS_FIELDS;
-  return defs
-    .filter((d) => !isEmpty(feature[d.key]))
-    .map((d) => ({
-      id: d.key,
+  const rows: Row[] = [];
+  defs.forEach((d) => {
+    const key = d.keys.find((k) => !isEmpty(feature[k]));
+    if (!key) return;
+    rows.push({
+      id: d.keys[0],
       name: d.label,
-      value: feature[d.key],
-      href: d.link ? safeHref(feature[d.key]) : undefined,
-    }));
+      value: feature[key],
+      href: d.link ? safeHref(feature[key]) : undefined,
+    });
+  });
+  return rows;
 }
 
 // Spalvų paletė kvadratėliams sąraše — spalva nustatoma pagal sluoksnį
