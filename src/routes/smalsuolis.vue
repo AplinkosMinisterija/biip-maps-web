@@ -74,6 +74,24 @@ events.on("geom", (data: any) => {
   mapLayers.zoomToFeatureCollection(geom);
 });
 
+let pendingFeature: { id: any; geom: any } | undefined;
+
+// A zoom closes any open popup and landing on the feature is a zoom, so the
+// popup waits for the map to settle on it — and for the map to exist at all,
+// since the request can arrive before it is built.
+const openPendingFeature = () => {
+  if (!pendingFeature) return;
+
+  const { id, geom } = pendingFeature;
+  const coordinate = mapLayers.featureCollectionCenter(geom, { dataProjection: projection });
+  if (!coordinate) return;
+
+  pendingFeature = undefined;
+  eventBus.emit("multiFeaturesPopupOpen", { features: [{ id }], coordinate });
+};
+
+mapLayers.on("zoom:change", () => openPendingFeature());
+
 events.on("feature", (data: any) => {
   let feature = data.feature || data;
 
@@ -88,12 +106,11 @@ events.on("feature", (data: any) => {
   const { id, geom } = feature || {};
   if (!id || !geom) return;
 
-  mapLayers.zoomToFeatureCollection(geom, { dataProjection: projection, animate: true });
+  pendingFeature = { id, geom };
+  mapLayers.zoomToFeatureCollection(geom, { dataProjection: projection });
 
-  const coordinate = mapLayers.featureCollectionCenter(geom, { dataProjection: projection });
-  if (!coordinate) return;
-
-  eventBus.emit("multiFeaturesPopupOpen", { features: [{ id }], coordinate });
+  // The view can already be where the feature is, in which case nothing zooms.
+  setTimeout(openPendingFeature, 1000);
 });
 
 events.on("filters", (data: any) => {
