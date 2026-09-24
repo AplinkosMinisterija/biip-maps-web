@@ -4,16 +4,44 @@
     <UiButton type="link" @click="clearFilters"> Panaikinti filtrą </UiButton>
   </div>
 
-  <span class="text-sm"> Atliktų tvarkymo darbų metai: </span>
+  <div class="flex items-center gap-2">
+    <span class="text-sm"> Atliktų tvarkymo darbų metai: </span>
+    <UiBadge v-if="selectedYearsList.length">{{ selectedYearsList.length }}</UiBadge>
+  </div>
   <p class="text-xs text-gray-500 mb-2">Nepažymėjus metų, rodomi visų metų darbai.</p>
+  <!-- Aktyvūs filtrai virš slankaus sąrašo – matyti be skrolinimo, nuimti po vieną (#72, 2 punktas) -->
+  <ul
+    v-if="selectedYearsList.length"
+    class="flex flex-wrap gap-1 mb-2"
+    aria-label="Pasirinkti metai"
+  >
+    <li v-for="year in selectedYearsList" :key="year">
+      <button
+        type="button"
+        class="inline-flex items-center gap-1 rounded-full bg-blue-50 text-blue-800 text-xs px-2 py-0.5 hover:bg-blue-100"
+        :aria-label="`Pašalinti metus ${year}`"
+        @click="toggleYear(year)"
+      >
+        {{ year }}
+        <UiIcon name="close" :size="12" />
+      </button>
+    </li>
+  </ul>
   <div class="max-h-64 overflow-y-auto border rounded p-2 flex flex-col gap-1">
     <label v-for="year in years" :key="year" class="flex items-center gap-2 text-sm cursor-pointer">
-      <input type="checkbox" :checked="selectedYearsList.includes(year)" @change="toggleYear(year)" />
+      <input
+        type="checkbox"
+        :checked="selectedYearsList.includes(year)"
+        @change="toggleYear(year)"
+      />
       {{ year }}
     </label>
   </div>
 
-  <span class="text-sm block mt-4"> Gamtotvarkos priemonės: </span>
+  <div class="flex items-center gap-2 mt-4">
+    <span class="text-sm"> Gamtotvarkos priemonės: </span>
+    <UiBadge v-if="selectedMeasuresList.length">{{ selectedMeasuresList.length }}</UiBadge>
+  </div>
   <p class="text-xs text-gray-500 mb-2">Nepažymėjus priemonių, rodomos visos priemonės.</p>
   <input
     v-model="measureSearch"
@@ -22,6 +50,24 @@
     placeholder="Ieškoti priemonės..."
     aria-label="Ieškoti gamtotvarkos priemonės"
   />
+  <!-- Aktyvūs filtrai virš slankaus sąrašo – matyti be skrolinimo, nuimti po vieną (#72, 2 punktas) -->
+  <ul
+    v-if="selectedMeasuresList.length && !measuresLoading"
+    class="flex flex-wrap gap-1 mb-2"
+    aria-label="Pasirinktos priemonės"
+  >
+    <li v-for="id in selectedMeasuresList" :key="id">
+      <button
+        type="button"
+        class="inline-flex items-center gap-1 rounded-full bg-blue-50 text-blue-800 text-xs px-2 py-0.5 hover:bg-blue-100 text-left"
+        :aria-label="`Pašalinti priemonę ${measureName(id)}`"
+        @click="toggleMeasure(id)"
+      >
+        {{ measureName(id) }}
+        <UiIcon name="close" :size="12" />
+      </button>
+    </li>
+  </ul>
   <div class="max-h-64 overflow-y-auto border rounded p-2 flex flex-col gap-1">
     <p v-if="measuresLoading" class="text-xs text-gray-500">Kraunamos priemonės...</p>
     <p v-else-if="measuresError" class="text-xs text-red-500">Nepavyko įkelti priemonių sąrašo.</p>
@@ -80,6 +126,9 @@ const filteredMeasures = computed(() => {
   if (!term) return measures.value;
   return measures.value.filter((measure) => measure.name.toLowerCase().includes(term));
 });
+
+// Žetono etiketė – priemonės vardas; kol sąrašas kraunasi, žetonų nerodom (žr. šabloną).
+const measureName = (id: number) => measures.value.find((m) => m.id === id)?.name ?? `#${id}`;
 
 onMounted(loadMeasures);
 
