@@ -4,10 +4,22 @@
     <UiButton type="link" @click="clearFilters()"> Valyti filtrus </UiButton>
   </div>
   <UiButtonRow>
-    <UiDropdown v-model="selectedYear" label="Metai" @change="applyYearFilter">
+    <UiDropdown v-model="selectedYear" label="Metai" @change="applyDateFilter">
       <UiDropdownItem value="">Visi duomenys</UiDropdownItem>
       <UiDropdownItem v-for="year in years" :key="year" :value="`${year}`">
         {{ year }}
+      </UiDropdownItem>
+    </UiDropdown>
+
+    <UiDropdown
+      v-model="selectedMonth"
+      label="Mėnuo"
+      :disabled="!selectedYear"
+      @change="applyDateFilter"
+    >
+      <UiDropdownItem value="">Visi mėnesiai</UiDropdownItem>
+      <UiDropdownItem v-for="month in months" :key="month.value" :value="month.value">
+        {{ month.label }}
       </UiDropdownItem>
     </UiDropdown>
 
@@ -18,14 +30,19 @@
       </UiDropdownItem>
     </UiDropdown>
   </UiButtonRow>
+  <p v-if="noData" class="text-xs text-gray-500 mt-2">Pagal pasirinktus filtrus sugavimų nėra.</p>
 </template>
 
 <script setup lang="ts">
 import { getFishTypes } from '@/utils/requests/zvejyba';
+import { MONTHS } from '@/utils/constants';
 import moment from 'moment';
-import { inject, ref } from 'vue';
+import { computed, inject, ref } from 'vue';
 const mapLayers: any = inject('mapLayers');
 
+defineProps({
+  noData: { type: Boolean, default: false },
+});
 const emit = defineEmits(['change']);
 const filters = mapLayers.filters('zvejyba').onAll();
 
@@ -43,11 +60,22 @@ const years = new Array(moment().get('year') - startingYearOfFishings + 1)
 const DATE_FROM_KEY = 'date[from]';
 const DATE_TO_KEY = 'date[to]';
 
-const initialYear = filters.get(DATE_FROM_KEY)
-  ? moment(filters.get(DATE_FROM_KEY)).format('YYYY')
-  : '';
+const initialFrom = filters.get(DATE_FROM_KEY);
+const initialTo = filters.get(DATE_TO_KEY);
+const initialYear = initialFrom ? moment(initialFrom).format('YYYY') : '';
+const initialMonth =
+  initialFrom && initialTo && moment(initialFrom).isSame(initialTo, 'month')
+    ? moment(initialFrom).format('M')
+    : '';
 const selectedYear = ref<string>(initialYear);
+const selectedMonth = ref<string>(initialMonth);
 const selectedFish = ref(`${filters.get('fish') || ''}` as string);
+
+// The current year only offers the months that have already started.
+const months = computed(() => {
+  const isCurrentYear = Number(selectedYear.value) === moment().year();
+  return isCurrentYear ? MONTHS.slice(0, moment().month() + 1) : MONTHS;
+});
 
 const fishTypes = ref(await getFishTypes());
 
@@ -61,14 +89,31 @@ function applyFilter(value: any, key: string) {
   emit('change', { filters: filters.toJson() });
 }
 
-function applyYearFilter() {
-  if (!selectedYear.value) {
+function selectedPeriod() {
+  if (!selectedYear.value) return null;
+
+  if (selectedMonth.value) {
+    const month = moment(`${selectedYear.value}-${selectedMonth.value}`, 'YYYY-M');
+    return { from: month.clone().startOf('month'), to: month.clone().endOf('month') };
+  }
+
+  const year = moment(selectedYear.value, 'YYYY');
+  return { from: year.clone().startOf('year'), to: year.clone().endOf('year') };
+}
+
+function applyDateFilter() {
+  const monthIsOffered = months.value.some((month) => month.value === selectedMonth.value);
+  if (!selectedYear.value || !monthIsOffered) {
+    selectedMonth.value = '';
+  }
+
+  const period = selectedPeriod();
+  if (period) {
+    filters.set(DATE_FROM_KEY, period.from.format());
+    filters.set(DATE_TO_KEY, period.to.format());
+  } else {
     filters.remove(DATE_FROM_KEY);
     filters.remove(DATE_TO_KEY);
-  } else {
-    const year = moment(selectedYear.value, 'YYYY');
-    filters.set(DATE_FROM_KEY, year.clone().startOf('year').format());
-    filters.set(DATE_TO_KEY, year.clone().endOf('year').format());
   }
 
   emit('change', { filters: filters.toJson() });
@@ -80,6 +125,7 @@ function applyFishFilter() {
 function clearFilters() {
   filters.clear();
   selectedYear.value = '';
+  selectedMonth.value = '';
   selectedFish.value = '';
   emit('change', { filters: filters.toJson() });
 }

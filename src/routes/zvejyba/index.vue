@@ -5,7 +5,11 @@
         <UiButtonIcon icon="filter" @click="filtersStore.toggle('filters')" />
       </template>
       <template v-if="filtersStore.active" #filtersContent>
-        <ZvejybaFilters v-if="filtersStore.isActive('filters')" @change.filters="onFiltersChange" />
+        <ZvejybaFilters
+          v-if="filtersStore.isActive('filters')"
+          :no-data="noData"
+          @change="onFiltersChange"
+        />
       </template>
       <template #sidebar>
         <UiSidebarFeatures
@@ -30,12 +34,7 @@
 </template>
 <script setup lang="ts">
 import { inject, ref } from 'vue';
-import {
-  projection3857,
-  uetkMergedCentroidServiceVT,
-  vectorPositron,
-  vectorBright,
-} from '@/utils';
+import { projection3857, uetkMergedCentroidServiceVT, vectorPositron, vectorBright } from '@/utils';
 import { useStatsStore } from '@/stores/stats';
 import { useFiltersStore } from '@/stores/filters';
 
@@ -45,6 +44,7 @@ const filtersStore = useFiltersStore();
 const mapLayers: any = inject('mapLayers');
 
 const selectedFeatures = ref([] as any);
+const noData = ref(false);
 
 function selectFeatures(feature: any) {
   if (!feature?.count) {
@@ -75,6 +75,20 @@ await statsStore.preloadStats(statsKey);
 
 async function onFiltersChange({ filters }: any) {
   await statsStore.setQuery(statsKey, filters);
+  // With a fish filter the API keeps water bodies whose count is 0, so an empty
+  // array is not the only "nothing to show" shape.
+  noData.value = !statsStore.getStats(statsKey)?.some((stat: { count: number }) => stat.count > 0);
+  refreshSelectedFeature();
   uetkMergedCentroidServiceVT.layer?.getSource()?.changed();
+}
+
+// The open card holds a copy of the stats taken on click; rebuild it from the
+// store so it follows the filters instead of keeping stale numbers.
+function refreshSelectedFeature() {
+  const selected = selectedFeatures.value[0];
+  if (!selected?.uetk?.id) return;
+
+  const { count, properties } = statsStore.getStatsById(statsKey, selected.uetk.id);
+  selectFeatures(count ? { ...properties, uetk: selected.uetk } : null);
 }
 </script>
