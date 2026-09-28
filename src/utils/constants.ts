@@ -28,3 +28,19 @@ if (lksBbox[1] > lksBbox[3]) {
 }
 const extent = applyTransform(worldExtent, fromLonLat, undefined, 8);
 lksProjection.setExtent(extent);
+
+// Month names in the nominative case for dropdown labels; values match moment's 'M' format.
+export const MONTHS = [
+  { value: '1', label: 'Sausis' },
+  { value: '2', label: 'Vasaris' },
+  { value: '3', label: 'Kovas' },
+  { value: '4', label: 'Balandis' },
+  { value: '5', label: 'Gegužė' },
+  { value: '6', label: 'Birželis' },
+  { value: '7', label: 'Liepa' },
+  { value: '8', label: 'Rugpjūtis' },
+  { value: '9', label: 'Rugsėjis' },
+  { value: '10', label: 'Spalis' },
+  { value: '11', label: 'Lapkritis' },
+  { value: '12', label: 'Gruodis' },
+];

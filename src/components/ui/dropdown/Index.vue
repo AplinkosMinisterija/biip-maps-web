@@ -6,7 +6,8 @@
     <select
       v-model="value"
       :aria-label="ariaLabel"
-      :class="[sizes[size || 'default']?.value]"
+      :disabled="disabled"
+      :class="[sizes[size || 'default']?.value, disabled ? 'opacity-50 cursor-not-allowed' : '']"
       class="p-1 bg-transparent outline-none text-gray-700 w-full max-w-full overflow-hidden"
     >
       <slot />
@@ -23,6 +24,7 @@ const props = defineProps({
   label: { type: String, default: '' },
   size: { type: String, default: 'default' },
   ariaLabel: { type: String, default: '' },
+  disabled: { type: Boolean, default: false },
 });
 
 const sizes: Record<string, { label: string; value: string }> = {
