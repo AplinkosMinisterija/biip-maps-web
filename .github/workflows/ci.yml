@@ -96,7 +96,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Publish preview to Cloudflare pages
-        uses: AplinkosMinisterija/reusable-workflows/.github/actions/cloudflare-pages-publish@main
+        uses: AplinkosMinisterija/reusable-workflows/.github/actions/cloudflare-pages-publish@fix/cloudflare-pages-publish-wrangler-action
         with:
           cloudflare-api-token: ${{ secrets.BIIP_CLOUDFLARE_PAGES_API_TOKEN }}
           cloudflare-account-id: ${{ secrets.BIIP_CLOUDFLARE_ACCOUNT_ID }}
