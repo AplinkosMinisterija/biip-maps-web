@@ -29,43 +29,49 @@ const mapLayers: any = inject('mapLayers');
 const emit = defineEmits(['change']);
 const filters = mapLayers.filters('zvejyba').onAll();
 
-const startingYearOfFishings = 2022;
+// Production data starts on 2026-05-01 (the database was empty until go-live),
+// so earlier years would only ever show an empty map.
+const startingYearOfFishings = 2026;
 const years = new Array(moment().get('year') - startingYearOfFishings + 1)
   .fill(0)
   .map((_, index) => startingYearOfFishings + index)
   .reverse();
 
-const initialDate = filters.get('date')?.$gte
-  ? moment(filters.get('date').$gte).format('YYYY')
+// Flat bracket keys: serializeQuery JSON-stringifies nested objects, which the
+// zvejyba API rejects, while `date[from]=…&date[to]=…` is parsed back into the
+// `{ from, to }` window it expects.
+const DATE_FROM_KEY = 'date[from]';
+const DATE_TO_KEY = 'date[to]';
+
+const initialYear = filters.get(DATE_FROM_KEY)
+  ? moment(filters.get(DATE_FROM_KEY)).format('YYYY')
   : '';
-const selectedYear = ref(initialDate as any);
+const selectedYear = ref<string>(initialYear);
 const selectedFish = ref(`${filters.get('fish') || ''}` as string);
 
 const fishTypes = ref(await getFishTypes());
 
-function applyFilter(value: any, key: string, setCb?: Function) {
+function applyFilter(value: any, key: string) {
   if (!value) {
     filters.remove(key);
-    emit('change', { filters: filters.toJson() });
-    return;
-  }
-
-  if (typeof setCb === 'function') {
-    filters.set(key, setCb(value));
   } else {
     filters.set(key, value);
   }
 
   emit('change', { filters: filters.toJson() });
 }
+
 function applyYearFilter() {
-  applyFilter(selectedYear.value, 'date', (value: string) => {
-    const date = moment(value, 'YYYY');
-    return {
-      $gte: date.clone().startOf('year').format(),
-      $lt: date.clone().endOf('year').format(),
-    };
-  });
+  if (!selectedYear.value) {
+    filters.remove(DATE_FROM_KEY);
+    filters.remove(DATE_TO_KEY);
+  } else {
+    const year = moment(selectedYear.value, 'YYYY');
+    filters.set(DATE_FROM_KEY, year.clone().startOf('year').format());
+    filters.set(DATE_TO_KEY, year.clone().endOf('year').format());
+  }
+
+  emit('change', { filters: filters.toJson() });
 }
 function applyFishFilter() {
   applyFilter(Number(selectedFish.value), 'fish');
