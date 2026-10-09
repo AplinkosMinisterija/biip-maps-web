@@ -126,7 +126,7 @@ export function assignMunicipalities(records: WolfRecord[], index: MunicipalityI
   return assigned;
 }
 
-// True once assignMunicipalities() has run on this dataset.
+// True once assignMunicipalities() has run on this dataset (an empty dataset needs none).
 export function hasMunicipalities(records: WolfRecord[]): boolean {
-  return records.length > 0 && records[0].municipalityCode !== undefined;
+  return records.length === 0 || records[0].municipalityCode !== undefined;
 }

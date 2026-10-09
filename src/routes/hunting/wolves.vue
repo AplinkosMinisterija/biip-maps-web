@@ -169,7 +169,11 @@ if (ctx) {
     dataset,
     async (value) => {
       if (!value || status.value === 'failed') return;
-      if (value.records.every((r) => r.municipalityCode !== undefined)) return;
+      // Nothing left to assign (an empty dataset included): the tab must not stay pending.
+      if (value.records.every((r) => r.municipalityCode !== undefined)) {
+        status.value = 'ready';
+        return;
+      }
       try {
         municipalityIndex = municipalityIndex || (await loadMunicipalityIndex());
       } catch (err) {

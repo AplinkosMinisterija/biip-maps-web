@@ -70,13 +70,32 @@ export class MapLayers extends Queues {
 
   private _callbacksProjection: string = projection;
 
-  // Resolved on the map's first 'loadend'. The listener is attached in setMap(),
-  // synchronously with the map, so a fast first load (warm tile cache, a single
-  // base layer) cannot finish before anyone listens.
+  // Resolved on the map's first 'loadend'. Two listeners race and the first one wins:
+  // one attached in setMap(), synchronously with the map, so a fast first load (warm
+  // tile cache, a single base layer) cannot finish before anyone listens; and the
+  // original delayed one, which still catches a 'loadend' that only follows a later
+  // loadstart (e.g. a basemap style request that fails before any tile work).
   private _resolveLoaded?: () => void;
 
-  waitForLoaded: Promise<void> = new Promise((resolve) => {
+  waitForLoaded: Promise<void> = new Promise(async (resolve) => {
     this._resolveLoaded = resolve;
+
+    const waitForMap = async () => {
+      return new Promise<void>((resolve) => {
+        const mapInterval = setInterval(() => {
+          if (this.map) {
+            clearInterval(mapInterval);
+            resolve();
+          }
+        }, 100);
+      });
+    };
+
+    await waitForMap();
+
+    this.map?.once('loadend', () => {
+      resolve();
+    });
   });
 
   constructor(map?: Map) {
