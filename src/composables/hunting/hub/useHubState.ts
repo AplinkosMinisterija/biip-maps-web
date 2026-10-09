@@ -135,11 +135,8 @@ export function useHubState(opts: HubStateOptions = {}): HubContext {
     return dim.options(data.snapshot.value!, sel).some((o) => o.value === value);
   };
   const dims = computed(() => {
-    const out = { ...dimDefaults.value };
-    Object.keys(dimPicks.value).forEach((key) => {
-      if (dimValid(key, dimPicks.value[key])) out[key] = dimPicks.value[key];
-    });
-    return out;
+    const picked = Object.entries(dimPicks.value).filter(([key, value]) => dimValid(key, value));
+    return Object.fromEntries([...Object.entries(dimDefaults.value), ...picked]);
   });
 
   const sel = computed<HubSelection>(() => ({
@@ -304,14 +301,12 @@ export function useHubState(opts: HubStateOptions = {}): HubContext {
       dropped = true;
     }
     if (filesReady.value) {
-      const picks = { ...dimPicks.value };
-      Object.keys(picks).forEach((key) => {
-        if (!dimValid(key, picks[key])) {
-          delete picks[key];
-          dropped = true;
-        }
-      });
-      if (dropped) dimPicks.value = picks;
+      const entries = Object.entries(dimPicks.value);
+      const kept = entries.filter(([key, value]) => dimValid(key, value));
+      if (kept.length !== entries.length) {
+        dropped = true;
+        dimPicks.value = Object.fromEntries(kept);
+      }
     }
     if (view.value && tablePick.value !== null && tableOf() === null) {
       tablePick.value = null;

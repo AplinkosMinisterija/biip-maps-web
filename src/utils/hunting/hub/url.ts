@@ -35,11 +35,10 @@ export function ownedKeys(dimKeys: string[] = []) {
 /** The query without the owned keys (x, y, z, debug and unknown keys stay). */
 export function keptQuery(query: Query, dimKeys: string[] = []) {
   const owned = ownedKeys(dimKeys);
-  const kept: Record<string, any> = {};
-  Object.keys(query).forEach((key) => {
-    if (owned.indexOf(key) < 0) kept[key] = query[key];
-  });
-  return kept;
+  // fromEntries defines own properties, so a `__proto__` key from the URL stays a plain key.
+  return Object.fromEntries(
+    Object.entries(query).filter(([key]) => owned.indexOf(key) < 0),
+  ) as Record<string, any>;
 }
 
 /** Municipality code from `sav` (shape only; membership is checked against meta). */
