@@ -16,12 +16,12 @@
         <span class="w-10 h-1 rounded-full bg-gray-300" aria-hidden="true" />
         <button
           type="button"
-          class="min-h-[44px] min-w-[44px] px-3 flex items-center gap-1 rounded text-sm font-semibold text-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+          class="min-h-[44px] min-w-[44px] px-4 flex items-center gap-2 rounded-lg bg-gray-900 text-white text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
           :aria-expanded="expanded"
           aria-controls="wolves-sheet-body"
           @click="toggle"
         >
-          {{ expanded ? 'Mažiau' : 'Daugiau' }}
+          {{ expanded ? 'Žemėlapis' : 'Lentelė' }}
           <UiIcon :name="expanded ? 'chevron-down' : 'chevron-up'" :size="16" aria-hidden="true" />
         </button>
       </div>
