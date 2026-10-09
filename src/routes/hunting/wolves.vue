@@ -46,6 +46,34 @@
       </section>
 
       <template v-if="!isMobile">
+        <!-- View switch, the same "Lentelė | Žemėlapis" pair the WordPress page uses. -->
+        <div
+          role="group"
+          aria-label="Rodinys"
+          class="absolute top-2 left-[376px] lg:left-[416px] z-30 flex rounded-lg bg-white shadow-lg p-1 gap-1"
+        >
+          <button
+            type="button"
+            :class="[viewButton, !tableOpen ? viewButtonActive : viewButtonIdle]"
+            :aria-pressed="!tableOpen"
+            @click="setTable(false)"
+          >
+            <UiIcon name="map" :size="18" aria-hidden="true" />
+            Žemėlapis
+          </button>
+          <button
+            ref="tableToggle"
+            type="button"
+            :class="[viewButton, tableOpen ? viewButtonActive : viewButtonIdle]"
+            :aria-pressed="tableOpen"
+            aria-controls="wolves-table-drawer"
+            @click="setTable(true)"
+          >
+            <UiIcon name="document" :size="18" aria-hidden="true" />
+            Lentelė
+          </button>
+        </div>
+
         <div class="absolute bottom-10 left-[376px] lg:left-[416px] z-20">
           <HuntingWolvesMapLegend />
         </div>
@@ -62,18 +90,6 @@
           <div v-if="hasSelection" class="w-[360px] max-w-[calc(100vw-32px)]">
             <HuntingWolvesWolfCard />
           </div>
-          <button
-            ref="tableToggle"
-            type="button"
-            class="px-4 py-2 rounded bg-white shadow-md text-sm font-semibold text-gray-900 hover:bg-gray-100 flex items-center gap-2"
-            :class="focusRing"
-            :aria-expanded="tableOpen"
-            aria-controls="wolves-table-drawer"
-            @click="toggleTable"
-          >
-            <UiIcon name="document" :size="16" aria-hidden="true" />
-            {{ tableOpen ? 'Slėpti lentelę' : 'Lentelė' }}
-          </button>
         </div>
       </template>
 
@@ -141,6 +157,9 @@ const isMobile = useMediaQuery('(max-width: 767px)');
 const focusRing =
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';
 const headerButton = `px-2 py-1 min-h-[24px] rounded border border-gray-300 text-xs font-semibold text-gray-800 hover:bg-gray-100 flex items-center gap-1 ${focusRing}`;
+const viewButton = `px-4 min-h-[40px] rounded-md text-sm font-semibold flex items-center gap-2 ${focusRing}`;
+const viewButtonActive = 'bg-gray-900 text-white';
+const viewButtonIdle = 'text-gray-900 hover:bg-gray-100';
 const iconButton =
   'w-11 h-11 flex items-center justify-center rounded text-gray-800 hover:bg-gray-100';
 
@@ -209,8 +228,8 @@ const debug = !!ctx?.debug;
 const tableOpen = computed(() => !!ctx?.state.tableOpen.value);
 const hasSelection = computed(() => !!ctx?.state.selection.value);
 
-const toggleTable = () => {
-  if (ctx) ctx.state.tableOpen.value = !ctx.state.tableOpen.value;
+const setTable = (open: boolean) => {
+  if (ctx) ctx.state.tableOpen.value = open;
 };
 
 // Closing the drawer (its button or Esc) removes the focused element; give focus back
