@@ -61,7 +61,7 @@
           v-if="!record.inWolfWindow"
           class="ml-1 inline-block rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-900"
         >
-          ne medžioklės laikotarpiu
+          ne vilkų medžioklės laikotarpiu
         </span>
       </dd>
       <template v-if="municipality">
@@ -112,15 +112,24 @@ const recordsById = computed(() => {
 });
 
 const selection = computed(() => ctx.state.selection.value);
-const members = computed(() =>
+// Only members that pass the current filters are paged through: a filter change keeps the
+// card open while the shown wolf still matches, but never pages to a wolf that the map,
+// the table and the CSV leave out. `selection.index` stays an index into `selection.ids`.
+const filteredIds = computed(() => new Set(ctx.derived.filtered.value.map((r) => r.id)));
+const visible = computed(() =>
   (selection.value?.ids || [])
-    .map((id) => recordsById.value.get(id))
-    .filter((r): r is WolfRecord => !!r),
+    .map((id, i) => ({ i, record: recordsById.value.get(id) }))
+    .filter(
+      (m): m is { i: number; record: WolfRecord } =>
+        !!m.record && filteredIds.value.has(m.record.id),
+    ),
 );
+const members = computed(() => visible.value.map((m) => m.record));
 const count = computed(() => members.value.length);
-const index = computed(() =>
-  Math.min(Math.max(selection.value?.index ?? 0, 0), Math.max(count.value - 1, 0)),
-);
+const index = computed(() => {
+  const at = visible.value.findIndex((m) => m.i === selection.value?.index);
+  return at >= 0 ? at : 0;
+});
 const record = computed(() => members.value[index.value] || null);
 const counter = computed(() => `${index.value + 1} iš ${count.value}`);
 const allInOneCell = computed(() =>
@@ -140,7 +149,9 @@ function go(step: number) {
   const sel = selection.value;
   if (!sel) return;
   const next = Math.min(Math.max(index.value + step, 0), count.value - 1);
-  ctx.state.selection.value = { ...sel, index: next };
+  const target = visible.value[next];
+  if (!target || target.i === sel.index) return;
+  ctx.state.selection.value = { ...sel, index: target.i };
   // the pressed pager button is disabled at either end and drops focus; keep it in the card
   nextTick(() => {
     const active = document.activeElement as HTMLButtonElement | null;

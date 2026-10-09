@@ -83,7 +83,10 @@
             @show-on-map="(record: unknown) => emit('show-on-map', record)"
           />
           <HuntingWolvesSeasonMonthTable v-else-if="tab.id === 'sezonai'" />
-          <HuntingWolvesMunicipalityTable v-else-if="tab.id === 'savivaldybes'" />
+          <p v-else-if="!municipalitiesReady" class="text-sm text-gray-700" role="status">
+            Skaičiuojama…
+          </p>
+          <HuntingWolvesMunicipalityTable v-else />
         </template>
       </div>
     </div>
@@ -123,13 +126,25 @@ const uid = computed(() => `wolves-table-${props.variant}`);
 const tabId = (id: TabId) => `${uid.value}-tab-${id}`;
 const panelId = (id: TabId) => `${uid.value}-panel-${id}`;
 
-// P1 tab only once municipality attribution has run (it is skipped on failure, §9).
+// P1 tab: shown from the start and hidden only if the attribution failed (§9). While the
+// polygons load it shows a placeholder. The tab list must not change under the user:
+// switching the active tab while an async table is still mounting broke the page
+// (a `?lentele=savivaldybes` link fell back to `irasai`, then jumped back).
+const municipalityStatus = computed(
+  () =>
+    data.municipalityStatus?.value ??
+    (hasMunicipalities(data.dataset.value?.records || []) ? 'ready' : 'pending'),
+);
+const municipalitiesReady = computed(
+  () =>
+    municipalityStatus.value === 'ready' && hasMunicipalities(data.dataset.value?.records || []),
+);
 const tabs = computed(() => {
   const list: { id: TabId; label: string }[] = [
     { id: 'irasai', label: 'Įrašai' },
     { id: 'sezonai', label: 'Sezonai ir mėnesiai' },
   ];
-  if (hasMunicipalities(data.dataset.value?.records || [])) {
+  if (municipalityStatus.value !== 'failed') {
     list.push({ id: 'savivaldybes', label: 'Savivaldybės' });
   }
   return list;

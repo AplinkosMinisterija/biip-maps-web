@@ -77,7 +77,9 @@
 // the map does not redraw under it.
 import { computed, getCurrentInstance, inject, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import { WOLVES_CTX } from '@/composables/hunting/context';
-import type { Interval, PresetId, WolfRecord } from '@/utils/hunting/types';
+import type { Interval, PresetId } from '@/utils/hunting/types';
+import { formatInt, pluralLt, WOLVES_ACC } from '@/utils/hunting/dates';
+import { filterRecords } from '@/utils/hunting/wolves';
 
 interface Draft {
   interval: Interval;
@@ -92,15 +94,6 @@ const triggerEl = ref<HTMLButtonElement | null>(null);
 const dialogEl = ref<HTMLElement | null>(null);
 const titleEl = ref<HTMLElement | null>(null);
 const draft = ref<Draft>({ interval: ctx.state.interval.value, preset: ctx.state.preset.value });
-
-const numberFormat = new Intl.NumberFormat('lt-LT');
-const pluralLt = (n: number, forms: [string, string, string]) => {
-  const a = n % 10;
-  const b = n % 100;
-  if (a === 1 && b !== 11) return forms[0];
-  if (a >= 2 && a <= 9 && !(b >= 12 && b <= 19)) return forms[1];
-  return forms[2];
-};
 
 const periodLabel = computed(() => {
   const { interval, preset } = {
@@ -117,29 +110,20 @@ const periodLabel = computed(() => {
 });
 
 // The same filter as derived.filtered, but for the staged interval.
-function matches(record: WolfRecord, interval: Interval) {
-  if (record.day < interval.from || record.day > interval.to) return false;
-  const sav = ctx.state.sav.value;
-  if (sav != null && record.municipalityCode !== sav) return false;
-  const attrs = ctx.state.attrs.value;
-  const ok = (list: string[], value: string | null) =>
-    !list.length || list.includes(value ?? 'nenurodyta');
-  return ok(attrs.age, record.age) && ok(attrs.sex, record.sex) && ok(attrs.method, record.method);
-}
-
 const draftCount = computed<number | null>(() => {
   const records = ctx.data.dataset.value?.records;
   if (!records) return null;
-  const interval = draft.value.interval;
-  let n = 0;
-  for (const record of records) if (matches(record, interval)) n++;
-  return n;
+  return filterRecords(records, {
+    interval: draft.value.interval,
+    sav: ctx.state.sav.value,
+    ...ctx.state.attrs.value,
+  }).length;
 });
 
 const applyLabel = computed(() => {
   const n = draftCount.value;
   if (n === null) return 'Rodyti';
-  return `Rodyti ${numberFormat.format(n)} ${pluralLt(n, ['vilką', 'vilkus', 'vilkų'])}`;
+  return `Rodyti ${formatInt(n)} ${pluralLt(n, WOLVES_ACC)}`;
 });
 
 let previousOverflow = '';

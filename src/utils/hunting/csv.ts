@@ -21,8 +21,16 @@ const HEADER = [
   'ne_medziokles_laikotarpiu',
 ];
 
+// A cell starting with one of these is run as a formula by spreadsheet apps (CSV injection).
+const FORMULA_START = /^[=+\-@\t\r]/;
+
+// Neutralise formula-like text with a leading apostrophe; dates and numbers are left alone.
+export function csvSafe(text: string) {
+  return FORMULA_START.test(text) && !/^-?\d+([.,]\d+)?$/.test(text) ? `'${text}` : text;
+}
+
 export function csvField(value: string | number | null | undefined) {
-  const text = value === null || value === undefined ? '' : String(value);
+  const text = csvSafe(value === null || value === undefined ? '' : String(value));
   return /[;"\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }
 
@@ -40,7 +48,8 @@ export function buildCsv(records: WolfRecord[], options: CsvOptions) {
   const { interval, placeLabel, withMunicipality } = options;
   const now = options.now || new Date();
   const lines: string[] = [
-    `# Sumedžioti vilkai; ${interval.from}–${interval.to}; ${placeLabel || 'visa Lietuva'}; ` +
+    `# Sumedžioti vilkai; ${interval.from}–${interval.to}; ` +
+      `${csvSafe((placeLabel || 'visa Lietuva').replace(/[;\r\n]/g, ' '))}; ` +
       `parengta ${formatDateTime(now)}; šaltinis: BIIP ir BIOMON (medziokle.biip.lt); ` +
       'vietos koordinatės ir identifikatoriai neįtraukti',
     [...HEADER, ...(withMunicipality ? ['savivaldybe'] : [])].join(CSV_SEPARATOR),

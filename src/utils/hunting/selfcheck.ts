@@ -23,7 +23,7 @@ import {
   snapToGrid,
   statusModel,
 } from './wolves';
-import { buildCsv, csvFileName } from './csv';
+import { buildCsv, csvField, csvFileName } from './csv';
 import { packLabel, ageLabel, methodLabel } from './labels';
 
 export interface SelfCheckResult {
@@ -352,6 +352,18 @@ export function runSelfChecks(): SelfCheckResult[] {
       ],
     );
   });
+  check('CSV formulės neutralizuojamos', () =>
+    eq(
+      [
+        csvField('=1+1'),
+        csvField('@SUM(A1)'),
+        csvField('+x'),
+        csvField('-2'),
+        csvField('2025-12-01'),
+      ],
+      ["'=1+1", "'@SUM(A1)", "'+x", '-2', '2025-12-01'],
+    ),
+  );
   check('Laikas 24 h', () =>
     eq(formatDateTime(new Date('2026-01-15T22:05:00.000Z')), '2026-01-16 00:05'),
   );

@@ -175,27 +175,15 @@ export function useWolvesMap(ctx: WolvesContext): WolvesMapApi {
     return typeof name === 'string' && name ? name : null;
   }
 
-  // P1: municipality toggle on click only once the P1 attribution has filled the records
-  function hasMunicipalityAttribution() {
-    const first = ctx.data.dataset.value?.records[0];
-    return !!first && first.municipalityCode !== undefined;
-  }
-
   function onClick(e: MapBrowserEvent<any> & { features: FeatureLike[] }) {
     if (!mounted || !map) return;
     const cluster = e.features?.[0];
 
+    // An empty spot only closes the card. §8.3's P1 "toggle the municipality under the
+    // pixel" is left out on purpose: a missed tap on a wolf would silently change every
+    // count. The municipality is chosen with MunicipalitySelect or the Savivaldybės table.
     if (!cluster) {
       ctx.state.clearSelection();
-      if (hasMunicipalityAttribution()) {
-        const code = map.forEachFeatureAtPixel(e.pixel, (f: FeatureLike) => f.getId(), {
-          layerFilter: (l) => l === layers.municipalities,
-        });
-        if (code !== undefined && code !== null) {
-          const num = Number(code);
-          ctx.state.sav.value = ctx.state.sav.value === num ? null : num;
-        }
-      }
       return;
     }
 

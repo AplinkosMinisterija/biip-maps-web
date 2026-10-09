@@ -39,7 +39,8 @@
 
     <div
       v-else
-      class="overflow-x-auto overscroll-x-contain pt-1 pb-1"
+      ref="stripEl"
+      class="relative overflow-x-auto overscroll-x-contain pt-1 pb-1"
       :class="compact ? '' : '-mx-1 px-1'"
     >
       <ul class="flex items-end gap-0.5 min-w-full" role="list">
@@ -87,9 +88,12 @@
 <script setup lang="ts">
 // Clickable count bars (SPEC §6.5): season → month → day. Bins come from the
 // shared context (`derived.histogram`, built by utils/hunting/wolves.ts).
-import { computed, getCurrentInstance, inject, nextTick, ref } from 'vue';
+import { computed, getCurrentInstance, inject, nextTick, ref, watch } from 'vue';
+import { useResizeObserver } from '@vueuse/core';
 import { WOLVES_CTX } from '@/composables/hunting/context';
 import type { HistogramBin, PresetId } from '@/utils/hunting/types';
+import { formatInt, pluralLt, WOLVES } from '@/utils/hunting/dates';
+import { MONTH_NAMES, MONTH_SHORT } from '@/utils/hunting/labels';
 
 const props = defineProps({
   // Mobile collapsed sheet: 64 px bars, no counts, title only for screen readers.
@@ -103,46 +107,21 @@ const uid = `wolves-histogram-${getCurrentInstance()?.uid ?? 0}`;
 const titleEl = ref<HTMLElement | null>(null);
 const backEl = ref<HTMLButtonElement | null>(null);
 
-const SHORT_MONTHS = [
-  'saus.',
-  'vas.',
-  'kov.',
-  'bal.',
-  'geg.',
-  'birž.',
-  'liep.',
-  'rugp.',
-  'rugs.',
-  'spal.',
-  'lapkr.',
-  'gruod.',
-];
-const MONTH_NAMES = [
-  'sausis',
-  'vasaris',
-  'kovas',
-  'balandis',
-  'gegužė',
-  'birželis',
-  'liepa',
-  'rugpjūtis',
-  'rugsėjis',
-  'spalis',
-  'lapkritis',
-  'gruodis',
-];
-
-const numberFormat = new Intl.NumberFormat('lt-LT');
-const formatInt = (n: number) => numberFormat.format(n);
-const pluralLt = (n: number, forms: [string, string, string]) => {
-  const a = n % 10;
-  const b = n % 100;
-  if (a === 1 && b !== 11) return forms[0];
-  if (a >= 2 && a <= 9 && !(b >= 12 && b <= 19)) return forms[1];
-  return forms[2];
-};
-
 const bins = computed(() => ctx.derived.histogram.value);
+
+// When the bars overflow (phones, the day level), start the strip at the first non-empty
+// bar: a season starts with six empty months (Apr–Sep) before the wolf window.
+const stripEl = ref<HTMLElement | null>(null);
+function scrollToFirstBar() {
+  const el = stripEl.value;
+  if (!el || el.scrollWidth <= el.clientWidth) return;
+  const first = bins.value.findIndex((b) => b.count > 0);
+  const item = el.querySelectorAll('li')[Math.max(first, 0)] as HTMLElement | undefined;
+  el.scrollLeft = item ? Math.max(0, item.offsetLeft - 4) : 0;
+}
+watch(() => bins.value.map((b) => b.key).join('|'), scrollToFirstBar, { flush: 'post' });
+// The strip gets its width only after layout (and again when the sheet expands).
+useResizeObserver(stripEl, scrollToFirstBar);
 const loading = computed(() => !ctx.data.dataset.value);
 const level = computed(() => bins.value[0]?.level ?? 'month');
 const title = computed(
@@ -157,7 +136,8 @@ const maxCount = computed(() => Math.max(1, ...bins.value.map((b) => b.count)));
 const barHeight = (count: number) =>
   count ? Math.max(4, Math.round((count / maxCount.value) * barArea.value)) : 2;
 
-const monthIndex = (bin: HistogramBin) => Number(bin.interval.from.slice(5, 7)) - 1;
+// 1..12, the index into MONTH_SHORT / MONTH_NAMES.
+const monthIndex = (bin: HistogramBin) => Number(bin.interval.from.slice(5, 7));
 const seasonOf = (bin: HistogramBin) => Number(bin.interval.from.slice(0, 4));
 
 function shortLabel(bin: HistogramBin) {
@@ -165,7 +145,7 @@ function shortLabel(bin: HistogramBin) {
     const s = seasonOf(bin);
     return `${s}/${`${(s + 1) % 100}`.padStart(2, '0')}`;
   }
-  if (bin.level === 'month') return SHORT_MONTHS[monthIndex(bin)];
+  if (bin.level === 'month') return MONTH_SHORT[monthIndex(bin)];
   return `${Number(bin.interval.from.slice(8, 10))}`;
 }
 
@@ -173,15 +153,15 @@ function shortLabel(bin: HistogramBin) {
 function yearMark(bin: HistogramBin, index: number) {
   if (bin.level === 'season') return '';
   if (bin.level === 'month') {
-    return index === 0 || monthIndex(bin) === 0 ? bin.interval.from.slice(0, 4) : '';
+    return index === 0 || monthIndex(bin) === 1 ? bin.interval.from.slice(0, 4) : '';
   }
-  return index === 0 || bin.interval.from.endsWith('-01') ? SHORT_MONTHS[monthIndex(bin)] : '';
+  return index === 0 || bin.interval.from.endsWith('-01') ? MONTH_SHORT[monthIndex(bin)] : '';
 }
 
 function ariaLabelOf(bin: HistogramBin) {
   // Prefer the label built with the bins; fall back to the SPEC §6.5 wording.
   if (bin.ariaLabel && bin.ariaLabel.includes('Rodyti')) return bin.ariaLabel;
-  const n = `${formatInt(bin.count)} ${pluralLt(bin.count, ['vilkas', 'vilkai', 'vilkų'])}`;
+  const n = `${formatInt(bin.count)} ${pluralLt(bin.count, WOLVES)}`;
   if (bin.level === 'season') {
     const s = seasonOf(bin);
     return `${s}/${s + 1} sezonas: ${n}. Rodyti šį sezoną.`;

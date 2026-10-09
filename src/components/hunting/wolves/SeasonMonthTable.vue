@@ -5,7 +5,7 @@
     </div>
 
     <div v-else class="overflow-x-auto max-w-full">
-      <table class="min-w-full border-collapse text-left text-sm">
+      <table class="min-w-full border-collapse text-left text-xs">
         <caption class="sr-only">
           Sumedžioti vilkai pagal sezonus ir mėnesius (visi sezonai, naujausi pirmi)
         </caption>
@@ -16,15 +16,20 @@
               v-for="month in MONTH_COLUMNS"
               :key="month.value"
               scope="col"
-              class="py-2 px-1 font-semibold text-right"
+              class="py-2 px-0.5 font-semibold text-right"
             >
               <abbr :title="month.full" class="no-underline">{{ month.short }}</abbr>
             </th>
             <th scope="col" class="py-2 px-1 font-semibold text-right">Kiti mėn.</th>
-            <th scope="col" class="py-2 px-1 font-semibold text-right">Iš viso (su vieta)</th>
+            <!-- Short visible headers so the table fits the 520 px drawer; full names for screen readers. -->
+            <th scope="col" class="py-2 px-1 font-semibold text-right whitespace-nowrap">
+              <span aria-hidden="true" title="Iš viso (su vieta)">Iš viso</span>
+              <span class="sr-only">Iš viso (su vieta)</span>
+            </th>
             <th scope="col" class="py-2 px-1 font-semibold text-right">Limitas</th>
             <th v-if="showPaperRows" scope="col" class="py-2 pl-1 font-semibold text-right">
-              Be vietos (įrašai)
+              <span aria-hidden="true" title="Be vietos (įrašai)">Be vietos</span>
+              <span class="sr-only">Be vietos (įrašai)</span>
             </th>
           </tr>
         </thead>
@@ -34,7 +39,7 @@
               <button
                 type="button"
                 :class="cellButtonClass"
-                :aria-label="`${row.label} sezonas: ${row.total}. Rodyti šį sezoną.`"
+                :aria-label="`${row.label} sezonas: ${wolves(row.total)}. Rodyti šį sezoną.`"
                 @click="selectSeason(row.season)"
               >
                 {{ row.label }}
@@ -43,13 +48,13 @@
             <td
               v-for="month in MONTH_COLUMNS"
               :key="month.value"
-              class="py-1 px-1 text-right tabular-nums"
+              class="py-1 px-0.5 text-right tabular-nums"
             >
               <button
                 v-if="row.months[month.value]"
                 type="button"
                 :class="cellButtonClass"
-                :aria-label="`${monthYear(row.season, month.value)} m. ${month.full.toLowerCase()}: ${row.months[month.value]}. Rodyti šį mėnesį.`"
+                :aria-label="`${monthYear(row.season, month.value)} m. ${month.full.toLowerCase()}: ${wolves(row.months[month.value])}. Rodyti šį mėnesį.`"
                 @click="selectMonth(row.season, month.value)"
               >
                 {{ formatInt(row.months[month.value]) }}
@@ -60,7 +65,13 @@
             <td class="py-1 px-1 text-right tabular-nums font-semibold">
               {{ formatInt(row.total) }}
             </td>
-            <td class="py-1 px-1 text-right tabular-nums whitespace-nowrap">{{ row.limit }}</td>
+            <td class="py-1 px-1 text-right tabular-nums whitespace-nowrap">
+              <template v-if="row.limit === NOT_APPROVED">
+                <span aria-hidden="true" title="Nepatvirtintas">Nepatv.</span>
+                <span class="sr-only">Nepatvirtintas</span>
+              </template>
+              <template v-else>{{ row.limit }}</template>
+            </td>
             <td v-if="showPaperRows" class="py-1 pl-1 text-right tabular-nums">
               {{ formatInt(row.paperRows) }}
             </td>
@@ -84,7 +95,7 @@ import { computed, inject } from 'vue';
 import { WOLVES_CTX } from '@/composables/hunting/context';
 import type { Interval, WolfRecord } from '@/utils/hunting/types';
 
-import { formatInt } from '@/utils/hunting/dates';
+import { formatInt, pluralLt, WOLVES } from '@/utils/hunting/dates';
 import { WOLF_LIMITS } from '@/utils/hunting/labels';
 
 // Wolf hunting months in season order; April–September go to "Kiti mėn.".
@@ -108,6 +119,8 @@ interface PivotRow {
 }
 
 const pad = (n: number) => `${n}`.padStart(2, '0');
+const NOT_APPROVED = 'Nepatvirtintas';
+const wolves = (n: number) => `${formatInt(n)} ${pluralLt(n, WOLVES)}`;
 
 const ctx = inject(WOLVES_CTX)!;
 const { state, data } = ctx;
@@ -122,7 +135,7 @@ function limitLabel(season: number): string {
   if (season === ctx.currentSeason) {
     const limit = data.totals.value?.wolfLimit;
     if (limit === undefined || limit === null) return '—';
-    return limit === 0 ? 'Nepatvirtintas' : formatInt(limit);
+    return limit === 0 ? NOT_APPROVED : formatInt(limit);
   }
   return WOLF_LIMITS[season] ? formatInt(WOLF_LIMITS[season]) : '—';
 }
@@ -184,5 +197,5 @@ function selectMonth(season: number, month: number) {
 
 const stickyClass = 'sticky left-0 z-10 bg-white';
 const cellButtonClass =
-  'min-h-[24px] min-w-[24px] rounded px-1 font-semibold text-blue-800 underline decoration-dotted underline-offset-2 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';
+  'min-h-[24px] min-w-[24px] max-md:min-h-[44px] max-md:min-w-[44px] rounded px-1 font-semibold text-blue-800 underline decoration-dotted underline-offset-2 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';
 </script>

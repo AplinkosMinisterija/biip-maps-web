@@ -33,7 +33,7 @@
       :class="compact ? 'px-3 pb-3' : ''"
     >
       <p class="text-xs text-gray-600">
-        Rodoma einamajam sezonui, nepriklausomai nuo pasirinkto laikotarpio.
+        Rodomi einamojo sezono duomenys, nepriklausomai nuo pasirinkto laikotarpio.
       </p>
 
       <div v-if="loading" aria-busy="true">

@@ -1,5 +1,8 @@
 <template>
-  <div class="absolute inset-0 z-40 flex items-center justify-center bg-gray-900 bg-opacity-30 p-4">
+  <div
+    class="absolute inset-0 z-[60] flex items-center justify-center bg-gray-900 bg-opacity-30 p-4"
+  >
+    <!-- z-[60]: above App.vue's #mapLoader (z-50), in case the map never reports its first load. -->
     <section
       aria-labelledby="wolves-gate-title"
       class="bg-white rounded-lg shadow-lg max-w-md w-full p-6 flex flex-col gap-4"

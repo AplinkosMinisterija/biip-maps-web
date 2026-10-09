@@ -112,6 +112,16 @@
 import { computed, getCurrentInstance, inject, ref, watch, type PropType } from 'vue';
 import { WOLVES_CTX } from '@/composables/hunting/context';
 import type { Interval, PresetId } from '@/utils/hunting/types';
+import {
+  MIN_DAY as FIRST_DAY,
+  addDays,
+  daysInMonth,
+  intervalSeason,
+  sameInterval,
+  seasonInterval,
+  seasonLabel,
+  toDay,
+} from '@/utils/hunting/dates';
 
 interface DateParts {
   year: string;
@@ -133,18 +143,6 @@ const emit = defineEmits(['update:draft']);
 
 const ctx = inject(WOLVES_CTX)!;
 const uid = `wolves-period-${getCurrentInstance()?.uid ?? 0}`;
-
-const FIRST_DAY = '2017-04-01';
-const pad = (n: number) => `${n}`.padStart(2, '0');
-const ymd = (y: number, m: number, d: number) => `${y}-${pad(m)}-${pad(d)}`;
-const daysInMonth = (y: number, m: number) => new Date(Date.UTC(y, m, 0)).getUTCDate();
-const addDays = (day: string, n: number) => {
-  const [y, m, d] = day.split('-').map(Number);
-  return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10);
-};
-const seasonLabel = (s: number) => `${s}/${s + 1}`;
-const seasonInterval = (s: number): Interval => ({ from: `${s}-04-01`, to: `${s + 1}-03-31` });
-const sameInterval = (a: Interval, b: Interval) => a.from === b.from && a.to === b.to;
 
 const cur = computed(() => ctx.currentSeason);
 const minYear = computed(() => ctx.data.dataset.value?.minYear ?? 2017);
@@ -227,14 +225,14 @@ const partsOf = (day: string): DateParts => ({
 
 const startOf = (p: DateParts) => {
   const y = Number(p.year);
-  if (p.month && p.day) return ymd(y, Number(p.month), Number(p.day));
-  if (p.month) return ymd(y, Number(p.month), 1);
+  if (p.month && p.day) return toDay(y, Number(p.month), Number(p.day));
+  if (p.month) return toDay(y, Number(p.month), 1);
   return `${y}-01-01`;
 };
 const endOf = (p: DateParts) => {
   const y = Number(p.year);
-  if (p.month && p.day) return ymd(y, Number(p.month), Number(p.day));
-  if (p.month) return ymd(y, Number(p.month), daysInMonth(y, Number(p.month)));
+  if (p.month && p.day) return toDay(y, Number(p.month), Number(p.day));
+  if (p.month) return toDay(y, Number(p.month), daysInMonth(y, Number(p.month)));
   return `${y}-12-31`;
 };
 
@@ -298,19 +296,15 @@ const years = computed(() => {
 
 // --- Info lines ----------------------------------------------------------------
 
-const shownSeason = computed<number | null>(() => {
-  const { from } = current.value.interval;
-  if (!from.endsWith('-04-01')) return null;
-  const season = Number(from.slice(0, 4));
-  return sameInterval(current.value.interval, seasonInterval(season)) ? season : null;
-});
+const shownSeason = computed<number | null>(() => intervalSeason(current.value.interval));
 
 const fallbackInfo = computed(() => {
   const fellBack = ctx.derived.defaultSeason.value === cur.value - 1;
   if (!fellBack || shownSeason.value !== cur.value - 1) return '';
   const start = `${cur.value}-10-15`;
   if (ctx.today < start) {
-    return `${seasonLabel(cur.value)} m. vilkų medžioklės sezonas prasideda ${start}. Rodomas praėjęs sezonas.`;
+    // "Sezonas" is the hunting year everywhere; the Oct 15 – Mar 31 window is "vilkų medžioklė".
+    return `${seasonLabel(cur.value)} sezono vilkų medžioklė prasideda ${start}. Rodomas praėjęs sezonas.`;
   }
   return `${seasonLabel(cur.value)} sezono vilkų su žinoma vieta dar nėra. Rodomas praėjęs sezonas.`;
 });

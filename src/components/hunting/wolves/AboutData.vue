@@ -43,7 +43,8 @@
         <h4 class="font-semibold text-gray-900">Klaidingos datos</h4>
         <p>
           {{ formatInt(badDates) }} {{ pluralLt(badDates, ['įrašas', 'įrašai', 'įrašų']) }} su
-          neįtikima data (iki 2017-04-01) neįtraukti.
+          neįtikima data (ankstesne nei 2017-04-01, vėlesne nei šiandien arba neatpažįstama)
+          neįtraukti.
         </p>
       </section>
 
@@ -146,9 +147,39 @@ const pastLimits = computed(() =>
     .join(', '),
 );
 
+let dialogBox: HTMLElement | null = null;
+let isOpen = false;
+
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+// aria-modal="true" promises that focus stays inside: Tab and Shift+Tab wrap around (§12.13).
 const onKeydown = (event: KeyboardEvent) => {
-  if (event.key === 'Escape') close();
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    close();
+    return;
+  }
+  if (event.key !== 'Tab' || !dialogBox) return;
+  const items = Array.from(dialogBox.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
+    (el) => el.offsetParent !== null,
+  );
+  if (!items.length) return;
+  const first = items[0];
+  const last = items[items.length - 1];
+  const active = document.activeElement as HTMLElement | null;
+  if (event.shiftKey && (active === first || !dialogBox.contains(active))) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && (active === last || !dialogBox.contains(active))) {
+    event.preventDefault();
+    first.focus();
+  }
 };
+
+// UiModal closes itself from its own close button and the backdrop without telling the
+// parent; route both through close() so focus returns and the key listener is removed.
+const onModalClose = () => close();
 
 // UiModal has no dialog role and an icon-only close button without a name;
 // patch its DOM after opening so the dialog is announced correctly.
@@ -157,16 +188,22 @@ const patchModal = () => {
   const title = root?.querySelector('h3');
   const box = title?.closest('.relative.z-50') as HTMLElement | null;
   if (!title || !box) return;
+  dialogBox = box;
   title.id = 'wolves-about-title';
   box.setAttribute('role', 'dialog');
   box.setAttribute('aria-modal', 'true');
   box.setAttribute('aria-labelledby', title.id);
   const closeButton = box.querySelector('button');
   closeButton?.setAttribute('aria-label', 'Uždaryti');
+  closeButton?.addEventListener('click', onModalClose);
+  const backdrop = box.previousElementSibling as HTMLElement | null;
+  backdrop?.addEventListener('click', onModalClose);
   closeButton?.focus();
 };
 
 async function open() {
+  if (isOpen) return;
+  isOpen = true;
   const active = document.activeElement;
   opener = active instanceof HTMLElement ? active : null;
   modal.value?.open();
@@ -176,10 +213,14 @@ async function open() {
 }
 
 function close() {
+  if (!isOpen) return;
+  isOpen = false;
   modal.value?.close();
   document.removeEventListener('keydown', onKeydown);
-  opener?.focus();
+  dialogBox = null;
+  const target = opener;
   opener = null;
+  nextTick(() => target?.focus());
 }
 
 onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown));

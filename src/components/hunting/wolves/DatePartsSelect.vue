@@ -42,7 +42,8 @@
           :style="{ backgroundImage: CHEVRON }"
           @change="update('month', ($event.target as HTMLSelectElement).value)"
         >
-          <option value="">Visi mėnesiai</option>
+          <!-- A disabled select shows a dash, not "Visi …", which would read as "all of them". -->
+          <option value="">{{ modelValue.year ? 'Visi mėnesiai' : '—' }}</option>
           <option v-for="month in months" :key="month.value" :value="month.value">
             {{ month.label }}
           </option>
@@ -61,7 +62,7 @@
           :style="{ backgroundImage: CHEVRON }"
           @change="update('day', ($event.target as HTMLSelectElement).value)"
         >
-          <option value="">Visos dienos</option>
+          <option value="">{{ modelValue.month ? 'Visos dienos' : '—' }}</option>
           <option v-for="day in days" :key="day" :value="`${day}`">{{ day }}</option>
         </select>
       </div>
@@ -139,8 +140,12 @@ function normalise(parts: DateParts): DateParts {
   return next;
 }
 
+// Choosing a year or a month clears the day, so "2025 · Gruodis" means the whole month
+// rather than keeping a day left over from the pre-filled interval.
 function update(part: keyof DateParts, value: string) {
-  emit('update:modelValue', normalise({ ...props.modelValue, [part]: value }));
+  const next = { ...props.modelValue, [part]: value };
+  if (part !== 'day' && value !== props.modelValue[part]) next.day = '';
+  emit('update:modelValue', normalise(next));
 }
 
 // A compact chevron (instead of the wide native one) leaves room for "Visos dienos" in a 360 px panel.

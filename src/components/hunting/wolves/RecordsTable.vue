@@ -35,7 +35,7 @@
             <span v-if="showMunicipality" class="font-normal text-gray-700">
               · {{ row.municipalityName || 'Nenustatyta' }}
             </span>
-            <span v-if="!row.inWolfWindow" :class="tagClass">ne medžioklės laikotarpiu</span>
+            <span v-if="!row.inWolfWindow" :class="tagClass">ne vilkų medžioklės laikotarpiu</span>
           </span>
           <span class="block text-gray-800">
             {{ ageLabel(row.age) }} · {{ sexLabel(row.sex) }} · {{ methodLabel(row.method) }}
@@ -46,7 +46,7 @@
     </ul>
 
     <div v-else class="overflow-x-auto">
-      <table class="w-full border-collapse text-left text-sm">
+      <table class="w-full border-collapse text-left text-xs">
         <caption class="sr-only">
           {{
             caption
@@ -73,20 +73,23 @@
             </th>
             <th scope="col" class="py-2 pr-2 font-semibold">Amžius</th>
             <th scope="col" class="py-2 pr-2 font-semibold">Lytis</th>
-            <th scope="col" class="py-2 pr-2 font-semibold">Medžioklės būdas</th>
+            <th scope="col" class="py-2 pr-2 font-semibold">
+              <span aria-hidden="true" title="Medžioklės būdas">Būdas</span>
+              <span class="sr-only">Medžioklės būdas</span>
+            </th>
             <th scope="col" class="py-2 pr-2 font-semibold">Gaujos narys</th>
             <th scope="col" class="py-2 pr-2 font-semibold">Šaltinis</th>
-            <th scope="col" class="py-2 pl-2 font-semibold sticky right-0 bg-white">
+            <th scope="col" class="py-2 pl-1 font-semibold sticky right-0 bg-white">
               <span class="sr-only">Veiksmai</span>
             </th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="row in pageRows" :key="row.id" class="border-b border-gray-100 align-top">
-            <td class="py-2 pr-2 whitespace-nowrap tabular-nums">
-              {{ row.day }}
-              <span v-if="!row.inWolfWindow" :class="tagClass" class="ml-1">
-                ne medžioklės laikotarpiu
+            <td class="py-2 pr-2 tabular-nums">
+              <span class="whitespace-nowrap">{{ row.day }}</span>
+              <span v-if="!row.inWolfWindow" :class="tagClass" class="block w-max mt-0.5">
+                ne vilkų medžioklės laikotarpiu
               </span>
             </td>
             <td v-if="showMunicipality" class="py-2 pr-2">
@@ -96,16 +99,23 @@
             <td class="py-2 pr-2">{{ sexLabel(row.sex) }}</td>
             <td class="py-2 pr-2">{{ methodLabel(row.method) }}</td>
             <td class="py-2 pr-2">{{ packLabel(row.packMember, row.packAmount) }}</td>
-            <td class="py-2 pr-2">{{ sourceLabel(row.source) }}</td>
+            <!-- Short source name keeps the table inside the 520 px drawer; the card and CSV use the full one. -->
+            <td class="py-2 pr-2 whitespace-nowrap">
+              <span aria-hidden="true" :title="sourceLabel(row.source)">{{
+                SHORT_SOURCE[row.source] || row.source
+              }}</span>
+              <span class="sr-only">{{ sourceLabel(row.source) }}</span>
+            </td>
             <!-- Sticky so the action stays visible when the columns scroll in the drawer. -->
-            <td class="py-2 pl-2 whitespace-nowrap sticky right-0 bg-white">
+            <td class="py-1 pl-1 sticky right-0 bg-white">
               <button
                 type="button"
-                class="min-h-[24px] rounded px-2 py-1 text-xs font-semibold text-blue-800 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+                class="w-8 h-8 flex items-center justify-center rounded text-blue-800 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
                 :aria-label="showOnMapLabel(row)"
+                title="Rodyti žemėlapyje"
                 @click="showOnMap(row)"
               >
-                Rodyti žemėlapyje
+                <UiIcon name="pin" :size="18" aria-hidden="true" />
               </button>
             </td>
           </tr>
@@ -149,6 +159,7 @@ import { formatInt } from '@/utils/hunting/dates';
 import { ageLabel, methodLabel, packLabel, sexLabel, sourceLabel } from '@/utils/hunting/labels';
 
 const PAGE_SIZE = 50;
+const SHORT_SOURCE: Record<string, string> = { biomon: 'BIOMON', biip: 'BIIP' };
 
 // 'show-on-map' (record: WolfRecord): the parent may collapse the mobile sheet.
 const emit = defineEmits(['show-on-map']);

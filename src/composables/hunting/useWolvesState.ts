@@ -1,9 +1,16 @@
-import { computed, ref, watch } from 'vue';
+import { computed, onScopeDispose, ref, watch } from 'vue';
 import { useRoute, useRouter, type LocationQuery } from 'vue-router';
 import type { WolvesContext } from '@/composables/hunting/context';
 import type { Interval, PresetId } from '@/utils/hunting/types';
 import { formatInt, pluralLt, seasonInterval, seasonOfDay } from '@/utils/hunting/dates';
-import { AGE_LABELS, METHOD_LABELS, SEX_LABELS } from '@/utils/hunting/labels';
+import {
+  AGE_LABELS,
+  AGE_OPTIONS,
+  METHOD_LABELS,
+  METHOD_OPTIONS,
+  SEX_LABELS,
+  SEX_OPTIONS,
+} from '@/utils/hunting/labels';
 import { filterRecords, histogram, statusModel } from '@/utils/hunting/wolves';
 
 type TableTab = 'irasai' | 'sezonai' | 'savivaldybes';
@@ -108,10 +115,11 @@ export function useWolvesState(opts: {
 
   const lentele = queryString(query, 'lentele');
   const savRaw = queryString(query, 'sav');
-  const parseAttr = (key: string) =>
-    (queryString(query, key) || '')
-      .split(',')
-      .filter((v) => v === NOT_SET || /^[A-Z][A-Z_]*$/.test(v));
+  // Only known codes are accepted; anything else is ignored as if absent (§5.2).
+  const parseAttr = (key: string, allowed: string[]) =>
+    Array.from(
+      new Set((queryString(query, key) || '').split(',').filter((v) => allowed.includes(v))),
+    );
 
   // Whether the interval came from the URL or the user; if not, it follows defaultSeason.
   let userChosen = !!initialInterval;
@@ -124,9 +132,9 @@ export function useWolvesState(opts: {
   const selection = ref<{ ids: string[]; index: number } | null>(null);
   const sav = ref<number | null>(savRaw && /^\d+$/.test(savRaw) ? Number(savRaw) : null);
   const attrs = ref<Attrs>({
-    age: parseAttr('amzius'),
-    sex: parseAttr('lytis'),
-    method: parseAttr('budas'),
+    age: parseAttr('amzius', AGE_OPTIONS),
+    sex: parseAttr('lytis', SEX_OPTIONS),
+    method: parseAttr('budas', METHOD_OPTIONS),
   });
   const mapExtent3346 = ref<[number, number, number, number] | null>(null);
   const zoomRequest = ref<{ ids: string[]; seq: number } | null>(null);
@@ -278,13 +286,15 @@ export function useWolvesState(opts: {
   });
 
   // ---- Write the URL (§5.2): router.replace, debounced, only non-default keys.
-  const urlQuery = () => {
+  // `explicit` (for "Dalintis") always names the period, so a shared default-season link
+  // keeps its meaning after the default moves on to the next season.
+  const urlQuery = (explicit = false) => {
     const out: Record<string, string> = {};
     const p = preset.value;
     const season = /^season:(\d{4})$/.exec(p);
     if (season) {
       const s = Number(season[1]);
-      if (s !== defaultSeason.value) out.sezonas = `${s}-${s + 1}`;
+      if (explicit || s !== defaultSeason.value) out.sezonas = `${s}-${s + 1}`;
     } else if (p === 'last30') {
       out.laikotarpis = '30d';
     } else if (p === 'all') {
@@ -301,21 +311,36 @@ export function useWolvesState(opts: {
     return out;
   };
 
+  // The query this page writes, plus the keys it does not own (x, y, z, debug, …).
+  const fullQuery = (explicit = false): LocationQuery => {
+    const kept: LocationQuery = {};
+    Object.keys(route.query).forEach((key) => {
+      if (!OWN_KEYS.includes(key)) kept[key] = route.query[key];
+    });
+    return { ...kept, ...urlQuery(explicit) };
+  };
+
+  // Absolute link for "Dalintis": the current view with the period always explicit.
+  const shareUrl = () =>
+    new URL(router.resolve({ path: route.path, query: fullQuery(true) }).href, window.location.href)
+      .href;
+
+  const routePath = route.path;
   let urlTimer: ReturnType<typeof setTimeout> | undefined;
   watch(
     [interval, preset, tableOpen, tableTab, sav, attrs],
     () => {
       clearTimeout(urlTimer);
       urlTimer = setTimeout(() => {
-        const kept: LocationQuery = {};
-        Object.keys(route.query).forEach((key) => {
-          if (!OWN_KEYS.includes(key)) kept[key] = route.query[key];
-        });
-        router.replace({ query: { ...kept, ...urlQuery() } });
+        urlTimer = undefined;
+        // Never write the wolves keys onto another route (a change just before leaving).
+        if (route.path !== routePath) return;
+        router.replace({ query: fullQuery() });
       }, URL_DEBOUNCE_MS);
     },
     { deep: true },
   );
+  onScopeDispose(() => clearTimeout(urlTimer));
 
   return {
     debug,
@@ -336,6 +361,7 @@ export function useWolvesState(opts: {
       clearSelection,
       zoomRequest,
       returnFocus,
+      shareUrl,
     },
     derived: {
       filtered,

@@ -103,6 +103,9 @@
       }}
     </button>
 
+    <p v-if="selectedName" class="text-xs text-gray-700">
+      Lentelėje rodomos visos savivaldybės; pasirinkta „{{ selectedName }}“ paryškinta.
+    </p>
     <p class="text-xs text-gray-600">
       Savivaldybė nustatyta pagal sumedžiojimo vietą; prie ribų galimas nedidelis netikslumas.
     </p>
@@ -113,20 +116,11 @@
 import { computed, inject, onMounted, ref, shallowRef } from 'vue';
 import { WOLVES_CTX } from '@/composables/hunting/context';
 import { loadMunicipalityIndex, type MunicipalityIndex } from '@/utils/hunting/municipalities';
-import type { WolfRecord } from '@/utils/hunting/types';
+import { formatInt } from '@/utils/hunting/dates';
+import { countByMunicipality, filterRecords, type MunicipalityCount } from '@/utils/hunting/wolves';
 
-interface Row {
-  code: number | null;
-  name: string;
-  count: number;
-  adults: number;
-  juniors: number;
-  males: number;
-  females: number;
-  lastDay: string | null;
-}
+type Row = Omit<MunicipalityCount, 'lastDay'> & { lastDay: string | null };
 
-const formatInt = (n: number) => new Intl.NumberFormat('lt-LT').format(n);
 const emptyRow = (code: number | null, name: string): Row => ({
   code,
   name,
@@ -163,45 +157,27 @@ const periodLabel = computed(() => {
   return from === to ? from : `${from} – ${to}`;
 });
 
-// The table compares municipalities, so it ignores the `sav` filter: the interval and the
-// attribute filters (§4.7 semantics) are applied here to all records.
-const matches = (list: string[], value: string | null) =>
-  !list.length || list.includes(value === null ? 'nenurodyta' : value);
-const base = computed<WolfRecord[]>(() => {
-  const records = data.dataset.value?.records || [];
-  const { from, to } = state.interval.value;
-  const { age, sex, method } = state.attrs.value;
-  return records.filter(
-    (r) =>
-      from <= r.day &&
-      r.day <= to &&
-      matches(age, r.age) &&
-      matches(sex, r.sex) &&
-      matches(method, r.method),
-  );
-});
-
-const aggregate = (row: Row, record: WolfRecord) => {
-  row.count++;
-  if (record.age === 'ADULT') row.adults++;
-  if (record.age === 'ONE_YEAR') row.juniors++;
-  if (record.sex === 'MALE') row.males++;
-  if (record.sex === 'FEMALE') row.females++;
-  if (!row.lastDay || record.day > row.lastDay) row.lastDay = record.day;
-};
+// The table compares municipalities, so it applies the interval and the attribute filters
+// but not `sav`: a selected municipality is highlighted, and the footer stays the national
+// total. Counting uses the shared countByMunicipality() (ADULT and TWO_YEAR are adults).
+const base = computed(() =>
+  filterRecords(data.dataset.value?.records || [], {
+    interval: state.interval.value,
+    sav: null,
+    age: state.attrs.value.age,
+    sex: state.attrs.value.sex,
+    method: state.attrs.value.method,
+  }),
+);
+const counts = computed(() => countByMunicipality(base.value));
 
 const rowsByCode = computed(() => {
   const map = new Map<number | null, Row>();
   index.value?.list.forEach((m) => map.set(m.code, emptyRow(m.code, m.name)));
-  for (const record of base.value) {
-    const code = record.municipalityCode ?? null;
-    let row = map.get(code);
-    if (!row) {
-      row = emptyRow(code, code === null ? 'Nenustatyta' : record.municipalityName || `${code}`);
-      map.set(code, row);
-    }
-    aggregate(row, record);
-  }
+  counts.value.forEach((c) => {
+    const name = map.get(c.code)?.name || c.name;
+    map.set(c.code, { ...c, name });
+  });
   return map;
 });
 
@@ -223,11 +199,22 @@ const visibleRows = computed(() =>
   showZero.value ? sortedRows.value : sortedRows.value.filter((r) => r.count > 0),
 );
 
-const totals = computed(() => {
+const totals = computed<Row>(() => {
   const total = emptyRow(null, '');
-  base.value.forEach((record) => aggregate(total, record));
+  counts.value.forEach((c) => {
+    total.count += c.count;
+    total.adults += c.adults;
+    total.juniors += c.juniors;
+    total.males += c.males;
+    total.females += c.females;
+    if (!total.lastDay || c.lastDay > total.lastDay) total.lastDay = c.lastDay;
+  });
   return total;
 });
+
+const selectedName = computed(() =>
+  state.sav.value == null ? null : rowsByCode.value.get(state.sav.value)?.name || null,
+);
 
 function toggleSort(key: 'count' | 'name') {
   if (sortKey.value === key) {
@@ -254,7 +241,7 @@ function selectMunicipality(code: number) {
 
 const stickyClass = 'sticky left-0 z-10 text-left';
 const sortButtonClass =
-  'inline-flex items-center gap-1 min-h-[24px] rounded font-semibold hover:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';
+  'inline-flex items-center gap-1 min-h-[24px] max-md:min-h-[44px] rounded font-semibold hover:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';
 const cellButtonClass =
-  'min-h-[24px] rounded text-left text-blue-800 underline decoration-dotted underline-offset-2 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';
+  'min-h-[24px] max-md:min-h-[44px] rounded text-left text-blue-800 underline decoration-dotted underline-offset-2 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';
 </script>

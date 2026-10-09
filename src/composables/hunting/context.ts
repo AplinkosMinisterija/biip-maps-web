@@ -29,6 +29,9 @@ export interface WolvesContext {
     // cache was refreshed in the background; E3 failure flag for DebugPanel.
     refreshedAt?: Ref<Date | null>;
     seasonsFailed?: Ref<boolean>;
+    // P1 municipality attribution (§9), set by the route: 'pending' until the polygons
+    // are read and the records assigned, 'failed' hides the municipality features.
+    municipalityStatus?: Ref<'pending' | 'ready' | 'failed'>;
   };
   state: {
     interval: Ref<Interval>;
@@ -50,6 +53,8 @@ export interface WolvesContext {
     // that was focused when `select()` ran, for Esc to return focus to (§8.3).
     zoomRequest: Ref<{ ids: string[]; seq: number } | null>;
     returnFocus: Ref<HTMLElement | null>;
+    // Absolute link for "Dalintis" with the period always explicit (§5.2).
+    shareUrl(): string;
   };
   derived: {
     filtered: ComputedRef<WolfRecord[]>;

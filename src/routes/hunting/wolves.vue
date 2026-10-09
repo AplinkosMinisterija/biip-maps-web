@@ -121,19 +121,9 @@
 </template>
 
 <script setup lang="ts">
-import {
-  computed,
-  inject,
-  nextTick,
-  onBeforeUnmount,
-  onMounted,
-  provide,
-  ref,
-  triggerRef,
-  watch,
-} from 'vue';
+import { computed, inject, nextTick, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue';
 import { useElementSize, useMediaQuery } from '@vueuse/core';
-import { projection3857 } from '@/utils';
+import { projection3857, vectorPositron } from '@/utils';
 import { WOLVES_CTX, type WolvesContext } from '@/composables/hunting/context';
 import { useWolvesState } from '@/composables/hunting/useWolvesState';
 import { seasonOfDay, todayVilnius } from '@/utils/hunting/dates';
@@ -157,7 +147,10 @@ const iconButton =
 function createContext(): WolvesContext {
   const today = todayVilnius();
   const currentSeason = seasonOfDay(today);
-  const data = useWolvesData({ today });
+  const data = {
+    ...useWolvesData({ today }),
+    municipalityStatus: ref<'pending' | 'ready' | 'failed'>('pending'),
+  };
   const { state, derived, debug } = useWolvesState({ today, currentSeason, data });
   return { today, currentSeason, data, state, derived, isMobile, debug };
 }
@@ -170,27 +163,42 @@ if (ctx) {
   // P1 (§9): municipality per record, after the dataset is on screen. The UI
   // works without it; a failure only hides the municipality features.
   let municipalityIndex: Awaited<ReturnType<typeof loadMunicipalityIndex>> | null = null;
-  let municipalityFailed = false;
+  const status = ctx.data.municipalityStatus!;
   const dataset = ctx.data.dataset;
   watch(
     dataset,
     async (value) => {
-      if (!value || municipalityFailed) return;
+      if (!value || status.value === 'failed') return;
       if (value.records.every((r) => r.municipalityCode !== undefined)) return;
       try {
         municipalityIndex = municipalityIndex || (await loadMunicipalityIndex());
       } catch (err) {
-        municipalityFailed = true;
+        status.value = 'failed';
+        // A `sav` from the URL cannot be honoured without the polygons (§5.2: ignore it).
+        ctx.state.sav.value = null;
         // eslint-disable-next-line no-console
         console.warn('[hunting/wolves] municipality lookup failed', err);
         return;
       }
       if (dataset.value !== value) return;
+      // Codes from the URL that are not a municipality are ignored (§5.2).
+      const sav = ctx.state.sav.value;
+      if (sav != null && !municipalityIndex.byCode[sav]) ctx.state.sav.value = null;
       assignMunicipalities(value.records, municipalityIndex);
-      triggerRef(dataset);
+      // Publish a new dataset object with a new records array: the derived computeds
+      // (records → filtered → map, histogram, sentence) only re-run when their input
+      // changes identity, so an in-place update plus triggerRef would leave them stale.
+      dataset.value = { ...value, records: value.records.slice() };
+      status.value = 'ready';
     },
     { immediate: true },
   );
+} else {
+  // Production gate: no wolves layers and no data requests, but the map still needs a
+  // base layer so its first 'loadend' fires and App.vue removes the loading overlay.
+  if (!mapLayers.baseLayers?.some((l: any) => l?.id === vectorPositron.id)) {
+    mapLayers.addBaseLayer(vectorPositron.id);
+  }
 }
 
 const debug = !!ctx?.debug;
@@ -219,7 +227,7 @@ const openAbout = () => about.value?.open();
 async function share() {
   try {
     if (!navigator.clipboard?.writeText) throw new Error('Clipboard API unavailable');
-    await navigator.clipboard.writeText(window.location.href);
+    await navigator.clipboard.writeText(ctx ? ctx.state.shareUrl() : window.location.href);
     eventBus.emit('uiToast', { type: 'success', title: 'Nuoroda nukopijuota' });
   } catch (err) {
     eventBus.emit('uiToast', {
