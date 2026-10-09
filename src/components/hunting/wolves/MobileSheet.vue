@@ -30,9 +30,11 @@
         <HuntingWolvesFilterSentence />
         <HuntingWolvesLoadState placement="panel" />
         <HuntingWolvesSeasonSummary v-if="expanded" />
-        <HuntingWolvesHistogram />
+        <HuntingWolvesHistogram :compact="!expanded" large />
         <template v-if="expanded">
-          <HuntingWolvesTableDrawer />
+          <HuntingWolvesMoreFilters large />
+          <HuntingWolvesMunicipalitySelect />
+          <HuntingWolvesTableDrawer variant="sheet" @show-on-map="collapse" />
           <HuntingWolvesDebugPanel v-if="ctx.debug" />
         </template>
       </div>
@@ -53,5 +55,10 @@ const showCard = computed(() => !!ctx.state.selection.value && !expanded.value);
 
 const toggle = () => {
   ctx.state.tableOpen.value = !ctx.state.tableOpen.value;
+};
+
+// "Rodyti žemėlapyje" in the sheet: collapse it so the map and the card show (§6.7).
+const collapse = () => {
+  ctx.state.tableOpen.value = false;
 };
 </script>

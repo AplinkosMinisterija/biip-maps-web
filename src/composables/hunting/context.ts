@@ -25,6 +25,10 @@ export interface WolvesContext {
     reloadTotals(): void;
     // T2 addition (optional): E1 fetch duration in ms, shown in DebugPanel.
     fetchMs?: Ref<number | null>;
+    // Integration additions (optional, provided by useWolvesData): set after a stale
+    // cache was refreshed in the background; E3 failure flag for DebugPanel.
+    refreshedAt?: Ref<Date | null>;
+    seasonsFailed?: Ref<boolean>;
   };
   state: {
     interval: Ref<Interval>;

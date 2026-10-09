@@ -1,5 +1,6 @@
 import { inject, onBeforeUnmount, onMounted, provide, ref, toRaw, watch } from 'vue';
 import type { InjectionKey, Ref } from 'vue';
+import { useRoute } from 'vue-router';
 import { Feature } from 'ol';
 import type { Map, MapBrowserEvent } from 'ol';
 import type { FeatureLike } from 'ol/Feature';
@@ -39,6 +40,15 @@ const prefersReducedMotion = () =>
   typeof window !== 'undefined' &&
   !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
+// Map area covered by the route's panels (§7): left panel on desktop/tablet, top bar and
+// collapsed sheet on phones. [top, right, bottom, left] in px.
+function panelPadding(): number[] {
+  const width = window.innerWidth;
+  if (width >= 1024) return [0, 0, 0, 416];
+  if (width >= 768) return [0, 0, 0, 376];
+  return [150, 0, 180, 0];
+}
+
 /**
  * Wolves map: adds the route's own layers on mount and removes them on unmount, keeps the
  * cluster source in sync with `ctx.derived.filtered`, handles clicks without network
@@ -60,6 +70,8 @@ export function useWolvesMap(ctx: WolvesContext): WolvesMapApi {
   let map: Map | null = null;
   let mounted = false;
   let previousMaxZoom: number | undefined;
+  let previousPadding: number[] | undefined;
+  const route = useRoute();
   let previousPointerLayers: string[] = [];
   let clickEntry: any = null;
 
@@ -282,6 +294,12 @@ export function useWolvesMap(ctx: WolvesContext): WolvesMapApi {
     previousMaxZoom = view.getMaxZoom();
     view.setMaxZoom(MAX_ZOOM);
 
+    // Keep Lithuania clear of the floating panels: the view centres and fits inside the
+    // uncovered area. The URL's x/y/z (App.vue) still wins.
+    previousPadding = view.padding;
+    view.padding = panelPadding();
+    if (!route.query.x || !route.query.y) mapLayers.centerMap();
+
     layers.clusterSource.on('change', onClusterChange);
     map.on('rendercomplete', onRenderComplete);
     map.on('moveend', onMoveEnd);
@@ -306,6 +324,7 @@ export function useWolvesMap(ctx: WolvesContext): WolvesMapApi {
     if (viewport) viewport.style.cursor = '';
 
     if (previousMaxZoom !== undefined) map.getView().setMaxZoom(previousMaxZoom);
+    map.getView().padding = previousPadding || [0, 0, 0, 0];
 
     layers.clusterSource.un('change', onClusterChange);
     map.un('rendercomplete', onRenderComplete);

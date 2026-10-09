@@ -141,10 +141,26 @@ function go(step: number) {
   if (!sel) return;
   const next = Math.min(Math.max(index.value + step, 0), count.value - 1);
   ctx.state.selection.value = { ...sel, index: next };
+  // the pressed pager button is disabled at either end and drops focus; keep it in the card
+  nextTick(() => {
+    const active = document.activeElement as HTMLButtonElement | null;
+    if (!active || active === document.body || active.disabled) {
+      titleEl.value?.focus({ preventScroll: true });
+    }
+  });
 }
 
 function close() {
   ctx.state.clearSelection();
+}
+
+// Focus moves to the heading when a card opens (§8.3). When this component is mounted
+// together with the selection, the heading exists only after mount.
+let pendingFocus = false;
+function focusTitle() {
+  if (!pendingFocus || !titleEl.value) return;
+  pendingFocus = false;
+  titleEl.value.focus({ preventScroll: true });
 }
 
 function restoreFocus() {
@@ -152,9 +168,9 @@ function restoreFocus() {
   opener = null;
   if (target && target.isConnected && target !== document.body) {
     target.focus({ preventScroll: true });
-  } else {
-    mapApi?.focusMap();
   }
+  // the opener may be gone or not focusable (a map click): fall back to the map
+  if (!target || document.activeElement !== target) mapApi?.focusMap();
 }
 
 watch(
@@ -167,8 +183,9 @@ watch(
         opener =
           active && active !== document.body && !cardEl.value?.contains(active) ? active : null;
       }
+      pendingFocus = true;
       await nextTick();
-      titleEl.value?.focus({ preventScroll: true });
+      focusTitle();
     } else if (!key && oldKey) {
       // closed by the button, Esc or a filter change: return focus only if it was inside the card
       // (pre-flush: the card is still in the DOM here)
@@ -177,7 +194,8 @@ watch(
       else opener = null;
     }
   },
-  { flush: 'pre' },
+  // immediate: the route mounts this card only once something is selected
+  { flush: 'pre', immediate: true },
 );
 
 function onKeydown(e: KeyboardEvent) {
@@ -186,6 +204,15 @@ function onKeydown(e: KeyboardEvent) {
   close();
 }
 
-onMounted(() => document.addEventListener('keydown', onKeydown));
-onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown));
+onMounted(() => {
+  document.addEventListener('keydown', onKeydown);
+  focusTitle();
+});
+onBeforeUnmount(() => {
+  document.removeEventListener('keydown', onKeydown);
+  // The route unmounts the card when the selection clears, before the watcher above
+  // can run; return focus here so it is not lost on <body>.
+  const active = document.activeElement;
+  if (active && cardEl.value?.contains(active)) restoreFocus();
+});
 </script>

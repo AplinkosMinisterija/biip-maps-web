@@ -8,8 +8,6 @@
     }"
     :style="{ '--wolves-top': `${topBarHeight}px`, '--wolves-bottom': `${sheetHeight}px` }"
   >
-    <UiMap :show-scale-line="true" :projection="projection3857" />
-
     <HuntingWolvesProductionGate v-if="isProductionHost" />
 
     <template v-else>
@@ -52,13 +50,8 @@
           <HuntingWolvesMapLegend />
         </div>
 
-        <div
-          v-if="tableOpen"
-          id="wolves-table-drawer"
-          class="absolute right-0 top-0 h-full z-30 w-[calc(100%-24px)] max-w-[520px] bg-white shadow-lg overflow-hidden"
-        >
-          <HuntingWolvesTableDrawer />
-        </div>
+        <!-- Positions itself and carries id="wolves-table-drawer" (§6.6). -->
+        <HuntingWolvesTableDrawer />
 
         <div
           class="absolute right-12 flex flex-col items-end gap-2"
@@ -70,6 +63,7 @@
             <HuntingWolvesWolfCard />
           </div>
           <button
+            ref="tableToggle"
             type="button"
             class="px-4 py-2 rounded bg-white shadow-md text-sm font-semibold text-gray-900 hover:bg-gray-100 flex items-center gap-2"
             :class="focusRing"
@@ -120,11 +114,24 @@
       <HuntingWolvesLoadState placement="map" />
       <HuntingWolvesAboutData ref="about" />
     </template>
+
+    <!-- Last in the DOM so keyboard users reach the panel before the map controls. -->
+    <UiMap :show-scale-line="true" :projection="projection3857" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, inject, onBeforeUnmount, onMounted, provide, ref, triggerRef, watch } from 'vue';
+import {
+  computed,
+  inject,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  provide,
+  ref,
+  triggerRef,
+  watch,
+} from 'vue';
 import { useElementSize, useMediaQuery } from '@vueuse/core';
 import { projection3857 } from '@/utils';
 import { WOLVES_CTX, type WolvesContext } from '@/composables/hunting/context';
@@ -193,6 +200,17 @@ const hasSelection = computed(() => !!ctx?.state.selection.value);
 const toggleTable = () => {
   if (ctx) ctx.state.tableOpen.value = !ctx.state.tableOpen.value;
 };
+
+// Closing the drawer (its button or Esc) removes the focused element; give focus back
+// to the toggle so keyboard users are not dropped on <body> (§6.6).
+const tableToggle = ref<HTMLButtonElement | null>(null);
+watch(tableOpen, (open, wasOpen) => {
+  if (open || !wasOpen || isMobile.value) return;
+  nextTick(() => {
+    const active = document.activeElement;
+    if (!active || active === document.body) tableToggle.value?.focus();
+  });
+});
 
 // ---- "Apie duomenis" and "Dalintis".
 const about = ref<{ open: () => void } | null>(null);
@@ -278,5 +296,12 @@ onBeforeUnmount(() => {
 .wolves-page--mobile .bottomLeft,
 .wolves-page--mobile .rightBottom {
   transform: translateY(calc(-1 * var(--wolves-bottom, 0px)));
+}
+/* §12.11: UiMap's own controls are 28 px (set with !important); make them 44 px touch
+   targets on phones. */
+.wolves-page--mobile .ol-control button,
+.wolves-page--mobile .rightBottom button {
+  width: 44px !important;
+  height: 44px !important;
 }
 </style>

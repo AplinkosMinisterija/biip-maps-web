@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col gap-3 text-sm text-gray-900">
     <div v-if="showVisibleAreaToggle" class="flex flex-col gap-1">
-      <label class="inline-flex items-center gap-2 cursor-pointer min-h-[24px]">
+      <label class="inline-flex items-center gap-2 cursor-pointer min-h-[44px] md:min-h-[24px]">
         <input
           v-model="visibleOnly"
           type="checkbox"

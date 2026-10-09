@@ -37,7 +37,12 @@
 
   <!-- In the panel: errors, cache notes and the data timestamp (§10). -->
   <template v-else>
-    <UiAlert v-if="hardError" type="danger" class="!items-start !font-normal flex-col gap-2">
+    <UiAlert
+      v-if="hardError"
+      role="alert"
+      type="danger"
+      class="!items-start !font-normal flex-col gap-2"
+    >
       <p class="font-semibold">{{ errorText }}</p>
       <button
         type="button"
@@ -72,7 +77,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, ref, watch, type PropType } from 'vue';
+import { computed, inject, type PropType } from 'vue';
 import { WOLVES_CTX } from '@/composables/hunting/context';
 import { formatDateTime, seasonInterval, seasonOfDay } from '@/utils/hunting/dates';
 
@@ -95,8 +100,12 @@ const pillText = computed(() =>
 );
 
 const hardError = computed(() => data.phase.value === 'error' && !data.dataset.value);
-const staleError = computed(() => data.phase.value === 'error' && !!data.dataset.value);
-const refreshing = computed(() => loading.value && !!data.dataset.value);
+// useWolvesData keeps a shown (cached) dataset when a refresh fails and reports it in `error`.
+const staleError = computed(() => !!data.error.value && !!data.dataset.value);
+// A stale cache is on screen while it is refreshed in the background (§10).
+const refreshing = computed(
+  () => data.fromCache.value === 'stale' || (loading.value && !!data.dataset.value),
+);
 
 // useWolvesData puts user-facing Lithuanian messages (they start with "Nepavyko")
 // into `error`; anything else is technical and gets the generic text.
@@ -110,17 +119,9 @@ const fetchedAtText = computed(() =>
 );
 
 // "Duomenys atnaujinti HH:mm" only after a stale cache was refreshed in the background.
-const refreshedAt = ref<string | null>(null);
-let sawStale = data.fromCache.value === 'stale';
-watch(data.fromCache, (value) => {
-  if (value === 'stale') sawStale = true;
-});
-watch(data.phase, (phase) => {
-  if (phase === 'ready' && sawStale && data.fromCache.value !== 'stale' && data.fetchedAt.value) {
-    refreshedAt.value = formatDateTime(data.fetchedAt.value).slice(11);
-    sawStale = false;
-  }
-});
+const refreshedAt = computed(() =>
+  data.refreshedAt?.value ? formatDateTime(data.refreshedAt.value).slice(11) : null,
+);
 
 const isEmpty = computed(
   () => !!data.dataset.value && !loading.value && derived.filtered.value.length === 0,

@@ -69,6 +69,14 @@ const cacheText = computed(() => {
   return cache ? `hit (${cache})` : 'miss';
 });
 
+// P1 lookup (§9): failures are reported here only.
+const municipalityText = computed(() => {
+  const records = data.dataset.value?.records || [];
+  if (!records.length || records[0].municipalityCode === undefined) return 'nepriskirta';
+  const assigned = records.filter((r) => r.municipalityCode != null).length;
+  return `${assigned} iš ${records.length}`;
+});
+
 const rows = computed<[string, string | number][]>(() => {
   const d = data.dataset.value;
   const paperBySeason = d
@@ -83,6 +91,7 @@ const rows = computed<[string, string | number][]>(() => {
     ['paperRowsBySeason', paperBySeason],
     ['paperRowsUnknownSeason', d ? d.paperRowsUnknownSeason : '—'],
     ['excludedBadDate', d ? d.excludedBadDate : '—'],
+    ['excludedBadGeom', d ? d.excludedBadGeom : '—'],
     ['duplicateIdsDropped', d ? d.duplicateIdsDropped : '—'],
     ['possibleDuplicatePairs', d ? d.possibleDuplicatePairs : '—'],
     ['minYear', d ? d.minYear : '—'],
@@ -93,7 +102,8 @@ const rows = computed<[string, string | number][]>(() => {
     ],
     ['fetchMs', data.fetchMs?.value ?? '—'],
     ['cache', cacheText.value],
-    ['seasons (E3)', data.seasons.value.length ? data.seasons.value.length : 'nepavyko / nėra'],
+    ['seasons (E3)', data.seasonsFailed?.value ? 'nepavyko' : data.seasons.value.length],
+    ['municipalities (P1)', municipalityText.value],
     ['totals (E2)', data.totalsFailed.value ? 'nepavyko' : JSON.stringify(data.totals.value)],
     ['error', data.error.value || '—'],
   ];
