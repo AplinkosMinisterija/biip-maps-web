@@ -49,6 +49,7 @@ export interface WolvesDataset {
   paperRowsBySeason: Record<number, number>; // rows without geom, by season start year (via seasonId → E3)
   paperRowsUnknownSeason: number; // rows without geom whose seasonId is unknown
   excludedBadDate: number; // day < '2017-04-01' or after today
+  excludedBadGeom: number; // geom present but not a readable EWKB point (defensive; today 0)
   duplicateIdsDropped: number;
   possibleDuplicatePairs: number; // flagged only, never removed (§4.5)
   apiTotal: number; // E1 `total`
