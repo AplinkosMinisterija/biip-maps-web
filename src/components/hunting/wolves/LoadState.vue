@@ -74,8 +74,7 @@
 <script setup lang="ts">
 import { computed, inject, ref, watch, type PropType } from 'vue';
 import { WOLVES_CTX } from '@/composables/hunting/context';
-// TODO-INTEGRATE: import from '@/utils/hunting/dates'.
-import { formatDateTime, seasonInterval, seasonOfDay } from '@/composables/hunting/t2Stubs';
+import { formatDateTime, seasonInterval, seasonOfDay } from '@/utils/hunting/dates';
 
 defineProps({
   placement: { type: String as PropType<'map' | 'panel'>, default: 'panel' },

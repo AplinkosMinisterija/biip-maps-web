@@ -92,41 +92,8 @@ import { WOLVES_CTX } from '@/composables/hunting/context';
 import { WOLVES_MAP_CTX } from '@/composables/hunting/useWolvesMap';
 import type { WolfRecord } from '@/utils/hunting/types';
 
-// Labels follow SPEC §4.8 (aligned with the WordPress map.php I18N).
-// TODO(integration): switch to the shared helpers in '@/utils/hunting/labels' once T1 is merged.
-const AGE: Record<string, string> = {
-  ADULT: 'Suaugęs',
-  TWO_YEAR: 'Vyresnis nei 1 m.',
-  ONE_YEAR: 'Jauniklis iki 1 m.',
-};
-const SEX: Record<string, string> = { MALE: 'Patinas', FEMALE: 'Patelė' };
-const METHOD: Record<string, string> = {
-  TYKOJAMOJI: 'Tykojamoji',
-  VAROMOJI: 'Varomoji',
-  SU_VELIAVELEMIS: 'Su vėliavėlėmis',
-  OTHER: 'Kita',
-};
-const SOURCE: Record<string, string> = {
-  biomon: 'BIOMON',
-  biip: 'BIIP elektroninis medžioklės lapas',
-};
-
-const ageLabel = (v: string | null) => (v ? (AGE[v] ?? v) : 'Nenurodyta');
-const sexLabel = (v: string | null) => (v ? (SEX[v] ?? v) : 'Nenurodyta');
-const methodLabel = (v: string | null) => (v ? (METHOD[v] ?? v) : 'Nenurodytas');
-const sourceLabel = (v: string) => SOURCE[v] ?? v;
-const packLabel = (member: boolean | null, amount: number | null) => {
-  if (member === true) return amount && amount > 0 ? `Taip, gaujoje ${amount}` : 'Taip';
-  if (member === false) return 'Ne';
-  return 'Nenurodyta';
-};
-const plural = (n: number, forms: [string, string, string]) => {
-  const a = n % 10;
-  const b = n % 100;
-  if (a === 1 && b !== 11) return forms[0];
-  if (a >= 2 && a <= 9 && !(b >= 12 && b <= 19)) return forms[1];
-  return forms[2];
-};
+import { pluralLt as plural } from '@/utils/hunting/dates';
+import { ageLabel, methodLabel, packLabel, sexLabel, sourceLabel } from '@/utils/hunting/labels';
 
 const pagerClass =
   'min-h-[24px] max-md:min-h-[44px] px-2 py-1 rounded border border-gray-300 text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';

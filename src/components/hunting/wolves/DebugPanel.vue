@@ -46,8 +46,7 @@
 <script setup lang="ts">
 import { computed, inject } from 'vue';
 import { WOLVES_CTX } from '@/composables/hunting/context';
-// TODO-INTEGRATE: import from '@/utils/hunting/selfcheck'.
-import { runSelfChecks } from '@/composables/hunting/t2Stubs';
+import { runSelfChecks } from '@/utils/hunting/selfcheck';
 
 const ctx = inject(WOLVES_CTX)!;
 const { data, derived, state } = ctx;

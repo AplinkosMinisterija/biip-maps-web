@@ -109,8 +109,8 @@
 <script setup lang="ts">
 import { computed, inject, reactive } from 'vue';
 import { WOLVES_CTX } from '@/composables/hunting/context';
-// TODO-INTEGRATE: import from '@/utils/hunting/dates' and '@/utils/hunting/labels'.
-import { AM_WOLVES_URL, WOLF_LIMITS, formatInt, pluralLt } from '@/composables/hunting/t2Stubs';
+import { formatInt, pluralLt } from '@/utils/hunting/dates';
+import { AM_WOLVES_URL, WOLF_LIMITS } from '@/utils/hunting/labels';
 
 const ctx = inject(WOLVES_CTX)!;
 const { data, derived } = ctx;

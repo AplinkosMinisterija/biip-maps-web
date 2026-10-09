@@ -84,8 +84,8 @@ import { computed, inject } from 'vue';
 import { WOLVES_CTX } from '@/composables/hunting/context';
 import type { Interval, WolfRecord } from '@/utils/hunting/types';
 
-// Local copy of §4.6 (`WOLF_LIMITS` in `@/utils/hunting/labels`, owned by T1).
-const WOLF_LIMITS: Record<number, number> = { 2024: 341, 2025: 307 };
+import { formatInt } from '@/utils/hunting/dates';
+import { WOLF_LIMITS } from '@/utils/hunting/labels';
 
 // Wolf hunting months in season order; April–September go to "Kiti mėn.".
 const MONTH_COLUMNS = [
@@ -107,7 +107,6 @@ interface PivotRow {
   paperRows: number;
 }
 
-const formatInt = (n: number) => new Intl.NumberFormat('lt-LT').format(n);
 const pad = (n: number) => `${n}`.padStart(2, '0');
 
 const ctx = inject(WOLVES_CTX)!;

@@ -99,8 +99,7 @@
 <script setup lang="ts">
 import { computed, inject, ref, watch } from 'vue';
 import { WOLVES_CTX } from '@/composables/hunting/context';
-// TODO-INTEGRATE: import from '@/utils/hunting/dates'.
-import { formatDateTime, formatInt } from '@/composables/hunting/t2Stubs';
+import { formatDateTime, formatInt } from '@/utils/hunting/dates';
 import type { StatusState } from '@/utils/hunting/types';
 
 const ctx = inject(WOLVES_CTX)!;

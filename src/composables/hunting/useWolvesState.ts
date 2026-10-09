@@ -2,12 +2,9 @@ import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter, type LocationQuery } from 'vue-router';
 import type { WolvesContext } from '@/composables/hunting/context';
 import type { Interval, PresetId } from '@/utils/hunting/types';
-// TODO-INTEGRATE: import these from '@/utils/hunting/dates'.
-import { formatInt, pluralLt, seasonInterval, seasonOfDay } from '@/composables/hunting/t2Stubs';
-// TODO-INTEGRATE: import these from '@/utils/hunting/labels'.
-import { AGE_LABELS, METHOD_LABELS, SEX_LABELS } from '@/composables/hunting/t2Stubs';
-// TODO-INTEGRATE: import these from '@/utils/hunting/wolves'.
-import { filterRecords, histogram, statusModel } from '@/composables/hunting/t2Stubs';
+import { formatInt, pluralLt, seasonInterval, seasonOfDay } from '@/utils/hunting/dates';
+import { AGE_LABELS, METHOD_LABELS, SEX_LABELS } from '@/utils/hunting/labels';
+import { filterRecords, histogram, statusModel } from '@/utils/hunting/wolves';
 
 type TableTab = 'irasai' | 'sezonai' | 'savivaldybes';
 type Attrs = { age: string[]; sex: string[]; method: string[] };

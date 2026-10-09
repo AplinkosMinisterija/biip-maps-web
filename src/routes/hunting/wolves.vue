@@ -124,22 +124,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue';
+import { computed, inject, onBeforeUnmount, onMounted, provide, ref, triggerRef, watch } from 'vue';
 import { useElementSize, useMediaQuery } from '@vueuse/core';
-import { projection3857, vectorPositron } from '@/utils';
+import { projection3857 } from '@/utils';
 import { WOLVES_CTX, type WolvesContext } from '@/composables/hunting/context';
 import { useWolvesState } from '@/composables/hunting/useWolvesState';
-// TODO-INTEGRATE: import from '@/utils/hunting/dates'.
-import { seasonOfDay, todayVilnius } from '@/composables/hunting/t2Stubs';
-// TODO-INTEGRATE: import from '@/composables/hunting/useWolvesData'.
-import { useWolvesData } from '@/composables/hunting/t2Stubs';
-// TODO-INTEGRATE: import from '@/composables/hunting/useWolvesMap'.
-import { useWolvesMap } from '@/composables/hunting/t2Stubs';
+import { seasonOfDay, todayVilnius } from '@/utils/hunting/dates';
+import { useWolvesData } from '@/composables/hunting/useWolvesData';
+import { useWolvesMap } from '@/composables/hunting/useWolvesMap';
+import { assignMunicipalities, loadMunicipalityIndex } from '@/utils/hunting/municipalities';
 
 const mapLayers: any = inject('mapLayers');
 const eventBus: any = inject('eventBus');
-
-mapLayers.addBaseLayer(vectorPositron.id);
 
 // Until the PO signs off, production shows only a notice and makes no data requests (§6.10).
 const isProductionHost = window.location.hostname === 'maps.biip.lt';
@@ -154,7 +150,7 @@ const iconButton =
 function createContext(): WolvesContext {
   const today = todayVilnius();
   const currentSeason = seasonOfDay(today);
-  const data = useWolvesData(today);
+  const data = useWolvesData({ today });
   const { state, derived, debug } = useWolvesState({ today, currentSeason, data });
   return { today, currentSeason, data, state, derived, isMobile, debug };
 }
@@ -163,6 +159,31 @@ const ctx = isProductionHost ? null : createContext();
 if (ctx) {
   provide(WOLVES_CTX, ctx);
   useWolvesMap(ctx);
+
+  // P1 (§9): municipality per record, after the dataset is on screen. The UI
+  // works without it; a failure only hides the municipality features.
+  let municipalityIndex: Awaited<ReturnType<typeof loadMunicipalityIndex>> | null = null;
+  let municipalityFailed = false;
+  const dataset = ctx.data.dataset;
+  watch(
+    dataset,
+    async (value) => {
+      if (!value || municipalityFailed) return;
+      if (value.records.every((r) => r.municipalityCode !== undefined)) return;
+      try {
+        municipalityIndex = municipalityIndex || (await loadMunicipalityIndex());
+      } catch (err) {
+        municipalityFailed = true;
+        // eslint-disable-next-line no-console
+        console.warn('[hunting/wolves] municipality lookup failed', err);
+        return;
+      }
+      if (dataset.value !== value) return;
+      assignMunicipalities(value.records, municipalityIndex);
+      triggerRef(dataset);
+    },
+    { immediate: true },
+  );
 }
 
 const debug = !!ctx?.debug;

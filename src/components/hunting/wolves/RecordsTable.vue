@@ -142,34 +142,8 @@ import { WOLVES_CTX } from '@/composables/hunting/context';
 import { hasMunicipalities } from '@/utils/hunting/municipalities';
 import type { WolfRecord } from '@/utils/hunting/types';
 
-// Local copies of the §4.8 labels and §4.9 formats; the integrator may switch these
-// to `@/utils/hunting/labels` / `dates` once T1 lands (same strings).
-const AGE: Record<string, string> = {
-  ADULT: 'Suaugęs',
-  TWO_YEAR: 'Vyresnis nei 1 m.',
-  ONE_YEAR: 'Jauniklis iki 1 m.',
-};
-const SEX: Record<string, string> = { MALE: 'Patinas', FEMALE: 'Patelė' };
-const METHOD: Record<string, string> = {
-  TYKOJAMOJI: 'Tykojamoji',
-  VAROMOJI: 'Varomoji',
-  SU_VELIAVELEMIS: 'Su vėliavėlėmis',
-  OTHER: 'Kita',
-};
-const SOURCE: Record<string, string> = {
-  biomon: 'BIOMON',
-  biip: 'BIIP elektroninis medžioklės lapas',
-};
-const ageLabel = (v: string | null) => (v ? AGE[v] || v : 'Nenurodyta');
-const sexLabel = (v: string | null) => (v ? SEX[v] || v : 'Nenurodyta');
-const methodLabel = (v: string | null) => (v ? METHOD[v] || v : 'Nenurodytas');
-const sourceLabel = (v: string) => SOURCE[v] || v;
-const packLabel = (member: boolean | null, amount: number | null) => {
-  if (member === true) return amount && amount > 0 ? `Taip, gaujoje ${amount}` : 'Taip';
-  if (member === false) return 'Ne';
-  return 'Nenurodyta';
-};
-const formatInt = (n: number) => new Intl.NumberFormat('lt-LT').format(n);
+import { formatInt } from '@/utils/hunting/dates';
+import { ageLabel, methodLabel, packLabel, sexLabel, sourceLabel } from '@/utils/hunting/labels';
 
 const PAGE_SIZE = 50;
 

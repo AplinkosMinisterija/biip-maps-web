@@ -96,14 +96,8 @@
 <script setup lang="ts">
 import { computed, inject, nextTick, onBeforeUnmount, ref } from 'vue';
 import { WOLVES_CTX } from '@/composables/hunting/context';
-// TODO-INTEGRATE: import from '@/utils/hunting/dates' and '@/utils/hunting/labels'.
-import {
-  AM_WOLVES_URL,
-  WOLF_LIMITS,
-  formatDateTime,
-  formatInt,
-  pluralLt,
-} from '@/composables/hunting/t2Stubs';
+import { formatDateTime, formatInt, pluralLt } from '@/utils/hunting/dates';
+import { AM_WOLVES_URL, WOLF_LIMITS } from '@/utils/hunting/labels';
 
 const ctx = inject(WOLVES_CTX)!;
 const modal = ref<any>(null);
