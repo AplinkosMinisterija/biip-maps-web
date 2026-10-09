@@ -94,11 +94,15 @@
       </p>
     </div>
 
-    <p v-if="fallbackInfo" class="mt-3 flex gap-1 text-xs text-gray-800">
-      <span aria-hidden="true">ⓘ</span>
+    <p
+      v-if="showSeasonNote && fallbackInfo"
+      class="mt-3 flex items-start gap-1 text-xs text-gray-800"
+    >
+      <!-- Drawn, not the "ⓘ" character: default fonts render that glyph as a box (SPEC2 §7). -->
+      <span :class="infoGlyph" aria-hidden="true">i</span>
       <span>{{ fallbackInfo }}</span>
     </p>
-    <p v-if="shownSeason !== null" class="mt-2 text-xs text-gray-700">
+    <p v-if="showSeasonNote && shownSeason !== null" class="mt-2 text-xs text-gray-700">
       Vilkų medžioklė: {{ shownSeason }}-10-15 – {{ shownSeason + 1 }}-03-31. Sezonas baigiamas
       anksčiau, jei išnaudojamas limitas.
     </p>
@@ -138,6 +142,9 @@ const props = defineProps({
   draft: { type: Object as PropType<Draft | null>, default: null },
   // Mobile: 44 px chips, 48 px selects.
   large: { type: Boolean, default: false },
+  // The season notes ("… vilkų medžioklė prasideda …" and "Vilkų medžioklė: … – …"); the hub
+  // passes false because its status line already names the dates (SPEC2 §7).
+  showSeasonNote: { type: Boolean, default: true },
 });
 const emit = defineEmits(['update:draft']);
 
@@ -297,6 +304,9 @@ const years = computed(() => {
 // --- Info lines ----------------------------------------------------------------
 
 const shownSeason = computed<number | null>(() => intervalSeason(current.value.interval));
+
+const infoGlyph =
+  'mt-px w-3.5 h-3.5 shrink-0 rounded-full border border-current text-[9px] font-bold leading-none flex items-center justify-center';
 
 const fallbackInfo = computed(() => {
   const fellBack = ctx.derived.defaultSeason.value === cur.value - 1;

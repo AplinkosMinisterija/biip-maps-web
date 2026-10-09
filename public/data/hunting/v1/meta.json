@@ -1,0 +1,187 @@
+{
+  "v": 1,
+  "snapshotDate": "2026-10-09",
+  "generatedAt": "2026-10-09T13:50:48Z",
+  "tables": {
+    "seasons": {
+      "columns": ["season","current"],
+      "rows": [
+        [2024,false],
+        [2025,false],
+        [2026,true]
+      ]
+    },
+    "species": {
+      "columns": ["id","name","slug","formType","group","isOther"],
+      "rows": [
+        [1,"Briedis","briedis","HORNED","Kanopiniai",false],
+        [2,"Taurusis elnias","taurusis-elnias","HORNED","Kanopiniai",false],
+        [3,"Stirna","stirna","HORNED","Kanopiniai",false],
+        [4,"Šernas","sernas","EXTENDED","Kanopiniai",false],
+        [5,"Lapė","lape","SIMPLE","Plėšrūnai",false],
+        [6,"Bebras","bebras","SIMPLE","Kiti žinduoliai",false],
+        [7,"Pilkasis kiškis","pilkasis-kiskis","SIMPLE","Kiti žinduoliai",false],
+        [8,"Mangutas","mangutas","SIMPLE","Plėšrūnai",false],
+        [9,"Danielius","danielius","HORNED","Kanopiniai",false],
+        [10,"Barsukas","barsukas","SIMPLE","Plėšrūnai",false],
+        [11,"Vilkas","vilkas","WOLF","Plėšrūnai",false],
+        [12,"Didžioji antis","didzioji-antis","SIMPLE","Paukščiai",false],
+        [13,"Slanka","slanka","SIMPLE","Paukščiai",false],
+        [14,"Fazanas","fazanas","SIMPLE","Paukščiai",false],
+        [15,"Želmeninė žąsis","zelmenine-zasis","SIMPLE","Paukščiai",false],
+        [16,"Miškinė kiaunė","miskine-kiaune","SIMPLE","Plėšrūnai",false],
+        [17,"Rudagalvė kryklė","rudagalve-krykle","SIMPLE","Paukščiai",false],
+        [18,"Laukys","laukys","SIMPLE","Paukščiai",false],
+        [19,"Pilkoji varna","pilkoji-varna","SIMPLE","Paukščiai",false],
+        [20,"Kanadinė audinė","kanadine-audine","SIMPLE","Plėšrūnai",false],
+        [21,"Baltakaktė žąsis","baltakakte-zasis","SIMPLE","Paukščiai",false],
+        [22,"Nutrija","nutrija","SIMPLE","Kiti žinduoliai",false],
+        [23,"Kuoduotoji antis","kuoduotoji-antis","SIMPLE","Paukščiai",false],
+        [24,"Akmeninė kiaunė","akmenine-kiaune","SIMPLE","Plėšrūnai",false],
+        [25,"Juodasis šeškas","juodasis-seskas","SIMPLE","Plėšrūnai",false],
+        [26,"Ondatra","ondatra","SIMPLE","Kiti žinduoliai",false],
+        [27,"Perkūno oželis","perkuno-ozelis","SIMPLE","Paukščiai",false],
+        [28,"Klykuolė","klykuole","SIMPLE","Paukščiai",false],
+        [29,"Keršulis","kersulis","SIMPLE","Paukščiai",false],
+        [30,"Kovas","kovas","SIMPLE","Paukščiai",false],
+        [31,"Paprastasis meškėnas","paprastasis-meskenas","SIMPLE","Plėšrūnai",false],
+        [32,"Paprastasis šakalas","paprastasis-sakalas","SIMPLE","Plėšrūnai",false],
+        [34,"Kanadinė berniklė","kanadine-bernikle","SIMPLE","Paukščiai",false],
+        [39,"Kita","kita","OTHER",null,true],
+        [41,"Dovydo elnias","dovydo-elnias","HORNED","Kanopiniai",false],
+        [42,"Dėmėtasis elnias","demetasis-elnias","HORNED","Kanopiniai",false]
+      ]
+    },
+    "municipalities": {
+      "columns": ["code","name","county","mpvCount","mpvHa","mpvSmall","pooled"],
+      "rows": [
+        [11,"Alytaus m. sav.","Alytaus apskr.",0,0,0,false],
+        [12,"Birštono sav.","Kauno apskr.",0,0,0,false],
+        [13,"Vilniaus m. sav.","Vilniaus apskr.",0,0,0,false],
+        [15,"Druskininkų sav.","Alytaus apskr.",4,40279,0,false],
+        [18,"Marijampolės sav.","Marijampolės apskr.",15,80918,1,false],
+        [19,"Kauno m. sav.","Kauno apskr.",0,0,0,false],
+        [21,"Klaipėdos m. sav.","Klaipėdos apskr.",1,3572,0,true],
+        [23,"Neringos sav.","Klaipėdos apskr.",2,4143,0,true],
+        [25,"Palangos m. sav.","Klaipėdos apskr.",0,0,0,false],
+        [27,"Panevėžio m. sav.","Panevėžio apskr.",0,0,0,false],
+        [29,"Šiaulių m. sav.","Šiaulių apskr.",0,0,0,false],
+        [30,"Visagino sav.","Utenos apskr.",0,0,0,false],
+        [32,"Akmenės r. sav.","Šiaulių apskr.",14,77462,0,false],
+        [33,"Alytaus r. sav.","Alytaus apskr.",22,132149,3,false],
+        [34,"Anykščių r. sav.","Utenos apskr.",22,170687,0,false],
+        [36,"Biržų r. sav.","Panevėžio apskr.",14,145907,0,false],
+        [38,"Varėnos r. sav.","Alytaus apskr.",31,202085,0,false],
+        [39,"Vilkaviškio r. sav.","Marijampolės apskr.",18,125812,0,false],
+        [41,"Vilniaus r. sav.","Vilniaus apskr.",26,207631,1,false],
+        [42,"Elektrėnų sav.","Vilniaus apskr.",7,41732,0,false],
+        [43,"Zarasų r. sav.","Utenos apskr.",19,129017,0,false],
+        [45,"Ignalinos r. sav.","Utenos apskr.",16,151720,0,false],
+        [46,"Jonavos r. sav.","Kauno apskr.",15,90442,0,false],
+        [47,"Joniškio r. sav.","Šiaulių apskr.",17,113270,0,false],
+        [48,"Kalvarijos sav.","Marijampolės apskr.",5,28850,0,false],
+        [49,"Kaišiadorių r. sav.","Kauno apskr.",16,105959,1,false],
+        [52,"Kauno r. sav.","Kauno apskr.",26,143992,0,false],
+        [53,"Kėdainių r. sav.","Kauno apskr.",26,173329,1,false],
+        [54,"Kelmės r. sav.","Šiaulių apskr.",28,162036,0,false],
+        [55,"Klaipėdos r. sav.","Klaipėdos apskr.",28,121256,0,false],
+        [56,"Kretingos r. sav.","Klaipėdos apskr.",13,105586,0,false],
+        [57,"Kupiškio r. sav.","Panevėžio apskr.",20,107732,0,false],
+        [58,"Kazlų Rūdos sav.","Marijampolės apskr.",20,57044,1,false],
+        [59,"Lazdijų r. sav.","Alytaus apskr.",18,134852,0,false],
+        [61,"Mažeikių r. sav.","Telšių apskr.",13,119335,0,false],
+        [62,"Molėtų r. sav.","Utenos apskr.",20,135198,0,false],
+        [63,"Pagėgių sav.","Tauragės apskr.",4,48115,0,false],
+        [65,"Pakruojo r. sav.","Šiaulių apskr.",13,131115,0,false],
+        [66,"Panevėžio r. sav.","Panevėžio apskr.",33,219492,0,false],
+        [67,"Pasvalio r. sav.","Panevėžio apskr.",12,128133,0,false],
+        [68,"Plungės r. sav.","Telšių apskr.",17,108933,0,false],
+        [69,"Prienų r. sav.","Kauno apskr.",24,105273,1,false],
+        [71,"Radviliškio r. sav.","Šiaulių apskr.",26,159893,0,false],
+        [72,"Raseinių r. sav.","Kauno apskr.",23,151238,0,false],
+        [73,"Rokiškio r. sav.","Panevėžio apskr.",22,178567,0,false],
+        [74,"Rietavo sav.","Telšių apskr.",10,53258,0,false],
+        [75,"Skuodo r. sav.","Klaipėdos apskr.",12,86210,0,false],
+        [77,"Tauragės r. sav.","Tauragės apskr.",13,115734,0,false],
+        [78,"Telšių r. sav.","Telšių apskr.",22,131745,0,false],
+        [79,"Trakų r. sav.","Vilniaus apskr.",20,139258,0,false],
+        [81,"Ukmergės r. sav.","Vilniaus apskr.",16,135100,0,false],
+        [82,"Utenos r. sav.","Utenos apskr.",21,117849,0,false],
+        [84,"Šakių r. sav.","Marijampolės apskr.",25,145028,0,false],
+        [85,"Šalčininkų r. sav.","Vilniaus apskr.",16,148563,0,false],
+        [86,"Švenčionių r. sav.","Vilniaus apskr.",36,168535,2,false],
+        [87,"Šilalės r. sav.","Tauragės apskr.",11,124453,0,false],
+        [88,"Šilutės r. sav.","Klaipėdos apskr.",22,142045,0,false],
+        [89,"Širvintų r. sav.","Vilniaus apskr.",13,99627,0,false],
+        [91,"Šiaulių r. sav.","Šiaulių apskr.",40,198761,1,false],
+        [94,"Jurbarko r. sav.","Tauragės apskr.",19,146347,0,false]
+      ]
+    }
+  },
+  "static": {
+    "damagesFrom": "2026-01-01",
+    "wolves": {
+      "window": {
+        "from": "10-15",
+        "to": "03-31"
+      },
+      "seasons": {
+        "2023": {
+          "official": 281,
+          "limit": 341,
+          "speciesTable": 273,
+          "sourceUrl": "https://am.lrv.lt/lt/veiklos-sritys-1/gamtos-apsauga/medziokle/sumedzioti-vilkai/sumedzioti-vilkai-2023-10-15/"
+        },
+        "2024": {
+          "official": 326,
+          "hunted": 319,
+          "limit": 341,
+          "speciesTable": 320,
+          "note": "iš jų 1 žuvęs kelyje ir 6 sumedžioti pagal leidimus",
+          "sourceUrl": "https://am.lrv.lt/lt/veiklos-sritys-1/gamtos-apsauga/medziokle/sumedzioti-vilkai/sumedzioti-vilkai-nuo-2024-10-15-iki-2025-03-31/"
+        },
+        "2025": {
+          "official": 275,
+          "limit": 307,
+          "speciesTable": 278,
+          "sourceUrl": "https://am.lrv.lt/lt/veiklos-sritys-1/gamtos-apsauga/medziokle/sumedzioti-vilkai/sumedzioti-vilkai-nuo-2025-10-15-iki-2026-03-31/"
+        },
+        "2026": {
+          "official": null,
+          "limit": null,
+          "draft": {
+            "total": 318,
+            "date": "2026-09-25"
+          }
+        }
+      },
+      "source": "AM puslapiai „Sumedžioti vilkai“ (2023/2024, 2024/2025, 2025/2026 sezonai)",
+      "sourceUrl": "https://am.lrv.lt/lt/veiklos-sritys-1/gamtos-apsauga/medziokle/sumedzioti-vilkai/"
+    },
+    "moose": {
+      "order": {
+        "2024": 4300,
+        "2025": 4300,
+        "2026": 3935
+      },
+      "amUsePct": {
+        "2025": 55
+      }
+    },
+    "am": {
+      "loots": {
+        "2024": 118823,
+        "2025": 129494
+      },
+      "lootsSource": "AM lentelė „Sumedžioti žvėrys ir paukščiai“",
+      "lootsSourceUrl": "https://am.lrv.lt/lt/veiklos-sritys-1/gamtos-apsauga/medziokle/sumedzioti-zverys-ir-pauksciai/"
+    },
+    "speciesGroups": {
+      "Kanopiniai": [1,2,3,4,9,41,42],
+      "Plėšrūnai": [5,8,10,11,16,20,24,25,31,32],
+      "Kiti žinduoliai": [6,7,22,26],
+      "Paukščiai": "*"
+    },
+    "classes": "see src/utils/hunting/hub/topics/*.ts"
+  }
+}

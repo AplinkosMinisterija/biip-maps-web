@@ -94,12 +94,15 @@ import { WOLVES_CTX } from '@/composables/hunting/context';
 import type { HistogramBin, PresetId } from '@/utils/hunting/types';
 import { formatInt, pluralLt, WOLVES } from '@/utils/hunting/dates';
 import { MONTH_NAMES, MONTH_SHORT } from '@/utils/hunting/labels';
+import { histogram, isOtherMonthsBin } from '@/utils/hunting/wolves';
 
 const props = defineProps({
   // Mobile collapsed sheet: 64 px bars, no counts, title only for screen readers.
   compact: { type: Boolean, default: false },
   // Touch layout: 44 px wide targets.
   large: { type: Boolean, default: false },
+  // Hub (SPEC2 §7): a full season shows Oct … Mar plus one "Kiti mėn." bar.
+  clipToWindow: { type: Boolean, default: false },
 });
 
 const ctx = inject(WOLVES_CTX)!;
@@ -107,7 +110,11 @@ const uid = `wolves-histogram-${getCurrentInstance()?.uid ?? 0}`;
 const titleEl = ref<HTMLElement | null>(null);
 const backEl = ref<HTMLButtonElement | null>(null);
 
-const bins = computed(() => ctx.derived.histogram.value);
+const bins = computed(() =>
+  props.clipToWindow && ctx.data.dataset.value
+    ? histogram(ctx.derived.filtered.value, ctx.state.interval.value, { clipToWindow: true })
+    : ctx.derived.histogram.value,
+);
 
 // When the bars overflow (phones, the day level), start the strip at the first non-empty
 // bar: a season starts with six empty months (Apr–Sep) before the wolf window.
@@ -131,7 +138,8 @@ const title = computed(
     ],
 );
 
-const barArea = computed(() => (props.compact ? 40 : 96));
+// The hub's clipped panel histogram is lower so it ends above y = 600 at 1440 × 900.
+const barArea = computed(() => (props.compact ? 40 : props.clipToWindow ? 68 : 96));
 const maxCount = computed(() => Math.max(1, ...bins.value.map((b) => b.count)));
 const barHeight = (count: number) =>
   count ? Math.max(4, Math.round((count / maxCount.value) * barArea.value)) : 2;
@@ -141,6 +149,7 @@ const monthIndex = (bin: HistogramBin) => Number(bin.interval.from.slice(5, 7));
 const seasonOf = (bin: HistogramBin) => Number(bin.interval.from.slice(0, 4));
 
 function shortLabel(bin: HistogramBin) {
+  if (isOtherMonthsBin(bin)) return bin.label;
   if (bin.level === 'season') {
     const s = seasonOf(bin);
     return `${s}/${`${(s + 1) % 100}`.padStart(2, '0')}`;
@@ -151,7 +160,7 @@ function shortLabel(bin: HistogramBin) {
 
 // A small year line under the first bar and under every January / 1st of a month.
 function yearMark(bin: HistogramBin, index: number) {
-  if (bin.level === 'season') return '';
+  if (bin.level === 'season' || isOtherMonthsBin(bin)) return '';
   if (bin.level === 'month') {
     return index === 0 || monthIndex(bin) === 1 ? bin.interval.from.slice(0, 4) : '';
   }

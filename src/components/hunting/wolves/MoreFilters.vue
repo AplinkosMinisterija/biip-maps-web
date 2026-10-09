@@ -2,6 +2,7 @@
   <div class="min-w-0">
     <div class="flex flex-wrap items-center gap-2">
       <button
+        v-if="!embedded"
         type="button"
         :aria-expanded="isOpen ? 'true' : 'false'"
         :aria-controls="`${uid}-panel`"
@@ -25,7 +26,7 @@
     </div>
 
     <div
-      v-show="isOpen"
+      v-show="embedded || isOpen"
       :id="`${uid}-panel`"
       class="mt-2 grid gap-x-4 gap-y-3 grid-cols-[repeat(auto-fit,minmax(9.5rem,1fr))]"
     >
@@ -60,6 +61,9 @@ type AttrKey = 'age' | 'sex' | 'method';
 
 defineProps({
   large: { type: Boolean, default: false },
+  // Hub: rendered inside the "Daugiau filtrų" popover, so the panel is always open and the
+  // own toggle is hidden.
+  embedded: { type: Boolean, default: false },
 });
 
 const ctx = inject(WOLVES_CTX)!;

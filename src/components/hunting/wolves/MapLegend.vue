@@ -3,7 +3,7 @@
     aria-labelledby="wolves-legend-title"
     class="bg-white rounded-lg shadow text-sm text-gray-900 p-3 max-w-[280px]"
   >
-    <h2 v-if="!collapsible" id="wolves-legend-title" class="font-semibold">Legenda</h2>
+    <h2 v-if="!isCollapsible" id="wolves-legend-title" class="font-semibold">Legenda</h2>
     <h2 v-else id="wolves-legend-title" class="font-semibold">
       <button
         type="button"
@@ -16,7 +16,7 @@
       </button>
     </h2>
 
-    <div v-show="!collapsible || open" id="wolves-legend-items">
+    <div v-show="!isCollapsible || open" id="wolves-legend-items">
       <ul class="mt-2 space-y-2">
         <li class="flex items-center gap-2">
           <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true" class="shrink-0">
@@ -56,16 +56,21 @@
 import { onBeforeUnmount, ref } from 'vue';
 import { MUNICIPALITY_OUTLINE_COLOR, WOLF_COLOR } from '@/utils/hunting/layers';
 
-// collapsible below 1024 px (SPEC §8.5), open by default on desktop
+const props = defineProps({
+  // Hub (SPEC2 §7): always a toggle chip, collapsed by default below 1280 px.
+  collapsible: { type: Boolean, default: false },
+});
+
+// Wolves page: collapsible below 1024 px (SPEC §8.5), open by default on desktop.
 const query =
   typeof window !== 'undefined' && window.matchMedia
-    ? window.matchMedia('(max-width: 1023px)')
+    ? window.matchMedia(props.collapsible ? '(max-width: 1279px)' : '(max-width: 1023px)')
     : null;
-const collapsible = ref(!!query?.matches);
-const open = ref(!collapsible.value);
+const isCollapsible = ref(props.collapsible || !!query?.matches);
+const open = ref(!query?.matches);
 
 const onChange = (e: MediaQueryListEvent) => {
-  collapsible.value = e.matches;
+  isCollapsible.value = props.collapsible || e.matches;
   open.value = !e.matches;
 };
 query?.addEventListener?.('change', onChange);

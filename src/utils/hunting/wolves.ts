@@ -21,6 +21,7 @@ import {
   daysInMonth,
   formatInt,
   intervalDays,
+  intervalSeason,
   isInWolfWindow,
   pluralLt,
   recordDay,
@@ -224,11 +225,28 @@ export function histogramLevel(interval: Interval): HistogramBin['level'] {
 
 const countText = (n: number) => `${formatInt(n)} ${pluralLt(n, WOLVES)}`;
 
+export interface HistogramOptions {
+  // A full season at month level: only the wolf-window months (Oct … Mar) get their own
+  // bar, April–September is one trailing "Kiti mėn." bar (SPEC2 §7). Other levels and
+  // partial seasons are unchanged.
+  clipToWindow?: boolean;
+}
+
+export const OTHER_MONTHS_LABEL = 'Kiti mėn.';
+// The trailing bar of a clipped season: key `${season}-other`.
+export const isOtherMonthsBin = (bin: HistogramBin) => bin.key.endsWith('-other');
+
 // Bins cover the whole interval in chronological order, zero bins included.
 // Counts come from `filtered`; each bin's `interval` is its full unit (the
 // day, the calendar month, the hunting year), which is what a click selects.
-export function histogram(filtered: WolfRecord[], interval: Interval): HistogramBin[] {
+export function histogram(
+  filtered: WolfRecord[],
+  interval: Interval,
+  options: HistogramOptions = {},
+): HistogramBin[] {
   const level = histogramLevel(interval);
+  const clipSeason = options.clipToWindow && level === 'month' ? intervalSeason(interval) : null;
+  if (clipSeason !== null) return clippedSeasonHistogram(filtered, clipSeason);
   const counts: Record<string, number> = {};
   const keyOf =
     level === 'day'
@@ -289,6 +307,46 @@ export function histogram(filtered: WolfRecord[], interval: Interval): Histogram
       });
     }
   }
+  return bins;
+}
+
+// One season at month level: Oct … Mar of the wolf window, then April–September as one bar.
+function clippedSeasonHistogram(filtered: WolfRecord[], season: number): HistogramBin[] {
+  const counts: Record<string, number> = {};
+  let other = 0;
+  filtered.forEach((r) => {
+    const { month } = dayParts(r.day);
+    if (PIVOT_MONTHS.indexOf(month) >= 0) {
+      const key = r.day.slice(0, 7);
+      counts[key] = (counts[key] || 0) + 1;
+    } else {
+      other++;
+    }
+  });
+
+  const bins: HistogramBin[] = PIVOT_MONTHS.map((month) => {
+    const year = month >= 4 ? season : season + 1;
+    const key = `${year}-${month < 10 ? '0' : ''}${month}`;
+    const count = counts[key] || 0;
+    return {
+      key,
+      level: 'month' as const,
+      label: MONTH_SHORT[month],
+      ariaLabel: `${year} m. ${MONTH_NAMES[month]}: ${countText(count)}. Rodyti šį mėnesį.`,
+      count,
+      interval: { from: toDay(year, month, 1), to: toDay(year, month, daysInMonth(year, month)) },
+    };
+  });
+  bins.push({
+    key: `${season}-other`,
+    level: 'month',
+    label: OTHER_MONTHS_LABEL,
+    ariaLabel:
+      `${seasonLabel(season)} sezono balandis–rugsėjis (ne vilkų medžioklės laikotarpis): ` +
+      `${countText(other)}. Rodyti šiuos mėnesius.`,
+    count: other,
+    interval: { from: toDay(season, 4, 1), to: toDay(season, 9, 30) },
+  });
   return bins;
 }
 
@@ -444,7 +502,8 @@ export function statusModel(
 
   const h = totals.wolfAmount;
   const L = totals.wolfLimit;
-  if (L === 0) {
+  // 0 (E2's "not approved yet") and a missing limit both mean not approved (SPEC2 §7).
+  if (L === 0 || L === null || L === undefined) {
     return { ...base, state: 'notApproved', limit: 0, hunted: h, remaining: null };
   }
 

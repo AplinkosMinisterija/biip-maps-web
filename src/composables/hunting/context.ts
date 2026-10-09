@@ -70,5 +70,9 @@ export interface WolvesContext {
   };
   isMobile: Ref<boolean>; // matchMedia('(max-width: 767px)')
   debug: boolean; // ?debug=1
+  // Hub addition (optional, SPEC2 §7): the current season's draft wolf limit while the
+  // limit is not approved, from the snapshot's `meta.static.wolves`. The status card
+  // names it in the "not approved" state; without it the text is unchanged.
+  wolfDraft?: Ref<{ total: number; date: string } | null>;
 }
 export const WOLVES_CTX: InjectionKey<WolvesContext> = Symbol('huntingWolves');

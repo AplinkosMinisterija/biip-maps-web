@@ -1,0 +1,483 @@
+{
+  "note": "Expected values (SPEC2 §9.5), verified read-only on medziokle-prod on 2026-10-09. exact = closed season; floor = running season (≥); exactOn = exact when snapshotDate equals date, else floor. A re-snapshot that moves a closed-season value updates this file in the same commit and adds a line to \"changes\".",
+  "changes": [
+    "2026-10-09: first snapshot. Damages small-cell rule (owner decision): every damages count of 1 or 2 is published as '<3'. National per-group livestock totals (cls \"*\") are published, computed on unsuppressed data.",
+    "2026-10-09: privacy.mjs added (no new query). '<3' now also covers 0 for every sibling cell of a published row, so small counts cannot be worked out from the totals; escalated counts are published only for kanopiniai and bebrai; municipalities with fewer than 3 MPV (Klaipėdos m., Neringos) are pooled in loots and limits. Damages month rows: 49 -> 90 (complete grid); national escalated '*' no longer published.",
+    "2026-10-09: privacy.mjs also protects derived figures (no new query): the remainder of a sum over several '<3' or withheld cells, and reports minus escalated, may not be 1 or 2. 27 more damages cells withheld (shown as 'neskelbiama'), among them Lietuva stumbrai 2025, vilkai ozkos 2026 (9 animals) and lusys avys 2026 (5 animals)."
+  ],
+  "checks": [
+    {
+      "metric": "seasons",
+      "expected": [2024, 2025, 2026]
+    },
+    {
+      "metric": "current",
+      "expected": 2026
+    },
+    {
+      "metric": "mpv.count",
+      "expected": 946
+    },
+    {
+      "metric": "mpv.municipalities",
+      "expected": 52
+    },
+    {
+      "metric": "mpv.ha",
+      "expected": 6295267,
+      "label": "±30 ha",
+      "tolerance": 30
+    },
+    {
+      "metric": "mpv.small",
+      "expected": 12
+    },
+    {
+      "metric": "loots.n:2024",
+      "expected": 119311,
+      "label": "BIIP 2024/2025, AM 118 823"
+    },
+    {
+      "metric": "loots.n:2025",
+      "expected": 129485,
+      "label": "BIIP 2025/2026, AM 129 494"
+    },
+    {
+      "metric": "loots.paper:2025",
+      "expected": 119773
+    },
+    {
+      "metric": "loots.app:2025",
+      "expected": 9712
+    },
+    {
+      "metric": "loots.dead:2025",
+      "expected": 4053
+    },
+    {
+      "metric": "loots.road:2025",
+      "expected": 3181
+    },
+    {
+      "metric": "loots.dead:2024",
+      "expected": 1060
+    },
+    {
+      "metric": "loots.road:2024",
+      "expected": 1884,
+      "label": "inconsistent: roads > dead, UI greys it"
+    },
+    {
+      "metric": "kita.n:2024",
+      "expected": 978
+    },
+    {
+      "metric": "kita.n:2025",
+      "expected": 2055
+    },
+    {
+      "metric": "kita.dead:2025",
+      "expected": 41
+    },
+    {
+      "metric": "kita.n:2026",
+      "expected": 2,
+      "type": "floor"
+    },
+    {
+      "metric": "loots.n:2025:*:3",
+      "expected": 29320,
+      "label": "Stirna"
+    },
+    {
+      "metric": "loots.n:2025:*:2",
+      "expected": 21903,
+      "label": "Taurusis elnias"
+    },
+    {
+      "metric": "loots.n:2025:*:4",
+      "expected": 20378,
+      "label": "Šernas"
+    },
+    {
+      "metric": "loots.n:2025:*:6",
+      "expected": 17810,
+      "label": "Bebras"
+    },
+    {
+      "metric": "loots.n:2025:*:5",
+      "expected": 15895,
+      "label": "Lapė"
+    },
+    {
+      "metric": "loots.n:2025:*:1",
+      "expected": 2372,
+      "label": "Briedis"
+    },
+    {
+      "metric": "loots.n:2025:*:9",
+      "expected": 1476,
+      "label": "Danielius"
+    },
+    {
+      "metric": "loots.n:2025:*:11",
+      "expected": 278,
+      "label": "Vilkas"
+    },
+    {
+      "metric": "loots.m:2025:*:1",
+      "expected": 790,
+      "label": "Briedis patinai"
+    },
+    {
+      "metric": "loots.f:2025:*:1",
+      "expected": 572,
+      "label": "Briedis patelės"
+    },
+    {
+      "metric": "loots.j:2025:*:1",
+      "expected": 1010,
+      "label": "Briedis jaunikliai"
+    },
+    {
+      "metric": "loots.n:2024:*:1",
+      "expected": 2825,
+      "label": "Briedis 2024/2025"
+    },
+    {
+      "metric": "loots.n:2024:53",
+      "expected": 5437,
+      "label": "Kėdainių r."
+    },
+    {
+      "metric": "loots.n:2025:53",
+      "expected": 5769,
+      "label": "Kėdainių r."
+    },
+    {
+      "metric": "loots.n:2025:53:4",
+      "expected": 1897,
+      "label": "Kėdainių r. Šernas"
+    },
+    {
+      "metric": "loots.n:2025:53:2",
+      "expected": 1443,
+      "label": "Kėdainių r. Taurusis elnias"
+    },
+    {
+      "metric": "loots.n:2025:53:3",
+      "expected": 1002,
+      "label": "Kėdainių r. Stirna"
+    },
+    {
+      "metric": "mpv.count:53",
+      "expected": 26
+    },
+    {
+      "metric": "mpv.ha:53",
+      "expected": 173329
+    },
+    {
+      "metric": "loots.n:2026",
+      "expected": 9381,
+      "type": "floor"
+    },
+    {
+      "metric": "loots.app:2026",
+      "expected": 9380,
+      "type": "floor"
+    },
+    {
+      "metric": "limits.limM:2024",
+      "expected": 1584
+    },
+    {
+      "metric": "limits.limFj:2024",
+      "expected": 2600
+    },
+    {
+      "metric": "limits.usedM:2024",
+      "expected": 969
+    },
+    {
+      "metric": "limits.usedFj:2024",
+      "expected": 1856
+    },
+    {
+      "metric": "limits.leftM:2024",
+      "expected": 741
+    },
+    {
+      "metric": "limits.leftFj:2024",
+      "expected": 932
+    },
+    {
+      "metric": "limits.limM:2025",
+      "expected": 1707
+    },
+    {
+      "metric": "limits.limFj:2025",
+      "expected": 2470
+    },
+    {
+      "metric": "limits.usedM:2025",
+      "expected": 790
+    },
+    {
+      "metric": "limits.usedFj:2025",
+      "expected": 1582
+    },
+    {
+      "metric": "limits.leftM:2025",
+      "expected": 926
+    },
+    {
+      "metric": "limits.leftFj:2025",
+      "expected": 1005
+    },
+    {
+      "metric": "limits.mpvWithLimit:2025",
+      "expected": 884
+    },
+    {
+      "metric": "limits.limM:2026",
+      "expected": 1641
+    },
+    {
+      "metric": "limits.limFj:2026",
+      "expected": 2161
+    },
+    {
+      "metric": "limits.mpvWithLimit:2026",
+      "expected": 858
+    },
+    {
+      "metric": "limits.usedM:2026",
+      "expected": 49,
+      "type": "floor"
+    },
+    {
+      "metric": "limits.usedFj:2026",
+      "expected": 7,
+      "type": "floor"
+    },
+    {
+      "metric": "limits.limM:2025:53",
+      "expected": 26
+    },
+    {
+      "metric": "limits.limFj:2025:53",
+      "expected": 49
+    },
+    {
+      "metric": "limits.usedM:2025:53",
+      "expected": 6
+    },
+    {
+      "metric": "limits.usedFj:2025:53",
+      "expected": 14
+    },
+    {
+      "metric": "limits.limM:2026:53",
+      "expected": 22
+    },
+    {
+      "metric": "limits.limFj:2026:53",
+      "expected": 24
+    },
+    {
+      "metric": "limits.mpvWithLimit:2026:53",
+      "expected": 18
+    },
+    {
+      "metric": "damages.reports:2025:0:*",
+      "expected": 99
+    },
+    {
+      "metric": "damages.reporters:2025:0:*",
+      "expected": 59
+    },
+    {
+      "metric": "damages.municipalities:2025",
+      "expected": 28
+    },
+    {
+      "metric": "damages.municipalitiesReportersSuppressed:2025",
+      "expected": 21
+    },
+    {
+      "metric": "damages.reports:2026:0:*",
+      "expected": 503,
+      "type": "exactOn",
+      "date": "2026-10-09"
+    },
+    {
+      "metric": "damages.reporters:2026:0:*",
+      "expected": 226,
+      "type": "exactOn",
+      "date": "2026-10-09"
+    },
+    {
+      "metric": "damages.escalated:2026:0:kanopiniai",
+      "expected": 70,
+      "type": "exactOn",
+      "date": "2026-10-09"
+    },
+    {
+      "metric": "damages.escalated:2026:0:bebrai",
+      "expected": 17,
+      "type": "exactOn",
+      "date": "2026-10-09"
+    },
+    {
+      "metric": "damages.municipalities:2026",
+      "expected": 45,
+      "type": "exactOn",
+      "date": "2026-10-09"
+    },
+    {
+      "metric": "damages.municipalitiesReportersSuppressed:2026",
+      "expected": 16,
+      "type": "exactOn",
+      "date": "2026-10-09"
+    },
+    {
+      "metric": "damages.reports:2026:0:kanopiniai",
+      "expected": 258,
+      "type": "exactOn",
+      "date": "2026-10-09"
+    },
+    {
+      "metric": "damages.reports:2026:0:vilkai",
+      "expected": 93,
+      "type": "exactOn",
+      "date": "2026-10-09"
+    },
+    {
+      "metric": "damages.reports:2026:0:bebrai",
+      "expected": 74,
+      "type": "exactOn",
+      "date": "2026-10-09"
+    },
+    {
+      "metric": "damages.reports:2026:0:stumbrai",
+      "expected": 61,
+      "type": "exactOn",
+      "date": "2026-10-09"
+    },
+    {
+      "metric": "damages.reports:2026:0:lokiai",
+      "expected": 13,
+      "type": "exactOn",
+      "date": "2026-10-09"
+    },
+    {
+      "metric": "damages.reports:2026:0:lusys",
+      "expected": 4,
+      "type": "exactOn",
+      "date": "2026-10-09"
+    },
+    {
+      "metric": "damages.reports:2026:53:*",
+      "expected": 92,
+      "type": "exactOn",
+      "date": "2026-10-09",
+      "label": "Kėdainių r."
+    },
+    {
+      "metric": "damages.reporters:2026:53:*",
+      "expected": 16,
+      "type": "exactOn",
+      "date": "2026-10-09",
+      "label": "Kėdainių r."
+    },
+    {
+      "metric": "damages.reports:2026:53:kanopiniai",
+      "expected": 52,
+      "type": "exactOn",
+      "date": "2026-10-09"
+    },
+    {
+      "metric": "damages.reports:2026:53:stumbrai",
+      "expected": 40,
+      "type": "exactOn",
+      "date": "2026-10-09"
+    },
+    {
+      "metric": "damages.monthRows",
+      "expected": 90,
+      "type": "exactOn",
+      "date": "2026-10-09",
+      "label": "complete grid: 15 months x 6 groups"
+    },
+    {
+      "metric": "attacked.animals:2026:vilkai:avys",
+      "expected": 217,
+      "type": "floor"
+    },
+    {
+      "metric": "attacked.animals:2026:vilkai:elniai",
+      "expected": 28,
+      "type": "floor"
+    },
+    {
+      "metric": "attacked.animals:2026:vilkai:galvijai",
+      "expected": 26,
+      "type": "floor"
+    },
+    {
+      "metric": "attacked.animals:2026:vilkai:ozkos",
+      "expected": null,
+      "type": "exactOn",
+      "date": "2026-10-09",
+      "label": "withheld: complementary suppression of a derivable 1-2 remainder"
+    },
+    {
+      "metric": "attacked.animals:2026:vilkai:alpakos",
+      "expected": null,
+      "type": "exactOn",
+      "date": "2026-10-09",
+      "label": "'<3' lines: not published"
+    },
+    {
+      "metric": "attacked.animals:2026:lusys:avys",
+      "expected": null,
+      "type": "exactOn",
+      "date": "2026-10-09",
+      "label": "withheld: complementary suppression of a derivable 1-2 remainder"
+    },
+    {
+      "metric": "attacked.animals:2026:vilkai:*",
+      "expected": 283,
+      "type": "floor",
+      "label": "vilkai total, unsuppressed"
+    },
+    {
+      "metric": "attacked.animals:2026:lusys:*",
+      "expected": 36,
+      "type": "floor",
+      "label": "lūšys total, unsuppressed"
+    },
+    {
+      "metric": "wolves.located:2023",
+      "expected": 278
+    },
+    {
+      "metric": "wolves.located:2024",
+      "expected": 334
+    },
+    {
+      "metric": "wolves.located:2025",
+      "expected": 275
+    },
+    {
+      "metric": "wolves.municipalities:2025",
+      "expected": 47
+    },
+    {
+      "metric": "wolves.located:2025:53",
+      "expected": 9,
+      "label": "Kėdainių r."
+    }
+  ]
+}

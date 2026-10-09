@@ -28,7 +28,8 @@
       <template v-if="season != null">
         <div class="rounded-lg border border-gray-200 p-3">
           <dt class="text-xs text-gray-600 flex items-center gap-1">
-            Limitas
+            <!-- Names its season, so it cannot be read as the status line's limit (SPEC2 §7). -->
+            Limitas {{ seasonLabel(season) }}
             <button
               v-if="limitUnknownPast"
               type="button"
@@ -109,7 +110,7 @@
 <script setup lang="ts">
 import { computed, inject, reactive } from 'vue';
 import { WOLVES_CTX } from '@/composables/hunting/context';
-import { formatInt, pluralLt } from '@/utils/hunting/dates';
+import { formatInt, pluralLt, seasonLabel } from '@/utils/hunting/dates';
 import { AM_WOLVES_URL, WOLF_LIMITS } from '@/utils/hunting/labels';
 
 const ctx = inject(WOLVES_CTX)!;
