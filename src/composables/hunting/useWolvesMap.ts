@@ -19,8 +19,11 @@ import {
 import type { WolvesContext } from './context';
 
 const MAX_ZOOM = 13; // at 1 km precision deeper zoom only suggests accuracy that is not there
-const CLUSTER_ZOOM_LIMIT = 11; // below this zoom a multi-cell cluster click zooms in
-const CLUSTER_FIT_MAX_ZOOM = 12;
+// A cluster fit stops at a ~10 km scale, so the user keeps the context (SPEC2 §7). Below
+// this zoom a larger multi-cell cluster click zooms in; at it, the click opens the card.
+const CLUSTER_FIT_MAX_ZOOM = 10;
+// A cluster of at most this many wolves opens the "1 iš N" card instead of zooming.
+const CLUSTER_PAGER_MAX = 10;
 const RECORD_ZOOM = 11; // "Rodyti žemėlapyje" centres the wolf at this zoom
 
 export interface WolvesMapApi {
@@ -49,12 +52,23 @@ function panelPadding(tableOpen: boolean): number[] {
   return [150, 0, 180, 0];
 }
 
+export interface WolvesMapOptions {
+  /**
+   * View padding [top, right, bottom, left] in px for the host's layout. Read reactively:
+   * a change (table drawer, rail, resize) re-centres the view. Default: the wolves page's
+   * own panel geometry (`panelPadding`), applied when the table opens or closes.
+   */
+  padding?: () => number[];
+}
+
 /**
  * Wolves map: adds the route's own layers on mount and removes them on unmount, keeps the
  * cluster source in sync with `ctx.derived.filtered`, handles clicks without network
  * requests and draws the selection ring. Call it once from the route's setup().
  */
-export function useWolvesMap(ctx: WolvesContext): WolvesMapApi {
+export function useWolvesMap(ctx: WolvesContext, options: WolvesMapOptions = {}): WolvesMapApi {
+  const currentPadding = () =>
+    options.padding ? options.padding() : panelPadding(ctx.state.tableOpen.value);
   const mapLayers: any = inject('mapLayers');
   const layers = createWolvesLayers();
   const renderTick = ref(0);
@@ -191,7 +205,7 @@ export function useWolvesMap(ctx: WolvesContext): WolvesMapApi {
     if (!records.length) return;
     const zoom = map.getView().getZoom() ?? 0;
 
-    if (records.length > 1 && zoom < CLUSTER_ZOOM_LIMIT && !sameCell(records)) {
+    if (records.length > CLUSTER_PAGER_MAX && zoom < CLUSTER_FIT_MAX_ZOOM && !sameCell(records)) {
       const extent = boundingExtent(
         records.map((r) => transform([r.x, r.y], projection, projection3857)),
       );
@@ -257,14 +271,14 @@ export function useWolvesMap(ctx: WolvesContext): WolvesMapApi {
 
   // The desktop drawer covers the right of the map: keep the view centred in what is left.
   watch(
-    () => ctx.state.tableOpen.value,
-    (open) => {
+    () => (options.padding ? options.padding().join(',') : ctx.state.tableOpen.value),
+    () => {
       if (!map) return;
       // OL keeps the picture still when the padding changes; re-apply the centre so the
       // content moves into the uncovered area.
       const view = map.getView();
       const center = view.getCenter();
-      view.padding = panelPadding(open);
+      view.padding = currentPadding();
       if (center) view.setCenter(center);
     },
   );
@@ -299,7 +313,7 @@ export function useWolvesMap(ctx: WolvesContext): WolvesMapApi {
     // Keep Lithuania clear of the floating panels: the view centres and fits inside the
     // uncovered area. The URL's x/y/z (App.vue) still wins.
     previousPadding = view.padding;
-    view.padding = panelPadding(ctx.state.tableOpen.value);
+    view.padding = currentPadding();
     if (!route.query.x || !route.query.y) mapLayers.centerMap();
 
     layers.clusterSource.on('change', onClusterChange);

@@ -6,7 +6,8 @@
     :aria-labelledby="`${uid}-title`"
     :class="
       variant === 'drawer'
-        ? 'absolute right-0 top-0 h-full w-[calc(100%-24px)] max-w-[520px] lg:w-[520px] z-30 bg-white shadow-lg flex flex-col'
+        ? drawerClass ||
+          'absolute right-0 top-0 h-full w-[calc(100%-24px)] max-w-[520px] lg:w-[520px] z-30 bg-white shadow-lg flex flex-col'
         : 'flex flex-col'
     "
     @keydown.esc="variant === 'drawer' && close()"
@@ -80,6 +81,7 @@
         <template v-if="activeTab === tab.id">
           <HuntingWolvesRecordsTable
             v-if="tab.id === 'irasai'"
+            :compact="compact"
             @show-on-map="(record: unknown) => emit('show-on-map', record)"
           />
           <HuntingWolvesSeasonMonthTable v-else-if="tab.id === 'sezonai'" />
@@ -111,6 +113,10 @@ const props = defineProps({
   // 'drawer': desktop/tablet right drawer, shown while `state.tableOpen` is true.
   // 'sheet': inline content for the expanded MobileSheet (always rendered).
   variant: { type: String as () => 'drawer' | 'sheet', default: 'drawer' },
+  // Hub additions (SPEC2 §7): the drawer's position/size classes (replacing the default
+  // ones), and the compact records table.
+  drawerClass: { type: String, default: '' },
+  compact: { type: Boolean, default: false },
 });
 // 'show-on-map' (record: WolfRecord): the parent may collapse the mobile sheet.
 const emit = defineEmits(['show-on-map']);

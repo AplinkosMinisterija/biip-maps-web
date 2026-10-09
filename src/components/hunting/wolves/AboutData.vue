@@ -77,6 +77,8 @@
         <p>Nustatyta pagal sumedžiojimo vietą; prie ribų galimas nedidelis netikslumas.</p>
       </section>
 
+      <!-- Hub: extra sections (e.g. comparison with the official figures). -->
+      <slot />
       <p v-if="ctx.data.fetchedAt.value" class="text-xs text-gray-600">
         Duomenys gauti {{ formatDateTime(ctx.data.fetchedAt.value) }}
       </p>

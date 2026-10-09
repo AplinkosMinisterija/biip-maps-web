@@ -1,5 +1,31 @@
 <template>
+  <!-- Hub (SPEC2 §7): one line that always names its season. -->
   <section
+    v-if="variant === 'line'"
+    :aria-label="`Šis sezonas (${model.seasonLabel})`"
+    class="text-sm text-gray-800"
+  >
+    <p v-if="loading" class="text-gray-600">{{ model.seasonLabel }}: įkeliama…</p>
+    <p v-else class="flex items-start gap-2">
+      <span class="w-2.5 h-2.5 rounded-full shrink-0 mt-1.5" :class="dotClass" aria-hidden="true" />
+      <span class="flex-1">
+        <span class="font-semibold text-gray-900">{{ model.seasonLabel }}:</span>
+        {{ lineText }}
+        <button
+          v-if="model.state === 'unavailable'"
+          type="button"
+          class="ml-1 font-semibold text-blue-800 underline rounded min-h-[44px] md:min-h-[24px]"
+          :class="focusRing"
+          @click="ctx.data.reloadTotals()"
+        >
+          Bandyti dar kartą
+        </button>
+      </span>
+    </p>
+  </section>
+
+  <section
+    v-else
     aria-labelledby="wolves-status-title"
     class="rounded-lg border border-gray-200 bg-white text-sm text-gray-800"
     :class="compact ? '' : 'p-3'"
@@ -97,13 +123,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, ref, watch } from 'vue';
+import { computed, inject, ref, watch, type PropType } from 'vue';
 import { WOLVES_CTX } from '@/composables/hunting/context';
 import { formatDateTime, formatInt } from '@/utils/hunting/dates';
 import type { StatusState } from '@/utils/hunting/types';
 
+defineProps({
+  // 'card' (default): the wolves page's status card. 'line': the hub's one-line status.
+  variant: { type: String as PropType<'card' | 'line'>, default: 'card' },
+});
+
 const ctx = inject(WOLVES_CTX)!;
 const model = ctx.derived.status;
+// Draft limit of the current season, only when the host passes one (hub).
+const draft = computed(() => ctx.wolfDraft?.value ?? null);
 const expanded = ref(false);
 const more = ref(false);
 const updatedAt = ref<Date | null>(null);
@@ -137,7 +170,11 @@ const title = computed(() => {
     case 'unavailable':
       return 'Limito duomenys šiuo metu nepasiekiami.';
     case 'notApproved':
-      return `Vilkų limitas ${m.seasonLabel} sezonui dar nepatvirtintas`;
+      return draft.value
+        ? `Vilkų limitas ${m.seasonLabel} sezonui dar nepatvirtintas (projekte – ${formatInt(
+            draft.value.total,
+          )}, ${draft.value.date})`
+        : `Vilkų limitas ${m.seasonLabel} sezonui dar nepatvirtintas`;
     case 'beforeStart':
       return `Vilkų medžioklė prasidės ${m.wolfStartDay}`;
     case 'exhausted':
@@ -168,6 +205,30 @@ const line2 = computed(() => {
       )}`;
     default:
       return '';
+  }
+});
+
+// The 'line' variant: what follows "{season}:" (SPEC2 §7).
+const lineText = computed(() => {
+  const m = model.value;
+  const limit = formatInt(m.limit || 0);
+  const start = `medžioklė prasidės ${m.wolfStartDay}`;
+  switch (m.state) {
+    case 'unavailable':
+      return 'limito duomenys šiuo metu nepasiekiami.';
+    case 'notApproved': {
+      const first = ctx.today < m.wolfStartDay ? start : `sumedžiota ${formatInt(m.hunted || 0)}`;
+      const projected = draft.value ? ` (projekte – ${formatInt(draft.value.total)})` : '';
+      return `${first} · limitas dar nepatvirtintas${projected}`;
+    }
+    case 'beforeStart':
+      return `${start} · limitas ${limit}`;
+    case 'exhausted':
+      return `limitas išnaudotas · sumedžiota ${formatInt(taken.value)} iš ${limit}`;
+    default:
+      return `medžioklė vyksta · sumedžiota ${formatInt(taken.value)} iš ${limit} · liko ${formatInt(
+        Math.max(0, m.remaining || 0),
+      )}`;
   }
 });
 

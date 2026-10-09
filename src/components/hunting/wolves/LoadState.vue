@@ -67,10 +67,10 @@
     <p v-else-if="refreshing" class="text-xs text-gray-700">
       Rodomi {{ fetchedAtText }} duomenys. Atnaujinama…
     </p>
-    <p v-else-if="refreshedAt" class="text-xs text-gray-600">
+    <p v-else-if="showTimestamp && refreshedAt" class="text-xs text-gray-600">
       Duomenys atnaujinti {{ refreshedAt }}
     </p>
-    <p v-else-if="data.fetchedAt.value" class="text-xs text-gray-600">
+    <p v-else-if="showTimestamp && data.fetchedAt.value" class="text-xs text-gray-600">
       Duomenys gauti {{ fetchedAtText }}
     </p>
   </template>
@@ -83,6 +83,8 @@ import { formatDateTime, seasonInterval, seasonOfDay } from '@/utils/hunting/dat
 
 defineProps({
   placement: { type: String as PropType<'map' | 'panel'>, default: 'panel' },
+  // Hub: the "Duomenys gauti / atnaujinti …" line is its provenance footer instead.
+  showTimestamp: { type: Boolean, default: true },
 });
 
 const ctx = inject(WOLVES_CTX)!;

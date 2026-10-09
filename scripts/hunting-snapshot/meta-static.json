@@ -1,0 +1,44 @@
+{
+  "damagesFrom": "2026-01-01",
+  "wolves": {
+    "window": { "from": "10-15", "to": "03-31" },
+    "seasons": {
+      "2023": {
+        "official": 281,
+        "limit": 341,
+        "speciesTable": 273,
+        "sourceUrl": "https://am.lrv.lt/lt/veiklos-sritys-1/gamtos-apsauga/medziokle/sumedzioti-vilkai/sumedzioti-vilkai-2023-10-15/"
+      },
+      "2024": {
+        "official": 326,
+        "hunted": 319,
+        "limit": 341,
+        "speciesTable": 320,
+        "note": "iš jų 1 žuvęs kelyje ir 6 sumedžioti pagal leidimus",
+        "sourceUrl": "https://am.lrv.lt/lt/veiklos-sritys-1/gamtos-apsauga/medziokle/sumedzioti-vilkai/sumedzioti-vilkai-nuo-2024-10-15-iki-2025-03-31/"
+      },
+      "2025": {
+        "official": 275,
+        "limit": 307,
+        "speciesTable": 278,
+        "sourceUrl": "https://am.lrv.lt/lt/veiklos-sritys-1/gamtos-apsauga/medziokle/sumedzioti-vilkai/sumedzioti-vilkai-nuo-2025-10-15-iki-2026-03-31/"
+      },
+      "2026": { "official": null, "limit": null, "draft": { "total": 318, "date": "2026-09-25" } }
+    },
+    "source": "AM puslapiai „Sumedžioti vilkai“ (2023/2024, 2024/2025, 2025/2026 sezonai)",
+    "sourceUrl": "https://am.lrv.lt/lt/veiklos-sritys-1/gamtos-apsauga/medziokle/sumedzioti-vilkai/"
+  },
+  "moose": { "order": { "2024": 4300, "2025": 4300, "2026": 3935 }, "amUsePct": { "2025": 55 } },
+  "am": {
+    "loots": { "2024": 118823, "2025": 129494 },
+    "lootsSource": "AM lentelė „Sumedžioti žvėrys ir paukščiai“",
+    "lootsSourceUrl": "https://am.lrv.lt/lt/veiklos-sritys-1/gamtos-apsauga/medziokle/sumedzioti-zverys-ir-pauksciai/"
+  },
+  "speciesGroups": {
+    "Kanopiniai": [1, 2, 3, 4, 9, 41, 42],
+    "Plėšrūnai": [5, 8, 10, 11, 16, 20, 24, 25, 31, 32],
+    "Kiti žinduoliai": [6, 7, 22, 26],
+    "Paukščiai": "*"
+  },
+  "classes": "see src/utils/hunting/hub/topics/*.ts"
+}

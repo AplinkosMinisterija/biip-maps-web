@@ -23,6 +23,9 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable --immutable-cache --check-cache
 
+      - name: Check hunting data snapshot
+        run: node scripts/hunting-snapshot/check.mjs
+
       - name: Build
         run: yarn run build
         env:

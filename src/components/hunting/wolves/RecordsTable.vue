@@ -77,8 +77,10 @@
               <span aria-hidden="true" title="Medžioklės būdas">Būdas</span>
               <span class="sr-only">Medžioklės būdas</span>
             </th>
-            <th scope="col" class="py-2 pr-2 font-semibold">Gaujos narys</th>
-            <th scope="col" class="py-2 pr-2 font-semibold">Šaltinis</th>
+            <template v-if="!compact">
+              <th scope="col" class="py-2 pr-2 font-semibold">Gaujos narys</th>
+              <th scope="col" class="py-2 pr-2 font-semibold">Šaltinis</th>
+            </template>
             <th scope="col" class="py-2 pl-1 font-semibold sticky right-0 bg-white">
               <span class="sr-only">Veiksmai</span>
             </th>
@@ -98,14 +100,16 @@
             <td class="py-2 pr-2">{{ ageLabel(row.age) }}</td>
             <td class="py-2 pr-2">{{ sexLabel(row.sex) }}</td>
             <td class="py-2 pr-2">{{ methodLabel(row.method) }}</td>
-            <td class="py-2 pr-2">{{ packLabel(row.packMember, row.packAmount) }}</td>
-            <!-- Short source name keeps the table inside the 520 px drawer; the card and CSV use the full one. -->
-            <td class="py-2 pr-2 whitespace-nowrap">
-              <span aria-hidden="true" :title="sourceLabel(row.source)">{{
-                SHORT_SOURCE[row.source] || row.source
-              }}</span>
-              <span class="sr-only">{{ sourceLabel(row.source) }}</span>
-            </td>
+            <template v-if="!compact">
+              <td class="py-2 pr-2">{{ packLabel(row.packMember, row.packAmount) }}</td>
+              <!-- Short source name keeps the table inside the 520 px drawer; the card and CSV use the full one. -->
+              <td class="py-2 pr-2 whitespace-nowrap">
+                <span aria-hidden="true" :title="sourceLabel(row.source)">{{
+                  SHORT_SOURCE[row.source] || row.source
+                }}</span>
+                <span class="sr-only">{{ sourceLabel(row.source) }}</span>
+              </td>
+            </template>
             <!-- Sticky so the action stays visible when the columns scroll in the drawer. -->
             <td class="py-1 pl-1 sticky right-0 bg-white">
               <button
@@ -160,6 +164,12 @@ import { ageLabel, methodLabel, packLabel, sexLabel, sourceLabel } from '@/utils
 
 const PAGE_SIZE = 50;
 const SHORT_SOURCE: Record<string, string> = { biomon: 'BIOMON', biip: 'BIIP' };
+
+defineProps({
+  // Hub (SPEC2 §7): Data · Savivaldybė · Amžius · Lytis · Būdas; pack and source stay in
+  // the card and the CSV.
+  compact: { type: Boolean, default: false },
+});
 
 // 'show-on-map' (record: WolfRecord): the parent may collapse the mobile sheet.
 const emit = defineEmits(['show-on-map']);

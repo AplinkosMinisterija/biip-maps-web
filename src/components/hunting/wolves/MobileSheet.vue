@@ -27,10 +27,12 @@
       </div>
 
       <div id="wolves-sheet-body" class="flex-1 overflow-y-auto px-3 pb-3 flex flex-col gap-3">
+        <!-- Hub: its status line and prototype note (empty on the wolves page). -->
+        <slot />
         <HuntingWolvesFilterSentence />
         <HuntingWolvesLoadState placement="panel" />
         <HuntingWolvesSeasonSummary v-if="expanded" />
-        <HuntingWolvesHistogram :compact="!expanded" large />
+        <HuntingWolvesHistogram :compact="!expanded" large :clip-to-window="clipHistogram" />
         <template v-if="expanded">
           <HuntingWolvesMoreFilters large />
           <HuntingWolvesMunicipalitySelect />
@@ -45,6 +47,11 @@
 <script setup lang="ts">
 import { computed, inject } from 'vue';
 import { WOLVES_CTX } from '@/composables/hunting/context';
+
+defineProps({
+  // Hub: the histogram shows Oct … Mar plus "Kiti mėn." for a full season (SPEC2 §7).
+  clipHistogram: { type: Boolean, default: false },
+});
 
 const ctx = inject(WOLVES_CTX)!;
 
