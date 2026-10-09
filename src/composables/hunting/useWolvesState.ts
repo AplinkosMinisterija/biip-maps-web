@@ -313,10 +313,10 @@ export function useWolvesState(opts: {
 
   // The query this page writes, plus the keys it does not own (x, y, z, debug, …).
   const fullQuery = (explicit = false): LocationQuery => {
-    const kept: LocationQuery = {};
-    Object.keys(route.query).forEach((key) => {
-      if (!OWN_KEYS.includes(key)) kept[key] = route.query[key];
-    });
+    // fromEntries defines own properties, so a `__proto__` key from the URL stays a plain key.
+    const kept: LocationQuery = Object.fromEntries(
+      Object.entries(route.query).filter(([key]) => !OWN_KEYS.includes(key)),
+    );
     return { ...kept, ...urlQuery(explicit) };
   };
 
