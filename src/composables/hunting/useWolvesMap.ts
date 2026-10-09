@@ -42,10 +42,10 @@ const prefersReducedMotion = () =>
 
 // Map area covered by the route's panels (§7): left panel on desktop/tablet, top bar and
 // collapsed sheet on phones. [top, right, bottom, left] in px.
-function panelPadding(): number[] {
+function panelPadding(tableOpen: boolean): number[] {
   const width = window.innerWidth;
-  if (width >= 1024) return [0, 0, 0, 416];
-  if (width >= 768) return [0, 0, 0, 376];
+  if (width >= 1024) return [0, tableOpen ? 520 : 0, 0, 416];
+  if (width >= 768) return [0, 0, 0, 376]; // the tablet drawer overlays the map
   return [150, 0, 180, 0];
 }
 
@@ -267,6 +267,20 @@ export function useWolvesMap(ctx: WolvesContext): WolvesMapApi {
     },
   );
 
+  // The desktop drawer covers the right of the map: keep the view centred in what is left.
+  watch(
+    () => ctx.state.tableOpen.value,
+    (open) => {
+      if (!map) return;
+      // OL keeps the picture still when the padding changes; re-apply the centre so the
+      // content moves into the uncovered area.
+      const view = map.getView();
+      const center = view.getCenter();
+      view.padding = panelPadding(open);
+      if (center) view.setCenter(center);
+    },
+  );
+
   watch(
     () => ctx.state.sav.value,
     (code) => layers.setSelectedMunicipality(code ?? null),
@@ -297,7 +311,7 @@ export function useWolvesMap(ctx: WolvesContext): WolvesMapApi {
     // Keep Lithuania clear of the floating panels: the view centres and fits inside the
     // uncovered area. The URL's x/y/z (App.vue) still wins.
     previousPadding = view.padding;
-    view.padding = panelPadding();
+    view.padding = panelPadding(ctx.state.tableOpen.value);
     if (!route.query.x || !route.query.y) mapLayers.centerMap();
 
     layers.clusterSource.on('change', onClusterChange);

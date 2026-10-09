@@ -76,7 +76,9 @@
             <th scope="col" class="py-2 pr-2 font-semibold">Medžioklės būdas</th>
             <th scope="col" class="py-2 pr-2 font-semibold">Gaujos narys</th>
             <th scope="col" class="py-2 pr-2 font-semibold">Šaltinis</th>
-            <th scope="col" class="py-2 font-semibold"><span class="sr-only">Veiksmai</span></th>
+            <th scope="col" class="py-2 pl-2 font-semibold sticky right-0 bg-white">
+              <span class="sr-only">Veiksmai</span>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -95,7 +97,8 @@
             <td class="py-2 pr-2">{{ methodLabel(row.method) }}</td>
             <td class="py-2 pr-2">{{ packLabel(row.packMember, row.packAmount) }}</td>
             <td class="py-2 pr-2">{{ sourceLabel(row.source) }}</td>
-            <td class="py-2 whitespace-nowrap">
+            <!-- Sticky so the action stays visible when the columns scroll in the drawer. -->
+            <td class="py-2 pl-2 whitespace-nowrap sticky right-0 bg-white">
               <button
                 type="button"
                 class="min-h-[24px] rounded px-2 py-1 text-xs font-semibold text-blue-800 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
