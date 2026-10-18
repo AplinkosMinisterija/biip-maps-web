@@ -42,9 +42,23 @@ defineProps({
   },
 });
 
+// Rūšis apskaitoma vienetais, kilogramais arba (sumuojant savivaldybėje) abiem.
+const formatSpeciesAmount = ({ count, countKg }: { count?: number; countKg?: number }) => {
+  if (count && countKg) return count + ' + ' + countKg + ' kg';
+  if (countKg) return countKg + ' kg';
+  return count || 0;
+};
+
 const rows: any[] = [
   { key: 'municipality', translate: 'Savivaldybė', fn: (municipality: any) => municipality.name },
   { key: 'count', translate: 'Individų skaičius' },
+  // Kilogramais apskaitomos rūšys į individų skaičių neįtraukiamos (gyvūnų API, #85).
+  {
+    key: 'countKg',
+    translate: 'Kilogramais apskaitomų gyvūnų',
+    hideEmpty: true,
+    fn: (countKg: number) => countKg + ' kg',
+  },
   { key: 'permitsCount', translate: 'Viso išduotų leidimų' },
   { key: 'zoosCount', translate: 'Zoologijos sodų' },
   { key: 'aviariesCount', translate: 'Aptvarų / Voljerų statinių' },
@@ -60,14 +74,14 @@ const rows: any[] = [
     subitemsFn: (items: any) =>
       items.map((i: any) => ({
         name: `${i.name} (lot. <i>${i.nameLatin}</i>)`,
-        value: i.count || 0,
+        value: formatSpeciesAmount(i),
       })),
   },
 ];
 
 const filteredRows = (feature: any) => {
   return rows.filter((r) => {
-    return typeof feature[r.key] !== 'undefined';
+    return typeof feature[r.key] !== 'undefined' && !(r.hideEmpty && !feature[r.key]);
   });
 };
 </script>
