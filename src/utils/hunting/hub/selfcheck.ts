@@ -21,8 +21,18 @@ import {
   seasonState,
   stateBadge,
 } from './time';
-import { TOPICS } from './topics';
-import { keptQuery, wolvesCarry } from './url';
+import {
+  EMBED_TOPICS,
+  isAllowedParent,
+  parseCommand,
+  readyMessage,
+  resolveParentOrigin,
+  stateMessage,
+  stateQuery,
+} from './embed';
+import { hubTop, isRailed, mapPadding, tableReplacesMap } from './layout';
+import { getTopic, TOPICS } from './topics';
+import { keptQuery, WOLVES_KEYS, WOLVES_TABLES, wolvesCarry } from './url';
 import type { HubSelection, Meta, SnapshotData, TableDef, TopicDef } from './types';
 
 export type { SelfCheckResult };
@@ -277,7 +287,234 @@ export function runHubUnitChecks(): SelfCheckResult[] {
       ],
     ),
   );
+  runEmbedChecks(check, eq);
   return results;
+}
+
+// ---------------------------------------------------------------------------
+// Embed contract (SPEC §5.4, §5.5, §5.9, §5.11)
+// ---------------------------------------------------------------------------
+
+type Check = ReturnType<typeof runner>['check'];
+type Eq = ReturnType<typeof runner>['eq'];
+
+const STAGING_MAPS = 'staging-maps.biip.lt';
+const PRODUCTION_MAPS = 'maps.biip.lt';
+const sortedEntries = (obj: Record<string, unknown>) =>
+  Object.keys(obj)
+    .sort()
+    .map((key) => [key, obj[key]]);
+const sortedList = (list: readonly string[]) => [...list].sort();
+
+function runEmbedChecks(check: Check, eq: Eq) {
+  const set = (fields: Record<string, unknown>) => ({
+    biipHunting: { v: 1, type: 'set', ...fields },
+  });
+
+  check('Įterpimas: parseCommand atmeta netinkamas žinutes', () => {
+    const rejected: [string, unknown][] = [
+      ['eilutė', JSON.stringify({ biipHunting: { v: 1, type: 'about' } })],
+      ['biipHunting eilutė', { biipHunting: 'x' }],
+      ['v 2', { biipHunting: { v: 2, type: 'about' } }],
+      ['v "1"', { biipHunting: { v: '1', type: 'about' } }],
+      ['type state', { biipHunting: { v: 1, type: 'state' } }],
+      ['tema __proto__', set({ tema: '__proto__' })],
+      [
+        'tema __proto__ (JSON)',
+        JSON.parse('{"biipHunting":{"v":1,"type":"set","tema":"__proto__"}}'),
+      ],
+      ['tema constructor', set({ tema: 'constructor' })],
+      ['tema stebejimai', set({ tema: 'stebejimai' })],
+      ['view list', set({ view: 'list' })],
+      ['null', null],
+      ['masyvas', [{ biipHunting: { v: 1, type: 'about' } }]],
+    ];
+    const accepted = rejected.filter(([, data]) => parseCommand(data) !== null);
+    return accepted.length === 0 || `accepted: ${accepted.map(([label]) => label).join(', ')}`;
+  });
+
+  check('Įterpimas: parseCommand priima set ir about', () =>
+    eq(
+      [
+        parseCommand(set({ tema: 'zala' })),
+        parseCommand(set({ view: 'table' })),
+        parseCommand(set({ tema: 'vilkai', view: 'map', extra: 'ignored' })),
+        parseCommand(set({ tema: 'apzvalga', view: null })),
+        parseCommand({ biipHunting: { v: 1, type: 'about' } }),
+      ],
+      [
+        { type: 'set', tema: 'zala' },
+        { type: 'set', view: 'table' },
+        { type: 'set', tema: 'vilkai', view: 'map' },
+        { type: 'set', tema: 'apzvalga' },
+        { type: 'about' },
+      ],
+    ),
+  );
+
+  check('Įterpimas: leidžiami tėviniai puslapiai', () =>
+    eq(
+      [
+        isAllowedParent('https://medziokle.biip.lt', STAGING_MAPS),
+        isAllowedParent('https://staging-medziokle.biip.lt', STAGING_MAPS),
+        isAllowedParent('https://medziokle.biip.lt', PRODUCTION_MAPS),
+        isAllowedParent('https://staging-medziokle.biip.lt', PRODUCTION_MAPS),
+        isAllowedParent('https://evil.example', STAGING_MAPS),
+        isAllowedParent('http://localhost:8099', STAGING_MAPS),
+        isAllowedParent('http://localhost:8099', PRODUCTION_MAPS),
+        isAllowedParent('https://medziokle.biip.lt.evil.example', STAGING_MAPS),
+      ],
+      [true, true, true, true, false, true, false, false],
+    ),
+  );
+
+  check('Įterpimas: parent ir referrer', () =>
+    eq(
+      [
+        resolveParentOrigin('http://localhost:8099', '', STAGING_MAPS),
+        resolveParentOrigin('https://staging-medziokle.biip.lt/', '', STAGING_MAPS),
+        resolveParentOrigin(
+          undefined,
+          'https://staging-medziokle.biip.lt/zemelapis/?tema=zala',
+          STAGING_MAPS,
+        ),
+        resolveParentOrigin(
+          'https://evil.example',
+          'https://medziokle.biip.lt/zemelapis/',
+          STAGING_MAPS,
+        ),
+        resolveParentOrigin(
+          'https://evil.example',
+          'https://evil.example/zemelapis/',
+          STAGING_MAPS,
+        ),
+        resolveParentOrigin('http://localhost:8099', '', PRODUCTION_MAPS),
+        resolveParentOrigin('%%:/not a url', '', STAGING_MAPS),
+        resolveParentOrigin('http://[::1', 'not a url either', STAGING_MAPS),
+      ],
+      [
+        'http://localhost:8099',
+        'https://staging-medziokle.biip.lt',
+        'https://staging-medziokle.biip.lt',
+        'https://medziokle.biip.lt',
+        null,
+        null,
+        null,
+        null,
+      ],
+    ),
+  );
+
+  check('Įterpimas: stateQuery laiko tik leidžiamus raktus', () => {
+    const kept = {
+      tema: 'zala',
+      lentele: 'savivaldybes',
+      sezonas: '2025-2026',
+      sav: '99',
+      nuo: '2025-04-01',
+      iki: '2026-03-31',
+      amzius: 'A,B',
+    };
+    const result = stateQuery({
+      embed: '1',
+      parent: 'http://localhost:8099',
+      ...kept,
+      x: '12a',
+      rusis: 'Briedis',
+      foo: 'bar',
+      grupe: ['vilkai', 'bebrai'],
+    });
+    return eq(
+      [sortedEntries(result), stateQuery({ tema: 'limitai', lentele: 'x' })],
+      [sortedEntries(kept), { tema: 'limitai' }],
+    );
+  });
+
+  check('Įterpimas: stateQuery be __proto__', () => {
+    const query = JSON.parse('{"__proto__":{"polluted":"1"},"constructor":"x","tema":"zala"}');
+    const result = stateQuery(query);
+    return eq(
+      [
+        Object.keys(result),
+        Object.prototype.hasOwnProperty.call(result, '__proto__'),
+        Object.getPrototypeOf(result) === Object.prototype,
+        'polluted' in {},
+      ],
+      [['tema'], false, true, false],
+    );
+  });
+
+  check('Įterpimas: žinučių vokas', () => {
+    const state = stateMessage({
+      tema: 'zala',
+      view: 'map',
+      hasTable: true,
+      title: 'Žala',
+      query: { tema: 'zala' },
+      shareQuery: { tema: 'zala', sezonas: '2026-2027' },
+      provenance: { kind: 'snapshot', asOf: '2026-10-09', environment: 'other' },
+    });
+    return eq(
+      [readyMessage(), Object.keys(state), state.biipHunting.type, state.biipHunting.v],
+      [{ biipHunting: { v: 1, type: 'ready' } }, ['biipHunting'], 'state', 1],
+    );
+  });
+
+  check('Įterpimas: išdėstymas', () =>
+    eq(
+      [
+        hubTop(true),
+        isRailed(1440, true, true),
+        tableReplacesMap(1440, true, true),
+        tableReplacesMap(390, true, true),
+        mapPadding(1440, false, true)[0],
+      ],
+      [48, false, true, false, 48],
+    ),
+  );
+
+  check('Išdėstymas be įterpimo nepakito', () =>
+    eq(
+      [
+        mapPadding(1440, true),
+        hubTop(),
+        isRailed(1440, true),
+        tableReplacesMap(1440, true),
+        tableReplacesMap(1100, true),
+      ],
+      [[104, 568, 0, 64], 104, true, false, true],
+    ),
+  );
+
+  check('Įterpimas: lentelės ir raktai = temos (EMBED_TOPICS)', () => {
+    const problems: string[] = [];
+    (['laimikiai', 'limitai', 'zala'] as const).forEach((id) => {
+      const expected = getTopic(id).defaultTable;
+      if (EMBED_TOPICS[id].defaultTable !== expected) {
+        problems.push(`${id}.defaultTable ${EMBED_TOPICS[id].defaultTable} ≠ ${expected}`);
+      }
+    });
+    const vilkai = EMBED_TOPICS.vilkai;
+    if (JSON.stringify(vilkai.tables) !== JSON.stringify(WOLVES_TABLES)) {
+      problems.push('vilkai.tables ≠ WOLVES_TABLES');
+    }
+    if (vilkai.defaultTable !== 'irasai')
+      problems.push(`vilkai.defaultTable ${vilkai.defaultTable}`);
+    const wolvesKeys = WOLVES_KEYS.filter((key) => key !== 'lentele');
+    if (JSON.stringify(vilkai.keys) !== JSON.stringify(wolvesKeys)) {
+      problems.push('vilkai.keys ≠ WOLVES_KEYS − lentele');
+    }
+    const byId = EMBED_TOPICS as unknown as Record<string, { keys: readonly string[] } | undefined>;
+    TOPICS.filter((t) => t.kind === 'snapshot').forEach((t) => {
+      const entry = byId[t.id];
+      if (!entry) return problems.push(`${t.id}: not in EMBED_TOPICS`);
+      const expected = sortedList(['sezonas', 'sav', ...t.dims.map((d) => d.key)]);
+      if (JSON.stringify(sortedList(entry.keys)) !== JSON.stringify(expected)) {
+        problems.push(`${t.id}.keys ${sortedList(entry.keys).join(' ')} ≠ ${expected.join(' ')}`);
+      }
+    });
+    return problems.length === 0 || problems.join('; ');
+  });
 }
 
 // ---------------------------------------------------------------------------
