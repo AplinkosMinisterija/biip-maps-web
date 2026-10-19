@@ -3,13 +3,15 @@
 // embed mode with a validated parent origin; on the production host ctx is null and this
 // never runs.
 //
-// iframe → WP: one `ready` per document load, then `state` (debounced, deduplicated).
+// iframe → WP: one `ready` per document load, then `state` (debounced, deduplicated), and
+// `aboutClosed` when the About dialog WP opened is closed inside the frame.
 // WP → iframe: `set` (topic and/or map/table view, optionally the table) and `about`.
 import { onMounted, onScopeDispose, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import type { HubContext } from '@/composables/hunting/hub/context';
 import { setTableOpen, type HubShell } from '@/components/hunting/hub/shell/shell';
 import {
+  aboutClosedMessage,
   parseCommand,
   readyMessage,
   stateMessage,
@@ -49,9 +51,17 @@ export function useEmbedBridge(ctx: HubContext, shell: HubShell | null): void {
     const cmd = parseCommand(e.data);
     if (!cmd) return;
     if (cmd.type === 'about') {
-      ctx.openAbout();
+      // Closed by the user inside the frame: WP takes focus back to its button.
+      ctx.openAbout(undefined, {
+        onClose: (byUser) => {
+          if (byUser) post(aboutClosedMessage());
+        },
+      });
       return;
     }
+    // The dialog's backdrop covers only the frame: a WP tab or switch click changes what is
+    // behind it, so close it (focus stays on the WP control).
+    ctx.closeAbout();
     pendingLive = null;
     // Every `set` gets a `state` answer, also when it changes nothing: WP waits for one.
     answerNextState();

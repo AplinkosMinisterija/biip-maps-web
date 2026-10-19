@@ -3,7 +3,7 @@
     <div
       v-if="isOpen"
       class="fixed inset-0 z-[1000] flex items-stretch justify-center bg-black/50 md:items-center md:p-8"
-      @click.self="close"
+      @click.self="close()"
     >
       <div
         ref="dialog"
@@ -28,7 +28,7 @@
             type="button"
             class="inline-flex min-h-[44px] items-center gap-1 rounded-md px-3 text-sm font-semibold text-gray-900 hover:bg-gray-100"
             :class="focusRing"
-            @click="close"
+            @click="close()"
           >
             <span aria-hidden="true">✕</span> {{ S.close }}
           </button>
@@ -51,7 +51,7 @@
 
 <script setup lang="ts">
 import { computed, inject, nextTick, onBeforeUnmount, ref, type PropType } from 'vue';
-import { HUB_CTX } from '@/composables/hunting/hub/context';
+import { HUB_CTX, type AboutOpenOptions } from '@/composables/hunting/hub/context';
 import type { TopicDef, TopicId } from '@/utils/hunting/hub/types';
 import { ABOUT_HEADINGS, ATTRIBUTION_RULE, S, TOPIC_TABS } from '@/utils/hunting/hub/strings';
 import { focusRing, trapTab } from './shell';
@@ -78,6 +78,9 @@ const dialog = ref<HTMLElement | null>(null);
 const titleEl = ref<HTMLElement | null>(null);
 let returnTo: HTMLElement | null = null;
 let previousOverflow = '';
+// Set when the opener wants to know about the close (embedded: the WP page, which then
+// takes focus back to its "Apie duomenis" button).
+let onClose: AboutOpenOptions['onClose'] | null = null;
 
 // Embedded, the WP page focuses the frame right before it asks for this dialog. Firefox gives
 // the frame's document focus a few milliseconds after the request arrives (without a window
@@ -121,12 +124,17 @@ const common = computed(() => {
   ].filter(Boolean);
 });
 
-async function open(id?: TopicId) {
+async function open(id?: TopicId, opts: AboutOpenOptions = {}) {
   topicId.value = id || ctx.sel.value.topic;
-  returnTo = document.activeElement as HTMLElement | null;
-  isOpen.value = true;
-  previousOverflow = document.body.style.overflow;
-  document.body.style.overflow = 'hidden';
+  onClose = opts.onClose || null;
+  // Opened again while open (the WP button stays clickable): keep the first opener's
+  // focus target and the page's own overflow.
+  if (!isOpen.value) {
+    returnTo = document.activeElement as HTMLElement | null;
+    isOpen.value = true;
+    previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+  }
   await nextTick();
   titleEl.value?.focus();
   if (ctx.embed) {
@@ -136,14 +144,22 @@ async function open(id?: TopicId) {
   }
 }
 
-function close() {
+// byUser: false when the opener closed it (embedded: a WP `set` changed the topic or view
+// behind the dialog). Focus then stays where the user is (on the WP page).
+function close(byUser = true) {
   if (!isOpen.value) return;
   stopLateFocus();
   isOpen.value = false;
   document.body.style.overflow = previousOverflow;
+  const notify = onClose;
+  onClose = null;
+  // An opener that is told about the close moves the focus itself.
+  const target = byUser && !notify ? returnTo : null;
+  returnTo = null;
   nextTick(() => {
-    if (returnTo && document.contains(returnTo)) returnTo.focus();
+    if (target && document.contains(target)) target.focus();
   });
+  notify?.(byUser);
 }
 
 function onKeydown(event: KeyboardEvent) {

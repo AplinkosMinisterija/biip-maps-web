@@ -111,7 +111,7 @@ import {
 import { useRoute } from 'vue-router';
 import { useWindowSize, watchDebounced } from '@vueuse/core';
 import { projection3857, vectorPositron } from '@/utils';
-import { HUB_CTX, type HubContext } from '@/composables/hunting/hub/context';
+import { HUB_CTX, type AboutOpenOptions, type HubContext } from '@/composables/hunting/hub/context';
 import type { TopicDef, TopicId } from '@/utils/hunting/hub/types';
 import {
   hubCssVars,
@@ -164,13 +164,17 @@ const topics = Object.fromEntries(
 const topicList = TOPIC_ORDER.map((id) => topics[id]);
 
 // ---- About dialog (opened through the context).
-type AboutDialog = { open: (...args: [TopicId?]) => void };
+type AboutDialog = {
+  open: (topic?: TopicId, opts?: AboutOpenOptions) => void;
+  close: (byUser?: boolean) => void;
+};
 const about = ref<AboutDialog | null>(null);
 const sheet = ref<{ openFilters(): void } | null>(null);
 
-const openAbout = (topic?: TopicId) => about.value?.open(topic);
+const openAbout = (topic?: TopicId, opts?: AboutOpenOptions) => about.value?.open(topic, opts);
+const closeAbout = () => about.value?.close(false);
 
-const ctx: HubContext | null = isProductionHost ? null : useHubState({ openAbout });
+const ctx: HubContext | null = isProductionHost ? null : useHubState({ openAbout, closeAbout });
 // Embedded in the WP "Medžioklės duomenys" page (SPEC §5); never on the production host.
 const embed = !!ctx?.embed;
 

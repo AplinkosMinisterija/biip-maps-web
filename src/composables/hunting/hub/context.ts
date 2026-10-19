@@ -29,6 +29,12 @@ export interface EmbedLiveControls {
   provenance: Ref<{ kind: 'snapshot' | 'live'; asOf: string | null }>;
 }
 
+// How the About dialog was opened: `onClose(byUser)` runs once when it closes; byUser is
+// false when `closeAbout()` closed it (embedded: a WP `set`).
+export interface AboutOpenOptions {
+  onClose?: (byUser: boolean) => void;
+}
+
 // Shared state of the hunting data hub (SPEC2 §8.2). Created once by the route
 // (`src/routes/hunting/data.vue`) and provided under HUB_CTX, as the wolves page does
 // with WOLVES_CTX.
@@ -65,6 +71,7 @@ export interface HubContext {
   setDim(key: string, value: string | null): void;
   setTable(tab: string | null): void;
   shareUrl(): string;
-  openAbout(topic?: TopicId): void;
+  openAbout(topic?: TopicId, opts?: AboutOpenOptions): void;
+  closeAbout(): void;
 }
 export const HUB_CTX: InjectionKey<HubContext> = Symbol('huntingHub');

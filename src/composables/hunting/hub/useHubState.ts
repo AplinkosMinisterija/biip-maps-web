@@ -8,7 +8,12 @@
 import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { useRoute, useRouter, type LocationQuery } from 'vue-router';
 import { useMediaQuery, useWindowSize } from '@vueuse/core';
-import type { EmbedLiveControls, HubContext, LiveMap } from '@/composables/hunting/hub/context';
+import type {
+  AboutOpenOptions,
+  EmbedLiveControls,
+  HubContext,
+  LiveMap,
+} from '@/composables/hunting/hub/context';
 import { useSnapshot } from '@/composables/hunting/hub/useSnapshot';
 import { seasonLabel, seasonOfDay, todayVilnius } from '@/utils/hunting/dates';
 import { isEmbedQuery, resolveParentOrigin } from '@/utils/hunting/hub/embed';
@@ -62,7 +67,8 @@ const hasFiles = (data: SnapshotData | null, topic: TopicDef) =>
 
 export interface HubStateOptions {
   today?: string; // Vilnius day; defaults to the real one
-  openAbout?: (topic?: TopicId) => void; // the shell's About dialog
+  openAbout?: (topic?: TopicId, opts?: AboutOpenOptions) => void; // the shell's About dialog
+  closeAbout?: () => void;
 }
 
 export function useHubState(opts: HubStateOptions = {}): HubContext {
@@ -452,7 +458,9 @@ export function useHubState(opts: HubStateOptions = {}): HubContext {
     return new URL(router.resolve({ path: routePath, query }).href, window.location.href).href;
   };
 
-  const openAbout = (id?: TopicId) => opts.openAbout?.(id ?? topicId.value);
+  const openAbout = (id?: TopicId, about?: AboutOpenOptions) =>
+    opts.openAbout?.(id ?? topicId.value, about);
+  const closeAbout = () => opts.closeAbout?.();
 
   const liveMap = shallowRef<LiveMap | null>(null);
 
@@ -483,5 +491,6 @@ export function useHubState(opts: HubStateOptions = {}): HubContext {
     setTable,
     shareUrl,
     openAbout,
+    closeAbout,
   };
 }

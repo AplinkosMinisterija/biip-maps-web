@@ -215,6 +215,12 @@ export const readyMessage = () => ({
   biipHunting: { v: EMBED_VERSION, type: 'ready' as const },
 });
 
+// The About dialog that WP asked for was closed inside the frame: WP gives focus back to
+// its "Apie duomenis" button (a v1 addition; an older WP page ignores it).
+export const aboutClosedMessage = () => ({
+  biipHunting: { v: EMBED_VERSION, type: 'aboutClosed' as const },
+});
+
 // Plain copies of the nested objects, so a reactive proxy never reaches postMessage.
 export const stateMessage = (s: EmbedState) => ({
   biipHunting: {
