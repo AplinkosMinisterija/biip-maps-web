@@ -565,7 +565,14 @@ const liveControls: EmbedLiveControls = {
 };
 
 onMounted(async () => {
-  if (hub && embed) hub.embedLive.value = liveControls;
+  if (hub && embed) {
+    hub.embedLive.value = liveControls;
+    // A switch that opened the table (an overview card's "Lentelė", setTopic `openTable`)
+    // wrote `lentele` to the URL, but when this component's chunk is already loaded the
+    // wolves state reads the URL before the router has applied it: open the table here.
+    const pick = hub.sel.value.table;
+    if (ctx && pick && !ctx.state.tableOpen.value) liveControls.setTableOpen(true, pick);
+  }
   if (!ctx) return;
   ensure(['meta']);
   // "Dalintis" in the shell copies the wolves link (period always explicit).
