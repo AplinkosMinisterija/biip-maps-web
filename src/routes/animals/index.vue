@@ -29,8 +29,8 @@
       <template #content="{ data }">
         <div class="text-xs">{{ countTranslation }}: {{ data.count }}</div>
         <!-- Kilogramais apskaitomos rūšys į individų skaičių neįtraukiamos (gyvūnų API, #85). -->
-        <div v-if="visibleLayer === 'animals.species' && data.countKg" class="text-xs">
-          Kilogramais apskaitomų gyvūnų: {{ data.countKg }} kg
+        <div v-if="visibleLayer === 'animals.species' && data.properties?.countKg" class="text-xs">
+          Kilogramais apskaitomų gyvūnų: {{ data.properties.countKg }} kg
         </div>
       </template>
     </FeaturesPopupHover>
