@@ -186,8 +186,9 @@ watch(
 
 function setSegment(id: Segment) {
   segment.value = id;
-  // Embedded, "Filtrai" keeps the table open: coming back to "Lentelė" keeps its tab.
-  if (ctx.embed && id === 'table' && ctx.sel.value.table !== null) {
+  // Embedded, "Filtrai" keeps the table open (as the header's "Filtrai" does, SPEC §4):
+  // `lentele` is the WP page's view switch, and coming back to "Lentelė" keeps its tab.
+  if (ctx.embed && (id === 'filters' || (id === 'table' && ctx.sel.value.table !== null))) {
     if (detent.value === 'peek') detent.value = 'half';
     return;
   }
