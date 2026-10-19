@@ -28,18 +28,17 @@
       </template>
       <template #content="{ data }">
         <div class="text-xs">{{ countTranslation }}: {{ data.count }}</div>
+        <!-- Kilogramais apskaitomos rūšys į individų skaičių neįtraukiamos (gyvūnų API, #85). -->
+        <div v-if="visibleLayer === 'animals.species' && data.properties?.countKg" class="text-xs">
+          Kilogramais apskaitomų gyvūnų: {{ data.properties.countKg }} kg
+        </div>
       </template>
     </FeaturesPopupHover>
   </div>
 </template>
 <script setup lang="ts">
 import { computed, inject, ref, watch } from 'vue';
-import {
-  municipalitiesServiceVT,
-  projection3857,
-  vectorBright,
-  vectorPositron,
-} from '@/utils';
+import { municipalitiesServiceVT, projection3857, vectorBright, vectorPositron } from '@/utils';
 import { useStatsStore } from '@/stores/stats';
 
 const statsStore = useStatsStore();
@@ -49,7 +48,7 @@ const mapLayers: any = inject('mapLayers');
 const selectedFeatures = ref([] as any);
 
 function selectFeatures(feature: any) {
-  if (!feature?.count) {
+  if (!feature?.count && !feature?.countKg) {
     selectedFeatures.value = [];
   } else {
     selectedFeatures.value = [feature];
