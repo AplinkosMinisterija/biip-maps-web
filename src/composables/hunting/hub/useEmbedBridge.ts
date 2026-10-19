@@ -7,7 +7,6 @@
 // WP → iframe: `set` (topic and/or map/table view, optionally the table) and `about`.
 import { onMounted, onScopeDispose, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import { watchDebounced } from '@vueuse/core';
 import type { HubContext } from '@/composables/hunting/hub/context';
 import { setTableOpen, type HubShell } from '@/components/hunting/hub/shell/shell';
 import {
@@ -54,6 +53,8 @@ export function useEmbedBridge(ctx: HubContext, shell: HubShell | null): void {
       return;
     }
     pendingLive = null;
+    // Every `set` gets a `state` answer, also when it changes nothing: WP waits for one.
+    answerNextState();
     // The table of the page's history entry (Back/Forward), else the topic's default one.
     const table = cmd.view === 'table' ? cmd.lentele : undefined;
     if (cmd.tema && cmd.tema !== ctx.sel.value.topic) {
@@ -158,7 +159,10 @@ export function useEmbedBridge(ctx: HubContext, shell: HubShell | null): void {
   // components), so a change during setup must not post a state before it.
   let readySent = false;
   let lastSent = '';
+  let stateTimer: ReturnType<typeof setTimeout> | undefined;
   function postState() {
+    clearTimeout(stateTimer);
+    stateTimer = undefined;
     if (!readySent) return;
     let msg: ReturnType<typeof stateMessage>;
     try {
@@ -172,13 +176,26 @@ export function useEmbedBridge(ctx: HubContext, shell: HubShell | null): void {
     post(msg);
   }
 
+  const schedulePost = () => {
+    clearTimeout(stateTimer);
+    stateTimer = setTimeout(postState, STATE_DEBOUNCE_MS);
+  };
+  // A `set` that leaves the hub as it was (two sets that cancel out within the debounce, or
+  // one for the state already shown) would otherwise post nothing, and WP would take the
+  // next in-frame change for the answer. Forget the last message, so the next post goes out.
+  function answerNextState() {
+    lastSent = '';
+    schedulePost();
+  }
+  onScopeDispose(() => clearTimeout(stateTimer));
+
   onMounted(() => {
     post(readyMessage());
     readySent = true;
     postState();
   });
 
-  watchDebounced(
+  watch(
     [
       () => route.fullPath,
       () => ctx.sel.value.topic,
@@ -198,7 +215,6 @@ export function useEmbedBridge(ctx: HubContext, shell: HubShell | null): void {
         }
       },
     ],
-    postState,
-    { debounce: STATE_DEBOUNCE_MS },
+    schedulePost,
   );
 }
