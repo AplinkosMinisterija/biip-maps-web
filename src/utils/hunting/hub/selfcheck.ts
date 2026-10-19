@@ -352,6 +352,34 @@ function runEmbedChecks(check: Check, eq: Eq) {
     ),
   );
 
+  // The optional table of a 'table' view: kept only when the target topic has it.
+  check('Įterpimas: parseCommand set lentelė', () =>
+    eq(
+      [
+        parseCommand(set({ tema: 'laimikiai', view: 'table', lentele: 'vietoves' })),
+        parseCommand(set({ tema: 'vilkai', view: 'table', lentele: 'sezonai' })),
+        parseCommand(set({ view: 'table', lentele: 'menesiai' })),
+        parseCommand(set({ tema: 'laimikiai', view: 'table', lentele: 'menesiai' })),
+        parseCommand(set({ tema: 'laimikiai', view: 'table', lentele: 'X1' })),
+        parseCommand(set({ tema: 'laimikiai', view: 'table', lentele: 7 })),
+        parseCommand(set({ tema: 'laimikiai', view: 'map', lentele: 'vietoves' })),
+        parseCommand(set({ tema: 'apzvalga', view: 'table', lentele: 'rusys' })),
+        parseCommand(set({ tema: 'zala', view: 'table', lentele: '__proto__' })),
+      ],
+      [
+        { type: 'set', tema: 'laimikiai', view: 'table', lentele: 'vietoves' },
+        { type: 'set', tema: 'vilkai', view: 'table', lentele: 'sezonai' },
+        { type: 'set', view: 'table', lentele: 'menesiai' },
+        { type: 'set', tema: 'laimikiai', view: 'table' },
+        { type: 'set', tema: 'laimikiai', view: 'table' },
+        { type: 'set', tema: 'laimikiai', view: 'table' },
+        { type: 'set', tema: 'laimikiai', view: 'map' },
+        { type: 'set', tema: 'apzvalga', view: 'table' },
+        { type: 'set', tema: 'zala', view: 'table' },
+      ],
+    ),
+  );
+
   check('Įterpimas: leidžiami tėviniai puslapiai', () =>
     eq(
       [

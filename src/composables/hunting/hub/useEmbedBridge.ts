@@ -4,7 +4,7 @@
 // never runs.
 //
 // iframe → WP: one `ready` per document load, then `state` (debounced, deduplicated).
-// WP → iframe: `set` (topic and/or map/table view) and `about`.
+// WP → iframe: `set` (topic and/or map/table view, optionally the table) and `about`.
 import { onMounted, onScopeDispose, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { watchDebounced } from '@vueuse/core';
@@ -40,10 +40,10 @@ export function useEmbedBridge(ctx: HubContext, shell: HubShell | null): void {
     }
   };
 
-  // The view a `set` asked for on the live topic before its controls registered. Applied at
-  // most once (when `embedLive` next changes) and cleared by every `set`, so a stale request
-  // never reaches a later visit of the topic.
-  let pendingLive: EmbedView | null = null;
+  // The view (and table) a `set` asked for on the live topic before its controls
+  // registered. Applied at most once (when `embedLive` next changes) and cleared by every
+  // `set`, so a stale request never reaches a later visit of the topic.
+  let pendingLive: { view: EmbedView; table?: string } | null = null;
 
   function onMessage(e: MessageEvent) {
     if (e.source !== window.parent || e.origin !== parentOrigin) return;
@@ -54,20 +54,24 @@ export function useEmbedBridge(ctx: HubContext, shell: HubShell | null): void {
       return;
     }
     pendingLive = null;
+    // The table of the page's history entry (Back/Forward), else the topic's default one.
+    const table = cmd.view === 'table' ? cmd.lentele : undefined;
     if (cmd.tema && cmd.tema !== ctx.sel.value.topic) {
-      ctx.setTopic(cmd.tema, { openTable: cmd.view === 'table' });
-      if (getTopic(cmd.tema).kind === 'live' && cmd.view) pendingLive = cmd.view;
+      ctx.setTopic(cmd.tema, { openTable: cmd.view === 'table', table });
+      if (getTopic(cmd.tema).kind === 'live' && cmd.view) pendingLive = { view: cmd.view, table };
       return;
     }
     if (!cmd.view) return;
     const open = cmd.view === 'table';
     const kind = ctx.topic.value.kind;
     if (kind === 'snapshot') {
-      setTableOpen(ctx, open);
+      // An unavailable table falls back to the default one (§5.9).
+      if (table) ctx.setTable(table);
+      else setTableOpen(ctx, open);
     } else if (kind === 'live') {
       const live = ctx.embedLive.value;
-      if (live) live.setTableOpen(open);
-      else pendingLive = cmd.view;
+      if (live) live.setTableOpen(open, table);
+      else pendingLive = { view: cmd.view, table };
     }
     // Overview: no map/table view, ignored.
   }
@@ -76,7 +80,9 @@ export function useEmbedBridge(ctx: HubContext, shell: HubShell | null): void {
   onScopeDispose(() => window.removeEventListener('message', onMessage));
 
   watch(ctx.embedLive, (controls) => {
-    if (controls && pendingLive) controls.setTableOpen(pendingLive === 'table');
+    if (controls && pendingLive) {
+      controls.setTableOpen(pendingLive.view === 'table', pendingLive.table);
+    }
     pendingLive = null;
   });
 
@@ -92,7 +98,11 @@ export function useEmbedBridge(ctx: HubContext, shell: HubShell | null): void {
     const tema = sel.topic;
     const kind = ctx.topic.value.kind;
     const overview = kind === 'overview';
-    const view: EmbedView | null = overview ? null : sel.table !== null ? 'table' : 'map';
+    // The live topic's open table comes from its controls: `sel.table` follows the wolves
+    // state's URL write, which comes after this debounce.
+    const live = kind === 'live' ? ctx.embedLive.value : null;
+    const table = live ? live.table.value : sel.table;
+    const view: EmbedView | null = overview ? null : table !== null ? 'table' : 'map';
 
     let hasTable: boolean;
     if (overview) hasTable = false;
@@ -109,7 +119,7 @@ export function useEmbedBridge(ctx: HubContext, shell: HubShell | null): void {
       delete out.tema;
       delete out.lentele;
       if (tema !== 'apzvalga') out.tema = tema;
-      if (sel.table !== null && view === 'table') out.lentele = sel.table;
+      if (table !== null && view === 'table') out.lentele = table;
       return out;
     };
 
@@ -176,6 +186,7 @@ export function useEmbedBridge(ctx: HubContext, shell: HubShell | null): void {
       () => ctx.view.value?.tables.length ?? -1,
       () => ctx.embedLive.value,
       () => ctx.embedLive.value?.hasTable.value,
+      () => ctx.embedLive.value?.table.value,
       // Not in the URL: the overview's snapshot date, and the live topic's share link
       // (registered on mount; its default period can settle after its data loads).
       () => ctx.data.snapshot.value?.meta?.snapshotDate,

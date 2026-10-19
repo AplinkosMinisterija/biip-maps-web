@@ -39,7 +39,7 @@ export const URL_DEBOUNCE_MS = 300;
 export const PRODUCTION_HOST = 'maps.biip.lt';
 export const STAGING_HOST = 'staging-maps.biip.lt';
 
-// The wolves table `setTopic(…, { openTable: true })` opens (SPEC §5.11).
+// The wolves table `setTopic(…, { openTable: true })` opens without a `table` (SPEC §5.11).
 const LIVE_TABLE = 'irasai';
 
 // Where an explicit season came from: the URL, the user, or a topic switch (§3.4 notices).
@@ -373,7 +373,7 @@ export function useHubState(opts: HubStateOptions = {}): HubContext {
     return { season: season.value, fromRange: false };
   }
 
-  function setTopic(id: TopicId, opts: { openTable?: boolean } = {}) {
+  function setTopic(id: TopicId, opts: { openTable?: boolean; table?: string } = {}) {
     const target = hasTopic(id) ? id : DEFAULT_TOPIC;
     if (target === topicId.value) return;
     const carry = carryFromCurrent();
@@ -393,16 +393,23 @@ export function useHubState(opts: HubStateOptions = {}): HubContext {
       if (target !== DEFAULT_TOPIC) query.tema = target;
       if (carriedSav !== null) query.sav = String(carriedSav);
       if (carry) query.sezonas = seasonKey(carry.season);
-      if (opts.openTable) query.lentele = LIVE_TABLE;
+      const liveTable = !opts.openTable
+        ? null
+        : opts.table && WOLVES_TABLES.indexOf(opts.table) >= 0
+          ? opts.table
+          : LIVE_TABLE;
+      if (liveTable) query.lentele = liveTable;
       // `previousQuery` becomes the written query, so the route watcher never sees `lentele`
       // change: mirror the opened table here, or `sel.table` stays null while it is open.
-      tablePick.value = opts.openTable ? LIVE_TABLE : null;
+      tablePick.value = liveTable;
       write('push', query);
       previousQuery = { ...query };
       return;
     }
-    // The overview has no table: `openTable` is ignored there.
-    tablePick.value = opts.openTable && !overview ? targetDef.defaultTable || null : null;
+    // The overview has no table: `openTable` is ignored there. A `table` the view does not
+    // offer falls back to the default one (`tableOf`, embed only).
+    tablePick.value =
+      opts.openTable && !overview ? opts.table || targetDef.defaultTable || null : null;
     validateSeason();
     pushNow();
   }

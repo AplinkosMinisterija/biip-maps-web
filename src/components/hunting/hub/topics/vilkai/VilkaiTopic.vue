@@ -285,6 +285,7 @@ import {
 } from '@/utils/hunting/hub/strings';
 import type { SnapshotData, TopicView } from '@/utils/hunting/hub/types';
 import { VILKAI_COMPARE, VILKAI_H1, type VilkaiCarry } from '@/utils/hunting/hub/topics/vilkai';
+import { WOLVES_TABLES } from '@/utils/hunting/hub/url';
 
 const mapLayers: any = inject('mapLayers');
 // Optional: the component also runs outside the hub (with its own defaults).
@@ -538,10 +539,19 @@ let stopLabelWatch: (() => void) | undefined;
 let unmounted = false;
 
 // ---- Embedded: the WP page's view switch opens and closes the table through the bridge
-// (SPEC §5.4, §5.11). Registered while this topic is mounted.
+// (SPEC §5.4, §5.11); Back/Forward also name the table. Registered while this topic is
+// mounted.
 const liveControls: EmbedLiveControls = {
-  setTableOpen: setTable,
+  setTableOpen(open: boolean, table?: string) {
+    if (open && ctx && table && WOLVES_TABLES.indexOf(table) >= 0) {
+      ctx.state.tableTab.value = table as typeof ctx.state.tableTab.value;
+    }
+    setTable(open);
+  },
   hasTable: computed(() => !fallback.value),
+  table: computed(() =>
+    ctx && !fallback.value && ctx.state.tableOpen.value ? ctx.state.tableTab.value : null,
+  ),
 };
 
 onMounted(async () => {

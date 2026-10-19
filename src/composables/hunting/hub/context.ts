@@ -18,10 +18,13 @@ export interface LiveMap {
 }
 
 // What the live Vilkai topic offers the WP embed bridge while it is mounted (SPEC §5.4):
-// opening or closing its table, and whether it has one.
+// opening (on `table` when it is one of its tables, else the current one) or closing its
+// table, whether it has one, and the open table. `table` is read directly: the wolves state
+// writes `lentele` to the URL only after its debounce, later than the bridge reports.
 export interface EmbedLiveControls {
-  setTableOpen(open: boolean): void;
+  setTableOpen(open: boolean, table?: string): void;
   hasTable: Ref<boolean>;
+  table: Ref<string | null>;
 }
 
 // Shared state of the hunting data hub (SPEC2 §8.2). Created once by the route
@@ -52,8 +55,9 @@ export interface HubContext {
   liveMap: ShallowRef<LiveMap | null>;
   // `mapPadding` is [top, right, bottom, left] in px, see `utils/hunting/hub/layout.ts`.
   layout: { railed: Ref<boolean>; mapPadding: ComputedRef<number[]> };
-  // `openTable`: open the target topic's default table (embed `set` with view 'table').
-  setTopic(id: TopicId, opts?: { openTable?: boolean }): void;
+  // `openTable`: open the target topic's table (embed `set` with view 'table'): `table` when
+  // given (an unavailable one falls back as in §5.9), else the topic's default table.
+  setTopic(id: TopicId, opts?: { openTable?: boolean; table?: string }): void;
   setSeason(s: number): void;
   setSav(code: number | null): void;
   setDim(key: string, value: string | null): void;

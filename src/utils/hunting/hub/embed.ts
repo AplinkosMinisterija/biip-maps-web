@@ -135,8 +135,11 @@ export type EmbedTopicId = keyof typeof EMBED_TOPIC_DEFS;
 
 export type EmbedView = 'map' | 'table';
 
-// Commands WP sends to the hub (§5.4).
-export type EmbedCommand = { type: 'set'; tema?: TopicId; view?: EmbedView } | { type: 'about' };
+// Commands WP sends to the hub (§5.4). `lentele` (optional, with view 'table') names the
+// table the page's history entry shows, so Back/Forward restore that table and not the
+// topic's default one.
+export type EmbedSet = { type: 'set'; tema?: TopicId; view?: EmbedView; lentele?: string };
+export type EmbedCommand = EmbedSet | { type: 'about' };
 
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
   Object.prototype.toString.call(value) === '[object Object]';
@@ -158,7 +161,7 @@ export function parseCommand(data: unknown): EmbedCommand | null {
   if (msg.type === 'about') return { type: 'about' };
   if (msg.type !== 'set') return null;
 
-  const command: { type: 'set'; tema?: TopicId; view?: EmbedView } = { type: 'set' };
+  const command: EmbedSet = { type: 'set' };
   if (!absent(msg, 'tema')) {
     const tema = msg.tema;
     if (!hasTopic(tema)) return null;
@@ -169,7 +172,26 @@ export function parseCommand(data: unknown): EmbedCommand | null {
     if (view !== 'map' && view !== 'table') return null;
     command.view = view;
   }
+  // The table is only a hint: one that fails the regex, or that the target topic does not
+  // have, is dropped and the hub opens the topic's default table.
+  if (command.view === 'table' && !absent(msg, 'lentele')) {
+    const lentele = msg.lentele;
+    if (
+      typeof lentele === 'string' &&
+      PASS_KEYS.lentele.test(lentele) &&
+      embedTableAllowed(command.tema, lentele)
+    ) {
+      command.lentele = lentele;
+    }
+  }
   return command;
+}
+
+/** Whether `table` is one of the tables of `tema` (any table id when no topic is given). */
+function embedTableAllowed(tema: TopicId | undefined, table: string): boolean {
+  if (tema === undefined) return true;
+  const def: { tables: readonly string[] } | undefined = EMBED_TOPICS[tema as EmbedTopicId];
+  return !!def && def.tables.indexOf(table) >= 0;
 }
 
 export interface EmbedProvenance {
