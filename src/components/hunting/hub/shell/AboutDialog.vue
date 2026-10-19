@@ -79,6 +79,28 @@ const titleEl = ref<HTMLElement | null>(null);
 let returnTo: HTMLElement | null = null;
 let previousOverflow = '';
 
+// Embedded, the WP page focuses the frame right before it asks for this dialog. Firefox gives
+// the frame's document focus a few milliseconds after the request arrives (without a window
+// focus event) and then resets the focus to the body, so the title loses it: for a short
+// while, put it back on the title whenever the frame has focus outside the dialog.
+const LATE_FOCUS_MS = 1000;
+const LATE_FOCUS_STEP_MS = 50;
+let lateFocusTimer = 0;
+function stopLateFocus() {
+  window.clearTimeout(lateFocusTimer);
+  lateFocusTimer = 0;
+}
+function focusTitleLate(until: number) {
+  lateFocusTimer = 0;
+  if (!isOpen.value) return;
+  if (document.hasFocus() && !dialog.value?.contains(document.activeElement)) {
+    titleEl.value?.focus();
+  }
+  if (Date.now() < until) {
+    lateFocusTimer = window.setTimeout(() => focusTitleLate(until), LATE_FOCUS_STEP_MS);
+  }
+}
+
 const sections = computed(() => {
   const about = props.topics[topicId.value]?.about;
   if (!about) return [];
@@ -107,10 +129,16 @@ async function open(id?: TopicId) {
   document.body.style.overflow = 'hidden';
   await nextTick();
   titleEl.value?.focus();
+  if (ctx.embed) {
+    stopLateFocus();
+    const until = Date.now() + LATE_FOCUS_MS;
+    lateFocusTimer = window.setTimeout(() => focusTitleLate(until), 0);
+  }
 }
 
 function close() {
   if (!isOpen.value) return;
+  stopLateFocus();
   isOpen.value = false;
   document.body.style.overflow = previousOverflow;
   nextTick(() => {
@@ -129,6 +157,7 @@ function onKeydown(event: KeyboardEvent) {
 }
 
 onBeforeUnmount(() => {
+  stopLateFocus();
   if (isOpen.value) document.body.style.overflow = previousOverflow;
 });
 
