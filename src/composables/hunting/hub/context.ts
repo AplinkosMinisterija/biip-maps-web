@@ -19,12 +19,14 @@ export interface LiveMap {
 
 // What the live Vilkai topic offers the WP embed bridge while it is mounted (SPEC §5.4):
 // opening (on `table` when it is one of its tables, else the current one) or closing its
-// table, whether it has one, and the open table. `table` is read directly: the wolves state
-// writes `lentele` to the URL only after its debounce, later than the bridge reports.
+// table, whether it has one, the open table, and where the shown data comes from (the
+// snapshot while the live API fails). `table` is read directly: the wolves state writes
+// `lentele` to the URL only after its debounce, later than the bridge reports.
 export interface EmbedLiveControls {
   setTableOpen(open: boolean, table?: string): void;
   hasTable: Ref<boolean>;
   table: Ref<string | null>;
+  provenance: Ref<{ kind: 'snapshot' | 'live'; asOf: string | null }>;
 }
 
 // Shared state of the hunting data hub (SPEC2 §8.2). Created once by the route

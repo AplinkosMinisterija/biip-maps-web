@@ -552,6 +552,16 @@ const liveControls: EmbedLiveControls = {
   table: computed(() =>
     ctx && !fallback.value && ctx.state.tableOpen.value ? ctx.state.tableTab.value : null,
   ),
+  // The fallback shows the wolves.json copy: report its date, so the WP provenance line
+  // does not say "live" next to the hub's snapshot notice.
+  provenance: computed(() =>
+    fallback.value
+      ? {
+          kind: 'snapshot' as const,
+          asOf: fallbackView.value?.provenance.asOf || snapshot.value?.meta?.snapshotDate || null,
+        }
+      : { kind: 'live' as const, asOf: null },
+  ),
 };
 
 onMounted(async () => {

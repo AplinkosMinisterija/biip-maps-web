@@ -146,7 +146,9 @@ export function useEmbedBridge(ctx: HubContext, shell: HubShell | null): void {
         environment,
       };
     } else if (kind === 'live') {
-      provenance = { kind: 'live', asOf: null, environment };
+      // The Vilkai snapshot fallback reports the copy it shows, not live data.
+      const p = live?.provenance.value;
+      provenance = { kind: p?.kind ?? 'live', asOf: p?.asOf || null, environment };
     } else {
       const p = ctx.view.value?.provenance;
       provenance = { kind: p?.kind ?? 'snapshot', asOf: p?.asOf || null, environment };
@@ -204,6 +206,8 @@ export function useEmbedBridge(ctx: HubContext, shell: HubShell | null): void {
       () => ctx.embedLive.value,
       () => ctx.embedLive.value?.hasTable.value,
       () => ctx.embedLive.value?.table.value,
+      () => ctx.embedLive.value?.provenance.value.kind,
+      () => ctx.embedLive.value?.provenance.value.asOf,
       // Not in the URL: the overview's snapshot date, and the live topic's share link
       // (registered on mount; its default period can settle after its data loads).
       () => ctx.data.snapshot.value?.meta?.snapshotDate,
