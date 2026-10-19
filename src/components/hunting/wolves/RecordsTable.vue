@@ -156,6 +156,7 @@
 <script setup lang="ts">
 import { computed, inject, ref, watch } from 'vue';
 import { WOLVES_CTX } from '@/composables/hunting/context';
+import { HUB_CTX } from '@/composables/hunting/hub/context';
 import { hasMunicipalities } from '@/utils/hunting/municipalities';
 import type { WolfRecord } from '@/utils/hunting/types';
 
@@ -176,6 +177,8 @@ const emit = defineEmits(['show-on-map']);
 
 const ctx = inject(WOLVES_CTX)!;
 const { state, derived, data } = ctx;
+// Inside the hub embedded in the WP data page (SPEC §4); false on the wolves page.
+const embed = !!inject(HUB_CTX, null)?.embed;
 
 const isMobile = computed(() => ctx.isMobile.value);
 const filtered = computed(() => derived.filtered.value);
@@ -183,7 +186,9 @@ const isLoading = computed(
   () => !data.dataset.value && ['loading', 'slow'].includes(data.phase.value),
 );
 const showMunicipality = computed(() => hasMunicipalities(data.dataset.value?.records || []));
-const showVisibleAreaToggle = computed(() => !!state.mapExtent3346.value);
+// Embedded, the table replaces the map at every width, so there is no visible area to filter
+// by: the toggle is hidden and `visibleOnly` stays false (SPEC §4).
+const showVisibleAreaToggle = computed(() => !embed && !!state.mapExtent3346.value);
 
 const visibleOnly = ref(false);
 const sortKey = ref<'day' | 'sav'>('day');

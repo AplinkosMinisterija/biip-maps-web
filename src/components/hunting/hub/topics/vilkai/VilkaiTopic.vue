@@ -2,11 +2,12 @@
   <div v-if="ctx" class="hub-vilkai" :style="cssVars">
     <!-- Desktop and tablet (≥ 768 px), SPEC2 §4.1, §6.2. -->
     <template v-if="!isMobile">
-      <!-- Filter bar under the shell's 56 px top bar. -->
+      <!-- Filter bar under the shell's 56 px top bar (embedded: at the top, SPEC §4). -->
       <div
         role="search"
         aria-label="Vilkų filtrai"
-        class="absolute inset-x-0 top-14 h-12 z-40 bg-white border-b border-gray-200 px-2 flex items-center gap-2"
+        class="absolute inset-x-0 h-12 z-40 bg-white border-b border-gray-200 px-2 flex items-center gap-2"
+        :class="embed ? 'top-0' : 'top-14'"
       >
         <HuntingHubTopicsVilkaiChipPopover
           :label="`Laikotarpis: ${ctx.derived.periodLabel.value}`"
@@ -33,8 +34,9 @@
           <HuntingWolvesMoreFilters embedded />
         </HuntingHubTopicsVilkaiChipPopover>
 
+        <!-- Embedded, the WP page's view switch opens and closes the table (SPEC §4). -->
         <div
-          v-if="!fallback"
+          v-if="!fallback && !embed"
           role="group"
           aria-label="Rodinys"
           class="ml-auto flex rounded-lg bg-gray-100 p-1 gap-1"
@@ -171,10 +173,12 @@
       </div>
     </template>
 
-    <!-- Mobile (< 768 px): the chip row completes the shell's 56 px header to 108 px. -->
+    <!-- Mobile (< 768 px): the chip row completes the shell's 56 px header to 108 px
+         (embedded: the chip row alone, at the top). -->
     <template v-else>
       <div
-        class="absolute inset-x-0 top-14 z-30 h-[52px] bg-white shadow-md px-3 py-1 flex items-center gap-2"
+        class="absolute inset-x-0 z-30 h-[52px] bg-white shadow-md px-3 py-1 flex items-center gap-2"
+        :class="embed ? 'top-0' : 'top-14'"
       >
         <HuntingWolvesPeriodSheet />
       </div>
@@ -249,7 +253,7 @@ import {
 } from 'vue';
 import { useElementSize, useMediaQuery, useWindowSize } from '@vueuse/core';
 import { WOLVES_CTX, type WolvesContext } from '@/composables/hunting/context';
-import { HUB_CTX } from '@/composables/hunting/hub/context';
+import { HUB_CTX, type EmbedLiveControls } from '@/composables/hunting/hub/context';
 import { HUB_SHELL } from '@/components/hunting/hub/shell/shell';
 import { useWolvesData } from '@/composables/hunting/useWolvesData';
 import { useWolvesMap } from '@/composables/hunting/useWolvesMap';
@@ -264,11 +268,11 @@ import {
 } from '@/utils/hunting/dates';
 import { assignMunicipalities, loadMunicipalityIndex } from '@/utils/hunting/municipalities';
 import {
-  HUB_MOBILE_HEADER,
   HUB_MOBILE_PEEK,
   hubCssVars,
   isRailed,
   mapPadding,
+  mobileHeader,
   tableReplacesMap,
 } from '@/utils/hunting/hub/layout';
 import {
@@ -286,6 +290,8 @@ const mapLayers: any = inject('mapLayers');
 // Optional: the component also runs outside the hub (with its own defaults).
 const hub = inject(HUB_CTX, null);
 const shell = inject(HUB_SHELL, null);
+// Embedded in the WP data page (SPEC §4): no own view toggle, no rail, the WP bar on top.
+const embed = !!hub?.embed;
 
 const isProductionHost = hub ? hub.isProductionHost : window.location.hostname === 'maps.biip.lt';
 const isMobile: Ref<boolean> = hub ? hub.isMobile : useMediaQuery('(max-width: 767px)');
@@ -320,11 +326,11 @@ function createContext(): WolvesContext {
 // The shell renders only the production gate on maps.biip.lt; never start requests there.
 const ctx = isProductionHost ? null : createContext();
 const tableOpen = computed(() => !!ctx?.state.tableOpen.value);
-const railed = computed(() => !isMobile.value && isRailed(width.value, tableOpen.value));
+const railed = computed(() => !isMobile.value && isRailed(width.value, tableOpen.value, embed));
 const replacesMap = computed(
-  () => !isMobile.value && tableReplacesMap(width.value, tableOpen.value),
+  () => !isMobile.value && tableReplacesMap(width.value, tableOpen.value, embed),
 );
-const cssVars = computed(() => hubCssVars(width.value));
+const cssVars = computed(() => hubCssVars(width.value, embed));
 
 // The wolves sheet is taller than the hub's 96 px peek (status line, histogram): on phones
 // the map keeps Lithuania above the collapsed sheet. While the sheet is expanded (table)
@@ -333,9 +339,9 @@ const sheet = ref<any>(null);
 const { height: sheetHeight } = useElementSize(sheet, undefined, { box: 'border-box' });
 let collapsedSheet = HUB_MOBILE_PEEK;
 function viewPadding(open: boolean): number[] {
-  if (!isMobile.value) return mapPadding(width.value, open);
+  if (!isMobile.value) return mapPadding(width.value, open, embed);
   if (!open && sheetHeight.value) collapsedSheet = Math.max(HUB_MOBILE_PEEK, sheetHeight.value);
-  return [HUB_MOBILE_HEADER, 0, collapsedSheet, 0];
+  return [mobileHeader(embed), 0, collapsedSheet, 0];
 }
 
 if (ctx) {
@@ -468,7 +474,8 @@ function setTable(open: boolean) {
   if (ctx) ctx.state.tableOpen.value = open;
 }
 
-// "Rodyti žemėlapyje" below 1280 px: the table covers the map, so close it (SPEC2 §4.1).
+// "Rodyti žemėlapyje" below 1280 px (embedded: at every width): the table covers the map,
+// so close it (SPEC2 §4.1).
 function onShowOnMap() {
   if (!railed.value && !isMobile.value) setTable(false);
 }
@@ -530,7 +537,15 @@ let stopLabelWatch: (() => void) | undefined;
 
 let unmounted = false;
 
+// ---- Embedded: the WP page's view switch opens and closes the table through the bridge
+// (SPEC §5.4, §5.11). Registered while this topic is mounted.
+const liveControls: EmbedLiveControls = {
+  setTableOpen: setTable,
+  hasTable: computed(() => !fallback.value),
+};
+
 onMounted(async () => {
+  if (hub && embed) hub.embedLive.value = liveControls;
   if (!ctx) return;
   ensure(['meta']);
   // "Dalintis" in the shell copies the wolves link (period always explicit).
@@ -559,6 +574,7 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   unmounted = true;
   if (hub) hub.liveMap.value = null;
+  if (hub && hub.embedLive.value === liveControls) hub.embedLive.value = null;
   if (shell && shell.shareOverride.value === shareUrl) shell.shareOverride.value = null;
   BODY_CLASSES.forEach((name) => document.body.classList.remove(name));
   document.body.style.removeProperty('--hub-vilkai-sheet');
@@ -584,10 +600,11 @@ defineExpose({ openAbout, shareUrl, carry, railed, fallbackView });
 </script>
 
 <style>
-/* UiMap's own controls (SPEC2 §4): below the 104 px bars, right of the panel or rail, left
-   of the drawer, above the mobile sheet. */
+/* UiMap's own controls (SPEC2 §4): below the 104 px bars (embedded: 48 px; the shell sets
+   --hub-top / --hub-mobile-header), right of the panel or rail, left of the drawer, above the
+   mobile sheet. */
 body.hub-vilkai--desktop #mapControlsRT {
-  transform: translateY(104px);
+  transform: translateY(var(--hub-top, 104px));
 }
 body.hub-vilkai--desktop .bottomLeft {
   transform: translateX(336px);
@@ -606,13 +623,13 @@ body.hub-vilkai--railed .bottomLeft {
   transform: translateX(64px);
 }
 body.hub-vilkai--railed #mapControlsRT {
-  transform: translate(-560px, 104px);
+  transform: translate(-560px, var(--hub-top, 104px));
 }
 body.hub-vilkai--railed .rightBottom {
   transform: translateX(-560px);
 }
 body.hub-vilkai--mobile #mapControlsRT {
-  transform: translateY(108px);
+  transform: translateY(var(--hub-mobile-header, 108px));
 }
 body.hub-vilkai--mobile .bottomLeft,
 body.hub-vilkai--mobile .rightBottom {

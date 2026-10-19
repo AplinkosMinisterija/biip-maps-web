@@ -22,8 +22,9 @@
       >
         Lentelė
       </h2>
+      <!-- Embedded in the WP data page, its view switch closes the table (SPEC §4); Esc stays. -->
       <button
-        v-if="variant === 'drawer'"
+        v-if="variant === 'drawer' && !embed"
         type="button"
         class="inline-flex items-center gap-1 min-h-[32px] rounded px-2 text-sm font-semibold text-gray-800 hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
         :aria-expanded="true"
@@ -105,6 +106,8 @@
 <script setup lang="ts">
 import { computed, inject, nextTick, watch } from 'vue';
 import { WOLVES_CTX } from '@/composables/hunting/context';
+import { HUB_CTX } from '@/composables/hunting/hub/context';
+import { embedFocusAllowed } from '@/utils/hunting/hub/embed';
 import { hasMunicipalities } from '@/utils/hunting/municipalities';
 
 type TabId = 'irasai' | 'sezonai' | 'savivaldybes';
@@ -127,6 +130,8 @@ const DRAWER_ID = 'wolves-table-drawer';
 
 const ctx = inject(WOLVES_CTX)!;
 const { state, data } = ctx;
+// Inside the hub embedded in the WP data page (SPEC §4); false on the wolves page.
+const embed = !!inject(HUB_CTX, null)?.embed;
 
 const uid = computed(() => `wolves-table-${props.variant}`);
 const tabId = (id: TabId) => `${uid.value}-tab-${id}`;
@@ -184,11 +189,18 @@ function onTabKeydown(event: KeyboardEvent) {
   selectTab(ids[next], true);
 }
 
-// Move focus into the drawer when it opens, so keyboard users land on the tabs.
+// Move focus into the drawer when it opens, so keyboard users land on the tabs. Embedded,
+// only while the frame has focus, and without scrolling the WP page (SPEC §5.8).
 watch(
   () => state.tableOpen.value,
   (open) => {
-    if (open && props.variant === 'drawer') nextTick(() => tabRefs[activeTab.value]?.focus());
+    if (!open || props.variant !== 'drawer') return;
+    nextTick(() => {
+      if (!embedFocusAllowed(embed)) return;
+      const tab = tabRefs[activeTab.value];
+      if (embed) tab?.focus({ preventScroll: true });
+      else tab?.focus();
+    });
   },
 );
 
