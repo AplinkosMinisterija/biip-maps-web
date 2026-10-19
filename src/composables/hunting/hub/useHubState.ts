@@ -7,9 +7,10 @@
 import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { useRoute, useRouter, type LocationQuery } from 'vue-router';
 import { useMediaQuery, useWindowSize } from '@vueuse/core';
-import type { HubContext, LiveMap } from '@/composables/hunting/hub/context';
+import type { EmbedLiveControls, HubContext, LiveMap } from '@/composables/hunting/hub/context';
 import { useSnapshot } from '@/composables/hunting/hub/useSnapshot';
 import { seasonLabel, seasonOfDay, todayVilnius } from '@/utils/hunting/dates';
+import { isEmbedQuery, resolveParentOrigin } from '@/utils/hunting/hub/embed';
 import { isRailed, mapPadding } from '@/utils/hunting/hub/layout';
 import { S } from '@/utils/hunting/hub/strings';
 import { parseSeasonKey, seasonKey } from '@/utils/hunting/hub/time';
@@ -72,6 +73,13 @@ export function useHubState(opts: HubStateOptions = {}): HubContext {
   const isWide = useMediaQuery('(min-width: 1280px)');
   const { width } = useWindowSize();
   const debug = queryString(route.query, 'debug') === '1';
+  // Embedded in the WP page (SPEC §5): never on the production host. `embed` and `parent`
+  // are not hub keys, so every URL write keeps them.
+  const embed = !isProductionHost && isEmbedQuery(route.query);
+  const parentOrigin = embed
+    ? resolveParentOrigin(queryString(route.query, 'parent'), document.referrer, hostname)
+    : null;
+  const embedLive = shallowRef<EmbedLiveControls | null>(null);
   const dimKeys = allDimKeys();
 
   // ---- Choices (unvalidated until meta / the topic's files are loaded).
@@ -169,8 +177,8 @@ export function useHubState(opts: HubStateOptions = {}): HubContext {
 
   // ---- Layout.
   const tableOpen = computed(() => sel.value.table !== null);
-  const railed = computed(() => isRailed(width.value, tableOpen.value));
-  const padding = computed(() => mapPadding(width.value, tableOpen.value));
+  const railed = computed(() => isRailed(width.value, tableOpen.value, embed));
+  const padding = computed(() => mapPadding(width.value, tableOpen.value, embed));
 
   // ---- URL → state.
   function applyQuery(query: LocationQuery) {
@@ -340,7 +348,7 @@ export function useHubState(opts: HubStateOptions = {}): HubContext {
     return { season: season.value, fromRange: false };
   }
 
-  function setTopic(id: TopicId) {
+  function setTopic(id: TopicId, opts: { openTable?: boolean } = {}) {
     const target = hasTopic(id) ? id : DEFAULT_TOPIC;
     if (target === topicId.value) return;
     const carry = carryFromCurrent();
@@ -420,6 +428,9 @@ export function useHubState(opts: HubStateOptions = {}): HubContext {
     isMobile,
     isWide,
     debug,
+    embed,
+    parentOrigin,
+    embedLive,
     sel,
     topic,
     data,
