@@ -1,9 +1,11 @@
 <template>
   <header
     class="absolute inset-x-0 top-0 z-40 flex flex-col gap-1 bg-white px-3 pb-2 shadow-md"
-    :style="{ maxHeight: `${HUB_MOBILE_HEADER}px` }"
+    :class="{ 'pt-2': ctx.embed }"
+    :style="{ maxHeight: `${mobileHeader(ctx.embed)}px` }"
   >
-    <div class="flex h-12 items-center justify-between gap-2">
+    <!-- Embedded, the WP page has the topics, Dalintis and Apie duomenis (SPEC §4). -->
+    <div v-if="!ctx.embed" class="flex h-12 items-center justify-between gap-2">
       <HuntingHubShellTopicMenu />
       <div class="flex shrink-0 gap-1">
         <button type="button" :aria-label="S.share" :class="iconButton" @click="share">
@@ -48,13 +50,13 @@
 import { computed, inject } from 'vue';
 import { HUB_CTX } from '@/composables/hunting/hub/context';
 import { S } from '@/utils/hunting/hub/strings';
-import { HUB_MOBILE_HEADER } from '@/utils/hunting/hub/layout';
+import { mobileHeader } from '@/utils/hunting/hub/layout';
 import { focusRing, HUB_SLOTS } from './shell';
 import { useShare } from './useShare';
 import { useActiveDimCount, useDimChips } from './useDimChips';
 
 // Mobile header ≤ 108 px (§4.3): topic menu (H1), Dalintis, Apie; chip row with season,
-// place and the filters count.
+// place and the filters count. Embedded: the chip row only, ≤ 60 px (SPEC §5.11).
 defineEmits(['filters']);
 
 const ctx = inject(HUB_CTX)!;

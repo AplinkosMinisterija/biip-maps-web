@@ -39,7 +39,28 @@
               />
             </p>
             <p v-if="card.fixedNote" class="text-sm text-gray-700">{{ card.fixedNote }}</p>
+            <!-- Embedded in the WP page: open the topic on the map or as a table (SPEC §4);
+                 buttons, so no maps-host link leaks into the page. -->
+            <div v-if="ctx.embed" class="mt-auto flex flex-wrap justify-end gap-2 self-end">
+              <button
+                type="button"
+                :class="[cardAction, focusRing]"
+                :aria-describedby="`hub-card-${card.topic}`"
+                @click="ctx.setTopic(card.topic, { openTable: false })"
+              >
+                {{ S.viewMap }} →
+              </button>
+              <button
+                type="button"
+                :class="[cardAction, focusRing]"
+                :aria-describedby="`hub-card-${card.topic}`"
+                @click="ctx.setTopic(card.topic, { openTable: true })"
+              >
+                {{ S.viewTable }} →
+              </button>
+            </div>
             <a
+              v-else
               :href="hrefOf(card.topic)"
               class="mt-auto self-end inline-flex min-h-[44px] items-center rounded px-2 text-sm font-semibold text-blue-800 underline md:min-h-[32px]"
               :class="focusRing"
@@ -101,6 +122,10 @@ const provenance = computed<Provenance | null>(() => {
   const asOf = ctx.data.snapshot.value?.meta.snapshotDate;
   return asOf ? { kind: 'snapshot', asOf, text: S.provenanceSnapshot(asOf) } : null;
 });
+
+// Embedded card actions: the style of the standalone link, 44 px targets on phones.
+const cardAction =
+  'inline-flex min-h-[44px] items-center rounded px-2 text-sm font-semibold text-blue-800 underline md:min-h-[32px]';
 
 const hrefOf = (id: TopicId) => {
   const query: Record<string, string> = { tema: id };
