@@ -57,6 +57,7 @@
     <div class="min-h-0 flex-1" :class="sheet ? 'py-3' : 'overflow-y-auto px-4 py-3'">
       <div
         :id="panelId(active)"
+        ref="panelEl"
         role="tabpanel"
         :aria-labelledby="tabId(active)"
         tabindex="0"
@@ -68,7 +69,8 @@
         </p>
         <p v-else-if="!rows.length" class="text-gray-700">{{ SS.tableFilteredEmpty }}</p>
 
-        <!-- Įrašai: cards below 600 px, else a sortable table. -->
+        <!-- Įrašai: cards where the table would not fit (by the panel's own width), else a
+             sortable table. -->
         <template v-else-if="active === 'irasai'">
           <ul v-if="narrow" class="flex flex-col gap-2" :aria-label="caption">
             <li
@@ -282,7 +284,7 @@
 // "Rodyti žemėlapyje" and the record link), Rūšys and Savivaldybės (with totals), and the
 // CSV of the active table with all filtered rows in the shown order.
 import { computed, getCurrentInstance, inject, nextTick, ref, watch } from 'vue';
-import { useMediaQuery } from '@vueuse/core';
+import { useElementSize, useMediaQuery } from '@vueuse/core';
 import { STEB_CTX } from '@/composables/hunting/hub/stebejimai/useStebState';
 import { formatInt } from '@/utils/hunting/dates';
 import { downloadCsv } from '@/utils/hunting/hub/csv';
@@ -326,7 +328,17 @@ const emit = defineEmits(['show-on-map', 'close']);
 const ctx = inject(STEB_CTX)!;
 const sheet = props.variant === 'sheet';
 const uid = `steb-table-${props.variant}-${getCurrentInstance()?.uid ?? 0}`;
-const narrow = useMediaQuery('(max-width: 599px)');
+// Cards by the width the table has, not by the viewport: the table sits beside the panel
+// (embedded from 768 px, standalone in the 560 px drawer), and its seven columns and the
+// actions need about 660 px. Below that the place columns would hide behind the sticky
+// actions column. Before the panel is measured, a narrow viewport decides.
+const CARDS_BELOW = 680;
+const panelEl = ref<HTMLElement | null>(null);
+const { width: panelWidth } = useElementSize(panelEl);
+const narrowViewport = useMediaQuery('(max-width: 599px)');
+const narrow = computed(() =>
+  panelWidth.value > 0 ? panelWidth.value < CARDS_BELOW : narrowViewport.value,
+);
 
 const focusRing =
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';
