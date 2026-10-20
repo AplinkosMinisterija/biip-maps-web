@@ -39,6 +39,7 @@ interface Page {
   rows: unknown[];
   total: number;
   totalPages: number;
+  pageSize: number;
 }
 
 class PageError extends Error {}
@@ -58,14 +59,18 @@ async function fetchPage(page: number, outer: AbortSignal): Promise<Page> {
     if (!body || typeof body !== 'object' || !Array.isArray(body.rows)) {
       throw new PageError(`no rows (page ${page})`);
     }
-    const total = Number.isInteger(body.total) && body.total >= 0 ? body.total : body.rows.length;
+    // Without the source's total a short read cannot be told from a complete one.
+    if (!Number.isInteger(body.total) || body.total < 0) {
+      throw new PageError(`no total (page ${page})`);
+    }
+    const total: number = body.total;
     const pageSize =
       Number.isInteger(body.pageSize) && body.pageSize > 0 ? body.pageSize : PAGE_SIZE;
     const totalPages =
       Number.isInteger(body.totalPages) && body.totalPages >= 0
         ? body.totalPages
         : Math.ceil(total / pageSize);
-    return { rows: body.rows, total, totalPages };
+    return { rows: body.rows, total, totalPages, pageSize };
   } finally {
     clearTimeout(timer);
     outer.removeEventListener('abort', abort);
@@ -106,10 +111,13 @@ export async function fetchAllObservations(signal: AbortSignal) {
   );
   const all = Array.from(byKey.values()).sort(compareRecords);
   const truncated = first.totalPages > MAX_PAGES || all.length > MAX_ROWS;
-  // All-or-nothing also when every page answered: fewer unique rows than the source's total
-  // (a repeated page, a row that moved across a page boundary) is an error, not a smaller list.
-  if (!truncated && all.length < first.total) {
-    throw new PageError(`incomplete read: ${all.length} of ${first.total} rows`);
+  // All-or-nothing also when every page answered: fewer unique rows than the pages read
+  // should hold (the source's total, or every read page full when MAX_PAGES cut the list)
+  // means a repeated page or a row that moved across a page boundary; that is an error, not a
+  // smaller list.
+  const expected = Math.min(first.total, last * first.pageSize);
+  if (all.length < expected) {
+    throw new PageError(`incomplete read: ${all.length} of ${expected} rows`);
   }
   return {
     records: truncated ? all.slice(0, MAX_ROWS) : all,
