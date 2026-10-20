@@ -4,7 +4,13 @@
 // functions without Vue reactivity, so ?debug=1 can test them; the WP side keeps a copy.
 import { hasTopic } from '@/utils/hunting/hub/topics';
 import type { TopicId } from '@/utils/hunting/hub/types';
-import { WOLVES_KEYS, queryString, type Query } from '@/utils/hunting/hub/url';
+import {
+  STEBEJIMAI_KEYS,
+  STEBEJIMAI_TABLES,
+  WOLVES_KEYS,
+  queryString,
+  type Query,
+} from '@/utils/hunting/hub/url';
 
 export const EMBED_VERSION = 1;
 export const EMBED_KEY = 'biipHunting';
@@ -79,6 +85,9 @@ export const PASS_KEYS: Readonly<Record<string, RegExp>> = Object.freeze(
     amzius: /^[A-Za-z_,]{1,80}$/,
     lytis: /^[A-Za-z_,]{1,80}$/,
     budas: /^[A-Za-z_,]{1,80}$/,
+    // Stebėjimai species and fact slugs (STEB-SPEC §4.2); not `rusis`, which is Laimikiai's.
+    gyvunas: /^[a-z0-9-]{1,40}$/,
+    faktas: /^[a-z0-9-]{1,60}$/,
     x: /^-?\d{1,8}(\.\d{1,6})?$/,
     y: /^-?\d{1,8}(\.\d{1,6})?$/,
     z: /^\d{1,2}(\.\d{1,3})?$/,
@@ -124,6 +133,12 @@ const EMBED_TOPIC_DEFS = {
     defaultTable: 'savivaldybes',
     tables: ['savivaldybes', 'menesiai', 'gyvuliai'],
     keys: ['sezonas', 'sav', 'grupe'],
+  },
+  // The live Stebėjimai topic (STEB-SPEC §4.3), from the url.ts constants its host mirrors.
+  stebejimai: {
+    defaultTable: 'irasai',
+    tables: STEBEJIMAI_TABLES,
+    keys: STEBEJIMAI_KEYS.filter((key) => key !== 'lentele'),
   },
 } as const;
 
