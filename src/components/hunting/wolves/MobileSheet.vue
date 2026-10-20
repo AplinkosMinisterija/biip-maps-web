@@ -44,12 +44,15 @@
              fallback closes the sheet right after it opened (vuejs/core#15551). -->
         <div v-if="expanded" class="contents"><HuntingWolvesSeasonSummary /></div>
         <HuntingWolvesHistogram :compact="!expanded" large :clip-to-window="clipHistogram" />
-        <template v-if="expanded">
+        <!-- Also element-rooted, not a <template>: removing a fragment removes the loading
+             placeholders of its async components, and in Vue 3.5.29 the first page load then
+             never finishes when one of them arrives (the loader stays). -->
+        <div v-if="expanded" class="contents">
           <HuntingWolvesMoreFilters large />
           <HuntingWolvesMunicipalitySelect />
           <HuntingWolvesTableDrawer variant="sheet" @show-on-map="collapse" />
           <HuntingWolvesDebugPanel v-if="ctx.debug" />
-        </template>
+        </div>
       </div>
     </template>
   </section>
