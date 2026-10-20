@@ -39,7 +39,10 @@
         <slot />
         <HuntingWolvesFilterSentence />
         <HuntingWolvesLoadState placement="panel" />
-        <HuntingWolvesSeasonSummary v-if="expanded" />
+        <!-- An element-rooted branch: Vue 3.5.29 patches a v-if'd async component that is
+             still loading with the wrong parent (insertBefore error), e.g. when the Vilkai
+             fallback closes the sheet right after it opened (vuejs/core#15551). -->
+        <div v-if="expanded" class="contents"><HuntingWolvesSeasonSummary /></div>
         <HuntingWolvesHistogram :compact="!expanded" large :clip-to-window="clipHistogram" />
         <template v-if="expanded">
           <HuntingWolvesMoreFilters large />

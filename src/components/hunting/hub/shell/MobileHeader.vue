@@ -24,7 +24,11 @@
     </div>
 
     <div role="search" aria-label="Filtrai" class="flex items-center gap-2 overflow-x-auto">
-      <HuntingHubShellSeasonSheet v-if="topicKind === 'overview'" disabled />
+      <!-- Element-rooted: Vue 3.5.29 mis-patches a v-if'd async component that is still
+           loading (a quick topic switch; insertBefore error, vuejs/core#15551). -->
+      <div v-if="topicKind === 'overview'" class="contents">
+        <HuntingHubShellSeasonSheet disabled />
+      </div>
       <template v-else-if="topicKind === 'snapshot'">
         <HuntingHubShellSeasonSheet />
         <HuntingHubShellPlacePicker mobile />

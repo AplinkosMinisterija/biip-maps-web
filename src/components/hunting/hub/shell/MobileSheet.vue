@@ -83,13 +83,14 @@
             :aria-labelledby="`hub-seg-${segment}`"
             class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-3"
           >
-            <HuntingHubShellTopicPanel v-if="segment === 'summary'" mobile heading-id="hub-title" />
-            <component
-              :is="tableView"
-              v-else-if="segment === 'table' && tableView"
-              variant="sheet"
-              @close="setSegment('summary')"
-            />
+            <!-- Element-rooted branches: Vue 3.5.29 mis-patches a v-if'd async component that
+                 is still loading (a quick segment switch; insertBefore error, vuejs/core#15551). -->
+            <div v-if="segment === 'summary'" class="contents">
+              <HuntingHubShellTopicPanel mobile heading-id="hub-title" />
+            </div>
+            <div v-else-if="segment === 'table' && tableView" class="contents">
+              <component :is="tableView" variant="sheet" @close="setSegment('summary')" />
+            </div>
             <div v-else-if="segment === 'filters'" class="flex flex-col gap-3">
               <HuntingHubShellFilterChips large />
             </div>

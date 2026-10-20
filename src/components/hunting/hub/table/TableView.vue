@@ -87,12 +87,15 @@
           {{ S.provenanceLink }}
         </button>
       </p>
-      <HuntingHubTableCsvButton
-        v-if="active"
-        :table="active"
-        :caption="captionOf(active)"
-        :sort="sorts[active.id] ?? null"
-      />
+      <!-- Element-rooted: Vue 3.5.29 mis-patches a v-if'd async component that is still
+           loading (insertBefore error, vuejs/core#15551). -->
+      <div v-if="active" class="contents">
+        <HuntingHubTableCsvButton
+          :table="active"
+          :caption="captionOf(active)"
+          :sort="sorts[active.id] ?? null"
+        />
+      </div>
     </div>
   </component>
 </template>

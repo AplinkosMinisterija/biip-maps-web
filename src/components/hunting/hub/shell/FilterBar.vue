@@ -6,10 +6,12 @@
     :class="ctx.embed ? 'top-0' : 'top-14'"
   >
     <div class="flex min-w-0 flex-1 items-center gap-2">
-      <template v-if="topicKind === 'overview'">
-        <!-- Apžvalga always shows the current season (§4.4). -->
+      <!-- Apžvalga always shows the current season (§4.4). The branches are element- or
+           fragment-rooted: Vue 3.5.29 mis-patches a v-if'd async component that is still
+           loading (a quick topic switch; insertBefore error, vuejs/core#15551). -->
+      <div v-if="topicKind === 'overview'" class="contents">
         <HuntingHubShellSeasonPopover disabled />
-      </template>
+      </div>
       <template v-else-if="topicKind === 'snapshot'">
         <HuntingHubShellSeasonPopover />
         <HuntingHubShellPlacePicker />
@@ -21,13 +23,14 @@
 
     <div class="flex shrink-0 items-center gap-2">
       <div :id="HUB_SLOTS.filtersEnd" class="flex items-center gap-2" />
-      <HuntingHubShellViewToggle
-        v-if="topicKind === 'snapshot' && !ctx.embed"
-        :table-open="tableOpen"
-        :disabled="!hasTables"
-        :controls="tableOpen ? 'hunting-hub-table' : ''"
-        @update:table-open="setTableOpen(ctx, $event)"
-      />
+      <div v-if="topicKind === 'snapshot' && !ctx.embed" class="contents">
+        <HuntingHubShellViewToggle
+          :table-open="tableOpen"
+          :disabled="!hasTables"
+          :controls="tableOpen ? 'hunting-hub-table' : ''"
+          @update:table-open="setTableOpen(ctx, $event)"
+        />
+      </div>
     </div>
   </div>
 </template>

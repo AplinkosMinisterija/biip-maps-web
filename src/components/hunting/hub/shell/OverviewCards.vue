@@ -15,7 +15,9 @@
         {{ title }}
       </h1>
 
-      <HuntingHubShellLoadState v-if="!ready" large />
+      <!-- Element-rooted: Vue 3.5.29 mis-patches a v-if'd async component that is still
+           loading when the data arrives first (insertBefore error; vuejs/core#15551). -->
+      <div v-if="!ready" class="contents"><HuntingHubShellLoadState large /></div>
 
       <template v-else>
         <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
