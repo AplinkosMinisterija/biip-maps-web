@@ -1,22 +1,28 @@
 <template>
   <section
+    ref="sheetEl"
     aria-labelledby="steb-sheet-title"
-    class="fixed inset-x-0 bottom-0 z-30 flex flex-col rounded-t-xl bg-white shadow-[0_-4px_16px_rgba(0,0,0,0.15)] transition-[height] duration-200 motion-reduce:transition-none"
-    :class="showCard ? 'max-h-[60%]' : ''"
-    :style="{ height: showCard ? 'auto' : HEIGHTS[detent] }"
+    class="fixed inset-x-0 bottom-0 z-30 flex flex-col rounded-t-xl bg-white shadow-[0_-4px_16px_rgba(0,0,0,0.15)]"
+    :class="[
+      showCard && dragHeight === null ? 'max-h-[60%]' : '',
+      dragging ? '' : 'transition-[height] duration-200 motion-reduce:transition-none',
+    ]"
+    :style="{ height: sheetHeight }"
   >
     <h2 id="steb-sheet-title" class="sr-only">{{ SS.h1 }}</h2>
 
-    <!-- Handle: a tap cycles peek → half → full; with a record card open it closes the card
-         (the sheet then shows its detent again), and says so. -->
+    <!-- Handle: a tap cycles peek → half → full and a drag snaps to the nearest one, as the
+         hub's sheet; with a record card open a tap (or a drag down) closes the card (the
+         sheet then shows its detent again), and the handle says so. -->
     <button
       type="button"
-      class="flex h-6 w-full shrink-0 items-center justify-center rounded-t-xl"
+      class="flex h-6 w-full shrink-0 touch-none items-center justify-center rounded-t-xl"
       :class="focusRing"
       :aria-label="handleLabel"
       :aria-expanded="showCard ? undefined : detent !== 'peek'"
       aria-controls="steb-sheet-body"
       @click="cycle"
+      @pointerdown="onDragStart"
     >
       <span class="h-1 w-10 rounded-full bg-gray-300" aria-hidden="true" />
     </button>
@@ -105,7 +111,7 @@
 // hub sheets: peek = the answer; half/full = Suvestinė | Lentelė; a selected record shows
 // its card. The table segment and `lentele` are one state (`tableOpen`): the WP page's
 // "Lentelė" expands the sheet to it, "Žemėlapis" lowers it back to the peek.
-import { computed, inject, ref, watch } from 'vue';
+import { computed, inject, onBeforeUnmount, ref, watch } from 'vue';
 import { STEB_CTX } from '@/composables/hunting/hub/stebejimai/useStebState';
 import { HUB_MOBILE_PEEK, mobileHeader } from '@/utils/hunting/hub/layout';
 import { SS } from '@/utils/hunting/hub/stebejimai/strings';
@@ -168,17 +174,87 @@ function setSegment(id: Segment) {
   else if (detent.value === 'peek') detent.value = 'half';
 }
 
-function cycle() {
-  if (showCard.value) {
-    ctx.state.clearSelection();
-    return;
-  }
-  const next: Detent = detent.value === 'peek' ? 'half' : detent.value === 'half' ? 'full' : 'peek';
+// Lowering the sheet to the peek closes the table (the peek has no segments).
+function setDetent(next: Detent) {
   if (next === 'peek' && ctx.state.tableOpen.value) {
     closedBySheet = true;
     ctx.state.setTable(false);
   }
   detent.value = next;
+}
+
+function cycle() {
+  if (suppressClick) {
+    suppressClick = false;
+    return;
+  }
+  if (showCard.value) {
+    ctx.state.clearSelection();
+    return;
+  }
+  setDetent(detent.value === 'peek' ? 'half' : detent.value === 'half' ? 'full' : 'peek');
+}
+
+// ---- Drag on the handle (the hub's MobileSheet logic).
+const sheetEl = ref<HTMLElement | null>(null);
+const dragging = ref(false);
+const dragHeight = ref<number | null>(null);
+const sheetHeight = computed(() => {
+  if (dragHeight.value !== null) return `${dragHeight.value}px`;
+  return showCard.value ? 'auto' : HEIGHTS[detent.value];
+});
+const headerHeight = mobileHeader(ctx.embed);
+// A drag down this far with a card open closes the card.
+const CARD_DISMISS_PX = 40;
+let startY = 0;
+let startH = 0;
+let suppressClick = false;
+
+function onDragStart(event: PointerEvent) {
+  if (!sheetEl.value) return;
+  startY = event.clientY;
+  startH = sheetEl.value.getBoundingClientRect().height;
+  dragging.value = true;
+  window.addEventListener('pointermove', onDragMove);
+  window.addEventListener('pointerup', onDragEnd);
+  window.addEventListener('pointercancel', onDragEnd);
+}
+
+function removeDragListeners() {
+  window.removeEventListener('pointermove', onDragMove);
+  window.removeEventListener('pointerup', onDragEnd);
+  window.removeEventListener('pointercancel', onDragEnd);
+}
+onBeforeUnmount(removeDragListeners);
+
+function onDragMove(event: PointerEvent) {
+  const dy = startY - event.clientY;
+  if (Math.abs(dy) < 6 && dragHeight.value === null) return;
+  const max = window.innerHeight - headerHeight;
+  dragHeight.value = Math.max(HUB_MOBILE_PEEK, Math.min(max, startH + dy));
+}
+
+function onDragEnd() {
+  removeDragListeners();
+  dragging.value = false;
+  const h = dragHeight.value;
+  dragHeight.value = null;
+  if (h === null) return;
+  // The click that ends a drag must not also cycle the detent or close the card.
+  suppressClick = true;
+  setTimeout(() => (suppressClick = false), 100);
+  if (showCard.value) {
+    if (h < startH - CARD_DISMISS_PX) ctx.state.clearSelection();
+    return;
+  }
+  const full = window.innerHeight - headerHeight;
+  const half = window.innerHeight / 2;
+  const options: [Detent, number][] = [
+    ['peek', HUB_MOBILE_PEEK],
+    ['half', half],
+    ['full', full],
+  ];
+  setDetent(options.reduce((a, b) => (Math.abs(b[1] - h) < Math.abs(a[1] - h) ? b : a))[0]);
 }
 
 const segButtons = ref<HTMLButtonElement[]>([]);
