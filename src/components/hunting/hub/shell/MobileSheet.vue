@@ -19,9 +19,10 @@
     >
       <span class="h-1 w-10 rounded-full bg-gray-300" aria-hidden="true" />
     </button>
-    <!-- The table one tap away from the peek (the handle alone does not say it is there). -->
+    <!-- The table one tap away from the peek (the handle alone does not say it is there).
+         Embedded, the WP page's view switch does this (SPEC §4). -->
     <button
-      v-if="detent === 'peek' && !showCard && view?.tables.length"
+      v-if="detent === 'peek' && !showCard && view?.tables.length && !ctx.embed"
       type="button"
       class="absolute right-2 top-0 flex h-6 items-center gap-1 rounded px-2 text-xs font-semibold text-blue-800 underline"
       :class="focusRing"
@@ -82,13 +83,14 @@
             :aria-labelledby="`hub-seg-${segment}`"
             class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-3"
           >
-            <HuntingHubShellTopicPanel v-if="segment === 'summary'" mobile heading-id="hub-title" />
-            <component
-              :is="tableView"
-              v-else-if="segment === 'table' && tableView"
-              variant="sheet"
-              @close="setSegment('summary')"
-            />
+            <!-- Element-rooted branches: Vue 3.5.29 mis-patches a v-if'd async component that
+                 is still loading (a quick segment switch; insertBefore error, vuejs/core#15551). -->
+            <div v-if="segment === 'summary'" class="contents">
+              <HuntingHubShellTopicPanel mobile heading-id="hub-title" />
+            </div>
+            <div v-else-if="segment === 'table' && tableView" class="contents">
+              <component :is="tableView" variant="sheet" @close="setSegment('summary')" />
+            </div>
             <div v-else-if="segment === 'filters'" class="flex flex-col gap-3">
               <HuntingHubShellFilterChips large />
             </div>
@@ -112,7 +114,7 @@ import {
 } from 'vue';
 import type { TopicDef } from '@/utils/hunting/hub/types';
 import { HUB_CTX } from '@/composables/hunting/hub/context';
-import { HUB_MOBILE_HEADER, HUB_MOBILE_PEEK } from '@/utils/hunting/hub/layout';
+import { HUB_MOBILE_PEEK, mobileHeader } from '@/utils/hunting/hub/layout';
 import { S, TOPIC_TABS } from '@/utils/hunting/hub/strings';
 import { focusRing, setTableOpen } from './shell';
 
@@ -129,10 +131,13 @@ defineProps({
 const ctx = inject(HUB_CTX)!;
 const view = computed(() => ctx.view.value);
 
+// Height of the mobile header above the sheet (embedded: the chip row only).
+const headerHeight = mobileHeader(ctx.embed);
+
 const HEIGHTS: Record<Detent, string> = {
   peek: `${HUB_MOBILE_PEEK}px`,
   half: '50%',
-  full: `calc(100% - ${HUB_MOBILE_HEADER}px)`,
+  full: `calc(100% - ${headerHeight}px)`,
 };
 
 const detent = ref<Detent>('peek');
@@ -157,6 +162,9 @@ const headline = computed(() => {
   return [`${kpi.value} ${kpi.label}`, kpi.sub].filter(Boolean).join(' · ');
 });
 
+// Set while the sheet's own segments close the table (see the watch below).
+let closedBySheet = false;
+
 // The table segment and the `lentele` URL key are one state.
 watch(
   () => ctx.sel.value.table,
@@ -164,9 +172,17 @@ watch(
     if (table) {
       segment.value = 'table';
       detent.value = 'full';
-    } else if (segment.value === 'table') {
-      segment.value = 'summary';
+    } else {
+      if (segment.value === 'table') segment.value = 'summary';
+      // Embedded, a table closed from outside the sheet (the WP page's "Žemėlapis", Back,
+      // the table's "Rodyti žemėlapyje") asks for the map: a full sheet would still cover
+      // it. Lower it to the peek, or to half when a municipality card should show. The
+      // sheet's own "Suvestinė" keeps its height.
+      if (ctx.embed && !closedBySheet && detent.value === 'full') {
+        detent.value = ctx.sel.value.sav !== null ? 'half' : 'peek';
+      }
     }
+    closedBySheet = false;
   },
   { immediate: true },
 );
@@ -182,6 +198,13 @@ watch(
 
 function setSegment(id: Segment) {
   segment.value = id;
+  // Embedded, "Filtrai" keeps the table open (as the header's "Filtrai" does, SPEC §4):
+  // `lentele` is the WP page's view switch, and coming back to "Lentelė" keeps its tab.
+  if (ctx.embed && (id === 'filters' || (id === 'table' && ctx.sel.value.table !== null))) {
+    if (detent.value === 'peek') detent.value = 'half';
+    return;
+  }
+  closedBySheet = id !== 'table' && ctx.sel.value.table !== null;
   setTableOpen(ctx, id === 'table');
   if (detent.value === 'peek') detent.value = 'half';
 }
@@ -208,10 +231,12 @@ function cycle() {
   detent.value = detent.value === 'peek' ? 'half' : detent.value === 'half' ? 'full' : 'peek';
 }
 
-// "Filtrai" in the header opens the sheet on the filters segment.
+// "Filtrai" in the header opens the sheet on the filters segment. Embedded, an open table
+// stays open (`lentele` is the WP page's view switch, SPEC D16); the "Lentelė" segment
+// leads back to it.
 async function openFilters() {
   segment.value = 'filters';
-  setTableOpen(ctx, false);
+  if (!ctx.embed) setTableOpen(ctx, false);
   if (detent.value === 'peek') detent.value = 'half';
   await nextTick();
   document.getElementById('hub-seg-filters')?.focus();
@@ -252,7 +277,7 @@ onBeforeUnmount(removeDragListeners);
 function onDragMove(event: PointerEvent) {
   const dy = startY - event.clientY;
   if (Math.abs(dy) < 6 && dragHeight.value === null) return;
-  const max = window.innerHeight - HUB_MOBILE_HEADER;
+  const max = window.innerHeight - headerHeight;
   dragHeight.value = Math.max(HUB_MOBILE_PEEK, Math.min(max, startH + dy));
 }
 
@@ -265,7 +290,7 @@ function onDragEnd() {
   // The click that ends a drag must not also cycle the detent.
   suppressClick = true;
   setTimeout(() => (suppressClick = false), 100);
-  const full = window.innerHeight - HUB_MOBILE_HEADER;
+  const full = window.innerHeight - headerHeight;
   const half = window.innerHeight / 2;
   const options: [Detent, number][] = [
     ['peek', HUB_MOBILE_PEEK],

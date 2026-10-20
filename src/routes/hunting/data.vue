@@ -7,6 +7,7 @@
       'hunting-hub--rail': railed && !isMobile,
       'hunting-hub--drawer': drawerOpen,
       'hunting-hub--overview': topicKind === 'overview',
+      'hunting-hub--embed': embed,
     }"
     :style="cssVars"
   >
@@ -16,9 +17,10 @@
       <!-- The answer, announced once per change (§10). -->
       <p class="sr-only" aria-live="polite">{{ announced }}</p>
 
-      <!-- Desktop and tablet (≥ 768 px): top bar, filter bar, floating panel (§4.1, §4.2). -->
+      <!-- Desktop and tablet (≥ 768 px): top bar, filter bar, floating panel (§4.1, §4.2).
+           Embedded in the WP page, the page renders the title, topics and view switch. -->
       <template v-if="!isMobile">
-        <HuntingHubShellTopBar />
+        <HuntingHubShellTopBar v-if="!embed" />
         <HuntingHubShellFilterBar />
 
         <template v-if="topicKind === 'snapshot'">
@@ -49,9 +51,13 @@
         </template>
       </template>
 
-      <!-- Mobile (< 768 px): header ≤ 108 px and a bottom sheet (§4.3). -->
+      <!-- Mobile (< 768 px): header ≤ 108 px and a bottom sheet (§4.3). Embedded, the header
+           keeps only the chip row, and the live topic (Vilkai) needs none of it. -->
       <template v-else>
-        <HuntingHubShellMobileHeader @filters="sheet?.openFilters()" />
+        <HuntingHubShellMobileHeader
+          v-if="!(embed && topicKind === 'live')"
+          @filters="sheet?.openFilters()"
+        />
         <template v-if="topicKind === 'snapshot'">
           <HuntingHubShellMobileSheet ref="sheet" :topics="topicList" />
           <component :is="T4.mapMessage" v-if="T4.mapMessage && isMapMessage" />
@@ -105,15 +111,16 @@ import {
 import { useRoute } from 'vue-router';
 import { useWindowSize, watchDebounced } from '@vueuse/core';
 import { projection3857, vectorPositron } from '@/utils';
-import { HUB_CTX, type HubContext } from '@/composables/hunting/hub/context';
+import { HUB_CTX, type AboutOpenOptions, type HubContext } from '@/composables/hunting/hub/context';
 import type { TopicDef, TopicId } from '@/utils/hunting/hub/types';
 import {
   hubCssVars,
-  HUB_MOBILE_HEADER,
-  HUB_TOP,
+  hubTop,
   MOBILE_MAX,
+  mobileHeader,
   tableReplacesMap,
 } from '@/utils/hunting/hub/layout';
+import { embedFocusAllowed } from '@/utils/hunting/hub/embed';
 import { S, TOPIC_ORDER, TOPIC_SUBTITLES, TOPIC_TABS } from '@/utils/hunting/hub/strings';
 import { seasonOfDay } from '@/utils/hunting/dates';
 import { useHubState } from '@/composables/hunting/hub/useHubState';
@@ -157,20 +164,36 @@ const topics = Object.fromEntries(
 const topicList = TOPIC_ORDER.map((id) => topics[id]);
 
 // ---- About dialog (opened through the context).
-type AboutDialog = { open: (...args: [TopicId?]) => void };
+type AboutDialog = {
+  open: (topic?: TopicId, opts?: AboutOpenOptions) => void;
+  close: (byUser?: boolean) => void;
+};
 const about = ref<AboutDialog | null>(null);
 const sheet = ref<{ openFilters(): void } | null>(null);
 
-const openAbout = (topic?: TopicId) => about.value?.open(topic);
+const openAbout = (topic?: TopicId, opts?: AboutOpenOptions) => about.value?.open(topic, opts);
+const closeAbout = () => about.value?.close(false);
 
-const ctx: HubContext | null = isProductionHost ? null : useHubState({ openAbout });
+const ctx: HubContext | null = isProductionHost ? null : useHubState({ openAbout, closeAbout });
+// Embedded in the WP "Medžioklės duomenys" page (SPEC §5); never on the production host.
+const embed = !!ctx?.embed;
+
+// In embed, programmatic focus only while the iframe document has focus, and without
+// scrolling the parent page (SPEC §5.8).
+function focusElement(el: HTMLElement) {
+  if (!embed) return el.focus();
+  if (embedFocusAllowed(true)) el.focus({ preventScroll: true });
+}
 
 // ---- Shell services for topic hosts (Vilkai).
 const panelHeadingId = 'hub-title';
 const shell: HubShell = {
   shareOverride: ref(null),
   width,
-  focusHeading: () => document.getElementById(panelHeadingId)?.focus(),
+  focusHeading: () => {
+    const el = document.getElementById(panelHeadingId);
+    if (el) focusElement(el);
+  },
 };
 
 if (ctx) {
@@ -191,6 +214,15 @@ const choroplethModules = import.meta.glob('@/composables/hunting/hub/useChoropl
 });
 if (ctx) {
   Object.values(choroplethModules).forEach((mod: any) => mod?.useChoropleth?.(ctx));
+}
+
+// The WP embed bridge (T4, SPEC §5.4), loaded the same way: the build passes without it.
+// It gets the local `shell`, because inject() does not see this component's own provide.
+const bridgeModules = import.meta.glob('@/composables/hunting/hub/useEmbedBridge.ts', {
+  eager: true,
+});
+if (ctx?.embed) {
+  Object.values(bridgeModules).forEach((mod: any) => mod?.useEmbedBridge?.(ctx, shell));
 }
 
 // ---- Optional components of the other tasks, resolved by their global names.
@@ -215,7 +247,7 @@ const mapHidden = computed(
   () =>
     !isMobile.value &&
     topicKind.value === 'snapshot' &&
-    tableReplacesMap(width.value, tableOpen.value),
+    tableReplacesMap(width.value, tableOpen.value, embed),
 );
 const isMapMessage = computed(() => ctx?.view.value?.map.kind === 'message');
 
@@ -223,22 +255,24 @@ const railTitle = computed(() => (ctx ? TOPIC_TABS[ctx.sel.value.topic] : ''));
 const railValue = computed(() => ctx?.view.value?.kpis[0]?.value || '');
 
 const cssVars = computed(() => ({
-  ...hubCssVars(width.value),
-  '--hub-overview-top': `${isMobile.value ? HUB_MOBILE_HEADER : HUB_TOP}px`,
+  ...hubCssVars(width.value, embed),
+  '--hub-overview-top': `${isMobile.value ? mobileHeader(embed) : hubTop(embed)}px`,
 }));
 
 // ---- Focus: a topic switch moves focus to the panel H1 (desktop; §10). On phones focus
-// stays on the topic menu, which is where the switch happened.
+// stays on the topic menu, which is where the switch happened. Embedded, a switch made on
+// the WP page keeps focus there (SPEC §5.8).
 if (ctx) {
   watch(
     () => ctx.sel.value.topic,
     async () => {
       if (isMobile.value) return;
+      if (embed && !embedFocusAllowed(true)) return;
       await nextTick();
       const started = performance.now();
       const tryFocus = () => {
         const el = document.getElementById(panelHeadingId);
-        if (el) return el.focus();
+        if (el) return focusElement(el);
         if (performance.now() - started < 3000) requestAnimationFrame(tryFocus);
       };
       tryFocus();

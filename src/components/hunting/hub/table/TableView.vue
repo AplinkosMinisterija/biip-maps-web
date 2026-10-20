@@ -15,8 +15,9 @@
       <h2 :id="`${uid}-title`" :class="mode === 'sheet' ? 'sr-only' : 'text-base font-semibold'">
         {{ S.viewTable }}
       </h2>
+      <!-- Embedded, the WP page's view switch closes the table (Esc still does). -->
       <button
-        v-if="mode !== 'sheet'"
+        v-if="mode !== 'sheet' && !ctx.embed"
         type="button"
         class="inline-flex items-center gap-1 min-h-[32px] rounded px-2 text-sm font-semibold text-gray-800 hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
         :aria-controls="HUB_TABLE_ID"
@@ -86,12 +87,15 @@
           {{ S.provenanceLink }}
         </button>
       </p>
-      <HuntingHubTableCsvButton
-        v-if="active"
-        :table="active"
-        :caption="captionOf(active)"
-        :sort="sorts[active.id] ?? null"
-      />
+      <!-- Element-rooted: Vue 3.5.29 mis-patches a v-if'd async component that is still
+           loading (insertBefore error, vuejs/core#15551). -->
+      <div v-if="active" class="contents">
+        <HuntingHubTableCsvButton
+          :table="active"
+          :caption="captionOf(active)"
+          :sort="sorts[active.id] ?? null"
+        />
+      </div>
     </div>
   </component>
 </template>
@@ -101,6 +105,7 @@ import { computed, inject, nextTick, ref, watch, type PropType } from 'vue';
 import { useMediaQuery } from '@vueuse/core';
 import { HUB_CTX } from '@/composables/hunting/hub/context';
 import { seasonLabel } from '@/utils/hunting/dates';
+import { embedFocusAllowed } from '@/utils/hunting/hub/embed';
 import { HUB_DRAWER_W, HUB_GAP, HUB_TOP } from '@/utils/hunting/hub/layout';
 import { S } from '@/utils/hunting/hub/strings';
 import type { TableDef } from '@/utils/hunting/hub/types';
@@ -110,6 +115,7 @@ import type { SortState } from './sort';
 // - ≥ 1280 px: right drawer (560 px) next to the panel rail; the map stays;
 // - 768–1279 px: replaces the map, full width right of the panel (the shell hides the map);
 // - < 768 px: `variant="sheet"` inside the mobile sheet's "Lentelė" segment (card list).
+// Embedded in the WP page (SPEC §4), the table replaces the map from 768 px, without a drawer.
 // With `variant="auto"` the component positions itself and shows only while `sel.table`
 // is set; the "Lentelė" toggle should use `aria-controls="hunting-hub-table"`.
 const HUB_TABLE_ID = 'hunting-hub-table';
@@ -127,7 +133,7 @@ const tables = computed<TableDef[]>(() => view.value?.tables || []);
 
 const mode = computed<'drawer' | 'replace' | 'sheet'>(() => {
   if (props.variant === 'sheet') return 'sheet';
-  return ctx.isWide.value ? 'drawer' : 'replace';
+  return ctx.isWide.value && !ctx.embed ? 'drawer' : 'replace';
 });
 const visible = computed(() => {
   if (props.variant === 'sheet') return true;
@@ -193,17 +199,33 @@ function close() {
   emit('close');
 }
 
-// "Rodyti žemėlapyje": select the municipality; below 1280 px the table gives way to the map.
+// "Rodyti žemėlapyje": select the municipality; below 1280 px (embedded: always) the table
+// gives way to the map.
 function showOnMap(code: number) {
+  if (ctx.embed) {
+    // Close first: setSav's immediate URL write then carries both changes. A close scheduled
+    // after that write is dropped when the write lands, and the URL would keep `lentele`.
+    ctx.setTable(null);
+    ctx.setSav(code);
+    return;
+  }
   ctx.setSav(code);
   if (!ctx.isWide.value) ctx.setTable(null);
 }
 
 // Move focus into the drawer / replaced view when it opens, so keyboard users land on the tabs.
+// Embedded, only while the iframe document has focus and without scrolling the page (§5.8).
+function focusActiveTab() {
+  if (!ctx.embed) return tabsRef.value?.focusActive();
+  const id = active.value?.id;
+  if (!id || !embedFocusAllowed(true)) return;
+  document.getElementById(`${uid.value}-tab-${id}`)?.focus({ preventScroll: true });
+}
 watch(
   () => visible.value && props.variant !== 'sheet',
   (open, wasOpen) => {
-    if (open && !wasOpen) nextTick(() => tabsRef.value?.focusActive());
+    if (!open || wasOpen || !embedFocusAllowed(ctx.embed)) return;
+    nextTick(focusActiveTab);
   },
 );
 </script>

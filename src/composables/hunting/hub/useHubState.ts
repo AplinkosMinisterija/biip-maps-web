@@ -1,15 +1,22 @@
 // State of the hunting data hub (SPEC2 §2.3, §8.3, §8.6): parses the URL into the
 // selection, validates it once meta and the topic's files are loaded, writes it back
 // (topic and place with router.push, everything else with a debounced router.replace,
-// never a default value), loads the topic's snapshot files and builds its view.
+// never a default value; embedded in the WP page, always router.replace), loads the
+// topic's snapshot files and builds its view.
 // While the live Vilkai topic is shown, the wolves state owns the URL; the hub writes only
 // `tema` and mirrors `sezonas`, `sav`, `lentele` read-only.
 import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { useRoute, useRouter, type LocationQuery } from 'vue-router';
 import { useMediaQuery, useWindowSize } from '@vueuse/core';
-import type { HubContext, LiveMap } from '@/composables/hunting/hub/context';
+import type {
+  AboutOpenOptions,
+  EmbedLiveControls,
+  HubContext,
+  LiveMap,
+} from '@/composables/hunting/hub/context';
 import { useSnapshot } from '@/composables/hunting/hub/useSnapshot';
 import { seasonLabel, seasonOfDay, todayVilnius } from '@/utils/hunting/dates';
+import { isEmbedQuery, resolveParentOrigin } from '@/utils/hunting/hub/embed';
 import { isRailed, mapPadding } from '@/utils/hunting/hub/layout';
 import { S } from '@/utils/hunting/hub/strings';
 import { parseSeasonKey, seasonKey } from '@/utils/hunting/hub/time';
@@ -37,6 +44,9 @@ export const URL_DEBOUNCE_MS = 300;
 export const PRODUCTION_HOST = 'maps.biip.lt';
 export const STAGING_HOST = 'staging-maps.biip.lt';
 
+// The wolves table `setTopic(…, { openTable: true })` opens without a `table` (SPEC §5.11).
+const LIVE_TABLE = 'irasai';
+
 // Where an explicit season came from: the URL, the user, or a topic switch (§3.4 notices).
 type SeasonOrigin = 'url' | 'user' | 'carry' | 'carryRange';
 
@@ -57,7 +67,8 @@ const hasFiles = (data: SnapshotData | null, topic: TopicDef) =>
 
 export interface HubStateOptions {
   today?: string; // Vilnius day; defaults to the real one
-  openAbout?: (topic?: TopicId) => void; // the shell's About dialog
+  openAbout?: (topic?: TopicId, opts?: AboutOpenOptions) => void; // the shell's About dialog
+  closeAbout?: () => void;
 }
 
 export function useHubState(opts: HubStateOptions = {}): HubContext {
@@ -72,6 +83,13 @@ export function useHubState(opts: HubStateOptions = {}): HubContext {
   const isWide = useMediaQuery('(min-width: 1280px)');
   const { width } = useWindowSize();
   const debug = queryString(route.query, 'debug') === '1';
+  // Embedded in the WP page (SPEC §5): never on the production host. `embed` and `parent`
+  // are not hub keys, so every URL write keeps them.
+  const embed = !isProductionHost && isEmbedQuery(route.query);
+  const parentOrigin = embed
+    ? resolveParentOrigin(queryString(route.query, 'parent'), document.referrer, hostname)
+    : null;
+  const embedLive = shallowRef<EmbedLiveControls | null>(null);
   const dimKeys = allDimKeys();
 
   // ---- Choices (unvalidated until meta / the topic's files are loaded).
@@ -164,13 +182,18 @@ export function useHubState(opts: HubStateOptions = {}): HubContext {
     if (isLive()) return WOLVES_TABLES.indexOf(pick) >= 0 ? pick : null;
     const v = view.value;
     if (!v) return pick;
-    return v.tables.some((t) => t.id === pick) ? pick : null;
+    if (v.tables.some((t) => t.id === pick)) return pick;
+    if (!embed) return null;
+    // Embed (SPEC §5.9): an unknown or currently unavailable table falls back to the
+    // topic's default (or first) table instead of closing the table.
+    const fallback = v.tables.find((t) => t.id === topic.value.defaultTable) || v.tables[0];
+    return fallback ? fallback.id : null;
   }
 
   // ---- Layout.
   const tableOpen = computed(() => sel.value.table !== null);
-  const railed = computed(() => isRailed(width.value, tableOpen.value));
-  const padding = computed(() => mapPadding(width.value, tableOpen.value));
+  const railed = computed(() => isRailed(width.value, tableOpen.value, embed));
+  const padding = computed(() => mapPadding(width.value, tableOpen.value, embed));
 
   // ---- URL → state.
   function applyQuery(query: LocationQuery) {
@@ -229,7 +252,8 @@ export function useHubState(opts: HubStateOptions = {}): HubContext {
     // Never write hub keys onto another route (a change just before leaving).
     if (route.path !== routePath) return;
     lastSignature = querySignature(query, hubSignatureKeys());
-    router[mode]({ query });
+    // Embedded, the WP page owns the history (SPEC §5.6): never add an entry here.
+    router[embed ? 'replace' : mode]({ query });
   }
 
   const pushNow = () => write('push', fullQuery());
@@ -284,6 +308,14 @@ export function useHubState(opts: HubStateOptions = {}): HubContext {
       notice.value = ok
         ? S.noticeSeasonOnly(label)
         : S.noticeSeasonMissing(topic.value.tab, label, seasonLabel(defaultSeason.value));
+    } else if (embed && seasonOrigin === 'url' && !ok) {
+      // Embed (SPEC §5.11): a season from the WP link (e.g. a translated legacy link) that
+      // the topic does not offer is explained, not dropped silently.
+      notice.value = S.noticeSeasonMissing(
+        topic.value.tab,
+        label,
+        seasonLabel(defaultSeason.value),
+      );
     }
     if (seasonOrigin === 'carry' || seasonOrigin === 'carryRange') seasonOrigin = 'url';
     if (!ok) {
@@ -308,9 +340,16 @@ export function useHubState(opts: HubStateOptions = {}): HubContext {
         dimPicks.value = Object.fromEntries(kept);
       }
     }
-    if (view.value && tablePick.value !== null && tableOf() === null) {
-      tablePick.value = null;
-      dropped = true;
+    if (view.value && tablePick.value !== null) {
+      const table = tableOf();
+      if (table === null) {
+        tablePick.value = null;
+        dropped = true;
+      } else if (table !== tablePick.value) {
+        // Embed fallback (§5.9): keep the pick, so the table comes back when the view offers
+        // it again, and write the table actually shown.
+        dropped = true;
+      }
     }
     if (dropped && route.path === routePath) scheduleReplace();
   }
@@ -340,7 +379,7 @@ export function useHubState(opts: HubStateOptions = {}): HubContext {
     return { season: season.value, fromRange: false };
   }
 
-  function setTopic(id: TopicId) {
+  function setTopic(id: TopicId, opts: { openTable?: boolean; table?: string } = {}) {
     const target = hasTopic(id) ? id : DEFAULT_TOPIC;
     if (target === topicId.value) return;
     const carry = carryFromCurrent();
@@ -360,10 +399,23 @@ export function useHubState(opts: HubStateOptions = {}): HubContext {
       if (target !== DEFAULT_TOPIC) query.tema = target;
       if (carriedSav !== null) query.sav = String(carriedSav);
       if (carry) query.sezonas = seasonKey(carry.season);
+      const liveTable = !opts.openTable
+        ? null
+        : opts.table && WOLVES_TABLES.indexOf(opts.table) >= 0
+          ? opts.table
+          : LIVE_TABLE;
+      if (liveTable) query.lentele = liveTable;
+      // `previousQuery` becomes the written query, so the route watcher never sees `lentele`
+      // change: mirror the opened table here, or `sel.table` stays null while it is open.
+      tablePick.value = liveTable;
       write('push', query);
       previousQuery = { ...query };
       return;
     }
+    // The overview has no table: `openTable` is ignored there. A `table` the view does not
+    // offer falls back to the default one (`tableOf`, embed only).
+    tablePick.value =
+      opts.openTable && !overview ? opts.table || targetDef.defaultTable || null : null;
     validateSeason();
     pushNow();
   }
@@ -406,7 +458,9 @@ export function useHubState(opts: HubStateOptions = {}): HubContext {
     return new URL(router.resolve({ path: routePath, query }).href, window.location.href).href;
   };
 
-  const openAbout = (id?: TopicId) => opts.openAbout?.(id ?? topicId.value);
+  const openAbout = (id?: TopicId, about?: AboutOpenOptions) =>
+    opts.openAbout?.(id ?? topicId.value, about);
+  const closeAbout = () => opts.closeAbout?.();
 
   const liveMap = shallowRef<LiveMap | null>(null);
 
@@ -420,6 +474,9 @@ export function useHubState(opts: HubStateOptions = {}): HubContext {
     isMobile,
     isWide,
     debug,
+    embed,
+    parentOrigin,
+    embedLive,
     sel,
     topic,
     data,
@@ -434,5 +491,6 @@ export function useHubState(opts: HubStateOptions = {}): HubContext {
     setTable,
     shareUrl,
     openAbout,
+    closeAbout,
   };
 }
