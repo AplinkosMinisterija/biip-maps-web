@@ -40,6 +40,7 @@ import {
   type StebTableId,
 } from './model';
 import { speciesColor, STEB_OTHER_COLOR } from './layers';
+import { SS } from './strings';
 
 export type { SelfCheckResult };
 
@@ -586,7 +587,7 @@ export function runStebejimaiChecks(): SelfCheckResult[] {
       [
         ['Rūšis;Stebėjimų;Gyvūnų', 'Iš viso;8;18', 'Vilkas;3;6'],
         '# Stebėjimai – Savivaldybės; visas laikotarpis; visos rūšys; visi faktai; visa Lietuva; ' +
-          `naujausi ${formatInt(10000)} iš ${formatInt(12345)}`,
+          `rodoma ${formatInt(10000)} naujausių įrašų iš ${formatInt(12345)}`,
         [
           'Savivaldybė;Stebėjimų;Gyvūnų',
           'Iš viso;8;18',
@@ -597,6 +598,16 @@ export function runStebejimaiChecks(): SelfCheckResult[] {
       ],
     );
   });
+  check('Stebėjimai: nupjovimo pastaba', () =>
+    eq(
+      [SS.truncated(10000, 12345), SS.truncated(9999, 12345), SS.truncated(21, 30)],
+      [
+        `Rodoma ${formatInt(10000)} naujausių įrašų iš ${formatInt(12345)}.`,
+        `Rodomi ${formatInt(9999)} naujausi įrašai iš ${formatInt(12345)}.`,
+        'Rodomas 21 naujausias įrašas iš 30.',
+      ],
+    ),
+  );
   check('Stebėjimai: CSV failų vardai', () =>
     eq(
       [

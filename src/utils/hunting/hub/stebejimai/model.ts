@@ -18,6 +18,7 @@ import {
 import { CSV_BOM, CSV_EOL, CSV_SEPARATOR, csvField, csvSafe } from '@/utils/hunting/csv';
 import type { Interval } from '@/utils/hunting/types';
 import { P_ANIMAL, P_SPECIFIED } from '@/utils/hunting/hub/strings';
+import { truncatedPart } from './strings';
 
 // ---------------------------------------------------------------------------
 // Contract constants (§4.2; S2 keeps the contract copies, ?debug=1 checks they agree)
@@ -713,7 +714,7 @@ export function buildStebCsv(options: StebCsvOptions): string {
     labels.place,
   ].map(commentPart);
   if (truncated) {
-    parts.push(`naujausi ${formatInt(truncated.shown)} iš ${formatInt(truncated.total)}`);
+    parts.push(truncatedPart(truncated.shown, truncated.total));
   }
   const lines = [`# Duomenys: tiesiogiai iš BĮIP; gauta ${at}`, `# ${csvSafe(parts.join('; '))}`];
   const line = (cells: (string | number | null)[]) =>

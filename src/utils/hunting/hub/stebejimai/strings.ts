@@ -10,6 +10,13 @@ export const P_NO_POINT: PluralForms = [
 ];
 // Rail label: "13 stebėjimų".
 export const P_OBSERVATION_GEN: PluralForms = ['stebėjimas', 'stebėjimai', 'stebėjimų'];
+// Truncation note: the participle and the adjective agree with the number, as in
+// "užregistruota 10 stebėjimų": "rodoma 10 000 naujausių įrašų", "rodomi 9 999 naujausi įrašai".
+const P_SHOWN: PluralForms = ['rodomas', 'rodomi', 'rodoma'];
+const P_NEWEST: PluralForms = ['naujausias įrašas', 'naujausi įrašai', 'naujausių įrašų'];
+/** "rodoma 10 000 naujausių įrašų iš 12 345" (the panel note and the CSV comment line). */
+export const truncatedPart = (shown: number, total: number) =>
+  `${pluralLt(shown, P_SHOWN)} ${formatInt(shown)} ${pluralLt(shown, P_NEWEST)} iš ${formatInt(total)}`;
 
 export const SS = {
   h1: 'Kur ir kokie gyvūnai stebėti?',
@@ -45,8 +52,10 @@ export const SS = {
     `Rodoma: ${period}; ${species}; ${fact}; ${place}${place.endsWith('.') ? '' : '.'}`,
   chartTitle: 'Stebėjimai pagal rūšį',
   noPoint: (k: number) => `${formatInt(k)} ${pluralLt(k, P_NO_POINT)}.`,
-  truncated: (shown: number, total: number) =>
-    `Rodomi naujausi ${formatInt(shown)} įrašų iš ${formatInt(total)}.`,
+  truncated: (shown: number, total: number) => {
+    const text = truncatedPart(shown, total);
+    return `${text.charAt(0).toUpperCase()}${text.slice(1)}.`;
+  },
   provenance: (time: string) => `Duomenys gauti ${time} tiesiogiai iš BĮIP`,
   // States (§3.9).
   loading: 'Įkeliami duomenys…',
