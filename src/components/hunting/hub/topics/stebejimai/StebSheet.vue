@@ -7,13 +7,14 @@
   >
     <h2 id="steb-sheet-title" class="sr-only">{{ SS.h1 }}</h2>
 
-    <!-- Handle: a tap cycles peek → half → full. -->
+    <!-- Handle: a tap cycles peek → half → full; with a record card open it closes the card
+         (the sheet then shows its detent again), and says so. -->
     <button
       type="button"
       class="flex h-6 w-full shrink-0 items-center justify-center rounded-t-xl"
       :class="focusRing"
-      :aria-label="detent === 'full' ? SS.sheetCollapse : SS.sheetExpand"
-      :aria-expanded="detent !== 'peek' || showCard"
+      :aria-label="handleLabel"
+      :aria-expanded="showCard ? undefined : detent !== 'peek'"
       aria-controls="steb-sheet-body"
       @click="cycle"
     >
@@ -134,6 +135,11 @@ const segments = computed(() => [
   { id: 'summary' as const, label: SS.segmentSummary, disabled: false },
   { id: 'table' as const, label: SS.segmentTable, disabled: !hasTable.value },
 ]);
+
+const handleLabel = computed(() => {
+  if (showCard.value) return SS.closeRecord;
+  return detent.value === 'full' ? SS.sheetCollapse : SS.sheetExpand;
+});
 
 const peekText = computed(() => {
   if (!ctx.derived.records.value.length) {

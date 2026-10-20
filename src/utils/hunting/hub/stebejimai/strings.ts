@@ -106,6 +106,7 @@ export const SS = {
   // Sheet (mobile).
   sheetExpand: 'Išskleisti skydelį',
   sheetCollapse: 'Suskleisti skydelį',
+  closeRecord: 'Uždaryti įrašą',
   segmentSummary: 'Suvestinė',
   segmentTable: 'Lentelė',
   segmentsLabel: 'Rodinys',
