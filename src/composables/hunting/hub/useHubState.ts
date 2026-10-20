@@ -3,8 +3,8 @@
 // (topic and place with router.push, everything else with a debounced router.replace,
 // never a default value; embedded in the WP page, always router.replace), loads the
 // topic's snapshot files and builds its view.
-// While the live Vilkai topic is shown, the wolves state owns the URL; the hub writes only
-// `tema` and mirrors `sezonas`, `sav`, `lentele` read-only.
+// While a live topic (Vilkai, Stebėjimai) is shown, the live topic owns its keys in the URL;
+// the hub writes only `tema` and mirrors `sezonas`, `sav`, `lentele` read-only.
 import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { useRoute, useRouter, type LocationQuery } from 'vue-router';
 import { useMediaQuery, useWindowSize } from '@vueuse/core';
@@ -23,7 +23,7 @@ import { parseSeasonKey, seasonKey } from '@/utils/hunting/hub/time';
 import { DEFAULT_TOPIC, TOPICS, getTopic, hasTopic } from '@/utils/hunting/hub/topics';
 import {
   DIM_KEYS,
-  WOLVES_TABLES,
+  LIVE_TABLES,
   keptQuery,
   parseSav,
   queryString,
@@ -44,9 +44,6 @@ export const URL_DEBOUNCE_MS = 300;
 export const PRODUCTION_HOST = 'maps.biip.lt';
 export const STAGING_HOST = 'staging-maps.biip.lt';
 
-// The wolves table `setTopic(…, { openTable: true })` opens without a `table` (SPEC §5.11).
-const LIVE_TABLE = 'irasai';
-
 // Where an explicit season came from: the URL, the user, or a topic switch (§3.4 notices).
 type SeasonOrigin = 'url' | 'user' | 'carry' | 'carryRange';
 
@@ -64,6 +61,9 @@ const allDimKeys = () =>
 
 const hasFiles = (data: SnapshotData | null, topic: TopicDef) =>
   !!data && topic.files.every((f) => f === 'meta' || (data as any)[f] !== undefined);
+
+// Table ids of a live topic (none for an id without an entry).
+const liveTablesOf = (id: TopicId): readonly string[] => LIVE_TABLES[id] || [];
 
 export interface HubStateOptions {
   today?: string; // Vilnius day; defaults to the real one
@@ -179,7 +179,7 @@ export function useHubState(opts: HubStateOptions = {}): HubContext {
   function tableOf() {
     const pick = tablePick.value;
     if (pick === null) return null;
-    if (isLive()) return WOLVES_TABLES.indexOf(pick) >= 0 ? pick : null;
+    if (isLive()) return liveTablesOf(topicId.value).indexOf(pick) >= 0 ? pick : null;
     const v = view.value;
     if (!v) return pick;
     if (v.tables.some((t) => t.id === pick)) return pick;
@@ -258,7 +258,7 @@ export function useHubState(opts: HubStateOptions = {}): HubContext {
 
   const pushNow = () => write('push', fullQuery());
   function scheduleReplace() {
-    if (isLive()) return; // the wolves state writes its own keys
+    if (isLive()) return; // the live topic writes its own keys
     clearTimeout(urlTimer);
     urlTimer = setTimeout(() => write('replace', fullQuery()), URL_DEBOUNCE_MS);
   }
@@ -274,7 +274,8 @@ export function useHubState(opts: HubStateOptions = {}): HubContext {
       const tema = queryString(query, 'tema');
       const sameTopic = (hasTopic(tema) ? tema : DEFAULT_TOPIC) === topicId.value;
       if (sameTopic && isLive()) {
-        // Mirror the wolves keys, only when they change (x/y/z writes must not reset them).
+        // Mirror the live topic's keys, only when they change (x/y/z writes must not reset
+        // them).
         const changed = (key: string) => queryString(query, key) !== queryString(previous, key);
         if (changed('sezonas')) seasonPick.value = parseSeasonKey(queryString(query, 'sezonas'));
         if (changed('sav')) savPick.value = parseSav(queryString(query, 'sav'));
@@ -370,6 +371,8 @@ export function useHubState(opts: HubStateOptions = {}): HubContext {
   function carryFromCurrent(): SeasonCarry | null {
     if (isOverview()) return null;
     if (isLive()) {
+      // Every live topic writes its period with the wolves keys (nuo, iki, sezonas,
+      // laikotarpis); a default period writes none and carries nothing.
       const fromUrl = wolvesCarry(route.query, today);
       if (fromUrl) return fromUrl;
       return seasonPick.value !== null ? { season: seasonPick.value, fromRange: false } : null;
@@ -394,16 +397,19 @@ export function useHubState(opts: HubStateOptions = {}): HubContext {
     seasonPick.value = overview || !carry ? null : carry.season;
     seasonOrigin = carry?.fromRange ? 'carryRange' : 'carry';
     if (targetDef.kind === 'live') {
-      // The wolves state reads these on mount and owns them from then on.
+      // The live topic reads these on mount and owns them from then on.
       const query: LocationQuery = { ...keptQuery(route.query, dimKeys) };
       if (target !== DEFAULT_TOPIC) query.tema = target;
       if (carriedSav !== null) query.sav = String(carriedSav);
       if (carry) query.sezonas = seasonKey(carry.season);
+      // `openTable` without a `table` (or with one the topic does not have) opens its
+      // default table (SPEC §5.11).
+      const tables = liveTablesOf(target);
       const liveTable = !opts.openTable
         ? null
-        : opts.table && WOLVES_TABLES.indexOf(opts.table) >= 0
+        : opts.table && tables.indexOf(opts.table) >= 0
           ? opts.table
-          : LIVE_TABLE;
+          : targetDef.defaultTable || tables[0] || null;
       if (liveTable) query.lentele = liveTable;
       // `previousQuery` becomes the written query, so the route watcher never sees `lentele`
       // change: mirror the opened table here, or `sel.table` stays null while it is open.

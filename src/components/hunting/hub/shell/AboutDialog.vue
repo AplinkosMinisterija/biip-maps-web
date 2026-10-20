@@ -39,7 +39,7 @@
             <h3 class="font-semibold text-gray-900">{{ part.heading }}</h3>
             <p v-for="line in part.lines" :key="line" class="mt-1">{{ line }}</p>
           </section>
-          <section>
+          <section v-if="common.length">
             <h3 class="font-semibold text-gray-900">{{ ABOUT_HEADINGS.common }}</h3>
             <p v-for="line in common" :key="line" class="mt-1">{{ line }}</p>
           </section>
@@ -53,21 +53,25 @@
 import { computed, inject, nextTick, onBeforeUnmount, ref, type PropType } from 'vue';
 import { HUB_CTX, type AboutOpenOptions } from '@/composables/hunting/hub/context';
 import type { TopicDef, TopicId } from '@/utils/hunting/hub/types';
-import { ABOUT_HEADINGS, ATTRIBUTION_RULE, S, TOPIC_TABS } from '@/utils/hunting/hub/strings';
+import {
+  ABOUT_HEADINGS,
+  ABOUT_LOCALE_RULE,
+  ATTRIBUTION_RULE,
+  S,
+  TOPIC_TABS,
+} from '@/utils/hunting/hub/strings';
 import { focusRing, trapTab } from './shell';
 
-// About dialog (§5): four fixed headings per topic, then "Bendros taisyklės".
+// About dialog (§5): four fixed headings per topic, then "Bendros taisyklės" (the topic's
+// own `aboutCommon` lines when it has them, else the shell's default lines).
 const props = defineProps({
   topics: { type: Object as PropType<Partial<Record<TopicId, TopicDef>>>, required: true },
 });
 
 const ctx = inject(HUB_CTX)!;
 
-// Shell texts of "Bendros taisyklės" (§5: attribution rule, snapshot, locale, no personal
-// data). Candidates for strings.ts.
-const LOCALE_RULE =
-  'Datos rašomos formatu metai-mėnuo-diena (pvz., 2026-10-09), laikas – 24 valandų formatu, ' +
-  'trupmenos – su kableliu.';
+// Default texts of "Bendros taisyklės" (§5: attribution rule, snapshot, locale, no personal
+// data). The locale rule is shared with the topics' own lines (strings.ts).
 const PRIVACY_RULE =
   'Asmens duomenys neskelbiami: rodomos tik visos Lietuvos ir savivaldybių sumos, be MPV, ' +
   'pranešėjų ar tikslių vietų.';
@@ -113,13 +117,16 @@ const sections = computed(() => {
 });
 
 const common = computed(() => {
+  const topic = props.topics[topicId.value];
+  // A topic whose rules differ (Stebėjimai: live records at their exact points) states its own.
+  if (topic?.aboutCommon) return topic.aboutCommon.filter(Boolean);
   const asOf = ctx.data.snapshot.value?.meta.snapshotDate;
   // The attribution rule is stated once: topics usually include it in "Ką reiškia skaičiai".
-  const meaning = props.topics[topicId.value]?.about?.meaning || [];
+  const meaning = topic?.about?.meaning || [];
   return [
     meaning.includes(ATTRIBUTION_RULE) ? '' : ATTRIBUTION_RULE,
     asOf ? S.provenanceSnapshotTitle(asOf) : '',
-    LOCALE_RULE,
+    ABOUT_LOCALE_RULE,
     PRIVACY_RULE,
   ].filter(Boolean);
 });
