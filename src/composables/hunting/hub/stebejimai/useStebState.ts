@@ -16,7 +16,6 @@ import {
 } from 'vue';
 import { useRoute, useRouter, type LocationQuery } from 'vue-router';
 import type { HubContext } from '@/composables/hunting/hub/context';
-import { seasonOfDay } from '@/utils/hunting/dates';
 import { keptQuery } from '@/utils/hunting/hub/url';
 import {
   answerText,
@@ -24,7 +23,6 @@ import {
   compareSpecies,
   filterRecords,
   firstDay,
-  FIRST_SEASON,
   NOT_SET_LABEL,
   NOT_SET_SLUG,
   parsePeriod,
@@ -32,6 +30,7 @@ import {
   periodQuery,
   recordPageUrl,
   samePeriod,
+  seasonOptions,
   STEB_DEFAULT_TABLE,
   STEB_FAKTAS_RE,
   STEB_GYVUNAS_RE,
@@ -307,7 +306,7 @@ export function useStebState(opts: {
   const isDefault = computed(() => period.value.kind === 'all' && activeCount.value === 0);
 
   // Years and seasons offered by the period picker: from the oldest record (not before
-  // 2017) to today (§3.3).
+  // 2017) to today (§3.3). Years go by the calendar year of the oldest record.
   const oldestYear = computed(() => {
     let oldest = '';
     for (const r of records.value) if (r.day && (!oldest || r.day < oldest)) oldest = r.day;
@@ -319,14 +318,10 @@ export function useStebState(opts: {
     for (let y = Number(today.slice(0, 4)); y >= oldestYear.value; y--) list.push(y);
     return list;
   });
+  // Seasons go down to the season of the oldest record's day, not of its calendar year: a
+  // record from 2026-09-21 is in 2026/2027, so 2025/2026 would be an empty choice.
   const seasons = computed(() => {
-    const current = seasonOfDay(today);
-    const first = Math.max(
-      FIRST_SEASON,
-      Math.min(current, seasonOfDay(`${oldestYear.value}-01-01`)),
-    );
-    const list: number[] = [];
-    for (let s = current; s >= first; s--) list.push(s);
+    const list = seasonOptions(today, since.value);
     const p = period.value;
     if (p.kind === 'season' && list.indexOf(p.season) < 0) list.push(p.season);
     return list;

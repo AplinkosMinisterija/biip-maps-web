@@ -373,6 +373,20 @@ export const dateTimeText = (r: StebRecord) =>
 export const FIRST_SEASON = 2017;
 
 /**
+ * Seasons the period picker offers, newest first: from the current season down to the
+ * season of the oldest record's day (not before 2017); with no dated record, the current
+ * season only (§3.3).
+ */
+export function seasonOptions(today: string, oldestDay: string | null): number[] {
+  const current = seasonOfDay(today);
+  const oldest = oldestDay ? seasonOfDay(oldestDay) : current;
+  const first = Math.max(FIRST_SEASON, Math.min(current, oldest));
+  const list: number[] = [];
+  for (let s = current; s >= first; s--) list.push(s);
+  return list;
+}
+
+/**
  * The period of a query: valid `nuo`+`iki` (nuo ≤ iki) > valid `sezonas` (YYYY-YYYY+1,
  * from 2017, not after the current season when `today` is given) > `laikotarpis=30d` >
  * all (`laikotarpis=visi` and anything invalid).

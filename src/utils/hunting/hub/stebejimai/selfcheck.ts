@@ -22,6 +22,7 @@ import {
   periodQuery,
   recordPageUrl,
   RECORDS_CSV_HEADER,
+  seasonOptions,
   slugLt,
   speciesSummary,
   stebCsvFileName,
@@ -391,6 +392,21 @@ export function runStebejimaiChecks(): SelfCheckResult[] {
         '2025/2026 sezonas',
         '2026-01-01',
       ],
+    ),
+  );
+  // The oldest record's own season is the last one offered, not the season of its year's
+  // 1 January (a record from 2026-09-21 offers 2026/2027 only).
+  check('Stebėjimai: sezonų sąrašas (§3.3)', () =>
+    eq(
+      [
+        seasonOptions(T, '2026-09-21'),
+        seasonOptions(T, '2024-06-15'),
+        seasonOptions(T, '2024-03-31'),
+        seasonOptions(T, null),
+        seasonOptions(T, '2027-01-05'),
+        seasonOptions(T, '2012-07-01').length,
+      ],
+      [[2026], [2026, 2025, 2024], [2026, 2025, 2024, 2023], [2026], [2026], 10],
     ),
   );
 
