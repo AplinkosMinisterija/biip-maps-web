@@ -217,12 +217,13 @@
             </option>
           </select>
         </div>
+        <!-- Only this sheet's filters: the period has its own sheet and chip. -->
         <button
-          v-if="!ctx.derived.isDefault.value"
+          v-if="ctx.derived.activeCount.value > 0"
           type="button"
           class="min-h-[44px] self-start rounded text-base font-semibold text-blue-800 underline"
           :class="focusRing"
-          @click="ctx.state.reset()"
+          @click="ctx.state.clearFilters()"
         >
           {{ SS.resetFilters }}
         </button>

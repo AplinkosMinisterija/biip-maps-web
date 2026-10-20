@@ -97,6 +97,8 @@ export interface StebContext {
     /** Open (on `table` when it is one of the tables) or close the table. */
     setTable(open: boolean, table?: string | null): void;
     reset(): void;
+    /** Species, fact and place back to all; the period stays (the phone "Filtrai" sheet). */
+    clearFilters(): void;
     select(keys: string[], opts?: { zoom?: boolean }): void;
     clearSelection(): void;
     linkOf(record: StebRecord): string | null;
@@ -353,13 +355,16 @@ export function useStebState(opts: {
     if (open && t) table.value = t;
     tableOpen.value = open;
   }
-  function reset() {
+  function clearFilters() {
     touch();
-    period.value = { kind: 'all' };
     gyvunas.value = null;
     faktas.value = null;
     if (sav.value !== null) fitRequest.value++;
     sav.value = null;
+  }
+  function reset() {
+    clearFilters();
+    period.value = { kind: 'all' };
   }
   function select(keys: string[], selectOpts: { zoom?: boolean } = {}) {
     if (!keys.length) return;
@@ -464,6 +469,7 @@ export function useStebState(opts: {
       setPlace,
       setTable,
       reset,
+      clearFilters,
       select,
       clearSelection,
       linkOf,
