@@ -40,8 +40,9 @@ export const SS = {
   rangeInvalid: 'Pabaiga negali būti ankstesnė už pradžią.',
   rangeHint: 'Palikus „Iki“ tuščią, rodomas visas „Nuo“ laikotarpis (metai, mėnuo ar diena).',
   // Filter sentence (§3.2).
+  // A place such as "Biržų r. sav." already ends the sentence with its period.
   sentence: (period: string, species: string, fact: string, place: string) =>
-    `Rodoma: ${period}; ${species}; ${fact}; ${place}.`,
+    `Rodoma: ${period}; ${species}; ${fact}; ${place}${place.endsWith('.') ? '' : '.'}`,
   chartTitle: 'Stebėjimai pagal rūšį',
   noPoint: (k: number) => `${formatInt(k)} ${pluralLt(k, P_NO_POINT)}.`,
   truncated: (shown: number, total: number) =>

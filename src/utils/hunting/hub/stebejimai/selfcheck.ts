@@ -460,6 +460,8 @@ export function runStebejimaiChecks(): SelfCheckResult[] {
         answerText(rows.slice(3, 4), { kind: 'range', from: '2026-04-01', to: '2026-04-01' }, T)
           .sentence,
         answerText(rows.slice(5, 6), { kind: 'all' }, T).sentence,
+        answerText([], { kind: 'all' }, T, '2024-05-02').text,
+        answerText(rows.slice(1, 2), { kind: 'all' }, T, '2024-05-02').sentence,
         answerText(rows.slice(0, 1), { kind: 'range', from: '2026-10-01', to: '2026-10-20' }, T)
           .text,
       ],
@@ -471,6 +473,8 @@ export function runStebejimaiChecks(): SelfCheckResult[] {
         'Stebėjimų neužregistruota.',
         '2026-04-01 užregistruotas 1 stebėjimas: Vilkas – 1.',
         'Užregistruotas 1 stebėjimas: Nenurodyta – 1.',
+        'Nuo 2024-05-02 stebėjimų neužregistruota.',
+        'Nuo 2024-05-02 užregistruotas 1 stebėjimas: Lūšis – 1.',
         'Laikotarpiu 2026-10-01 – 2026-10-20 užregistruotas 1 stebėjimas: Vilkas – 1. ' +
           'Pranešimuose nurodytas 1 gyvūnas.',
       ],

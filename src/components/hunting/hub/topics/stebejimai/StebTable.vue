@@ -83,10 +83,7 @@
               <p>{{ SS.colFact }}: {{ factText(r) }}</p>
               <p>{{ SS.colMunicipality }}: {{ r.municipality || NOT_SET_LABEL }}</p>
               <p>{{ SS.colEldership }}: {{ r.eldership || NOT_SET_LABEL }}</p>
-              <p>
-                <abbr :title="SS.colMpvTitle">{{ SS.colMpv }}</abbr>
-                {{ r.huntingArea || NOT_SET_LABEL }}
-              </p>
+              <p>{{ SS.cardMpv }}: {{ r.huntingArea || NOT_SET_LABEL }}</p>
               <div class="mt-2 flex flex-wrap items-center gap-3">
                 <button
                   v-if="r.x !== null"

@@ -106,9 +106,9 @@
         class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 rounded-lg border border-dashed border-gray-400 bg-gray-50 p-3 font-mono text-xs text-gray-800"
       >
         <dt class="text-gray-600">Stebėjimai</dt>
-        <dd class="tabular-nums">{{ debugRows }}</dd>
+        <dd class="min-w-0 break-words tabular-nums">{{ debugRows }}</dd>
         <dt class="text-gray-600">Filtrai</dt>
-        <dd class="break-words">{{ debugFilters }}</dd>
+        <dd class="min-w-0 break-all">{{ debugFilters }}</dd>
       </dl>
       <DebugPanel v-if="ctx.hub" />
     </template>

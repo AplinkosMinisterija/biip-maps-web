@@ -23,6 +23,7 @@ import {
   compareLt,
   compareSpecies,
   filterRecords,
+  firstDay,
   FIRST_SEASON,
   NOT_SET_LABEL,
   NOT_SET_SLUG,
@@ -237,7 +238,9 @@ export function useStebState(opts: {
   const ready = computed(
     () => data.phase.value === 'ready' && (sav.value === null || metaStatus.value !== 'pending'),
   );
-  const answer = computed(() => answerText(filtered.value, period.value, today));
+  // "Nuo {first day}" counts from the first loaded record, whatever the other filters.
+  const since = computed(() => firstDay(records.value));
+  const answer = computed(() => answerText(filtered.value, period.value, today, since.value));
 
   // Options with the count of rows under the other active filters (§3.3).
   function options(
@@ -255,9 +258,7 @@ export function useStebState(opts: {
       const text = key === NOT_SET_SLUG ? NOT_SET_LABEL : r[label] || NOT_SET_LABEL;
       seen.set(key, { key, label: text, n: 0 });
     });
-    const list = Array.from(seen.values()).map((o) => ({ ...o, n: counts.get(o.key) || 0 }));
-    // A value from the URL that no loaded row has stays listed until validation drops it.
-    return list;
+    return Array.from(seen.values()).map((o) => ({ ...o, n: counts.get(o.key) || 0 }));
   }
   const speciesOptions = computed(() =>
     options('speciesSlug', 'species', { ...filtersNow(), gyvunas: null }).sort(compareSpecies),

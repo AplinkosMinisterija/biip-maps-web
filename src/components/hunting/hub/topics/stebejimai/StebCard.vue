@@ -57,9 +57,9 @@
       </div>
     </div>
 
-    <dl class="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+    <dl class="mt-3 grid grid-cols-[minmax(0,9.5rem)_minmax(0,1fr)] gap-x-3 gap-y-1">
       <dt class="text-gray-600">{{ SS.cardDateTime }}:</dt>
-      <dd class="tabular-nums">{{ dateTimeText(record) }}</dd>
+      <dd class="whitespace-nowrap tabular-nums">{{ dateTimeText(record) }}</dd>
       <dt class="text-gray-600">{{ SS.cardCount }}:</dt>
       <dd class="tabular-nums">{{ countText(record) }}</dd>
       <dt class="text-gray-600">{{ SS.cardFact }}:</dt>

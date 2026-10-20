@@ -540,12 +540,27 @@ export interface StebAnswer {
 
 const capitalise = (s: string) => (s ? s[0].toUpperCase() + s.slice(1) : s);
 
-/** The sentence prefix of a period: "Nuo …", "Per paskutines 30 d.", "2025/2026 sezoną", … */
-export function answerPrefix(period: StebPeriod, records: StebRecord[], today: string): string {
+/** The first valid Vilnius day of the rows, or null. */
+export function firstDay(records: StebRecord[]): string | null {
+  let first = '';
+  for (const r of records) if (r.day && (!first || r.day < first)) first = r.day;
+  return first || null;
+}
+
+/**
+ * The sentence prefix of a period: "Nuo …" (all records: since the first record, `since`
+ * when given, else the first day of `records`), "Per paskutines 30 d.", "2025/2026 sezoną",
+ * "Laikotarpiu … – …" or the single day.
+ */
+export function answerPrefix(
+  period: StebPeriod,
+  records: StebRecord[],
+  today: string,
+  since?: string | null,
+): string {
   const interval = periodInterval(period, today);
   if (period.kind === 'all' || !interval) {
-    let first = '';
-    for (const r of records) if (r.day && (!first || r.day < first)) first = r.day;
+    const first = since === undefined ? firstDay(records) : since;
     return first ? `Nuo ${first}` : '';
   }
   if (period.kind === '30d') return 'Per paskutines 30 d.';
@@ -558,10 +573,16 @@ export function answerPrefix(period: StebPeriod, records: StebRecord[], today: s
 /**
  * "{prefix} užregistruota 13 stebėjimų: Vilkas – 6, Lūšis – 5, Rudasis lokys – 2." plus
  * "Pranešimuose nurodyta 17 gyvūnų." when a row has a count; for no rows
- * "{prefix} stebėjimų neužregistruota.". `records` are the filtered rows.
+ * "{prefix} stebėjimų neužregistruota.". `records` are the filtered rows; `since` is the
+ * first day of all loaded rows (the "all records" prefix).
  */
-export function answerText(records: StebRecord[], period: StebPeriod, today: string): StebAnswer {
-  const prefix = answerPrefix(period, records, today);
+export function answerText(
+  records: StebRecord[],
+  period: StebPeriod,
+  today: string,
+  since?: string | null,
+): StebAnswer {
+  const prefix = answerPrefix(period, records, today, since);
   const n = records.length;
   if (!n) {
     const sentence = prefix ? `${prefix} stebėjimų neužregistruota.` : 'Stebėjimų neužregistruota.';
