@@ -7,6 +7,7 @@
       :label="chipText.period"
       shrinkable
       :style="shrinkStyle(chipText.period)"
+      :sr-label="compact ? fullText.period : ''"
       :title="SS.period"
       :active="ctx.state.period.value.kind !== 'all'"
       panel-class="w-[400px]"
@@ -17,6 +18,7 @@
       :label="chipText.species"
       shrinkable
       :style="shrinkStyle(chipText.species)"
+      :sr-label="compact ? fullText.species : ''"
       :title="SS.species"
       :active="ctx.state.gyvunas.value !== null"
       panel-class="w-[320px]"
@@ -51,6 +53,7 @@
       :label="chipText.fact"
       shrinkable
       :style="shrinkStyle(chipText.fact)"
+      :sr-label="compact ? fullText.fact : ''"
       :title="SS.fact"
       :active="ctx.state.faktas.value !== null"
       panel-class="w-[360px]"
@@ -86,6 +89,7 @@
       :label="chipText.place"
       shrinkable
       :style="shrinkStyle(chipText.place)"
+      :sr-label="compact ? fullText.place : ''"
       :title="SS.place"
       :active="ctx.state.sav.value !== null"
       panel-class="w-[320px]"
@@ -274,7 +278,8 @@ const placeChip = computed(() => {
   return sav === null ? SS.allPlaces : ctx.meta.nameOf(sav) || `${sav}`;
 });
 // Chip texts. Wide: "Rūšis: Stumbras". Compact: the value of a set filter, the name of an
-// unset one ("Rūšis", not "Visos rūšys"), and the period's value.
+// unset one ("Rūšis", not "Visos rūšys"), and the period's value; the full text stays the
+// chip's accessible name, so a screen reader still hears "Rūšis: Stumbras".
 const fullText = computed(() => ({
   period: SS.periodChip(periodChip.value),
   species: SS.speciesChip(speciesChip.value),
