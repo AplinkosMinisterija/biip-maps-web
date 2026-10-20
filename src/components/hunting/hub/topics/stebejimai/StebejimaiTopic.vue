@@ -106,6 +106,8 @@
          and the bottom sheet. -->
     <template v-else>
       <div
+        role="search"
+        :aria-label="SS.filtersLabel"
         class="absolute inset-x-0 z-30 flex h-[52px] items-center gap-2 bg-white px-3 py-1 shadow-md"
         :class="embed ? 'top-0' : 'top-14'"
       >
