@@ -106,23 +106,26 @@
     </button>
   </div>
 
-  <!-- Phones: two chips, each opening a full-screen sheet (STEB-SPEC §3.1). -->
+  <!-- Phones: two chips, each opening a full-screen sheet (STEB-SPEC §3.1). The period chip
+       shows the value only (as Vilkai's does) and is the one that shrinks; its name keeps
+       "Laikotarpis: …". -->
   <div v-else class="flex min-w-0 items-center gap-2">
     <button
       ref="periodTrigger"
       type="button"
       aria-haspopup="dialog"
-      :class="mobileChip"
+      :aria-label="SS.periodChip(periodChip)"
+      :class="[mobileChip, 'min-w-0 max-w-full shrink']"
       @click="periodOpen = true"
     >
-      <span class="truncate">{{ SS.periodChip(periodChip) }}</span>
+      <span class="truncate">{{ periodChip }}</span>
       <span aria-hidden="true" class="text-sm">▾</span>
     </button>
     <button
       ref="filtersTrigger"
       type="button"
       aria-haspopup="dialog"
-      :class="mobileChip"
+      :class="[mobileChip, 'shrink-0 whitespace-nowrap']"
       @click="filtersOpen = true"
     >
       <UiIcon name="filter" :size="18" aria-hidden="true" />
@@ -244,7 +247,7 @@ const rowClass = 'flex min-h-[32px] cursor-pointer items-center gap-3 text-sm te
 const rowClassLarge = 'flex min-h-[44px] cursor-pointer items-center gap-3 text-base text-gray-900';
 const radioClass = `h-4 w-4 shrink-0 accent-gray-900 ${focusRing}`;
 const selectClass = `block h-9 w-full rounded-md border border-gray-400 bg-white px-2 text-sm text-gray-900 ${focusRing}`;
-const mobileChip = `inline-flex h-11 min-w-0 max-w-full shrink items-center gap-1 rounded-full border border-gray-900 bg-white px-4 text-base font-medium text-gray-900 ${focusRing}`;
+const mobileChip = `inline-flex h-11 items-center gap-1 rounded-full border border-gray-900 bg-white px-4 text-base font-medium text-gray-900 ${focusRing}`;
 
 const periodChip = computed(() => periodChipLabel(ctx.state.period.value, ctx.today));
 const optionLabel = (list: { key: string; label: string }[], key: string | null, all: string) =>
