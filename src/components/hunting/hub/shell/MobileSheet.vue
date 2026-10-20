@@ -161,6 +161,9 @@ const headline = computed(() => {
   return [`${kpi.value} ${kpi.label}`, kpi.sub].filter(Boolean).join(' · ');
 });
 
+// Set while the sheet's own segments close the table (see the watch below).
+let closedBySheet = false;
+
 // The table segment and the `lentele` URL key are one state.
 watch(
   () => ctx.sel.value.table,
@@ -168,9 +171,17 @@ watch(
     if (table) {
       segment.value = 'table';
       detent.value = 'full';
-    } else if (segment.value === 'table') {
-      segment.value = 'summary';
+    } else {
+      if (segment.value === 'table') segment.value = 'summary';
+      // Embedded, a table closed from outside the sheet (the WP page's "Žemėlapis", Back,
+      // the table's "Rodyti žemėlapyje") asks for the map: a full sheet would still cover
+      // it. Lower it to the peek, or to half when a municipality card should show. The
+      // sheet's own "Suvestinė" keeps its height.
+      if (ctx.embed && !closedBySheet && detent.value === 'full') {
+        detent.value = ctx.sel.value.sav !== null ? 'half' : 'peek';
+      }
     }
+    closedBySheet = false;
   },
   { immediate: true },
 );
@@ -192,6 +203,7 @@ function setSegment(id: Segment) {
     if (detent.value === 'peek') detent.value = 'half';
     return;
   }
+  closedBySheet = id !== 'table' && ctx.sel.value.table !== null;
   setTableOpen(ctx, id === 'table');
   if (detent.value === 'peek') detent.value = 'half';
 }
