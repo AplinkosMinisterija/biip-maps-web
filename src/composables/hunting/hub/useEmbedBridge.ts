@@ -42,7 +42,7 @@ export function useEmbedBridge(ctx: HubContext, shell: HubShell | null): void {
   };
 
   // The view (and table) a `set` asked for on the live topic before its controls
-  // registered. Applied at most once (when `embedLive` next changes) and cleared by every
+  // registered. Applied at most once (when the next controls register) and cleared by every
   // `set`, so a stale request never reaches a later visit of the topic.
   let pendingLive: { view: EmbedView; table?: string } | null = null;
 
@@ -91,9 +91,10 @@ export function useEmbedBridge(ctx: HubContext, shell: HubShell | null): void {
   onScopeDispose(() => window.removeEventListener('message', onMessage));
 
   watch(ctx.embedLive, (controls) => {
-    if (controls && pendingLive) {
-      controls.setTableOpen(pendingLive.view === 'table', pendingLive.table);
-    }
+    // A switch between two live topics first unregisters the old host (null): keep the
+    // request for the host that registers next.
+    if (!controls) return;
+    if (pendingLive) controls.setTableOpen(pendingLive.view === 'table', pendingLive.table);
     pendingLive = null;
   });
 
