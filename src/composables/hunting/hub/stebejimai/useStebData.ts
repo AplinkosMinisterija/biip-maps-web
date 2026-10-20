@@ -86,7 +86,14 @@ export async function fetchAllObservations(signal: AbortSignal) {
     for (let p = start; p < start + PARALLEL_PAGES && p <= last; p++) batch.push(p);
     requests += batch.length;
     const bodies = await Promise.all(batch.map((p) => fetchPage(p, signal)));
-    bodies.forEach((b) => pages.push(b.rows));
+    bodies.forEach((b, i) => {
+      // A changed total means rows were added or removed while the pages were read, so the
+      // offsets moved and a row may have been skipped or repeated.
+      if (b.total !== first.total) {
+        throw new PageError(`total changed while reading (page ${batch[i]})`);
+      }
+      pages.push(b.rows);
+    });
   }
 
   const byKey = new Map<string, StebRecord>();
@@ -99,6 +106,11 @@ export async function fetchAllObservations(signal: AbortSignal) {
   );
   const all = Array.from(byKey.values()).sort(compareRecords);
   const truncated = first.totalPages > MAX_PAGES || all.length > MAX_ROWS;
+  // All-or-nothing also when every page answered: fewer unique rows than the source's total
+  // (a repeated page, a row that moved across a page boundary) is an error, not a smaller list.
+  if (!truncated && all.length < first.total) {
+    throw new PageError(`incomplete read: ${all.length} of ${first.total} rows`);
+  }
   return {
     records: truncated ? all.slice(0, MAX_ROWS) : all,
     total: Math.max(first.total, all.length),
