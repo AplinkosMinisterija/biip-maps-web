@@ -543,6 +543,12 @@ let unmounted = false;
 // mounted.
 const liveControls: EmbedLiveControls = {
   setTableOpen(open: boolean, table?: string) {
+    // The fallback shows its own table and the live drawer would be empty: a WP `set`
+    // (Back to a table entry, a pending view) keeps the map, which `hasTable` reports.
+    if (open && fallback.value) {
+      setTable(false);
+      return;
+    }
     if (open && ctx && table && WOLVES_TABLES.indexOf(table) >= 0) {
       ctx.state.tableTab.value = table as typeof ctx.state.tableTab.value;
     }
