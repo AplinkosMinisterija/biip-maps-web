@@ -1,17 +1,19 @@
 <template>
-  <div ref="rootEl" class="relative">
+  <div ref="rootEl" class="relative" :class="shrinkable ? 'min-w-0 max-w-[320px]' : ''">
     <button
       ref="triggerEl"
       type="button"
       aria-haspopup="dialog"
       :aria-expanded="isOpen ? 'true' : 'false'"
       :aria-controls="panelId"
-      class="inline-flex items-center gap-1 h-9 max-w-[320px] rounded-full border px-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
-      :class="
+      :aria-label="srLabel || undefined"
+      class="inline-flex items-center gap-1 h-9 rounded-full border px-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+      :class="[
+        shrinkable ? 'max-w-full' : 'max-w-[320px]',
         active
           ? 'border-gray-900 bg-gray-900 text-white'
-          : 'border-gray-400 bg-white text-gray-900 hover:bg-gray-100'
-      "
+          : 'border-gray-400 bg-white text-gray-900 hover:bg-gray-100',
+      ]"
       @click="toggle"
     >
       <span class="truncate">{{ label }}</span>
@@ -47,6 +49,10 @@ defineProps({
   // Dark chip: a non-default value is set.
   active: { type: Boolean, default: false },
   panelClass: { type: String, default: 'w-[360px]' },
+  // The chip may shrink below its text (truncated with "…") when the filter row is short.
+  shrinkable: { type: Boolean, default: false },
+  // Accessible name when the visible text is a short form ("Stumbras" for "Rūšis: Stumbras").
+  srLabel: { type: String, default: '' },
 });
 
 const panelId = `hub-vilkai-popover-${getCurrentInstance()?.uid ?? 0}`;

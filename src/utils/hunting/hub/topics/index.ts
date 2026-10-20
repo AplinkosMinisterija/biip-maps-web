@@ -1,6 +1,7 @@
 // Topic registry (SPEC2 §8.1). Every module next to this file (apzvalga, vilkai, laimikiai,
-// limitai, zala) exports its TopicDef, as `default` or as a named export; the registry picks
-// up each exported TopicDef by its `id`, so a topic cut from P0 (§1) simply drops out.
+// limitai, zala, stebejimai) exports its TopicDef, as `default` or as a named export; the
+// registry picks up each exported TopicDef by its `id`, so a topic cut from P0 (§1) simply
+// drops out.
 import { TOPIC_ORDER, TOPIC_SUBTITLES, TOPIC_TABS } from '../strings';
 import type { TopicDef, TopicId } from '../types';
 
@@ -29,6 +30,17 @@ Object.keys(modules).forEach((path) => {
     if (isTopicDef(value) && !found[value.id]) found[value.id] = value;
   });
 });
+
+// Global component that hosts each live topic (`kind: 'live'`), by topic id (STEB-SPEC
+// §4.1). The route mounts the host of the selected topic; a live topic without a registered
+// host shows only the shell. No prototype, frozen: `LIVE_HOSTS[id]` is undefined for
+// anything but these ids.
+export const LIVE_HOSTS: Readonly<Record<string, string>> = Object.freeze(
+  Object.assign(Object.create(null) as Record<string, string>, {
+    vilkai: 'HuntingHubTopicsVilkaiVilkaiTopic',
+    stebejimai: 'HuntingHubTopicsStebejimaiStebejimaiTopic',
+  }),
+);
 
 /** Registered topics in tab order. */
 export const TOPICS: TopicDef[] = TOPIC_ORDER.filter((id) => found[id]).map((id) => found[id]!);

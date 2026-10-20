@@ -1,7 +1,8 @@
 // ?debug=1 self-checks of the hunting data hub (SPEC2 §13 T2). The repo has no test runner;
 // the debug panel runs these and prints OK / KLAIDA per check:
 // - `runHubUnitChecks()`: pure rules on a synthetic fixture (season states, defaults, formats,
-//   classes, CSV, URL carry-over, table zipping);
+//   classes, CSV, URL carry-over, table zipping), the WP embed contract, the live topics'
+//   registry and, when its modules are there, the Stebėjimai topic's own checks;
 // - `runHubDataChecks(data)`: the committed snapshot against the expected values of §9.5,
 //   the privacy rules, and every registered topic's view()/overview() on it.
 // Expected values are those verified on prod for the 2026-10-09 snapshot; values marked
@@ -24,6 +25,7 @@ import {
 import {
   EMBED_TOPICS,
   isAllowedParent,
+  PASS_KEYS,
   parseCommand,
   readyMessage,
   resolveParentOrigin,
@@ -31,9 +33,46 @@ import {
   stateQuery,
 } from './embed';
 import { hubTop, isRailed, mapPadding, tableReplacesMap } from './layout';
-import { getTopic, TOPICS } from './topics';
-import { keptQuery, WOLVES_KEYS, WOLVES_TABLES, wolvesCarry } from './url';
+import { ABOUT_LOCALE_RULE, TOPIC_ORDER } from './strings';
+import { getTopic, hasTopic, LIVE_HOSTS, TOPICS } from './topics';
+import {
+  keptQuery,
+  LIVE_TABLES,
+  ownedKeys,
+  STEBEJIMAI_KEYS,
+  STEBEJIMAI_TABLES,
+  WOLVES_KEYS,
+  WOLVES_TABLES,
+  wolvesCarry,
+} from './url';
 import type { HubSelection, Meta, SnapshotData, TableDef, TopicDef } from './types';
+
+// The Stebėjimai topic's own modules (STEB-SPEC §4.6, §7), loaded only when they are there:
+// this file builds without them, and nothing here imports them statically.
+type StebModelModule = {
+  STEB_URL_KEYS?: readonly string[];
+  STEB_TABLES?: readonly string[];
+  STEB_DEFAULT_TABLE?: string;
+  STEB_GYVUNAS_RE?: RegExp;
+  STEB_FAKTAS_RE?: RegExp;
+};
+type StebSelfCheckModule = { runStebejimaiChecks?: () => SelfCheckResult[] };
+const stebModel: StebModelModule | undefined = Object.values(
+  import.meta.glob<StebModelModule>('@/utils/hunting/hub/stebejimai/model.ts', { eager: true }),
+)[0];
+const stebSelfCheck: StebSelfCheckModule | undefined = Object.values(
+  import.meta.glob<StebSelfCheckModule>('@/utils/hunting/hub/stebejimai/selfcheck.ts', {
+    eager: true,
+  }),
+)[0];
+
+// The URL keys each live topic owns (`lentele` included), as written by its host.
+const LIVE_KEYS: Readonly<Record<string, readonly string[]>> = Object.freeze(
+  Object.assign(Object.create(null) as Record<string, readonly string[]>, {
+    vilkai: WOLVES_KEYS,
+    stebejimai: STEBEJIMAI_KEYS,
+  }),
+);
 
 export type { SelfCheckResult };
 export { formatSelfChecks } from '@/utils/hunting/selfcheck';
@@ -288,6 +327,8 @@ export function runHubUnitChecks(): SelfCheckResult[] {
     ),
   );
   runEmbedChecks(check, eq);
+  runLiveTopicChecks(check, eq);
+  results.push(...stebejimaiModuleChecks());
   return results;
 }
 
@@ -324,7 +365,7 @@ function runEmbedChecks(check: Check, eq: Eq) {
         JSON.parse('{"biipHunting":{"v":1,"type":"set","tema":"__proto__"}}'),
       ],
       ['tema constructor', set({ tema: 'constructor' })],
-      ['tema stebejimai', set({ tema: 'stebejimai' })],
+      ['tema senoji', set({ tema: 'senoji' })],
       ['view list', set({ view: 'list' })],
       ['null', null],
       ['masyvas', [{ biipHunting: { v: 1, type: 'about' } }]],
@@ -341,6 +382,7 @@ function runEmbedChecks(check: Check, eq: Eq) {
         parseCommand(set({ tema: 'vilkai', view: 'map', extra: 'ignored' })),
         parseCommand(set({ tema: 'apzvalga', view: null })),
         parseCommand({ biipHunting: { v: 1, type: 'about' } }),
+        parseCommand(set({ tema: 'stebejimai' })),
       ],
       [
         { type: 'set', tema: 'zala' },
@@ -348,6 +390,7 @@ function runEmbedChecks(check: Check, eq: Eq) {
         { type: 'set', tema: 'vilkai', view: 'map' },
         { type: 'set', tema: 'apzvalga' },
         { type: 'about' },
+        { type: 'set', tema: 'stebejimai' },
       ],
     ),
   );
@@ -365,6 +408,9 @@ function runEmbedChecks(check: Check, eq: Eq) {
         parseCommand(set({ tema: 'laimikiai', view: 'map', lentele: 'vietoves' })),
         parseCommand(set({ tema: 'apzvalga', view: 'table', lentele: 'rusys' })),
         parseCommand(set({ tema: 'zala', view: 'table', lentele: '__proto__' })),
+        parseCommand(set({ tema: 'stebejimai', view: 'table', lentele: 'rusys' })),
+        parseCommand(set({ tema: 'stebejimai', view: 'table', lentele: 'menesiai' })),
+        parseCommand(set({ tema: 'stebejimai', view: 'table', lentele: 'sezonai' })),
       ],
       [
         { type: 'set', tema: 'laimikiai', view: 'table', lentele: 'vietoves' },
@@ -376,6 +422,9 @@ function runEmbedChecks(check: Check, eq: Eq) {
         { type: 'set', tema: 'laimikiai', view: 'map' },
         { type: 'set', tema: 'apzvalga', view: 'table' },
         { type: 'set', tema: 'zala', view: 'table' },
+        { type: 'set', tema: 'stebejimai', view: 'table', lentele: 'rusys' },
+        { type: 'set', tema: 'stebejimai', view: 'table' },
+        { type: 'set', tema: 'stebejimai', view: 'table' },
       ],
     ),
   );
@@ -532,7 +581,10 @@ function runEmbedChecks(check: Check, eq: Eq) {
     if (JSON.stringify(vilkai.keys) !== JSON.stringify(wolvesKeys)) {
       problems.push('vilkai.keys ≠ WOLVES_KEYS − lentele');
     }
-    const byId = EMBED_TOPICS as unknown as Record<string, { keys: readonly string[] } | undefined>;
+    const byId = EMBED_TOPICS as unknown as Record<
+      string,
+      { defaultTable: string; tables: readonly string[]; keys: readonly string[] } | undefined
+    >;
     TOPICS.filter((t) => t.kind === 'snapshot').forEach((t) => {
       const entry = byId[t.id];
       if (!entry) return problems.push(`${t.id}: not in EMBED_TOPICS`);
@@ -541,8 +593,260 @@ function runEmbedChecks(check: Check, eq: Eq) {
         problems.push(`${t.id}.keys ${sortedList(entry.keys).join(' ')} ≠ ${expected.join(' ')}`);
       }
     });
+    // Live topics: the tables are LIVE_TABLES, the keys those the host owns (− lentele).
+    TOPICS.filter((t) => t.kind === 'live').forEach((t) => {
+      const entry = byId[t.id];
+      if (!entry) return problems.push(`${t.id}: not in EMBED_TOPICS`);
+      if (entry.defaultTable !== t.defaultTable) {
+        problems.push(`${t.id}.defaultTable ${entry.defaultTable} ≠ ${t.defaultTable}`);
+      }
+      const tables = LIVE_TABLES[t.id] || [];
+      if (JSON.stringify(entry.tables) !== JSON.stringify(tables)) {
+        problems.push(`${t.id}.tables ≠ LIVE_TABLES.${t.id}`);
+      }
+      const keys = (LIVE_KEYS[t.id] || []).filter((key) => key !== 'lentele');
+      if (JSON.stringify(entry.keys) !== JSON.stringify(keys)) {
+        problems.push(`${t.id}.keys ${entry.keys.join(' ')} ≠ ${keys.join(' ')}`);
+      }
+    });
+    // Every iframe topic is registered, and every registered topic but Apžvalga is one.
+    Object.keys(EMBED_TOPICS).forEach((id) => {
+      if (!hasTopic(id)) problems.push(`${id}: in EMBED_TOPICS, not registered`);
+    });
+    TOPICS.filter((t) => t.kind !== 'overview').forEach((t) => {
+      if (!byId[t.id]) problems.push(`${t.id}: registered, not in EMBED_TOPICS`);
+    });
     return problems.length === 0 || problems.join('; ');
   });
+}
+
+// ---------------------------------------------------------------------------
+// Live topics (Vilkai, Stebėjimai): registry, hosts, tables, URL keys (STEB-SPEC §4, §7)
+// ---------------------------------------------------------------------------
+
+function runLiveTopicChecks(check: Check, eq: Eq) {
+  check('Stebėjimai: temų registras', () => {
+    const topic = getTopic('stebejimai');
+    return eq(
+      [
+        TOPIC_ORDER[TOPIC_ORDER.length - 1],
+        hasTopic('stebejimai'),
+        topic.id,
+        topic.kind,
+        topic.defaultTable,
+        topic.dims.length,
+        typeof topic.view,
+        typeof topic.overview,
+      ],
+      ['stebejimai', true, 'stebejimai', 'live', 'irasai', 0, 'undefined', 'undefined'],
+    );
+  });
+
+  check('Gyvos temos = LIVE_HOSTS', () => {
+    const live = TOPICS.filter((t) => t.kind === 'live').map((t) => t.id);
+    return eq(
+      [
+        sortedList(live),
+        sortedList(Object.keys(LIVE_HOSTS)),
+        LIVE_HOSTS.vilkai,
+        LIVE_HOSTS.stebejimai,
+        Object.getPrototypeOf(LIVE_HOSTS) === null,
+        Object.isFrozen(LIVE_HOSTS),
+        typeof LIVE_HOSTS.constructor,
+      ],
+      [
+        sortedList(Object.keys(LIVE_HOSTS)),
+        ['stebejimai', 'vilkai'],
+        'HuntingHubTopicsVilkaiVilkaiTopic',
+        'HuntingHubTopicsStebejimaiStebejimaiTopic',
+        true,
+        true,
+        'undefined',
+      ],
+    );
+  });
+
+  check('Gyvų temų lentelės (LIVE_TABLES)', () => {
+    const defaults = TOPICS.filter((t) => t.kind === 'live').filter(
+      (t) => (LIVE_TABLES[t.id] || []).indexOf(t.defaultTable) < 0,
+    );
+    return eq(
+      [
+        LIVE_TABLES.vilkai === WOLVES_TABLES,
+        LIVE_TABLES.stebejimai === STEBEJIMAI_TABLES,
+        STEBEJIMAI_TABLES,
+        sortedList(Object.keys(LIVE_TABLES)),
+        Object.getPrototypeOf(LIVE_TABLES) === null,
+        Object.isFrozen(LIVE_TABLES),
+        defaults.map((t) => t.id),
+      ],
+      [true, true, ['irasai', 'rusys', 'savivaldybes'], ['stebejimai', 'vilkai'], true, true, []],
+    );
+  });
+
+  check('Įterpimas: Stebėjimų lentelės ir raktai (EMBED_TOPICS)', () => {
+    const entry = EMBED_TOPICS.stebejimai;
+    return eq(
+      [
+        entry,
+        entry.tables === STEBEJIMAI_TABLES,
+        STEBEJIMAI_KEYS.filter((key) => key !== 'lentele'),
+      ],
+      [
+        {
+          defaultTable: 'irasai',
+          tables: ['irasai', 'rusys', 'savivaldybes'],
+          keys: ['nuo', 'iki', 'laikotarpis', 'sezonas', 'sav', 'gyvunas', 'faktas'],
+        },
+        true,
+        entry.keys,
+      ],
+    );
+  });
+
+  check('Įterpimas: raktai gyvunas ir faktas', () => {
+    const gyvunas = PASS_KEYS.gyvunas;
+    const faktas = PASS_KEYS.faktas;
+    const accepted = ['lusis', 'rudasis-lokys', 'aptikti-pedsakai'];
+    const rejected = ['Lusis', 'lūšis', 'a b', ''];
+    return eq(
+      [
+        accepted.map((v) => gyvunas.test(v) && faktas.test(v)),
+        rejected.map((v) => gyvunas.test(v) || faktas.test(v)),
+        [gyvunas.test('a'.repeat(40)), gyvunas.test('a'.repeat(41))],
+        [faktas.test('a'.repeat(60)), faktas.test('a'.repeat(61))],
+        Object.keys(PASS_KEYS),
+      ],
+      [
+        [true, true, true],
+        [false, false, false, false],
+        [true, false],
+        [true, false],
+        [
+          'tema',
+          'lentele',
+          'sezonas',
+          'sav',
+          'rusis',
+          'rodiklis',
+          'grupe',
+          'nuo',
+          'iki',
+          'laikotarpis',
+          'amzius',
+          'lytis',
+          'budas',
+          'gyvunas',
+          'faktas',
+          'x',
+          'y',
+          'z',
+          'debug',
+        ],
+      ],
+    );
+  });
+
+  check('URL: Stebėjimų raktai (stateQuery, keptQuery, ownedKeys)', () => {
+    const query = {
+      embed: '1',
+      tema: 'stebejimai',
+      lentele: 'rusys',
+      gyvunas: 'rudasis-lokys',
+      faktas: 'aptikti-pedsakai',
+      x: '1',
+      debug: '1',
+    };
+    return eq(
+      [
+        sortedEntries(stateQuery(query)),
+        stateQuery({ gyvunas: 'Lūšis', faktas: 'a'.repeat(61) }),
+        keptQuery(query),
+        ['gyvunas', 'faktas'].map((key) => ownedKeys().indexOf(key) >= 0),
+        STEBEJIMAI_KEYS.filter((key) => ownedKeys().indexOf(key) < 0),
+      ],
+      [
+        sortedEntries({
+          tema: 'stebejimai',
+          lentele: 'rusys',
+          gyvunas: 'rudasis-lokys',
+          faktas: 'aptikti-pedsakai',
+          x: '1',
+          debug: '1',
+        }),
+        {},
+        { embed: '1', x: '1', debug: '1' },
+        [true, true],
+        [],
+      ],
+    );
+  });
+
+  check('Stebėjimai: Apie duomenis', () => {
+    const topic = getTopic('stebejimai');
+    const common = topic.aboutCommon || [];
+    const about = topic.about;
+    const texts = [
+      ...common,
+      ...about.source,
+      ...about.meaning,
+      ...about.missing,
+      ...about.compare,
+    ].join(' ');
+    const problems: string[] = [];
+    if (!common.length) problems.push('no aboutCommon');
+    if (common.join(' ').indexOf('tikslių vietų') >= 0) problems.push('"tikslių vietų"');
+    if (common.indexOf(ABOUT_LOCALE_RULE) < 0) problems.push('no ABOUT_LOCALE_RULE');
+    if (/būrel/i.test(texts)) problems.push('"būrelis"');
+    const counts = [about.source, about.meaning, about.missing, about.compare].map((l) => l.length);
+    if (JSON.stringify(counts) !== JSON.stringify([2, 4, 2, 2])) {
+      problems.push(`sections ${counts.join('/')}`);
+    }
+    const others = TOPICS.filter((t) => t.id !== 'stebejimai' && t.aboutCommon).map((t) => t.id);
+    if (others.length) problems.push(`aboutCommon on ${others.join(', ')}`);
+    return problems.length === 0 || problems.join('; ');
+  });
+}
+
+// The Stebėjimai topic's modules (S1): their copies of the contract must equal it, and their
+// own checks run here. Missing modules give one failing check.
+function stebejimaiModuleChecks(): SelfCheckResult[] {
+  const missing = [
+    stebModel ? '' : 'stebejimai/model.ts',
+    typeof stebSelfCheck?.runStebejimaiChecks === 'function' ? '' : 'stebejimai/selfcheck.ts',
+  ].filter(Boolean);
+  if (!stebModel || missing.length) {
+    return [{ name: 'Stebėjimų temos modulis nerastas', ok: false, detail: missing.join(', ') }];
+  }
+  const { results, check, eq } = runner();
+  check('Stebėjimai: modulio kopijos = sutartis', () =>
+    eq(
+      [
+        stebModel.STEB_URL_KEYS,
+        stebModel.STEB_TABLES,
+        stebModel.STEB_DEFAULT_TABLE,
+        stebModel.STEB_GYVUNAS_RE?.source,
+        stebModel.STEB_FAKTAS_RE?.source,
+      ],
+      [
+        STEBEJIMAI_KEYS,
+        STEBEJIMAI_TABLES,
+        EMBED_TOPICS.stebejimai.defaultTable,
+        PASS_KEYS.gyvunas.source,
+        PASS_KEYS.faktas.source,
+      ],
+    ),
+  );
+  try {
+    results.push(...stebSelfCheck!.runStebejimaiChecks!());
+  } catch (e) {
+    results.push({
+      name: 'Stebėjimai: runStebejimaiChecks()',
+      ok: false,
+      detail: e instanceof Error ? e.message : String(e),
+    });
+  }
+  return results;
 }
 
 // ---------------------------------------------------------------------------

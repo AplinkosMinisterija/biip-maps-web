@@ -8,7 +8,7 @@
 //   so a total row can be larger than the sum of its published (non-null) parts.
 // - `MetaStatic` is defined here from SPEC2 §9.3 (the spec references it without a body).
 
-export type TopicId = 'apzvalga' | 'vilkai' | 'laimikiai' | 'limitai' | 'zala';
+export type TopicId = 'apzvalga' | 'vilkai' | 'laimikiai' | 'limitai' | 'zala' | 'stebejimai';
 export type SnapshotFile = 'meta' | 'loots' | 'limits' | 'damages' | 'wolves';
 export type SeasonState = 'vyksta' | 'preliminarus' | 'dalinis' | 'galutinis';
 export type DamageGroup = 'kanopiniai' | 'stumbrai' | 'bebrai' | 'vilkai' | 'lusys' | 'lokiai';
@@ -280,4 +280,7 @@ export interface TopicDef {
   otherRow?(data: SnapshotData, sav: number): OtherRow | null; // "Kiti rodikliai čia"
   otherRowFiles?: SnapshotFile[]; // files `otherRow` reads, when they differ from `files`
   about: AboutDef;
+  // Lines of the About dialog's "Bendros taisyklės" block; when set, they replace the
+  // shell's default lines (which speak of municipality sums, without MPV or exact places).
+  aboutCommon?: string[];
 }
