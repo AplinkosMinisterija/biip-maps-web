@@ -1,8 +1,12 @@
 <template>
-  <!-- Desktop and tablet: one chip with a popover per filter (STEB-SPEC §3.1). -->
+  <!-- Desktop and tablet: one chip with a popover per filter (STEB-SPEC §3.1). The chips
+       shrink (truncated) when the row is short, so the bar never scrolls sideways and
+       "Atstatyti filtrus" never slides under the standalone view switch. -->
   <div v-if="!mobile" class="flex min-w-0 items-center gap-2">
     <ChipPopover
-      :label="compact ? periodChip : SS.periodChip(periodChip)"
+      :label="chipText.period"
+      shrinkable
+      :style="shrinkStyle(chipText.period)"
       :title="SS.period"
       :active="ctx.state.period.value.kind !== 'all'"
       panel-class="w-[400px]"
@@ -10,7 +14,9 @@
       <StebPeriod />
     </ChipPopover>
     <ChipPopover
-      :label="compact ? speciesChip : SS.speciesChip(speciesChip)"
+      :label="chipText.species"
+      shrinkable
+      :style="shrinkStyle(chipText.species)"
       :title="SS.species"
       :active="ctx.state.gyvunas.value !== null"
       panel-class="w-[320px]"
@@ -42,7 +48,9 @@
       </fieldset>
     </ChipPopover>
     <ChipPopover
-      :label="compact ? factChip : SS.factChip(factChip)"
+      :label="chipText.fact"
+      shrinkable
+      :style="shrinkStyle(chipText.fact)"
       :title="SS.fact"
       :active="ctx.state.faktas.value !== null"
       panel-class="w-[360px]"
@@ -75,7 +83,9 @@
     </ChipPopover>
     <ChipPopover
       v-if="placeAvailable"
-      :label="compact ? placeChip : SS.placeChip(placeChip)"
+      :label="chipText.place"
+      shrinkable
+      :style="shrinkStyle(chipText.place)"
       :title="SS.place"
       :active="ctx.state.sav.value !== null"
       panel-class="w-[320px]"
@@ -226,7 +236,7 @@ import { useWindowSize } from '@vueuse/core';
 import ChipPopover from '@/components/hunting/hub/topics/vilkai/ChipPopover.vue';
 import FullSheet from '@/components/hunting/hub/shell/FullSheet.vue';
 import { STEB_CTX } from '@/composables/hunting/hub/stebejimai/useStebState';
-import { DESKTOP_MIN } from '@/utils/hunting/hub/layout';
+import { DESKTOP_MIN, WIDE_MIN } from '@/utils/hunting/hub/layout';
 import { periodChipLabel } from '@/utils/hunting/hub/stebejimai/model';
 import { SS } from '@/utils/hunting/hub/stebejimai/strings';
 import StebPeriod from './StebPeriod.vue';
@@ -238,8 +248,9 @@ defineProps({
 const ctx = inject(STEB_CTX)!;
 const uid = `steb-filters-${getCurrentInstance()?.uid ?? 0}`;
 const { width } = useWindowSize();
-// Tablets: the chips show the value only, so four chips fit next to the view switch.
-const compact = computed(() => width.value < DESKTOP_MIN);
+// Tablets, and standalone below 1280 px (where the own view switch shares the bar): short
+// chip texts, so four chips fit; the chips also shrink as a last resort.
+const compact = computed(() => width.value < (ctx.embed ? DESKTOP_MIN : WIDE_MIN));
 
 const focusRing =
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';
@@ -262,6 +273,30 @@ const placeChip = computed(() => {
   const sav = ctx.state.sav.value;
   return sav === null ? SS.allPlaces : ctx.meta.nameOf(sav) || `${sav}`;
 });
+// Chip texts. Wide: "Rūšis: Stumbras". Compact: the value of a set filter, the name of an
+// unset one ("Rūšis", not "Visos rūšys"), and the period's value.
+const fullText = computed(() => ({
+  period: SS.periodChip(periodChip.value),
+  species: SS.speciesChip(speciesChip.value),
+  fact: SS.factChip(factChip.value),
+  place: SS.placeChip(placeChip.value),
+}));
+const chipText = computed(() => {
+  if (!compact.value) return fullText.value;
+  const { gyvunas, faktas, sav } = ctx.state;
+  return {
+    period: periodChip.value,
+    species: gyvunas.value !== null ? speciesChip.value : SS.species,
+    fact: faktas.value !== null ? factChip.value : SS.fact,
+    place: sav.value !== null ? placeChip.value : SS.place,
+  };
+});
+// When the row is short, long chip texts give way first, down to 5rem; short ones ("Rūšis",
+// "Stumbras") shrink only after that, so they stay readable in the usual cases. Flex
+// shrinking is weighted by the shrink factor, hence the large factor of the long chips.
+const LONG_CHIP = 16;
+const shrinkStyle = (text: string) =>
+  text.length > LONG_CHIP ? { flexShrink: 100000, minWidth: '5rem' } : { flexShrink: 1 };
 // The place filter needs the municipality list of the hub meta.
 const placeAvailable = computed(() => ctx.meta.status.value === 'ready');
 const placeValue = computed(() =>
