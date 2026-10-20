@@ -52,6 +52,7 @@
 
 <script setup lang="ts">
 import { computed, getCurrentInstance, inject } from 'vue';
+import { useMediaQuery } from '@vueuse/core';
 import _ from 'lodash';
 import { HUB_CTX } from '@/composables/hunting/hub/context';
 import { useDimChips, type DimChip } from './useDimChips';
@@ -63,6 +64,7 @@ const props = defineProps({
 
 const ctx = inject(HUB_CTX)!;
 const chips = useDimChips(ctx);
+const isRoomy = useMediaQuery('(min-width: 1440px)');
 
 const components = getCurrentInstance()?.appContext.components || {};
 // Topic controls shipped by the topic task (§8.1), then the generic convention
@@ -75,8 +77,10 @@ const custom = computed(() => {
   const topic = ctx.sel.value.topic;
   const names = [...(CUSTOM[topic] || []), `HuntingHubTopics${_.upperFirst(topic)}Filters`];
   // In the 48 px filter bar the topic controls fit only on wide screens; narrower bars use
-  // the generic select chips.
+  // the generic select chips. The Žala presets with their group chips need more room than
+  // the standalone bar has next to its own view switch below 1440 px.
   if (!props.large && !ctx.isWide.value) return null;
+  if (!props.large && topic === 'zala' && !ctx.embed && !isRoomy.value) return null;
   return names.find((name) => name in components) || null;
 });
 

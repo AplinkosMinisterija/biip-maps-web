@@ -1,10 +1,13 @@
 <template>
-  <div class="flex min-w-0 flex-col gap-2">
+  <!-- In the 48 px filter bar the presets and the chips share one row (a second row would
+       overflow the bar); the mobile sheet stacks them. -->
+  <div class="flex min-w-0 gap-2" :class="large ? 'flex-col' : 'flex-row items-center'">
     <!-- Presets: a radio group rendered as a segmented control (SPEC2 §6.5). -->
     <div
       role="radiogroup"
       :aria-label="groupDim.label"
-      class="inline-flex min-w-0 flex-wrap gap-1 rounded-md border border-gray-400 bg-white p-0.5"
+      class="inline-flex min-w-0 gap-1 rounded-md border border-gray-400 bg-white p-0.5"
+      :class="large ? 'flex-wrap' : 'flex-nowrap shrink-0'"
       @keydown="onKeydown"
     >
       <button
@@ -36,7 +39,8 @@
     <!-- Single groups of the active preset: toggle chips (pressed = only this group). -->
     <div
       v-if="activePreset !== 'visos'"
-      class="flex flex-wrap gap-1"
+      class="flex gap-1"
+      :class="large ? 'flex-wrap' : 'flex-nowrap shrink-0'"
       role="group"
       :aria-label="`${PRESET_LABELS[activePreset]}: grupė`"
     >
