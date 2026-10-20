@@ -8,7 +8,14 @@ import type { Badge, TopicId } from './types';
 // Link of the prototype line "Pastabos apie prototipą"; the link is hidden while empty.
 export const FEEDBACK_URL = '';
 
-export const TOPIC_ORDER: TopicId[] = ['apzvalga', 'vilkai', 'laimikiai', 'limitai', 'zala'];
+export const TOPIC_ORDER: TopicId[] = [
+  'apzvalga',
+  'vilkai',
+  'laimikiai',
+  'limitai',
+  'zala',
+  'stebejimai',
+];
 
 // Tab labels and mobile menu subtitles (§2.2). Topic modules use the same texts in TopicDef.
 export const TOPIC_TABS: Record<TopicId, string> = {
@@ -17,6 +24,7 @@ export const TOPIC_TABS: Record<TopicId, string> = {
   laimikiai: 'Laimikiai',
   limitai: 'Briedžių limitai',
   zala: 'Žala',
+  stebejimai: 'Stebėjimai',
 };
 export const TOPIC_SUBTITLES: Record<TopicId, string> = {
   apzvalga: 'Šio sezono būklė vienoje vietoje',
@@ -24,6 +32,7 @@ export const TOPIC_SUBTITLES: Record<TopicId, string> = {
   laimikiai: 'Kiek ir kokių gyvūnų sumedžiota',
   limitai: 'Kiek briedžių leista ir kiek panaudota',
   zala: 'Pranešimai apie laukinių gyvūnų padarytą žalą',
+  stebejimai: 'Pranešimai apie stebėtus vilkus, lūšis, lokius ir stumbrus',
 };
 
 export const BADGE_LABELS: Record<Badge, string> = {
@@ -42,6 +51,11 @@ export const ABOUT_HEADINGS = {
   compare: 'Kaip palyginti su oficialiais duomenimis',
   common: 'Bendros taisyklės',
 } as const;
+
+// Locale rule of the About dialog's "Bendros taisyklės" block (every topic).
+export const ABOUT_LOCALE_RULE =
+  'Datos rašomos formatu metai-mėnuo-diena (pvz., 2026-10-09), laikas – 24 valandų formatu, ' +
+  'trupmenos – su kableliu.';
 
 // Attribution rule, part of every About "Ką reiškia skaičiai" (§3.5).
 export const ATTRIBUTION_RULE =

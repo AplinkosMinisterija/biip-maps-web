@@ -52,7 +52,7 @@
       </template>
 
       <!-- Mobile (< 768 px): header ≤ 108 px and a bottom sheet (§4.3). Embedded, the header
-           keeps only the chip row, and the live topic (Vilkai) needs none of it. -->
+           keeps only the chip row, and the live topics (Vilkai, Stebėjimai) need none of it. -->
       <template v-else>
         <HuntingHubShellMobileHeader
           v-if="!(embed && topicKind === 'live')"
@@ -64,9 +64,10 @@
         </template>
       </template>
 
-      <!-- Live topic (Vilkai): the host renders its own panel, table, card and controls, and
-           teleports its chips into the shell slots (HUB_SLOTS). -->
-      <component :is="liveHost" v-if="topicKind === 'live' && liveHost" />
+      <!-- Live topic (Vilkai, Stebėjimai; LIVE_HOSTS): the host renders its own panel, table,
+           card and controls, and may teleport its chips into the shell slots (HUB_SLOTS).
+           Keyed by topic, so a switch between two live topics always replaces the host. -->
+      <component :is="liveHost" v-if="topicKind === 'live' && liveHost" :key="liveHostKey" />
       <!-- The live topic's snapshot fallback map (Vilkai without /wolfs): legend and tooltip. -->
       <template v-if="topicKind === 'live' && ctx.liveMap.value && !isMobile">
         <div v-if="T4.legend" class="hub-legend absolute z-20">
@@ -124,7 +125,7 @@ import { embedFocusAllowed } from '@/utils/hunting/hub/embed';
 import { S, TOPIC_ORDER, TOPIC_SUBTITLES, TOPIC_TABS } from '@/utils/hunting/hub/strings';
 import { seasonOfDay } from '@/utils/hunting/dates';
 import { useHubState } from '@/composables/hunting/hub/useHubState';
-import { TOPICS } from '@/utils/hunting/hub/topics';
+import { LIVE_HOSTS, TOPICS } from '@/utils/hunting/hub/topics';
 import { HUB_SHELL, type HubShell } from '@/components/hunting/hub/shell/shell';
 
 const mapLayers: any = inject('mapLayers');
@@ -138,13 +139,14 @@ const { width } = useWindowSize();
 const isMobile = computed(() => width.value <= MOBILE_MAX);
 
 // ---- Topic registry. A topic whose module is not there yet gets a placeholder, so the shell
-// still renders its tab (with the load error state).
+// still renders its tab (with the load error state). Topics with a live host are live.
+const hasLiveHost = (id: TopicId) => typeof LIVE_HOSTS[id] === 'string';
 function placeholderTopic(id: TopicId): TopicDef {
   return {
     id,
     tab: TOPIC_TABS[id],
     menuSubtitle: TOPIC_SUBTITLES[id],
-    kind: id === 'apzvalga' ? 'overview' : id === 'vilkai' ? 'live' : 'snapshot',
+    kind: id === 'apzvalga' ? 'overview' : hasLiveHost(id) ? 'live' : 'snapshot',
     files: id === 'apzvalga' ? ['meta', 'loots', 'limits', 'damages', 'wolves'] : ['meta'],
     seasons: (meta) => meta.seasons.map((s) => s.season).sort((a, b) => b - a),
     seasonState: () => 'galutinis',
@@ -185,7 +187,7 @@ function focusElement(el: HTMLElement) {
   if (embedFocusAllowed(true)) el.focus({ preventScroll: true });
 }
 
-// ---- Shell services for topic hosts (Vilkai).
+// ---- Shell services for live topic hosts (Vilkai, Stebėjimai).
 const panelHeadingId = 'hub-title';
 const shell: HubShell = {
   shareOverride: ref(null),
@@ -207,7 +209,7 @@ if (!mapLayers.baseLayers?.some((l: any) => l?.id === vectorPositron.id)) {
   mapLayers.addBaseLayer(vectorPositron.id);
 }
 
-// Choropleth (T4, §8.5): one layer for the snapshot topics, hidden while Vilkai or
+// Choropleth (T4, §8.5): one layer for the snapshot topics, hidden while a live topic or
 // Apžvalga is active. Called here, after provide, when the composable is present.
 const choroplethModules = import.meta.glob('@/composables/hunting/hub/useChoropleth.ts', {
   eager: true,
@@ -235,7 +237,14 @@ const T4 = {
   mapMessage: pick('HuntingHubMapMapMessage'),
   mapTooltip: pick('HuntingHubMapMapTooltip'),
 };
-const liveHost = pick('HuntingHubTopicsVilkaiVilkaiTopic') || pick('HuntingHubTopicsVilkaiTopic');
+// The selected live topic's host (LIVE_HOSTS); Vilkai also under its older component name.
+// A live topic whose host is not registered (yet) shows only the shell.
+const liveHost = computed(() => {
+  const id = ctx?.sel.value.topic;
+  if (!id || !hasLiveHost(id)) return null;
+  return pick(LIVE_HOSTS[id]) || (id === 'vilkai' ? pick('HuntingHubTopicsVilkaiTopic') : null);
+});
+const liveHostKey = computed(() => ctx?.sel.value.topic ?? '');
 
 // ---- Layout state.
 const topicKind = computed(() => ctx?.topic.value.kind ?? 'overview');
@@ -295,7 +304,7 @@ if (ctx) {
 
 // ---- Map view: keep Lithuania inside the area the shell leaves free. The choropleth keeps
 // the padding in sync while it is shown; the shell sets it on load and when the map comes
-// back from Apžvalga or Vilkai, then centres Lithuania unless the URL or a place says
+// back from Apžvalga or a live topic, then centres Lithuania unless the URL or a place says
 // otherwise.
 function recentre() {
   const map = mapLayers.map ? toRaw(mapLayers.map) : null;

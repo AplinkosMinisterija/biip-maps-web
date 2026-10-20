@@ -5,8 +5,9 @@ import { parseSeasonKey } from './time';
 
 export type Query = Record<string, unknown>;
 
-// Keys written by the hub itself, by the snapshot topics' dims (§2.3) and by the wolves
-// state; everything else (x, y, z, debug, …) belongs to others and is always kept.
+// Keys written by the hub itself, by the snapshot topics' dims (§2.3) and by the live
+// topics (the wolves state, the Stebėjimai host); everything else (x, y, z, debug, …)
+// belongs to others and is always kept.
 export const HUB_KEYS = ['tema', 'sezonas', 'sav', 'lentele'];
 export const DIM_KEYS = ['rusis', 'rodiklis', 'grupe'];
 export const WOLVES_KEYS = [
@@ -21,6 +22,27 @@ export const WOLVES_KEYS = [
   'lentele',
 ];
 export const WOLVES_TABLES = ['irasai', 'sezonai', 'savivaldybes'];
+// Keys and table ids of the live Stebėjimai topic (STEB-SPEC §4.2). Its host keeps its own
+// copies (`STEB_URL_KEYS`, `STEB_TABLES`); ?debug=1 checks they are equal.
+export const STEBEJIMAI_KEYS = [
+  'nuo',
+  'iki',
+  'laikotarpis',
+  'sezonas',
+  'sav',
+  'gyvunas',
+  'faktas',
+  'lentele',
+];
+export const STEBEJIMAI_TABLES = ['irasai', 'rusys', 'savivaldybes'];
+// Table ids per live topic. No prototype, frozen: `LIVE_TABLES[id]` is undefined for
+// anything but these ids.
+export const LIVE_TABLES: Readonly<Record<string, readonly string[]>> = Object.freeze(
+  Object.assign(Object.create(null) as Record<string, readonly string[]>, {
+    vilkai: WOLVES_TABLES,
+    stebejimai: STEBEJIMAI_TABLES,
+  }),
+);
 
 export const queryString = (query: Query, key: string) => {
   const value = query[key];
@@ -29,7 +51,9 @@ export const queryString = (query: Query, key: string) => {
 
 /** Every key the hub or one of its topics owns. */
 export function ownedKeys(dimKeys: string[] = []) {
-  return Array.from(new Set([...HUB_KEYS, ...DIM_KEYS, ...WOLVES_KEYS, ...dimKeys]));
+  return Array.from(
+    new Set([...HUB_KEYS, ...DIM_KEYS, ...WOLVES_KEYS, ...STEBEJIMAI_KEYS, ...dimKeys]),
+  );
 }
 
 /** The query without the owned keys (x, y, z, debug and unknown keys stay). */
