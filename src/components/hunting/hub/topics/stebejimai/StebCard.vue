@@ -23,11 +23,11 @@
       </h2>
       <button
         type="button"
-        class="min-h-[24px] min-w-[24px] shrink-0 rounded px-2 text-ink-muted hover:bg-brand-50 max-md:min-h-[44px] max-md:min-w-[44px]"
-        :class="focusRing"
+        :class="[BTN_TEXT, 'shrink-0 text-sm max-md:min-h-[44px]']"
         @click="close"
       >
-        <span aria-hidden="true">✕</span> {{ SS.close }}
+        <UiIcon name="close" :size="16" aria-hidden="true" />
+        {{ SS.close }}
       </button>
     </div>
 
@@ -77,10 +77,18 @@
         :href="link"
         :target="ctx.embed ? '_top' : '_blank'"
         :rel="ctx.embed ? undefined : 'noopener'"
-        class="inline-flex min-h-[32px] items-center gap-1 rounded font-semibold text-brand underline max-md:min-h-[44px]"
-        :class="focusRing"
+        :class="CTA_LINK"
       >
         {{ SS.cardLink }}
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path
+            d="M3 8h10M9 4l4 4-4 4"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
         <span v-if="!ctx.embed" class="sr-only">{{ SS.newWindow }}</span>
       </a>
     </p>
@@ -104,6 +112,7 @@ import {
 import { speciesColor } from '@/utils/hunting/hub/stebejimai/layers';
 import { SS } from '@/utils/hunting/hub/stebejimai/strings';
 import { mpvName } from '@/components/hunting/hub/table/text';
+import { BTN_TEXT, CTA_LINK } from '@/components/hunting/hub/shell/controls';
 
 const props = defineProps({
   // Inside the mobile sheet: no own shadow or width.

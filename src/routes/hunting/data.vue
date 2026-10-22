@@ -543,7 +543,8 @@ onBeforeUnmount(() => {
 <style scoped>
 .hub-card {
   top: calc(var(--hub-top) + var(--hub-gap));
-  right: 16px;
+  /* On the site container's right edge (D3), clear of the accessibility button. */
+  right: var(--hub-gutter, 16px);
   width: 360px;
   max-width: calc(100vw - var(--hub-panel-w) - 48px);
   max-height: calc(100% - var(--hub-top) - 120px);

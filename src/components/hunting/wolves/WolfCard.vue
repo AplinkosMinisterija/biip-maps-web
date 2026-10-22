@@ -5,28 +5,30 @@
     role="dialog"
     aria-modal="false"
     aria-labelledby="wolf-card-title"
-    class="bg-white rounded-lg shadow-lg w-[360px] max-w-full p-4 text-sm text-gray-900"
+    class="bg-white rounded-lg shadow-lg w-[360px] max-w-full p-4 text-sm text-ink"
   >
     <div class="flex items-start justify-between gap-2">
       <h2
         id="wolf-card-title"
         ref="titleEl"
         tabindex="-1"
-        class="text-base font-semibold leading-6 outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 rounded"
+        class="rounded text-base font-semibold leading-6 outline-none"
+        :class="FOCUS_RING"
       >
         Sumedžiotas vilkas
       </h2>
       <button
         type="button"
-        class="shrink-0 min-h-[24px] min-w-[24px] max-md:min-h-[44px] max-md:min-w-[44px] px-2 rounded text-gray-700 hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+        :class="[BTN_TEXT, 'shrink-0 text-sm max-md:min-h-[44px]']"
         @click="close"
       >
-        <span aria-hidden="true">✕</span> Uždaryti
+        <UiIcon name="close" :size="16" aria-hidden="true" />
+        Uždaryti
       </button>
     </div>
 
     <div v-if="count > 1" class="mt-2 flex items-center gap-2">
-      <span class="tabular-nums text-gray-700" aria-live="polite">{{ counter }}</span>
+      <span class="tabular-nums text-ink-muted" aria-live="polite">{{ counter }}</span>
       <div class="ml-auto flex gap-1">
         <button
           type="button"
@@ -49,12 +51,12 @@
       </div>
     </div>
 
-    <p v-if="count > 1 && allInOneCell" class="mt-2 text-gray-700">
+    <p v-if="count > 1 && allInOneCell" class="mt-2 text-ink-muted">
       {{ count }} {{ plural(count, ['vilkas', 'vilkai', 'vilkų']) }} šioje vietoje
     </p>
 
     <dl class="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
-      <dt class="text-gray-600">Data:</dt>
+      <dt class="text-ink-muted">Data:</dt>
       <dd class="tabular-nums">
         {{ record.day }}
         <span
@@ -65,24 +67,24 @@
         </span>
       </dd>
       <template v-if="municipality">
-        <dt class="text-gray-600">Savivaldybė:</dt>
+        <dt class="text-ink-muted">Savivaldybė:</dt>
         <dd>{{ municipality }}</dd>
       </template>
-      <dt class="text-gray-600">Amžius:</dt>
+      <dt class="text-ink-muted">Amžius:</dt>
       <dd>{{ ageLabel(record.age) }}</dd>
-      <dt class="text-gray-600">Lytis:</dt>
+      <dt class="text-ink-muted">Lytis:</dt>
       <dd>{{ sexLabel(record.sex) }}</dd>
-      <dt class="text-gray-600">Medžioklės būdas:</dt>
+      <dt class="text-ink-muted">Medžioklės būdas:</dt>
       <dd>{{ methodLabel(record.method) }}</dd>
-      <dt class="text-gray-600">Gaujos narys:</dt>
+      <dt class="text-ink-muted">Gaujos narys:</dt>
       <dd>{{ packLabel(record.packMember, record.packAmount) }}</dd>
-      <dt class="text-gray-600">Sezonas:</dt>
+      <dt class="text-ink-muted">Sezonas:</dt>
       <dd class="tabular-nums">{{ record.season }}/{{ record.season + 1 }}</dd>
-      <dt class="text-gray-600">Šaltinis:</dt>
+      <dt class="text-ink-muted">Šaltinis:</dt>
       <dd>{{ sourceLabel(record.source) }}</dd>
     </dl>
 
-    <p class="mt-3 text-xs text-gray-600">Vieta žemėlapyje rodoma apytiksliai (~1 km).</p>
+    <p class="mt-3 text-xs text-ink-muted">Vieta žemėlapyje rodoma apytiksliai (~1 km).</p>
   </section>
 </template>
 
@@ -91,12 +93,13 @@ import { computed, inject, nextTick, onBeforeUnmount, onMounted, ref, watch } fr
 import { WOLVES_CTX } from '@/composables/hunting/context';
 import { WOLVES_MAP_CTX } from '@/composables/hunting/useWolvesMap';
 import type { WolfRecord } from '@/utils/hunting/types';
+import { BTN_TEXT, FOCUS_RING } from '@/components/hunting/hub/shell/controls';
 
 import { pluralLt as plural } from '@/utils/hunting/dates';
 import { ageLabel, methodLabel, packLabel, sexLabel, sourceLabel } from '@/utils/hunting/labels';
 
 const pagerClass =
-  'min-h-[24px] max-md:min-h-[44px] px-2 py-1 rounded border border-gray-300 text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
+  `min-h-[24px] max-md:min-h-[44px] px-2 py-1 rounded border border-line-strong text-ink hover:bg-brand-50 disabled:opacity-50 disabled:cursor-not-allowed ${FOCUS_RING}`;
 
 const ctx = inject(WOLVES_CTX)!;
 const mapApi = inject(WOLVES_MAP_CTX, null);

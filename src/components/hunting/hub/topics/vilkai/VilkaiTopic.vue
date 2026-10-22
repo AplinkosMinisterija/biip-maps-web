@@ -224,10 +224,11 @@
         <HuntingWolvesMapLegend collapsible />
       </div>
 
+      <!-- Top right on the container edge, as the other topics' cards (VISUAL-10). -->
       <div
         v-if="hasSelection && !replacesMap"
-        class="absolute bottom-10 z-30"
-        :class="railed ? 'right-[576px]' : 'right-12'"
+        class="absolute top-[calc(var(--hub-top)+8px)] z-30"
+        :class="railed ? 'right-[576px]' : 'right-[var(--hub-gutter,16px)]'"
       >
         <div class="w-[360px] max-w-[calc(100vw-32px)]">
           <HuntingWolvesWolfCard />
