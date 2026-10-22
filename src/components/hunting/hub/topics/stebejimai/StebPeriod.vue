@@ -1,102 +1,30 @@
 <template>
-  <fieldset class="min-w-0">
-    <legend class="sr-only">{{ SS.period }}</legend>
-    <div class="flex flex-col gap-2">
-      <label v-for="opt in simple" :key="opt.kind" :class="rowClass">
-        <input
-          type="radio"
-          :name="`${uid}-kind`"
-          :value="opt.kind"
-          :checked="choice === opt.kind"
-          :class="radioClass"
-          @change="pick(opt.kind)"
-        />
-        <span>{{ opt.label }}</span>
-      </label>
-
-      <div class="flex flex-col gap-1">
-        <label :class="rowClass">
-          <input
-            type="radio"
-            :name="`${uid}-kind`"
-            value="season"
-            :checked="choice === 'season'"
-            :class="radioClass"
-            @change="pick('season')"
-          />
-          <span>{{ SS.periodSeason }}</span>
-        </label>
-        <div class="pl-7">
-          <label :for="`${uid}-season`" class="sr-only">{{ SS.seasonSelect }}</label>
-          <select
-            :id="`${uid}-season`"
-            :value="String(seasonPick)"
-            :class="selectClass"
-            @change="onSeason(($event.target as HTMLSelectElement).value)"
-          >
-            <option v-for="s in ctx.derived.seasons.value" :key="s" :value="String(s)">
-              {{ seasonLabel(s) }}
-            </option>
-          </select>
-        </div>
-      </div>
-
-      <div class="flex flex-col gap-1">
-        <label :class="rowClass">
-          <input
-            type="radio"
-            :name="`${uid}-kind`"
-            value="range"
-            :checked="choice === 'range'"
-            :class="radioClass"
-            @change="pick('range')"
-          />
-          <span>{{ SS.periodRange }}</span>
-        </label>
-        <div class="flex flex-col gap-2 pl-7">
-          <DatePartsSelect
-            :model-value="nuo"
-            kind="nuo"
-            :years="years"
-            :today="ctx.today"
-            :id-prefix="`${uid}-nuo`"
-            :large="large"
-            @update:model-value="(value: Parts) => onParts('nuo', value)"
-          />
-          <DatePartsSelect
-            :model-value="iki"
-            kind="iki"
-            :years="years"
-            :today="ctx.today"
-            :id-prefix="`${uid}-iki`"
-            :large="large"
-            :invalid="invalid"
-            :described-by="`${uid}-error`"
-            @update:model-value="(value: Parts) => onParts('iki', value)"
-          />
-          <p
-            v-if="invalid"
-            :id="`${uid}-error`"
-            role="alert"
-            class="text-sm font-medium text-red-700"
-          >
-            {{ SS.rangeInvalid }}
-          </p>
-          <p class="text-xs text-gray-700">{{ SS.rangeHint }}</p>
-        </div>
-      </div>
-    </div>
-  </fieldset>
+  <!-- The hub's period panel, shared with Vilkai (CONTROLS-06). -->
+  <HuntingHubShellPeriodPanel
+    :kind="choice"
+    :season="seasonPick"
+    :seasons="ctx.derived.seasons.value"
+    :all-label="SS.periodAll"
+    :nuo="nuo"
+    :iki="iki"
+    :years="years"
+    :today="ctx.today"
+    :invalid="invalid"
+    :large="large"
+    @pick="pick"
+    @season="onSeasonPick"
+    @parts="onParts"
+  />
 </template>
 
 <script setup lang="ts">
-// Period picker of the Stebėjimai topic (STEB-SPEC §3.3): Visas laikotarpis · Paskutinės
-// 30 d. · Medžioklės sezonas (select) · Nuo–iki (Metai/Mėnuo/Diena selects; no native date
-// inputs). Every valid change applies at once; an invalid range keeps the previous period.
-import { computed, getCurrentInstance, inject, ref, watch } from 'vue';
-import DatePartsSelect from '@/components/hunting/wolves/DatePartsSelect.vue';
+// Period picker of the Stebėjimai topic (STEB-SPEC §3.3), drawn by the hub's period panel:
+// Medžioklės sezonas (select) · Paskutinės 30 d. · Visas laikotarpis · Nuo–iki
+// (Metai/Mėnuo/Diena selects; no native date inputs). Every valid change applies at once;
+// an invalid range keeps the previous period.
+import { computed, inject, ref, watch } from 'vue';
 import { STEB_CTX } from '@/composables/hunting/hub/stebejimai/useStebState';
-import { intervalFromParts, seasonLabel, seasonOfDay } from '@/utils/hunting/dates';
+import { intervalFromParts, seasonOfDay } from '@/utils/hunting/dates';
 import { periodInterval, type StebPeriod } from '@/utils/hunting/hub/stebejimai/model';
 import { SS } from '@/utils/hunting/hub/stebejimai/strings';
 
@@ -107,31 +35,12 @@ interface Parts {
 }
 type Kind = StebPeriod['kind'];
 
-const props = defineProps({
+defineProps({
   // Phones: larger targets and selects.
   large: { type: Boolean, default: false },
 });
 
 const ctx = inject(STEB_CTX)!;
-const uid = `steb-period-${getCurrentInstance()?.uid ?? 0}`;
-
-const focusRing =
-  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
-const rowClass = [
-  'flex cursor-pointer items-center gap-3 text-gray-900',
-  props.large ? 'min-h-[44px] text-base' : 'min-h-[32px] text-sm',
-];
-const radioClass = `h-4 w-4 shrink-0 accent-brand ${focusRing}`;
-const selectClass = [
-  'block w-full rounded-md border border-gray-400 bg-white px-2 text-gray-900',
-  focusRing,
-  props.large ? 'h-12 text-base' : 'h-9 text-sm',
-];
-
-const simple: { kind: Kind; label: string }[] = [
-  { kind: 'all', label: SS.periodAll },
-  { kind: '30d', label: SS.period30 },
-];
 
 const period = computed(() => ctx.state.period.value);
 const choice = ref<Kind>(period.value.kind);
@@ -209,9 +118,7 @@ function pick(kind: Kind) {
   else applyRange();
 }
 
-function onSeason(value: string) {
-  const season = Number(value);
-  if (!Number.isInteger(season)) return;
+function onSeasonPick(season: number) {
   seasonPick.value = season;
   pick('season');
 }

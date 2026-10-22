@@ -15,22 +15,20 @@
     >
       <label
         :for="`hub-dim-${chip.key}${large ? '-m' : ''}`"
-        class="font-semibold text-gray-900"
-        :class="large ? 'text-sm' : 'sr-only'"
+        class="font-semibold text-ink"
+        :class="large ? 'text-base' : 'sr-only'"
       >
         {{ chip.label }}
       </label>
       <select
         :id="`hub-dim-${chip.key}${large ? '-m' : ''}`"
         :value="chip.value"
-        class="rounded-full border bg-white font-semibold text-gray-900 cursor-pointer"
-        :class="[
-          focusRing,
+        class="cursor-pointer"
+        :class="
           large
-            ? 'h-12 rounded-md border-gray-400 px-3 text-base'
-            : 'h-9 px-3 text-sm border-gray-500',
-          !large && chip.value !== chip.fallback ? 'bg-gray-100' : '',
-        ]"
+            ? [FIELD, FIELD_TOUCH]
+            : [CHIP, 'font-semibold', chip.value !== chip.fallback ? CHIP_ACTIVE : CHIP_IDLE]
+        "
         @change="onChange(chip, ($event.target as HTMLSelectElement).value)"
       >
         <template v-for="group in chip.groups" :key="group.label">
@@ -52,19 +50,17 @@
 
 <script setup lang="ts">
 import { computed, getCurrentInstance, inject } from 'vue';
-import { useMediaQuery } from '@vueuse/core';
 import _ from 'lodash';
 import { HUB_CTX } from '@/composables/hunting/hub/context';
 import { useDimChips, type DimChip } from './useDimChips';
-import { focusRing } from './shell';
+import { CHIP, CHIP_ACTIVE, CHIP_IDLE, FIELD, FIELD_TOUCH } from './controls';
 
-const props = defineProps({
+defineProps({
   large: { type: Boolean, default: false },
 });
 
 const ctx = inject(HUB_CTX)!;
 const chips = useDimChips(ctx);
-const isRoomy = useMediaQuery('(min-width: 1440px)');
 
 const components = getCurrentInstance()?.appContext.components || {};
 // Topic controls shipped by the topic task (§8.1), then the generic convention
@@ -72,15 +68,12 @@ const components = getCurrentInstance()?.appContext.components || {};
 const CUSTOM: Record<string, string[]> = {
   laimikiai: ['HuntingHubTopicsLaimikiaiSpeciesSelect'],
   zala: ['HuntingHubTopicsZalaPresetControl'],
+  limitai: ['HuntingHubTopicsLimitaiLimitaiMetricSwitch'],
 };
 const custom = computed(() => {
   const topic = ctx.sel.value.topic;
   const names = [...(CUSTOM[topic] || []), `HuntingHubTopics${_.upperFirst(topic)}Filters`];
-  // In the 48 px filter bar the topic controls fit only on wide screens; narrower bars use
-  // the generic select chips. The Žala presets with their group chips need more room than
-  // the standalone bar has next to its own view switch below 1440 px.
-  if (!props.large && !ctx.isWide.value) return null;
-  if (!props.large && topic === 'zala' && !ctx.embed && !isRoomy.value) return null;
+  // The topic controls are chips (or a display switch) at every width.
   return names.find((name) => name in components) || null;
 });
 

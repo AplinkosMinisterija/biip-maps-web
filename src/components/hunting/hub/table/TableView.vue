@@ -184,7 +184,7 @@ const containerStyle = computed(() => {
   if (mode.value === 'drawer') return { top, width: `var(--hub-drawer-w, ${HUB_DRAWER_W}px)` };
   return {
     top,
-    left: `calc(var(--hub-panel-w, 320px) + 2 * var(--hub-gap, ${HUB_GAP}px))`,
+    left: `var(--hub-content-left, calc(var(--hub-panel-w, 320px) + 2 * var(--hub-gap, ${HUB_GAP}px)))`,
   };
 });
 

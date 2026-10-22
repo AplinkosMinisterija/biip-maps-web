@@ -94,9 +94,10 @@ export const PRESET_LABELS: Record<Preset, string> = {
   plesrunai: 'Plėšrūnai',
   augalai: 'Kanopiniai, stumbrai, bebrai',
 };
-export const PRESET_SUBLABELS: Partial<Record<Preset, string>> = {
-  plesrunai: 'ūkiniai gyvūnai, bitynai',
-  augalai: 'pasėliai, miškas, melioracija',
+// One help line per preset in the "Gyvūnai" tree (what the damage is to).
+export const PRESET_HELP: Partial<Record<Preset, string>> = {
+  plesrunai: 'Žala ūkiniams gyvūnams ir bitynams',
+  augalai: 'Žala pasėliams, miškui ir melioracijai',
 };
 export const GROUP_LABELS: Record<DamageGroup, string> = {
   kanopiniai: 'Kanopiniai',

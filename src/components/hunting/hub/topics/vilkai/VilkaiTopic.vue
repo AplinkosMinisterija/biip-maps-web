@@ -5,11 +5,12 @@
 
     <!-- Desktop and tablet (≥ 768 px), SPEC2 §4.1, §6.2. -->
     <template v-if="!isMobile">
-      <!-- Filter bar under the shell's 56 px top bar (embedded: at the top, SPEC §4). -->
+      <!-- Filter bar under the shell's 56 px top bar (embedded: at the top, SPEC §4): the same
+           56 px bar, gutter and chips as the other topics (CONTROLS-10). -->
       <div
         role="search"
         aria-label="Vilkų filtrai"
-        class="absolute inset-x-0 h-12 z-40 bg-white border-b border-gray-200 px-2 flex items-center gap-2"
+        class="absolute inset-x-0 h-14 z-40 bg-white border-b border-line px-[var(--hub-gutter,16px)] flex items-center gap-2"
         :class="embed ? 'top-0' : 'top-14'"
       >
         <!-- Until the records arrive the chips wait (disabled, no period guessed from the
@@ -20,29 +21,37 @@
           :class="loadingData ? '[&>*]:opacity-60' : ''"
         >
           <HuntingHubTopicsVilkaiChipPopover
-            :label="`Laikotarpis: ${loadingData ? '…' : ctx.derived.periodLabel.value}`"
+            name="Laikotarpis"
+            :value="loadingData ? '…' : ctx.derived.periodLabel.value"
             title="Laikotarpis"
             :active="!loadingData && !isDefaultPeriod"
+            shrinkable
             panel-class="w-[400px]"
           >
             <HuntingWolvesPeriodFilter :show-season-note="false" />
           </HuntingHubTopicsVilkaiChipPopover>
+          <HuntingHubShellPlacePicker
+            :model-value="ctx.state.sav.value"
+            :items="municipalityList"
+            @update:model-value="onPlace"
+          />
           <HuntingHubTopicsVilkaiChipPopover
-            :label="S.placeChip(placeName)"
-            title="Vieta"
-            :active="ctx.state.sav.value !== null"
-            panel-class="w-[320px]"
-          >
-            <HuntingWolvesMunicipalitySelect />
-          </HuntingHubTopicsVilkaiChipPopover>
-          <HuntingHubTopicsVilkaiChipPopover
-            :label="attrCount ? S.moreFilters(attrCount) : 'Daugiau filtrų'"
+            name=""
+            :value="S.moreFilters(attrCount)"
             title="Daugiau filtrų"
             :active="attrCount > 0"
             panel-class="w-[440px]"
           >
             <HuntingWolvesMoreFilters embedded />
           </HuntingHubTopicsVilkaiChipPopover>
+          <button
+            v-if="!isDefaultFilters"
+            type="button"
+            :class="[BTN_TEXT, 'shrink-0 whitespace-nowrap']"
+            @click="ctx.state.reset()"
+          >
+            {{ S.resetFilters }}
+          </button>
         </fieldset>
 
         <!-- Embedded, the WP page's view switch opens and closes the table (SPEC §4). -->
@@ -50,7 +59,8 @@
           v-if="!fallback && !embed"
           role="group"
           aria-label="Rodinys"
-          class="ml-auto flex rounded-lg bg-gray-100 p-1 gap-1"
+          class="ml-auto shrink-0"
+          :class="SEG"
         >
           <button
             type="button"
@@ -80,7 +90,7 @@
         v-if="!railed"
         id="hub-panel"
         aria-labelledby="hub-vilkai-title"
-        class="absolute left-2 top-[calc(var(--hub-top)+8px)] bottom-2 w-[var(--hub-panel-w)] z-30 bg-white rounded-lg shadow-lg overflow-y-auto"
+        class="absolute left-[var(--hub-panel-left)] top-[calc(var(--hub-top)+8px)] bottom-2 w-[var(--hub-panel-w)] z-30 bg-white rounded-lg shadow-lg overflow-y-auto"
       >
         <div class="p-4 flex flex-col gap-3">
           <!-- The badge shares the H1 row so the status line keeps the full panel width and
@@ -189,23 +199,76 @@
     </template>
 
     <!-- Mobile (< 768 px): the chip row completes the shell's 56 px header to 108 px
-         (embedded: the chip row alone, at the top). -->
+         (embedded: the chip row alone, at the top). Same row as the other topics
+         (CONTROLS-04): [Laikotarpis] [Vieta] [Filtrai (n)]. -->
     <template v-else>
       <div
-        class="absolute inset-x-0 z-30 h-[52px] bg-white shadow-md px-3 py-1 flex items-center gap-2"
+        role="search"
+        aria-label="Vilkų filtrai"
+        class="absolute inset-x-0 z-30 h-[60px] bg-white shadow-md px-4 py-2 flex min-w-0 items-center gap-2"
         :class="embed ? 'top-0' : 'top-14'"
       >
-        <!-- Until the records arrive: a disabled chip, no period guessed from the calendar. -->
-        <div v-if="loadingData" class="contents">
-          <button
-            type="button"
-            disabled
-            class="inline-flex h-11 items-center gap-1 rounded-full border border-line-strong bg-white px-4 text-base font-medium text-ink opacity-60"
-          >
-            Laikotarpis: …
-          </button>
-        </div>
-        <div v-else class="contents"><HuntingWolvesPeriodSheet /></div>
+        <!-- Until the records arrive: a disabled chip, no period guessed from the calendar
+             (J-05, J-17); element-rooted v-if branches (async components). -->
+        <fieldset
+          :disabled="loadingData"
+          class="contents"
+          :class="loadingData ? '[&>*]:opacity-60' : ''"
+        >
+          <div v-if="loadingData" class="contents">
+            <button
+              type="button"
+              disabled
+              class="inline-flex h-11 shrink-0 items-center gap-1 rounded-full border border-line-strong bg-white px-3 text-base text-ink"
+            >
+              Laikotarpis: …
+            </button>
+          </div>
+          <div v-else class="contents"><HuntingWolvesPeriodSheet compact class="shrink-0" /></div>
+          <HuntingHubShellPlacePicker
+            mobile
+            :model-value="ctx.state.sav.value"
+            :items="municipalityList"
+            @update:model-value="onPlace"
+          />
+          <HuntingHubShellFilterChip
+            ref="filtersTrigger"
+            class="shrink-0"
+            touch
+            :value="S.filters"
+            :badge="attrCount"
+            :active="attrCount > 0"
+            :chevron="false"
+            :sr-label="S.filtersChip(attrCount)"
+            aria-haspopup="dialog"
+            @click="openFilters"
+          />
+        </fieldset>
+        <HuntingHubShellFullSheet :open="filtersOpen" :title="S.filters" @close="closeFilters">
+          <div class="flex min-h-full flex-col">
+            <HuntingWolvesMoreFilters v-model:draft="attrsDraft" large embedded staged />
+            <!-- Staged: the map redraws only with "Rodyti N vilkų" (CONTROLS-17). -->
+            <div
+              class="sticky bottom-0 -mx-4 -mb-3 mt-auto flex gap-3 border-t border-line bg-white px-4 pt-3"
+              style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom))"
+            >
+              <button
+                type="button"
+                :class="[BTN_SECONDARY, BTN_TOUCH, 'text-base']"
+                @click="attrsDraft = { age: [], sex: [], method: [] }"
+              >
+                {{ S.reset }}
+              </button>
+              <button
+                type="button"
+                :class="[BTN_PRIMARY, BTN_TOUCH, 'flex-1 text-base']"
+                @click="applyFilters"
+              >
+                {{ draftLabel }}
+              </button>
+            </div>
+          </div>
+        </HuntingHubShellFullSheet>
       </div>
       <HuntingWolvesMobileSheet ref="sheet" clip-histogram>
         <template #status>
@@ -296,6 +359,7 @@ import {
   seasonInterval,
   seasonOfDay,
   todayVilnius,
+  WOLVES_ACC,
 } from '@/utils/hunting/dates';
 import { assignMunicipalities, loadMunicipalityIndex } from '@/utils/hunting/municipalities';
 import {
@@ -317,6 +381,17 @@ import {
 import type { SnapshotData, TopicView } from '@/utils/hunting/hub/types';
 import { VILKAI_COMPARE, VILKAI_H1, type VilkaiCarry } from '@/utils/hunting/hub/topics/vilkai';
 import { WOLVES_TABLES } from '@/utils/hunting/hub/url';
+import { filterRecords } from '@/utils/hunting/wolves';
+import {
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT,
+  BTN_TOUCH,
+  FOCUS_RING as focusRing,
+  SEG,
+  SEG_ITEM,
+  SEG_ITEM_ON,
+} from '@/components/hunting/hub/shell/controls';
 
 const mapLayers: any = inject('mapLayers');
 // Optional: the component also runs outside the hub (with its own defaults).
@@ -332,11 +407,10 @@ const { width } = useWindowSize();
 // environment's own API, so every non-production host gets "Bandomoji aplinka" (SPEC2 §5).
 const showStagingBadge = !isProductionHost;
 
-const focusRing =
-  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
-const viewButton = `px-3 min-h-[32px] rounded-md text-sm font-semibold flex items-center gap-2 ${focusRing}`;
-const viewButtonActive = 'bg-brand text-white';
-const viewButtonIdle = 'text-gray-900 hover:bg-white';
+// Standalone "Žemėlapis | Lentelė" switch: the segmented control of the vocabulary.
+const viewButton = `${SEG_ITEM} gap-2`;
+const viewButtonActive = SEG_ITEM_ON;
+const viewButtonIdle = '';
 const linkButton = `font-semibold text-brand underline rounded ${focusRing}`;
 const badgeClass =
   'shrink-0 rounded border border-gray-400 bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-800';
@@ -483,11 +557,57 @@ const attrCount = computed(() => {
   const attrs = ctx?.state.attrs.value;
   return attrs ? attrs.age.length + attrs.sex.length + attrs.method.length : 0;
 });
-const municipalityNames = shallowRef<Record<number, string>>({});
-const placeName = computed(() => {
-  const sav = ctx?.state.sav.value;
-  if (sav == null) return S.placeAll;
-  return municipalityNames.value[sav] || `${sav}`;
+const isDefaultFilters = computed(
+  () => isDefaultPeriod.value && attrCount.value === 0 && ctx?.state.sav.value == null,
+);
+// The place picker's list (the municipality boundaries index, loaded on mount).
+const placeIndex = shallowRef<Awaited<ReturnType<typeof loadMunicipalityIndex>> | null>(null);
+const municipalityList = computed(() =>
+  (placeIndex.value?.list || []).map((m) => ({ code: m.code, name: m.name })),
+);
+// As the wolves page's municipality select: zoom to the municipality, or back to Lithuania.
+function onPlace(code: number | null) {
+  if (!ctx) return;
+  ctx.state.sav.value = code;
+  const info = code !== null ? placeIndex.value?.byCode[code] : null;
+  if (!mapLayers) return;
+  const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  if (info) mapLayers.zoomToExtent(info.extent3857, { animate: !reduceMotion, maxZoom: 12 });
+  else if (code === null) mapLayers.centerMap();
+}
+
+// ---- Phone Filtrai sheet: the attribute filters, staged until "Rodyti N vilkų".
+type Attrs = { age: string[]; sex: string[]; method: string[] };
+const filtersOpen = ref(false);
+const filtersTrigger = ref<{ focus(): void } | null>(null);
+const attrsDraft = ref<Attrs>({ age: [], sex: [], method: [] });
+function openFilters() {
+  if (!ctx) return;
+  attrsDraft.value = { ...ctx.state.attrs.value };
+  filtersOpen.value = true;
+}
+function closeFilters() {
+  filtersOpen.value = false;
+  nextTick(() => filtersTrigger.value?.focus());
+}
+function applyFilters() {
+  if (ctx && JSON.stringify(attrsDraft.value) !== JSON.stringify(ctx.state.attrs.value)) {
+    ctx.state.attrs.value = { ...attrsDraft.value };
+  }
+  closeFilters();
+}
+const draftLabel = computed(() => {
+  const records = ctx?.data.dataset.value?.records;
+  if (!ctx || !records) return 'Rodyti';
+  const n = filterRecords(records, {
+    interval: ctx.state.interval.value,
+    sav: ctx.state.sav.value,
+    ...attrsDraft.value,
+  }).length;
+  return `Rodyti ${formatInt(n)} ${pluralLt(n, WOLVES_ACC)}`;
+});
+watch(isMobile, (mobile) => {
+  if (!mobile) filtersOpen.value = false;
 });
 
 // ---- Rail: the answer's number, vertical.
@@ -503,10 +623,10 @@ const railLabel = computed(() =>
 const drawerClass = computed(() =>
   railed.value
     ? 'absolute right-0 top-[var(--hub-top)] bottom-0 w-[var(--hub-drawer-w)] z-30 bg-white shadow-lg flex flex-col'
-    : 'absolute right-0 top-[var(--hub-top)] bottom-0 left-[calc(var(--hub-panel-w)+16px)] z-30 bg-white shadow-lg flex flex-col',
+    : 'absolute right-0 top-[var(--hub-top)] bottom-0 left-[var(--hub-content-left)] z-30 bg-white shadow-lg flex flex-col',
 );
 const legendLeft = computed(() =>
-  railed.value ? 'left-[64px]' : 'left-[calc(var(--hub-panel-w)+16px)]',
+  railed.value ? 'left-[64px]' : 'left-[var(--hub-content-left)]',
 );
 
 const hasSelection = computed(() => !!ctx?.state.selection.value);
@@ -629,10 +749,9 @@ onMounted(async () => {
   if (shell) shell.shareOverride.value = shareUrl;
   previousMapLabel = mapElement()?.getAttribute('aria-label') ?? null;
   try {
-    const index = await loadMunicipalityIndex();
-    municipalityNames.value = Object.fromEntries(index.list.map((m) => [m.code, m.name]));
+    placeIndex.value = await loadMunicipalityIndex();
   } catch (err) {
-    // Without the polygons the chip shows the code; the select hides itself.
+    // Without the polygons the place chip is disabled (an empty list).
   }
   // Left the tab while the index was loading: no watcher may outlive the component.
   if (unmounted) return;
@@ -677,30 +796,20 @@ defineExpose({ openAbout, shareUrl, carry, railed, fallbackView });
 </script>
 
 <style>
-/* UiMap's own controls (SPEC2 §4): below the 104 px bars (embedded: 48 px; the shell sets
+/* UiMap's own controls (SPEC2 §4): below the 112 px bars (embedded: 56 px; the shell sets
    --hub-top / --hub-mobile-header), right of the panel or rail, left of the drawer, above the
    mobile sheet. */
 body.hub-vilkai--desktop #mapControlsRT {
-  transform: translateY(var(--hub-top, 104px));
+  transform: translateY(var(--hub-top, 112px));
 }
 body.hub-vilkai--desktop .bottomLeft {
-  transform: translateX(336px);
-}
-@media (min-width: 1024px) {
-  body.hub-vilkai--desktop .bottomLeft {
-    transform: translateX(376px);
-  }
-}
-@media (min-width: 1280px) {
-  body.hub-vilkai--desktop .bottomLeft {
-    transform: translateX(396px);
-  }
+  transform: translateX(calc(var(--hub-content-left, 396px) - 8px));
 }
 body.hub-vilkai--railed .bottomLeft {
   transform: translateX(64px);
 }
 body.hub-vilkai--railed #mapControlsRT {
-  transform: translate(-560px, var(--hub-top, 104px));
+  transform: translate(-560px, var(--hub-top, 112px));
 }
 body.hub-vilkai--railed .rightBottom {
   transform: translateX(-560px);

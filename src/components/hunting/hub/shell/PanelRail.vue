@@ -3,7 +3,7 @@
   <div class="flex h-full w-full flex-col items-center gap-3 py-3">
     <button
       type="button"
-      class="flex h-11 w-11 items-center justify-center rounded-md bg-brand text-white hover:bg-brand-hover"
+      class="flex h-11 w-11 items-center justify-center rounded-full bg-brand text-white hover:bg-brand-hover"
       :class="focusRing"
       :aria-label="`${S.railExpand}: ${title}`"
       :title="S.railExpand"
@@ -13,12 +13,12 @@
     >
       <UiIcon name="chevron-right" :size="20" aria-hidden="true" />
     </button>
-    <span class="text-xs font-semibold text-gray-900 [writing-mode:vertical-rl] rotate-180">
+    <span class="text-xs font-semibold text-ink [writing-mode:vertical-rl] rotate-180">
       {{ title }}
     </span>
     <span
       v-if="value"
-      class="text-base font-semibold tabular-nums text-gray-900 [writing-mode:vertical-rl] rotate-180"
+      class="text-base font-semibold tabular-nums text-ink [writing-mode:vertical-rl] rotate-180"
     >
       {{ value }}
     </span>

@@ -10,6 +10,8 @@ export const P_NO_POINT: PluralForms = [
 ];
 // Rail label: "13 stebėjimų".
 export const P_OBSERVATION_GEN: PluralForms = ['stebėjimas', 'stebėjimai', 'stebėjimų'];
+// Phone Filtrai sheet button: "Rodyti 8 stebėjimus".
+export const P_OBSERVATION_ACC: PluralForms = ['stebėjimą', 'stebėjimus', 'stebėjimų'];
 // Truncation note: the participle and the adjective agree with the number, as in
 // "užregistruota 10 stebėjimų": "rodoma 10 000 naujausių įrašų", "rodomi 9 999 naujausi įrašai".
 const P_SHOWN: PluralForms = ['rodomas', 'rodomi', 'rodoma'];
@@ -36,6 +38,11 @@ export const SS = {
   allSpeciesLower: 'visos rūšys',
   allFactsLower: 'visi faktai',
   allPlacesLower: 'visa Lietuva',
+  // Chip values of the unset filters ("Rūšis: visos", "Faktas: visi", "Laikotarpis: visas").
+  allSpeciesChip: 'visos',
+  allFactsChip: 'visi',
+  allPeriodChip: 'visas',
+  showObservations: (label: string) => `Rodyti ${label}`,
   optionCount: (label: string, n: number) => `${label} (${formatInt(n)})`,
   resetFilters: 'Atstatyti filtrus',
   // Period options (§3.3).

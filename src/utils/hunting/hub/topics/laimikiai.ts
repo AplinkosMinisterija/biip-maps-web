@@ -871,7 +871,7 @@ export const speciesDim: DimDef = {
     };
     present.sort((a, b) => rank(a.group) - rank(b.group) || b.n - a.n);
     return [
-      { value: ALL_SPECIES, label: 'Visos' },
+      { value: ALL_SPECIES, label: 'Visos rūšys' },
       ...present.map((x) => ({ value: x.sp.slug, label: x.sp.name, group: x.group })),
     ];
   },
