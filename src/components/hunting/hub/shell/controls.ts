@@ -5,9 +5,11 @@
 // "current/active" = the site's nav tint, "on" = the filled teal pill ("Prisijungti"),
 // links = teal, focus = one teal outline in both layers (the WP bar uses the same outline).
 
-// Focus: 2 px teal outline, 2 px off the control (hub.css uses the same for the WP bar).
+// Focus: 2 px teal outline, 2 px off the control (hub.css uses the same for the WP bar). A
+// white halo fills the offset, so the teal ring keeps a white inner edge over the map's dark
+// classes and next to filled teal pills (MOBILE-16).
 export const FOCUS_RING =
-  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
+  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand focus-visible:shadow-[0_0_0_2px_#fff]';
 // Inside a scrolling row (overflow clips an outside outline).
 export const FOCUS_RING_INSET =
   'focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand';

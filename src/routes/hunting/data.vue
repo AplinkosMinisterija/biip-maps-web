@@ -724,6 +724,8 @@ body:has(.hunting-hub) {
 .hunting-hub .rightBottom button:focus-visible {
   outline: 2px solid #004650 !important;
   outline-offset: 2px !important;
+  /* A white halo fills the offset, so the ring reads over the darkest map class too. */
+  box-shadow: 0 0 0 2px #fff !important;
   position: relative;
   z-index: 1;
 }
