@@ -4,7 +4,11 @@
     :aria-labelledby="showsPanel ? 'hub-title' : 'steb-sheet-title'"
     class="fixed inset-x-0 bottom-0 z-30 flex flex-col rounded-t-xl bg-white shadow-[0_-4px_16px_rgba(0,0,0,0.15)]"
     :class="[
-      detent === 'peek' && !showCard ? 'pt-3.5' : 'pt-11',
+      detent === 'peek' && !showCard
+        ? 'pt-3.5'
+        : tableShown && detent === 'full'
+          ? 'pt-8'
+          : 'pt-11',
       showCard && dragHeight === null ? 'max-h-[60%]' : '',
       dragging ? '' : 'transition-[height] duration-200 motion-reduce:transition-none',
     ]"
@@ -38,13 +42,9 @@
       {{ SS.segmentTable }}
     </button>
 
-    <!-- The topic question; in the summary the panel's own heading takes its place. -->
-    <h2
-      v-if="!showsPanel"
-      id="steb-sheet-title"
-      class="shrink-0 truncate px-5 text-[15px] font-bold leading-5 text-ink"
-      :class="{ 'pr-24': peekTableLink, 'mb-2': detent !== 'peek' }"
-    >
+    <!-- The topic question; in the summary the panel's own heading takes its place, with the
+         table the table's caption is the visible heading (MOBILE-07). -->
+    <h2 v-if="!showsPanel" id="steb-sheet-title" :class="tableShown ? 'sr-only' : titleClass">
       {{ SS.h1 }}
     </h2>
 
@@ -136,7 +136,7 @@
 // Suvestinė | Lentelė); a selected record shows its card. The table and `lentele` are one
 // state (`tableOpen`): the WP page's "Lentelė" expands the sheet to it at the full detent,
 // "Žemėlapis" lowers it back to the peek.
-import { computed, inject, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, inject, ref, watch } from 'vue';
 import { STEB_CTX } from '@/composables/hunting/hub/stebejimai/useStebState';
 import { HUB_MOBILE_PEEK, mobileHeader } from '@/utils/hunting/hub/layout';
 import { SS } from '@/utils/hunting/hub/stebejimai/strings';
@@ -150,8 +150,11 @@ import {
 } from '@/components/hunting/hub/shell/controls';
 import {
   firstSentence,
+  nearestDetent,
+  nextDetent,
   SHEET_HANDLE,
   useMapInert,
+  useSheetDrag,
   type SheetDetent,
 } from '@/components/hunting/hub/shell/sheet';
 import StebCard from './StebCard.vue';
@@ -177,9 +180,16 @@ const showCard = computed(() => !!ctx.state.selection.value && !ctx.state.tableO
 const showsPanel = computed(
   () => !showCard.value && detent.value !== 'peek' && segment.value === 'summary',
 );
+const tableShown = computed(
+  () => !showCard.value && detent.value !== 'peek' && segment.value === 'table',
+);
 const peekTableLink = computed(
   () => detent.value === 'peek' && !showCard.value && !ctx.embed && hasTable.value,
 );
+const titleClass = computed(() => [
+  'shrink-0 truncate px-5 text-[15px] font-bold leading-5 text-ink',
+  { 'pr-24': peekTableLink.value, 'mb-2': detent.value !== 'peek' },
+]);
 // The full sheet covers the map: its controls leave the Tab order (WCAG 2.4.11).
 useMapInert(computed(() => !showCard.value && detent.value === 'full'));
 
@@ -238,78 +248,35 @@ function setDetent(next: Detent) {
 }
 
 function cycle() {
-  if (suppressClick) {
-    suppressClick = false;
-    return;
-  }
+  if (consumeClick()) return;
   if (showCard.value) {
     ctx.state.clearSelection();
     return;
   }
-  setDetent(detent.value === 'peek' ? 'half' : detent.value === 'half' ? 'full' : 'peek');
+  setDetent(nextDetent(detent.value));
 }
 
-// ---- Drag on the handle (the hub's MobileSheet logic).
+// ---- Drag on the handle (shared with the hub's sheet): snaps to the nearest detent; with a
+// card open a drag down closes the card.
 const sheetEl = ref<HTMLElement | null>(null);
-const dragging = ref(false);
-const dragHeight = ref<number | null>(null);
+const headerHeight = mobileHeader(ctx.embed);
+// A drag down this far with a card open closes the card.
+const CARD_DISMISS_PX = 40;
+const { dragging, dragHeight, onDragStart, consumeClick } = useSheetDrag({
+  sheet: sheetEl,
+  max: () => window.innerHeight - headerHeight,
+  onEnd: (h, startH) => {
+    if (showCard.value) {
+      if (h < startH - CARD_DISMISS_PX) ctx.state.clearSelection();
+      return;
+    }
+    setDetent(nearestDetent(h, window.innerHeight - headerHeight));
+  },
+});
 const sheetHeight = computed(() => {
   if (dragHeight.value !== null) return `${dragHeight.value}px`;
   return showCard.value ? 'auto' : HEIGHTS[detent.value];
 });
-const headerHeight = mobileHeader(ctx.embed);
-// A drag down this far with a card open closes the card.
-const CARD_DISMISS_PX = 40;
-let startY = 0;
-let startH = 0;
-let suppressClick = false;
-
-function onDragStart(event: PointerEvent) {
-  if (!sheetEl.value) return;
-  startY = event.clientY;
-  startH = sheetEl.value.getBoundingClientRect().height;
-  dragging.value = true;
-  window.addEventListener('pointermove', onDragMove);
-  window.addEventListener('pointerup', onDragEnd);
-  window.addEventListener('pointercancel', onDragEnd);
-}
-
-function removeDragListeners() {
-  window.removeEventListener('pointermove', onDragMove);
-  window.removeEventListener('pointerup', onDragEnd);
-  window.removeEventListener('pointercancel', onDragEnd);
-}
-onBeforeUnmount(removeDragListeners);
-
-function onDragMove(event: PointerEvent) {
-  const dy = startY - event.clientY;
-  if (Math.abs(dy) < 6 && dragHeight.value === null) return;
-  const max = window.innerHeight - headerHeight;
-  dragHeight.value = Math.max(HUB_MOBILE_PEEK, Math.min(max, startH + dy));
-}
-
-function onDragEnd() {
-  removeDragListeners();
-  dragging.value = false;
-  const h = dragHeight.value;
-  dragHeight.value = null;
-  if (h === null) return;
-  // The click that ends a drag must not also cycle the detent or close the card.
-  suppressClick = true;
-  setTimeout(() => (suppressClick = false), 100);
-  if (showCard.value) {
-    if (h < startH - CARD_DISMISS_PX) ctx.state.clearSelection();
-    return;
-  }
-  const full = window.innerHeight - headerHeight;
-  const half = window.innerHeight / 2;
-  const options: [Detent, number][] = [
-    ['peek', HUB_MOBILE_PEEK],
-    ['half', half],
-    ['full', full],
-  ];
-  setDetent(options.reduce((a, b) => (Math.abs(b[1] - h) < Math.abs(a[1] - h) ? b : a))[0]);
-}
 
 const segButtons = ref<HTMLButtonElement[]>([]);
 function onTabKeydown(event: KeyboardEvent) {

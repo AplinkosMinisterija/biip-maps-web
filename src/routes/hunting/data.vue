@@ -74,8 +74,13 @@
           />
           <!-- Not under the full sheet: its buttons would take focus behind it. -->
           <component :is="T4.mapMessage" v-if="T4.mapMessage && !sheetFull" />
-          <!-- Phone legend: floats bottom left, above the collapsed sheet (DATAVIZ-01). -->
-          <div v-if="T4.legend" class="hub-legend-phone absolute left-3 z-20">
+          <!-- Phone legend: floats bottom left, above the collapsed sheet (DATAVIZ-01); out of
+               the Tab order under the full sheet (MOBILE-02). -->
+          <div
+            v-if="T4.legend"
+            class="hub-legend-phone absolute left-3 z-20"
+            :inert="mapCovered || undefined"
+          >
             <component :is="T4.legend" phone />
           </div>
         </template>
@@ -95,6 +100,7 @@
       <div
         v-if="topicKind === 'live' && ctx.liveMap.value && isMobile && T4.legend"
         class="hub-legend-phone hub-legend-phone--live absolute left-3 z-20"
+        :inert="mapCovered || undefined"
       >
         <component :is="T4.legend" phone />
       </div>
@@ -108,9 +114,10 @@
       <HuntingHubShellAboutDialog ref="about" :topics="topics" />
     </template>
 
-    <!-- The map's keyboard and screen reader equivalent is the table (MOBILE-A11Y-09). -->
+    <!-- The map's keyboard and screen reader equivalent is the table (MOBILE-A11Y-09); not
+         while a phone sheet covers the map (MOBILE-02). -->
     <button
-      v-if="ctx && tableTarget"
+      v-if="ctx && tableTarget && !mapCovered"
       type="button"
       class="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-[calc(var(--hub-top)+8px)] focus:z-50 focus:rounded focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-brand max-md:focus:top-[calc(var(--hub-mobile-header)+8px)]"
       :class="FOCUS_RING"
@@ -119,14 +126,16 @@
       {{ S.mapToTable }}
     </button>
     <!-- Last in the DOM so keyboard users reach the panel before the map controls. Fractional
-         zoom, so Lithuania fills the free map area instead of the next lower zoom step. -->
+         zoom, so Lithuania fills the free map area instead of the next lower zoom step. Under a
+         phone sheet that covers it, the whole map with its control containers (zoom, globe,
+         attribution) leaves the Tab order and the accessibility tree (MOBILE-02). -->
     <UiMap
       :show-scale-line="true"
       :constrain-resolution="false"
       :projection="projection3857"
       :class="{ invisible: mapHidden }"
-      :aria-hidden="topicKind === 'overview' ? 'true' : undefined"
-      :inert="topicKind === 'overview' ? true : undefined"
+      :aria-hidden="topicKind === 'overview' || mapCovered ? 'true' : undefined"
+      :inert="topicKind === 'overview' || mapCovered ? true : undefined"
     />
   </div>
 </template>
@@ -174,6 +183,8 @@ import { useHubState } from '@/composables/hunting/hub/useHubState';
 import { LIVE_HOSTS, TOPICS } from '@/utils/hunting/hub/topics';
 import { HUB_SHELL, type HubShell } from '@/components/hunting/hub/shell/shell';
 import { FOCUS_RING } from '@/components/hunting/hub/shell/controls';
+import { mapCovered as sheetCoversMap } from '@/components/hunting/hub/shell/sheet';
+import { MINUS } from '@/utils/hunting/hub/topics/common';
 
 const mapLayers: any = inject('mapLayers');
 const route = useRoute();
@@ -184,6 +195,8 @@ const isProductionHost = hostname === 'maps.biip.lt';
 
 const { width } = useWindowSize();
 const isMobile = computed(() => width.value <= MOBILE_MAX);
+// A phone sheet covers the whole map (its full detent, a table over the map).
+const mapCovered = computed(() => isMobile.value && sheetCoversMap.value);
 
 // ---- Topic registry. A topic whose module is not there yet gets a placeholder, so the shell
 // still renders its tab (with the load error state). Topics with a live host are live.
@@ -492,6 +505,8 @@ function labelMapControls() {
     });
   name('.ol-zoom-in', 'Artinti');
   name('.ol-zoom-out', 'Tolinti');
+  // A real minus next to the "+" (OpenLayers' default label is an en dash; VISUAL-20).
+  root.querySelectorAll<HTMLElement>('.ol-zoom-out').forEach((el) => (el.textContent = MINUS));
   name('.ol-attribution button', 'Žemėlapio duomenų šaltiniai');
   name('.ol-rotate-reset', 'Atstatyti kryptį');
 }
