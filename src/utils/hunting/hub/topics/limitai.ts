@@ -266,6 +266,7 @@ function chart(meta: Meta, rows: LimitRow[], muni: Municipality | null): ChartDe
   return {
     kind: 'columns',
     title: 'Paskirstytas limitas ir sumedžiota pagal sezonus',
+    axisLabel: 'Sezonas',
     bars,
     series: [
       { id: 'allocated', label: 'Paskirstytas limitas' },

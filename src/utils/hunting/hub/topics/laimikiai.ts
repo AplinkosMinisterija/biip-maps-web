@@ -415,7 +415,13 @@ function chart(c: Ctx, muni: Municipality | null): ChartDef | undefined {
       const n = cellOf(seasonIndex(c.rows, s), code, c.sp!.id).n;
       return { label: seasonLabel(s), value: n, valueLabel: formatInt(n), current: s === c.season };
     });
-    return { kind: 'columns', title: `${c.sp.name}: sumedžiota pagal sezonus`, bars };
+    return {
+      kind: 'columns',
+      title: `${c.sp.name}: sumedžiota pagal sezonus`,
+      bars,
+      axisLabel: 'Sezonas',
+      valueLabel: 'Sumedžiota',
+    };
   }
   const list = speciesOfPlace(c, c.idx, code).filter((x) => x.agg.n > 0);
   if (!list.length) return undefined;
@@ -433,6 +439,8 @@ function chart(c: Ctx, muni: Municipality | null): ChartDef | undefined {
     kind: 'hbar',
     title: `${c.current ? 'Užregistruota el. žurnale' : 'Sumedžiota'} pagal rūšis · ${seasonLabel(c.season)}`,
     bars,
+    axisLabel: 'Rūšis',
+    valueLabel: c.current ? 'Užregistruota el. žurnale' : 'Sumedžiota',
   };
 }
 

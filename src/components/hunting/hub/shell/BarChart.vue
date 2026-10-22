@@ -102,7 +102,9 @@
       </ul>
     </div>
 
-    <p v-if="chart.note" class="text-xs leading-4 text-ink-muted">{{ chart.note }}</p>
+    <p v-if="chart.note" class="whitespace-pre-line text-xs leading-4 text-ink-muted">
+      {{ chart.note }}
+    </p>
 
     <!-- Table twin for screen readers (§10). -->
     <table class="sr-only">
@@ -113,7 +115,7 @@
       </caption>
       <thead>
         <tr>
-          <th scope="col">Pavadinimas</th>
+          <th scope="col">{{ chart.axisLabel || 'Pavadinimas' }}</th>
           <th v-for="s in seriesList" :key="s.id" scope="col">{{ s.label }}</th>
         </tr>
       </thead>
@@ -194,7 +196,7 @@ const pct = (v: number) => `${Math.max(0, Math.min(100, (v / max.value) * 100))}
 const seriesList = computed(() =>
   props.chart.kind !== 'hbar' && props.chart.series?.length
     ? props.chart.series
-    : [{ id: '', label: 'Reikšmė' }],
+    : [{ id: '', label: props.chart.valueLabel || 'Reikšmė' }],
 );
 
 const twinRows = computed(() => {

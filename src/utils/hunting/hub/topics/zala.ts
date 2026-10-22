@@ -163,6 +163,9 @@ export const T = {
   rankNote: 'Rikiuojama pagal mažiausią galimą skaičių.',
 };
 
+const upperFirst = (t: string) => t.charAt(0).toLocaleUpperCase('lt') + t.slice(1);
+const lowerFirst = (t: string) => t.charAt(0).toLocaleLowerCase('lt') + t.slice(1);
+
 // ---------------------------------------------------------------------------
 // Selection and season rules
 // ---------------------------------------------------------------------------
@@ -400,7 +403,7 @@ function answer(c: Ctx, muni: number, g: Grupe, placeName: string | null, withTo
     const top = topPlaces(c, g);
     if (top) text += ` ${top}`;
   }
-  return placeName ? `${placeName} ${text}` : text;
+  return placeName ? `${placeName}: ${text}` : text;
 }
 
 const P_MUNI: PluralForms = ['savivaldybė', 'savivaldybės', 'savivaldybių'];
@@ -621,23 +624,26 @@ function chart(c: Ctx, g: Grupe): ChartDef {
   if (state === 'dalinis') notes.push(T.monthNote);
   if (state === 'vyksta' && months.length) {
     const last = months[months.length - 1];
-    notes.push(`${MONTH_SHORT[last.m]} – iki ${c.meta.snapshotDate}.`);
+    notes.push(`${upperFirst(MONTH_NAMES[last.m])} – duomenys iki ${c.meta.snapshotDate}.`);
   }
+  // One note per glyph, each starting with the glyph (CONTENT-14).
   if (bars.some((b) => b.valueLabel === S.suppressed))
-    notes.push(`${S.suppressed}: ${S.suppressedReports}`);
-  // Range and "≥" totals explained next to the chart (DATAVIZ-16).
-  const ranged = Object.values(totals).filter((t) => /[–≥]/.test(t));
+    notes.push(`${S.suppressed} – mažiau nei 3 pranešimai (0, 1 arba 2).`);
+  // Range and "≥" totals explained next to the chart (DATAVIZ-16), each example once.
+  const ranged = Array.from(new Set(Object.values(totals).filter((t) => RANGE.test(t))));
   if (ranged.length) {
-    const why =
-      SUPPRESSED_RANGE_TOOLTIP.charAt(0).toLowerCase() + SUPPRESSED_RANGE_TOOLTIP.slice(1);
-    notes.push(`${ranged.slice(0, 2).join(', ')} ir pan. – ${why}`);
+    notes.push(
+      `${ranged.slice(0, 2).join(', ')} – kai kurios dalys mažesnės nei 3 arba neskelbiamos; rodomos galimos ribos.`,
+    );
   }
   return {
     kind: 'stacked',
+    axisLabel: 'Mėnuo',
     title: `Pranešimai pagal mėnesius · Lietuva · ${seasonLabel(c.season)}`,
     bars,
     series: groups.map((grp) => ({ id: grp, label: GROUP_LABELS[grp] })),
-    note: notes.length ? notes.join(' ') : undefined,
+    // One line per note (the chart renders them with `whitespace-pre-line`).
+    note: notes.length ? notes.join('\n') : undefined,
     totals,
   };
 }
@@ -732,7 +738,8 @@ const grupeTitle = (g: Grupe) =>
     ? ''
     : ` (${(g in PRESETS ? PRESET_LABELS[g as Preset] : GROUP_LABELS[g as DamageGroup]).toLowerCase()})`;
 
-const RANGE = /^\d[\d\s]*–\d|^≥/;
+const RANGE = /^\d[\d\s]*–\d|^≥|^iki /;
+const OPEN_RANGE = /^≥/;
 const PCT_RANGE = /^\d+–\d+/;
 
 // Footnotes for the glyphs a damages table shows ("<3", ranges, "x"), each with an example
@@ -743,13 +750,15 @@ function glyphNotes<R>(columns: ColumnDef<R>[], rows: R[]) {
     .filter((col) => col.numeric && col.display)
     .forEach((col) => rows.forEach((r) => texts.push(col.display!(r))));
   const notes: string[] = [];
-  if (texts.indexOf(S.suppressed) >= 0) notes.push(`${S.suppressed} – ${S.suppressedReports}`);
-  const range = texts.find((t) => RANGE.test(t) && !/%$/.test(t));
-  if (range) {
-    notes.push(
-      `${range} – tikslus skaičius neskelbiamas, nes kai kurios jo dalys mažesnės nei 3; rodomas galimas intervalas.`,
-    );
+  if (texts.indexOf(S.suppressed) >= 0)
+    notes.push(`${S.suppressed} – ${lowerFirst(S.suppressedReports)}`);
+  // "≥" is a lower bound, not an interval: its own note.
+  const atLeast = texts.find((t) => OPEN_RANGE.test(t));
+  if (atLeast) {
+    notes.push(`${atLeast} – dalis skaičių neskelbiama; rodoma mažiausia galima reikšmė.`);
   }
+  const range = texts.find((t) => RANGE.test(t) && !OPEN_RANGE.test(t) && !/%$/.test(t));
+  if (range) notes.push(`${range} – kai kurios dalys mažesnės nei 3; rodomos galimos ribos.`);
   if (texts.indexOf(S.withheld) >= 0) notes.push(FOOTNOTE_WITHHELD);
   return notes;
 }
@@ -823,17 +832,17 @@ function municipalityTable(c: Ctx, g: Grupe): TableDef<MuniRow> {
   }
   if (all.some((r) => !r.escalation)) {
     footnotes.push(
-      `${DASH} stulpelyje „Perduota seniūnijai“ – nėra kanopinių ir bebrų pranešimų, iš kurių skaičiuojama dalis, jų mažiau nei 3 arba dalis neskelbiama.`,
+      `${DASH} stulpelyje „Perduota seniūnijai, %“ – dalis neapskaičiuojama: kanopinių ir bebrų pranešimų nėra, jų mažiau nei 3 arba dalis neskelbiama.`,
     );
   }
   if (g !== 'visos')
     footnotes.push(
       `${DASH} stulpelyje „Pranešėjai“ – ${T.reportersGroupOnly.charAt(0).toLowerCase()}${T.reportersGroupOnly.slice(1)}`,
     );
+  // The place rule is in the legend and the "reports, not damage" note in the panel next to
+  // the table (CONTENT-14).
   footnotes.push(
-    T.placeNote,
     'Iš viso – skaičiuojama iš visų pranešimų, todėl gali būti didesnė už paskelbtų dalių sumą.',
-    T.fixedNote,
   );
   return {
     id: 'savivaldybes',
@@ -1099,6 +1108,13 @@ export const about = {
   ],
 };
 
+// A `lentele=gyvuliai` link (advertised by the WP page) without a group opens the predators,
+// whose livestock table it is (REGRESS-04); an explicit non-predator group keeps the fallback.
+export function tableDims(table: string | null, dims: Record<string, string>) {
+  if (table !== 'gyvuliai' || (dims.grupe && dims.grupe !== 'visos')) return null;
+  return { ...dims, grupe: 'plesrunai' };
+}
+
 export const zala: TopicDef = {
   id: 'zala',
   tab: TOPIC_TABS.zala,
@@ -1110,6 +1126,7 @@ export const zala: TopicDef = {
   defaultSeason: (meta) => defaultSeason(meta),
   dims: [groupDim],
   defaultTable: 'savivaldybes',
+  tableDims,
   attribution: 'place',
   view,
   overview: (data) => overview(data),
