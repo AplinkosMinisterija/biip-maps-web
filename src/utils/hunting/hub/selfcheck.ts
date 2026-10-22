@@ -409,6 +409,35 @@ export function runHubUnitChecks(): SelfCheckResult[] {
       ],
     );
   });
+  check('Žala: „Daugiausia“ – lygūs skaičiai ties riba', () => {
+    const r = (name: string, lo: number, hi = lo) => ({ name, n: { lo, hi } });
+    const out = (list: ReturnType<typeof r>[]) => {
+      const x = certainTop(list);
+      return [x.top.map((y) => y.name), x.cut, x.tie];
+    };
+    const seven = ['B', 'C', 'D', 'E', 'F', 'G'].map((n) => r(n, 7));
+    return eq(
+      [
+        // the whole tie group fits (≤ 5 names): all named, the list is complete
+        out([r('A', 10), r('D', 7), r('C', 7), r('B', 7), r('E', 2)]),
+        // 6 places with 7: too many to name, stop before them
+        out([r('A', 10), ...seven, r('H', 1)]),
+        // all tied, none named
+        out(seven),
+        // a range could reach the cut-off: not provably tied, stop before the group
+        out([r('A', 10), r('B', 7), r('C', 7), r('D', 5, 7), r('E', 5, 7)]),
+        // a range below the cut-off whose rank is still certain: named
+        out([r('A', 10), r('B', 7), r('C', 7), r('D', 5, 7), r('E', 2)]),
+      ],
+      [
+        [['A', 'B', 'C', 'D'], false, null],
+        [['A'], true, { value: 7, count: 6 }],
+        [[], true, { value: 7, count: 6 }],
+        [['A'], true, null],
+        [['A', 'B', 'C', 'D'], false, null],
+      ],
+    );
+  });
   runEmbedChecks(check, eq);
   runLiveTopicChecks(check, eq);
   runCopyChecks(check);

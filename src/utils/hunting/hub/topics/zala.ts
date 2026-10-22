@@ -4,7 +4,7 @@
 // a cell withheld so that no small count can be worked out is "neskelbiama". Sums of parts that
 // include such cells become ranges.
 // Pure: view(), overview() and otherRow() read only their arguments.
-import { seasonLabel } from '../../dates';
+import { seasonLabel, type PluralForms } from '../../dates';
 import { MONTH_NAMES, MONTH_SHORT } from '../../labels';
 import {
   P_ATTACKED_LIVESTOCK,
@@ -403,6 +403,8 @@ function answer(c: Ctx, muni: number, g: Grupe, placeName: string | null, withTo
   return placeName ? `${placeName} ${text}` : text;
 }
 
+const P_MUNI: PluralForms = ['savivaldybė', 'savivaldybės', 'savivaldybių'];
+
 export interface RankedPlace {
   name: string;
   n: Count;
@@ -413,8 +415,17 @@ export interface RankedPlace {
  * kept only while its lower bound is at least the upper bound of every place not yet named,
  * and at most `max`; `cut` when a further place could still belong in the list. A count with
  * a lower bound below 3 is never named.
+ *
+ * Ties at the cut-off: when a place not named could have as many as the last one named, the
+ * whole tie group is named if the list stays at most `tieMax` long; otherwise the list stops
+ * before the group and is `cut`. `tie` then gives the group's exact value and size (null
+ * when its members are ranges).
  */
-export function certainTop(list: RankedPlace[], max = 3): { top: RankedPlace[]; cut: boolean } {
+export function certainTop(
+  list: RankedPlace[],
+  max = 3,
+  tieMax = 5,
+): { top: RankedPlace[]; cut: boolean; tie: { value: number; count: number } | null } {
   const sorted = list
     .slice()
     .sort((a, b) => b.n.lo - a.n.lo || a.n.hi - b.n.hi || a.name.localeCompare(b.name, 'lt'));
@@ -423,15 +434,29 @@ export function certainTop(list: RankedPlace[], max = 3): { top: RankedPlace[]; 
   for (let i = sorted.length - 1; i >= 0; i--) {
     maxHiAfter[i] = Math.max(sorted[i].n.hi, maxHiAfter[i + 1]);
   }
-  const top: RankedPlace[] = [];
-  for (let i = 0; i < sorted.length && top.length < max; i++) {
-    const entry = sorted[i];
-    if (entry.n.lo < 3 || entry.n.lo < maxHiAfter[i + 1]) break;
-    top.push(entry);
+  const certain = (i: number) => sorted[i].n.lo >= 3 && sorted[i].n.lo >= maxHiAfter[i + 1];
+  // After k names, no place left could have as many as the last one named.
+  const clean = (k: number) => sorted[k - 1].n.lo > maxHiAfter[k];
+  let k = 0;
+  while (k < sorted.length && k < max && certain(k)) k++;
+  if (k < max || clean(k)) {
+    // Cut: fewer than `max` named although another place may have 3 or more reports.
+    return { top: sorted.slice(0, k), cut: k < max && maxHiAfter[k] >= 3, tie: null };
   }
-  // Cut: fewer than `max` named although another place may have 3 or more reports.
-  const cut = top.length < max && maxHiAfter[top.length] >= 3;
-  return { top, cut };
+  // A tie at the cut-off: take in the places that share it, while their rank is certain.
+  let end = k;
+  while (end < sorted.length && end < tieMax && !clean(end) && certain(end)) end++;
+  if (clean(end)) return { top: sorted.slice(0, end), cut: false, tie: null };
+  // Too many (or not provably tied): stop before the group, every place that may reach it.
+  const value = sorted[k - 1].n.lo;
+  const start = sorted.findIndex((x) => x.n.lo <= value);
+  const group = sorted.slice(start).filter((x) => x.n.hi >= value);
+  const exactTie = group.every((x) => x.n.lo === value && x.n.hi === value);
+  return {
+    top: sorted.slice(0, start),
+    cut: true,
+    tie: exactTie ? { value, count: group.length } : null,
+  };
 }
 
 // "Daugiausia – Kėdainių r. sav. (92), …": the municipalities with the most reports, so the
@@ -439,11 +464,16 @@ export function certainTop(list: RankedPlace[], max = 3): { top: RankedPlace[]; 
 // (partly suppressed) counts prove are named; none, and the clause is left out.
 function topPlaces(c: Ctx, g: Grupe) {
   if (!ZALA_MUNICIPALITY) return null;
-  const { top, cut } = certainTop(
+  const { top, cut, tie } = certainTop(
     c.meta.municipalities.map((m) => ({ name: m.name, n: reports(c, m.code, g) })),
   );
-  if (!top.length) return null;
+  // "dar 6 savivaldybės – po 7": a tie too large to name.
+  const tieText = tie
+    ? `${top.length ? 'dar ' : ''}${formatInt(tie.count)} ${plural(tie.count, P_MUNI)} – po ${formatInt(tie.value)}`
+    : null;
+  if (!top.length) return tieText ? `Daugiausia – ${tieText}.` : null;
   const list = top.map((x) => `${x.name} (${formatCount(x.n)})`).join(', ');
+  if (tieText) return `Daugiausia – ${list}; ${tieText}.`;
   return cut ? `Daugiausia – ${list}; ${T.topCut}` : `Daugiausia – ${list}.`;
 }
 
