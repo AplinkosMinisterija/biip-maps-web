@@ -15,7 +15,7 @@
         ref="backEl"
         type="button"
         aria-label="Grįžti į ankstesnį laikotarpį"
-        class="ml-auto inline-flex items-center rounded px-2 text-sm font-medium text-brand hover:bg-brand-50 underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+        class="ml-auto inline-flex shrink-0 items-center whitespace-nowrap rounded px-2 text-sm font-medium text-brand hover:bg-brand-50 underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
         :class="large ? 'min-h-[44px]' : 'min-h-[24px]'"
         @click="goBack"
       >
@@ -215,7 +215,9 @@ function yearMark(bin: HistogramBin, index: number) {
   if (bin.level === 'month') {
     return index === 0 || monthIndex(bin) === 1 ? bin.interval.from.slice(0, 4) : '';
   }
-  return index === 0 || bin.interval.from.endsWith('-01') ? MONTH_SHORT[monthIndex(bin)] : '';
+  // Days of one month: the caption names the period; a month mark only where months change.
+  if (index === 0) return '';
+  return bin.interval.from.endsWith('-01') ? MONTH_SHORT[monthIndex(bin)] : '';
 }
 
 function ariaLabelOf(bin: HistogramBin) {

@@ -456,6 +456,8 @@ if (ctx) {
     await mapLayers.waitForLoaded;
     await nextTick();
     labelMapControls();
+    // The answer may have arrived before the map element existed.
+    if (ctx.topic.value.kind !== 'live') setMapLabel(answer.value);
   });
 }
 

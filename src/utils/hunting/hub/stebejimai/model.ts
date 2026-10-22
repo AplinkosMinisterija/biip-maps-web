@@ -320,9 +320,13 @@ export function parseObservationRow(raw: unknown, index = 0): StebRecord | null 
     y: point ? point[1] : null,
     municipality: text(pick('municipalities')),
     eldership: text(pick('elderships')),
-    huntingArea: text(pick('huntingAreas')),
+    huntingArea: lithuanianQuotes(text(pick('huntingAreas'))),
   };
 }
+
+// MPV names arrive as „Lūšies” (English closing quote); Lithuanian closes with “ (J-25).
+const lithuanianQuotes = (value: string | null) =>
+  value === null ? null : value.replace(/„([^„”“]*)”/g, '„$1“');
 
 /** Newest first: the instant desc, then id desc; rows without a valid date last. */
 export function compareRecords(a: StebRecord, b: StebRecord): number {

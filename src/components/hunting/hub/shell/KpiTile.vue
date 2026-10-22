@@ -11,18 +11,18 @@
       :class="[
         KPI_VALUE,
         kpi.muted ? '!text-ink-muted' : '',
-        long ? 'text-base leading-6' : 'text-[28px] leading-8',
+        long ? 'text-sm leading-5' : 'text-[28px] leading-8',
       ]"
     >
-      {{ kpi.value }}
+      <!-- A date never breaks at its hyphens ("po 2027-05-15"). -->
+      <template v-for="(part, i) in valueParts" :key="i">
+        <span v-if="i % 2" class="whitespace-nowrap">{{ part }}</span>
+        <template v-else>{{ part }}</template>
+      </template>
     </span>
     <!-- The ⓘ sits in the label row, so the value keeps the tile's full width. -->
     <span class="flex items-start gap-1">
-      <span
-        aria-hidden="true"
-        class="flex-1 text-[13px] font-medium leading-[18px] text-ink-muted"
-        >{{ kpi.label }}</span
-      >
+      <span aria-hidden="true" :class="LABEL">{{ kpi.label }}</span>
       <button
         v-if="kpi.tooltip"
         ref="tipButton"
@@ -68,7 +68,9 @@ const props = defineProps({
   large: { type: Boolean, default: false },
 });
 
+const LABEL = 'flex-1 text-[13px] font-medium leading-[18px] text-ink-muted';
 const tipOpen = ref(false);
 // A text value ("po 2027-05-15", "12 · 30 · 4") gets the smaller size, so it fits one line.
 const long = computed(() => props.kpi.value.length > 9);
+const valueParts = computed(() => props.kpi.value.split(/(\d{4}-\d{2}-\d{2})/));
 </script>
