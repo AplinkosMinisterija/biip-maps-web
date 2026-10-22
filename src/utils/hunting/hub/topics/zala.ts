@@ -616,6 +616,8 @@ interface LivestockRow {
   groups: Record<string, Count>;
 }
 
+const isZero = (c: Count) => !c.withheld && c.lo === 0 && c.hi === 0;
+
 const countColumn = <R>(
   id: string,
   label: string,
@@ -692,6 +694,11 @@ function municipalityTable(c: Ctx, g: Grupe): TableDef<MuniRow> {
       T.fixedNote,
     ],
     rowSav: (r) => r.code,
+    // Phone cards: a municipality without any report is one line (same numbers, less noise).
+    cardSummary: (r) =>
+      isZero(r.reports) && GROUPS.every((grp) => isZero(r.groups[grp]))
+        ? `0 ${plural(0, P_REPORT)}`
+        : null,
     disabled: ZALA_MUNICIPALITY ? undefined : T.municipalityPending,
     csvName: csvName('zala', 'savivaldybes', c.season, null),
   };

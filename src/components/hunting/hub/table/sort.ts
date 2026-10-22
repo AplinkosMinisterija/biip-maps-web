@@ -33,17 +33,29 @@ export function suppressedTooltip<R>(col: ColumnDef<R>) {
     : S.suppressedReports;
 }
 
+/** Sort of a table as shown: the visitor's choice, else the table's default. */
+export const effectiveSort = (table: TableDef, chosen: SortState | null | undefined) =>
+  chosen === undefined ? (table.defaultSort ?? null) : chosen;
+
+/** Rows with a note (pooled, no MPV): kept last, in the topic's order. */
+export const notedRows = <R>(table: TableDef<R>) =>
+  table.rowNote ? table.rows.filter((r) => table.rowNote!(r)) : [];
+
 /**
  * Rows sorted by one column; `null` keeps the topic's own order. Empty values (null, '')
- * always go last, whatever the direction, so "–" rows stay at the bottom. Stable.
+ * always go last, whatever the direction, so "–" rows stay at the bottom. Rows with a note
+ * (`rowNote`) are not sorted; `withNoted` appends them in the topic's order. Stable.
  */
-export function sortRows<R>(table: TableDef<R>, sort: SortState | null): R[] {
-  const rows = [...table.rows];
-  if (!sort) return rows;
+export function sortRows<R>(table: TableDef<R>, sort: SortState | null, withNoted = true): R[] {
+  const noted = notedRows(table);
+  const rows = noted.length ? table.rows.filter((r) => noted.indexOf(r) < 0) : [...table.rows];
+  const tail = withNoted ? noted : [];
+  if (!sort) return [...rows, ...tail];
   const col = table.columns.find((c) => c.id === sort.col);
-  if (!col) return rows;
+  if (!col) return [...rows, ...tail];
   const dir = sort.dir === 'asc' ? 1 : -1;
-  const decorated = rows.map((row, i) => ({ row, i, v: col.value(row) }));
+  const key = col.sort || col.value;
+  const decorated = rows.map((row, i) => ({ row, i, v: key(row) }));
   decorated.sort((a, b) => {
     const ea = a.v === null || a.v === undefined || a.v === '';
     const eb = b.v === null || b.v === undefined || b.v === '';
@@ -53,7 +65,7 @@ export function sortRows<R>(table: TableDef<R>, sort: SortState | null): R[] {
     else cmp = String(a.v).localeCompare(String(b.v), 'lt', { numeric: true });
     return dir * cmp || a.i - b.i;
   });
-  return decorated.map((d) => d.row);
+  return [...decorated.map((d) => d.row), ...tail];
 }
 
 /** Next sort state after a header click: numbers start descending, text ascending. */
