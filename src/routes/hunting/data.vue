@@ -167,6 +167,7 @@ import {
   tableReplacesMap,
 } from '@/utils/hunting/hub/layout';
 import { embedFocusAllowed } from '@/utils/hunting/hub/embed';
+import { atCountryFit, markCountryFit } from '@/utils/hunting/hub/mapFit';
 import { S, TOPIC_ORDER, TOPIC_SUBTITLES, TOPIC_TABS } from '@/utils/hunting/hub/strings';
 import { seasonOfDay } from '@/utils/hunting/dates';
 import { useHubState } from '@/composables/hunting/hub/useHubState';
@@ -407,7 +408,14 @@ function fitLithuania() {
   const padding = isMobile.value
     ? [8, 8, LEGEND_H_PHONE + 16, 8]
     : [16, 16, LEGEND_H_DESKTOP + 24, 16];
-  map.getView().fit(LITHUANIA_3857, { padding, duration: 0 });
+  // The free area from the map's size, not the view's cached one: on `change:size` the view
+  // has not seen the new size yet.
+  const view = map.getView();
+  const [w, h] = map.getSize() || [0, 0];
+  const [top, right, bottom, left] = view.padding || [0, 0, 0, 0];
+  const size = w && h ? [w - left - right, h - top - bottom] : undefined;
+  view.fit(LITHUANIA_3857, { padding, duration: 0, size });
+  markCountryFit(view);
 }
 if (ctx) {
   mapLayers.centerMap = fitLithuania;
@@ -421,6 +429,26 @@ function recentre() {
   if (!ctx || !map) return;
   map.getView().padding = [...ctx.layout.mapPadding.value];
   if (ctx.sel.value.sav === null) mapLayers.centerMap();
+}
+
+// A map that changes its size (the iframe got its height, a resize) keeps its resolution:
+// untouched since the country fit, it fits the country again.
+let mapSized: { map: any; listener: () => void } | null = null;
+if (ctx) {
+  onMounted(async () => {
+    await mapLayers.waitForLoaded;
+    const map = mapLayers.map ? toRaw(mapLayers.map) : null;
+    if (!map) return;
+    const listener = () => {
+      if (atCountryFit(map.getView())) mapLayers.centerMap();
+    };
+    map.on('change:size', listener);
+    mapSized = { map, listener };
+  });
+  onBeforeUnmount(() => {
+    mapSized?.map.un('change:size', mapSized.listener);
+    mapSized = null;
+  });
 }
 
 if (ctx) {

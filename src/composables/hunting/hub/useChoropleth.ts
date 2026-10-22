@@ -31,6 +31,7 @@ import { projection3857 } from '@/utils/constants';
 import { loadMunicipalityIndex, type MunicipalityIndex } from '@/utils/hunting/municipalities';
 import { S } from '@/utils/hunting/hub/strings';
 import type { ChoroplethDef } from '@/utils/hunting/hub/types';
+import { atCountryFit } from '@/utils/hunting/hub/mapFit';
 import {
   CHOROPLETH_NO_DATA_FILL,
   CHOROPLETH_OUTLINE,
@@ -515,12 +516,15 @@ export function useChoropleth(ctx: HubContext): HubChoroplethApi {
   });
 
   // The live topic keeps its own view padding and zoom (useWolvesMap).
+  // Untouched since the country fit, the country is fitted again into the new free area.
   function applyPadding() {
     if (!map || !active.value || live.value) return;
     const view = map.getView();
+    const refit = atCountryFit(view);
     const center = view.getCenter();
     view.padding = [...ctx.layout.mapPadding.value];
-    if (center) view.setCenter(center);
+    if (refit) mapLayers.centerMap();
+    else if (center) view.setCenter(center);
   }
   watch([() => ctx.layout.mapPadding.value.join(','), active], applyPadding);
 
