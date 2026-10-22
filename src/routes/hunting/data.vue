@@ -52,15 +52,21 @@
       </template>
 
       <!-- Mobile (< 768 px): header ≤ 108 px and a bottom sheet (§4.3). Embedded, the header
-           keeps only the chip row, and the live topics (Vilkai, Stebėjimai) need none of it. -->
+           keeps only the chip row, and the live topics (Vilkai, Stebėjimai) need none of it.
+           The header's "Filtrai" opens the sheet's full-screen filters. -->
       <template v-else>
         <HuntingHubShellMobileHeader
           v-if="!(embed && topicKind === 'live')"
           @filters="sheet?.openFilters()"
         />
         <template v-if="topicKind === 'snapshot'">
-          <HuntingHubShellMobileSheet ref="sheet" :topics="topicList" />
-          <component :is="T4.mapMessage" v-if="T4.mapMessage && isMapMessage" />
+          <HuntingHubShellMobileSheet
+            ref="sheet"
+            :topics="topicList"
+            @detent="(detent: string) => (sheetFull = detent === 'full')"
+          />
+          <!-- Not under the full sheet: its buttons would take focus behind it. -->
+          <component :is="T4.mapMessage" v-if="T4.mapMessage && isMapMessage && !sheetFull" />
         </template>
       </template>
 
@@ -179,6 +185,7 @@ type AboutDialog = {
 };
 const about = ref<AboutDialog | null>(null);
 const sheet = ref<{ openFilters(): void } | null>(null);
+const sheetFull = ref(false);
 
 const openAbout = (topic?: TopicId, opts?: AboutOpenOptions) => about.value?.open(topic, opts);
 const closeAbout = () => about.value?.close(false);
