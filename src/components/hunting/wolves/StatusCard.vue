@@ -3,12 +3,12 @@
   <section
     v-if="variant === 'line'"
     :aria-label="`Šis sezonas (${model.seasonLabel})`"
-    class="text-sm text-ink"
+    class="text-sm text-ink-muted"
   >
-    <p v-if="loading" class="text-ink-muted">Šis sezonas ({{ model.seasonLabel }}): įkeliama…</p>
-    <p v-else class="flex items-start gap-2">
-      <span class="w-2.5 h-2.5 rounded-full shrink-0 mt-1.5" :class="dotClass" aria-hidden="true" />
-      <span class="flex-1">
+    <!-- A context line under the answer, as the other topics' notices: no status dot. -->
+    <p v-if="loading">Šis sezonas ({{ model.seasonLabel }}): įkeliama…</p>
+    <p v-else>
+      <span>
         <span class="font-semibold text-ink">Šis sezonas ({{ model.seasonLabel }}):</span>
         {{ lineText }}
         <button
@@ -161,7 +161,7 @@ const DOTS: Record<StatusState, string> = {
   beforeStart: 'bg-brand-secondary',
   exhausted: 'bg-red-600',
   littleLeft: 'bg-amber-500',
-  ongoing: 'bg-green-600',
+  ongoing: 'bg-brand',
 };
 const dotClass = computed(() => DOTS[model.value.state]);
 

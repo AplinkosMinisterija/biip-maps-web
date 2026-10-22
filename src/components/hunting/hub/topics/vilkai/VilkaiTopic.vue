@@ -99,7 +99,7 @@
             <h1
               id="hub-vilkai-title"
               tabindex="-1"
-              class="text-xl font-semibold text-gray-900 focus:outline-none"
+              class="text-xl font-semibold text-ink focus:outline-none"
             >
               {{ VILKAI_H1 }}
             </h1>
@@ -124,7 +124,11 @@
             <p v-else role="status" class="text-sm text-gray-700">{{ S.loading }}</p>
           </div>
           <div v-else class="flex flex-col gap-3">
-            <HuntingWolvesFilterSentence />
+            <!-- The other topics' anatomy (AnswerBlock): badge, then the answer (VISUAL-19). -->
+            <div class="flex flex-col gap-1">
+              <p v-if="seasonBadge"><HuntingHubShellStateBadge :badge="seasonBadge" /></p>
+              <HuntingWolvesFilterSentence />
+            </div>
             <HuntingWolvesLoadState placement="panel" :show-timestamp="false" />
             <!-- One loading line (the answer) until the records arrive; then the current
                  season's status, named as such, below the answer of the chosen period. -->
@@ -673,6 +677,14 @@ watch(
         : null;
   },
   { immediate: true },
+);
+
+// "Sezonas vyksta" while the shown period is the current season (the live data is never
+// preliminary); none for a past season or a custom date range.
+const seasonBadge = computed(() =>
+  ctx && !loadingData.value && ctx.derived.intervalSeason.value === ctx.currentSeason
+    ? ('vyksta' as const)
+    : undefined,
 );
 
 // ---- Filter bar labels.

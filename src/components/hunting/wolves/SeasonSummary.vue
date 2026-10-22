@@ -5,37 +5,38 @@
     </h2>
 
     <!-- The hub's tile anatomy (KpiTile): the number first, the label under it. The DOM keeps
-         dt before dd; flex-col-reverse puts the value on top. -->
-    <dl
-      class="grid items-start gap-2"
-      :class="season == null ? 'grid-cols-1' : remaining != null ? 'grid-cols-3' : 'grid-cols-2'"
-    >
-      <div :class="TILE">
+         dt before dd; flex-col-reverse puts the value on top. Two columns; with three tiles
+         the first spans both, and the tiles of a row share one height (VISUAL-09). -->
+    <dl class="grid items-stretch gap-2" :class="tileCount > 1 ? 'grid-cols-2' : 'grid-cols-1'">
+      <div :class="[TILE, tileCount >= 3 ? 'col-span-2' : '']">
         <dt :class="LABEL">
-          Sumedžiota (su vieta)
+          <span class="flex-1">Sumedžiota, vieta žinoma</span>
           <button
             type="button"
             :class="tipButton"
-            aria-label="Paaiškinimas: Sumedžiota (su vieta)"
+            aria-label="Paaiškinimas: Sumedžiota, vieta žinoma"
             :aria-expanded="tips.located"
             aria-controls="wolves-tip-located"
             @click="tips.located = !tips.located"
           >
-            <span :class="tipGlyph" aria-hidden="true">i</span>
+            <svg v-bind="TIP_SVG"><path v-bind="TIP_PATH" /></svg>
           </button>
         </dt>
         <dd :class="[KPI_VALUE, VALUE]">{{ count }}</dd>
       </div>
 
-      <template v-if="season != null">
+      <!-- A municipality is chosen: the national limit is not comparable with the local
+           count, so the second tile is the same count for all of Lithuania (JOURNEYS-15). -->
+      <div v-if="scoped" :class="TILE">
+        <dt :class="LABEL"><span class="flex-1">Lietuvoje, vieta žinoma</span></dt>
+        <dd :class="[KPI_VALUE, VALUE]">{{ nationalCount }}</dd>
+      </div>
+
+      <template v-else-if="season != null">
         <div :class="TILE">
           <dt :class="LABEL">
-            <!-- Names its season, so it cannot be read as the status line's limit (SPEC2 §7),
-                 and its scope when a municipality is chosen (J-07). -->
-            <span>
-              Limitas {{ seasonLabel(season) }}
-              <template v-if="scoped">(visa Lietuva)</template>
-            </span>
+            <!-- Names its season, so it cannot be read as the status line's limit (SPEC2 §7). -->
+            <span class="flex-1">Limitas {{ seasonLabel(season) }}</span>
             <button
               v-if="limitUnknownPast"
               type="button"
@@ -45,18 +46,16 @@
               aria-controls="wolves-tip-limit"
               @click="tips.limit = !tips.limit"
             >
-              <span :class="tipGlyph" aria-hidden="true">i</span>
+              <svg v-bind="TIP_SVG"><path v-bind="TIP_PATH" /></svg>
             </button>
           </dt>
-          <dd
-            :class="[KPI_VALUE, limitText.length > 6 ? 'text-base leading-6' : VALUE, scopedValue]"
-          >
+          <dd :class="[KPI_VALUE, limitText.length > 6 ? 'text-base leading-6' : VALUE]">
             {{ limitText }}
           </dd>
         </div>
         <div v-if="remaining != null" :class="TILE">
-          <dt :class="LABEL">Liko<template v-if="scoped">&nbsp;(visa Lietuva)</template></dt>
-          <dd :class="[KPI_VALUE, VALUE, scopedValue]">{{ remaining }}</dd>
+          <dt :class="LABEL"><span class="flex-1">Liko</span></dt>
+          <dd :class="[KPI_VALUE, VALUE]">{{ remaining }}</dd>
         </div>
       </template>
     </dl>
@@ -68,7 +67,9 @@
       Šio sezono limitas šiame puslapyje dar nepateikiamas.
     </p>
 
-    <p v-if="season == null" class="text-xs text-ink-muted">Limitas nustatomas visam sezonui.</p>
+    <p v-if="season == null && !scoped" class="text-xs text-ink-muted">
+      Limitas nustatomas visam sezonui.
+    </p>
 
     <p v-if="offWindow > 0" class="text-xs text-ink-muted">
       Iš jų {{ formatInt(offWindow) }} ne vilkų medžioklės laikotarpiu.
@@ -89,7 +90,7 @@
           aria-controls="wolves-tip-paper"
           @click="tips.paper = !tips.paper"
         >
-          <span :class="tipGlyph" aria-hidden="true">i</span>
+          <svg v-bind="TIP_SVG"><path v-bind="TIP_PATH" /></svg>
         </button>
       </p>
       <p v-if="tips.paper" id="wolves-tip-paper" class="mt-1">
@@ -128,9 +129,10 @@
 import { computed, inject, reactive } from 'vue';
 import { WOLVES_CTX } from '@/composables/hunting/context';
 import { HUB_CTX } from '@/composables/hunting/hub/context';
-import { INLINE_LINK, KPI_VALUE } from '@/components/hunting/hub/shell/controls';
+import { FOCUS_RING, INLINE_LINK, KPI_VALUE } from '@/components/hunting/hub/shell/controls';
 import { formatInt, pluralLt, seasonLabel } from '@/utils/hunting/dates';
 import { AM_WOLVES_URL, WOLF_LIMITS } from '@/utils/hunting/labels';
+import { filterRecords } from '@/utils/hunting/wolves';
 
 const ctx = inject(WOLVES_CTX)!;
 // The hub (optional): its snapshot meta holds the official AM count per season.
@@ -139,15 +141,25 @@ const { data, derived } = ctx;
 
 const TILE =
   'flex min-w-0 flex-col-reverse gap-1 rounded-lg border border-line bg-white px-3 py-2.5';
-const LABEL = 'flex items-center gap-1 text-[13px] font-medium leading-[18px] text-ink-muted';
+const LABEL = 'flex items-start gap-1 text-[13px] font-medium leading-[18px] text-ink-muted';
 const VALUE = 'text-[28px] leading-8';
 
 const tips = reactive({ located: false, limit: false, paper: false });
-const tipButton =
-  'w-11 h-11 -my-3 md:w-6 md:h-6 md:my-0 shrink-0 inline-flex items-center justify-center rounded-full text-brand hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
-
-const tipGlyph =
-  'w-4 h-4 rounded-full border border-current text-[10px] font-bold leading-none flex items-center justify-center';
+// The ⓘ of KpiTile: 16 px on desktop, a 44 px target on phones.
+const tipButton = computed(() => [
+  'flex shrink-0 items-center justify-center rounded-full text-ink-muted hover:text-ink',
+  FOCUS_RING,
+  ctx.isMobile.value ? '-m-3 h-11 w-11' : 'h-4 w-4',
+]);
+const TIP_SVG = { viewBox: '0 0 20 20', width: 16, height: 16, 'aria-hidden': 'true' } as const;
+// The circle, the stem and the dot of KpiTile's glyph as one path.
+const TIP_PATH = {
+  d: 'M10 1.5a8.5 8.5 0 1 1 0 17a8.5 8.5 0 1 1 0-17M10 8.5v5.1M10 5.8v.01',
+  fill: 'none',
+  stroke: 'currentColor',
+  'stroke-width': 1.6,
+  'stroke-linecap': 'round',
+} as const;
 
 const season = computed(() => derived.intervalSeason.value);
 const isCurrent = computed(() => season.value === ctx.currentSeason);
@@ -176,9 +188,22 @@ const remaining = computed(() => {
   return formatInt(Math.max(0, limit.value - Math.max(located.value, hunted)));
 });
 
-// A municipality is chosen: the limit tiles stay national, and say so (J-07).
+// A municipality is chosen: the national located count replaces the limit tiles.
 const scoped = computed(() => ctx.state.sav.value != null);
-const scopedValue = computed(() => (scoped.value ? '!text-ink-muted' : ''));
+const nationalCount = computed(() => {
+  const records = data.dataset.value?.records;
+  if (!records) return '—';
+  const { age, sex, method } = ctx.state.attrs.value;
+  return formatInt(
+    filterRecords(records, { interval: ctx.state.interval.value, sav: null, age, sex, method })
+      .length,
+  );
+});
+const tileCount = computed(() => {
+  if (scoped.value) return 2;
+  if (season.value == null) return 1;
+  return remaining.value != null ? 3 : 2;
+});
 
 const closed = computed(() => season.value != null && season.value < ctx.currentSeason);
 const official = computed<number | null>(() => {
