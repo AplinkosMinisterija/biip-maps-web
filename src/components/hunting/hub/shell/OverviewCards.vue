@@ -92,7 +92,9 @@
                   type="button"
                   :class="CTA_LINK"
                   :aria-label="`${S.overviewMap}: ${card.title}`"
-                  @click="ctx.setTopic(card.topic, { openTable: false })"
+                  @click="
+                    ctx.setTopic(card.topic, { openTable: false, season: headlineSeason(card) })
+                  "
                 >
                   {{ S.overviewMap }}
                   <svg
@@ -116,7 +118,9 @@
                   type="button"
                   :class="CTA_LINK"
                   :aria-label="`${S.overviewTable}: ${card.title}`"
-                  @click="ctx.setTopic(card.topic, { openTable: true })"
+                  @click="
+                    ctx.setTopic(card.topic, { openTable: true, season: headlineSeason(card) })
+                  "
                 >
                   {{ S.overviewTable }}
                 </button>
@@ -297,6 +301,11 @@ const groups = computed(() =>
     cards: g.topics.map(cardOf).filter((c): c is OverviewCard => !!c),
   })),
 );
+
+// D19: the card's actions open the season of its headline number. A card without a number
+// (a sentence: before the wolf hunt starts, observations still loading) opens the topic's
+// own default.
+const headlineSeason = (card: OverviewCard) => (card.value ? card.season : undefined);
 
 // The season chip of a card's headline number (D10): only for figures that are not final.
 const badgeOf = (card: OverviewCard): Badge | undefined =>

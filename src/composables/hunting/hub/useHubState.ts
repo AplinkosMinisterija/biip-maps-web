@@ -382,7 +382,10 @@ export function useHubState(opts: HubStateOptions = {}): HubContext {
     return { season: season.value, fromRange: false };
   }
 
-  function setTopic(id: TopicId, opts: { openTable?: boolean; table?: string } = {}) {
+  function setTopic(
+    id: TopicId,
+    opts: { openTable?: boolean; table?: string; season?: number } = {},
+  ) {
     const target = hasTopic(id) ? id : DEFAULT_TOPIC;
     if (target === topicId.value) return;
     let carry = carryFromCurrent();
@@ -395,6 +398,11 @@ export function useHubState(opts: HubStateOptions = {}): HubContext {
     if (carry && meta.value && targetDef.kind === 'snapshot') {
       const state = targetDef.seasonState(carry.season, meta.value);
       if (state === 'dalinis' || state === 'preliminarus') carry = null;
+    }
+    // D19: an Apžvalga card opens the season of its headline number (a live target gets it
+    // as `sezonas`; a snapshot target validates it like any other carried season).
+    if (opts.season !== undefined && Number.isInteger(opts.season)) {
+      carry = { season: opts.season, fromRange: false };
     }
     topicId.value = target;
     dimPicks.value = {};
