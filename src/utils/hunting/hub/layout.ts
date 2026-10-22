@@ -76,9 +76,12 @@ export const tableReplacesMap = (width: number, tableOpen: boolean, embed = fals
 /** CSS variables for the shell root element (SPEC2 §4.1; embedded: SPEC §5.11). */
 export function hubCssVars(width: number, embed = false): Record<string, string> {
   return {
-    '--hub-top': `${hubTop(embed)}px`,
+    // In rem, like the bars' own Tailwind heights (h-14 = 3.5rem): with a larger browser text
+    // size the panels, drawers and map controls stay below the grown bars (MOBILE-A11Y-16).
+    // The OpenLayers padding (mapPadding) stays in px.
+    '--hub-top': `${hubTop(embed) / 16}rem`,
     // Top of the filter bar: below the 56 px top bar, or at the top when embedded.
-    '--hub-bar-top': embed ? '0px' : `${HUB_TOP - HUB_TOP_EMBED}px`,
+    '--hub-bar-top': embed ? '0rem' : `${(HUB_TOP - HUB_TOP_EMBED) / 16}rem`,
     '--hub-mobile-header': `${mobileHeader(embed)}px`,
     '--hub-panel-w': `${panelWidth(width) || HUB_PANEL_W}px`,
     '--hub-rail-w': `${HUB_RAIL_W}px`,

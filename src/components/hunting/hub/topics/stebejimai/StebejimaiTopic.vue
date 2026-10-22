@@ -365,7 +365,7 @@ defineExpose({ openAbout, railed });
 </script>
 
 <style>
-/* UiMap's own controls: below the bars (embedded: 48 px; the hub sets --hub-top /
+/* UiMap's own controls: below the bars (embedded: 56 px; the hub sets --hub-top /
    --hub-mobile-header), right of the panel or rail, left of the drawer, above the mobile
    sheet. Same offsets as the Vilkai host's rules. */
 body.hub-steb--desktop #mapControlsRT {

@@ -5,7 +5,7 @@
        offers one metric only. -->
   <div
     v-if="options.length > 1 && (large || ctx.sel.value.table === null)"
-    :class="large ? 'flex flex-col gap-2' : 'ml-auto shrink-0'"
+    :class="large ? 'flex flex-col gap-2' : 'order-last ml-auto shrink-0'"
   >
     <span v-if="large" :id="`${uid}-label`" class="text-base font-semibold text-ink">
       {{ S.metricSwitch }}

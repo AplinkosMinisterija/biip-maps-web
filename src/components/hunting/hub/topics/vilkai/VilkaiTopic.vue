@@ -740,7 +740,7 @@ defineExpose({ openAbout, shareUrl, carry, railed, fallbackView });
 </script>
 
 <style>
-/* UiMap's own controls (SPEC2 §4): below the 104 px bars (embedded: 48 px; the shell sets
+/* UiMap's own controls (SPEC2 §4): below the 112 px bars (embedded: 56 px; the shell sets
    --hub-top / --hub-mobile-header), right of the panel or rail, left of the drawer, above the
    mobile sheet. */
 body.hub-vilkai--desktop #mapControlsRT {

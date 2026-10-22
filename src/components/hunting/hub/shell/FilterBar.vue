@@ -16,6 +16,15 @@
         <HuntingHubShellSeasonPopover />
         <HuntingHubShellPlacePicker />
         <HuntingHubShellFilterChips />
+        <!-- Only when a filter is set (CONTROLS-16); the season is context, not a filter. -->
+        <button
+          v-if="filtersSet"
+          type="button"
+          :class="[BTN_TEXT, 'shrink-0 whitespace-nowrap']"
+          @click="resetFilters"
+        >
+          {{ S.resetFilters }}
+        </button>
       </template>
       <!-- Live topics (Vilkai) teleport their own chips here. -->
       <div :id="HUB_SLOTS.filters" class="flex min-w-0 items-center gap-2" />
@@ -38,7 +47,10 @@
 <script setup lang="ts">
 import { computed, inject } from 'vue';
 import { HUB_CTX } from '@/composables/hunting/hub/context';
+import { S } from '@/utils/hunting/hub/strings';
 import { HUB_SLOTS, setTableOpen } from './shell';
+import { BTN_TEXT } from './controls';
+import { useDimChips } from './useDimChips';
 
 // Desktop/tablet filter bar, 56 px (§4.1, CONTROLS-10): season, place, topic chips (a display
 // switch such as the Briedžių limitai metric at the right end), and the standalone
@@ -49,4 +61,16 @@ const ctx = inject(HUB_CTX)!;
 const topicKind = computed(() => ctx.topic.value.kind);
 const tableOpen = computed(() => ctx.sel.value.table !== null);
 const hasTables = computed(() => !!ctx.view.value?.tables.length);
+
+// Filters set away from their defaults: the place and the topic's dimensions, except the
+// Briedžių limitai map metric (a display choice with its own switch).
+const chips = useDimChips(ctx);
+const setDims = computed(() =>
+  chips.value.filter((c) => c.key !== 'rodiklis' && c.value !== c.fallback),
+);
+const filtersSet = computed(() => ctx.sel.value.sav !== null || setDims.value.length > 0);
+function resetFilters() {
+  setDims.value.forEach((c) => ctx.setDim(c.key, null));
+  if (ctx.sel.value.sav !== null) ctx.setSav(null);
+}
 </script>
