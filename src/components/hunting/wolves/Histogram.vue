@@ -5,7 +5,7 @@
         :id="`${uid}-title`"
         ref="titleEl"
         tabindex="-1"
-        class="text-sm font-semibold text-gray-900 focus:outline-none"
+        class="text-[13px] font-semibold leading-[18px] text-ink focus:outline-none"
         :class="compact ? 'sr-only' : ''"
       >
         {{ title }}
@@ -15,7 +15,7 @@
         ref="backEl"
         type="button"
         aria-label="Grįžti į ankstesnį laikotarpį"
-        class="ml-auto inline-flex items-center rounded px-2 text-sm font-medium text-brand hover:bg-brand-50 underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+        class="ml-auto inline-flex shrink-0 items-center whitespace-nowrap rounded px-2 text-sm font-medium text-brand hover:bg-brand-50 underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
         :class="large ? 'min-h-[44px]' : 'min-h-[24px]'"
         @click="goBack"
       >
@@ -23,9 +23,12 @@
       </button>
     </div>
 
+    <!-- The bars filter the list: say so (J-16). -->
+    <p v-if="!compact && !loading && hint" class="mb-1 text-xs text-ink-muted">{{ hint }}</p>
+
     <div
       v-if="loading"
-      class="flex items-end gap-1 animate-pulse"
+      class="flex items-end gap-1 animate-pulse motion-reduce:animate-none"
       :style="{ height: `${barArea + 32}px` }"
       aria-hidden="true"
     >
@@ -42,39 +45,39 @@
       ref="stripEl"
       class="relative overflow-x-auto overscroll-x-contain pt-1 pb-1"
       :class="compact ? '' : '-mx-1 px-1'"
+      :style="moreRight ? FADE_RIGHT : undefined"
+      @scroll.passive="measure"
     >
       <ul class="flex items-end gap-0.5 min-w-full" role="list">
-        <li
-          v-for="(bin, index) in bins"
-          :key="bin.key"
-          class="flex-1"
-          :class="large ? 'min-w-[44px]' : 'min-w-[24px]'"
-        >
+        <li v-for="(bin, index) in bins" :key="bin.key" class="flex-1" :class="minWidth">
           <button
             type="button"
             :aria-label="ariaLabelOf(bin)"
-            class="group w-full flex flex-col items-center justify-end rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            class="group w-full cursor-pointer flex flex-col items-center justify-end rounded hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
             :style="{ height: `${barArea + (compact ? 14 : 32)}px` }"
             @click="drill(bin)"
           >
             <span
               v-if="!compact"
               class="text-xxs leading-4 tabular-nums"
-              :class="bin.count ? 'text-gray-900 font-semibold' : 'text-gray-500'"
+              :class="bin.count ? 'text-ink font-semibold' : 'text-ink-muted'"
             >
-              {{ formatInt(bin.count) }}
+              {{ showCount(bin) ? formatInt(bin.count) : '' }}
             </span>
             <span
               class="block w-full max-w-[40px] rounded-t-sm group-hover:opacity-80"
-              :class="bin.count ? 'bg-[#B45309]' : 'bg-gray-300'"
-              :style="{ height: `${barHeight(bin.count)}px` }"
+              :class="bin.count ? '' : 'bg-line'"
+              :style="{
+                height: `${barHeight(bin.count)}px`,
+                background: bin.count ? WOLF_COLOR : undefined,
+              }"
             />
-            <span class="text-xxs leading-[14px] text-gray-700 whitespace-nowrap">{{
-              shortLabel(bin)
+            <span class="text-xxs leading-[14px] text-ink-muted whitespace-nowrap">{{
+              showLabel(bin, index) ? shortLabel(bin) : ''
             }}</span>
             <span
               v-if="!compact"
-              class="text-xxxs leading-[12px] text-gray-500 whitespace-nowrap h-3"
+              class="text-xxxs leading-[12px] text-ink-muted whitespace-nowrap h-3"
             >
               {{ yearMark(bin, index) }}
             </span>
@@ -95,6 +98,7 @@ import type { HistogramBin, PresetId } from '@/utils/hunting/types';
 import { formatInt, pluralLt, WOLVES } from '@/utils/hunting/dates';
 import { MONTH_NAMES, MONTH_SHORT } from '@/utils/hunting/labels';
 import { histogram, isOtherMonthsBin } from '@/utils/hunting/wolves';
+import { WOLF_COLOR } from '@/utils/hunting/layers';
 
 const props = defineProps({
   // Mobile collapsed sheet: 64 px bars, no counts, title only for screen readers.
@@ -128,15 +132,62 @@ function scrollToFirstBar() {
 }
 watch(() => bins.value.map((b) => b.key).join('|'), scrollToFirstBar, { flush: 'post' });
 // The strip gets its width only after layout (and again when the sheet expands).
-useResizeObserver(stripEl, scrollToFirstBar);
+useResizeObserver(stripEl, () => {
+  scrollToFirstBar();
+  measure();
+});
+
+// Bars hidden to the right fade out, so the strip shows that it scrolls (J-13).
+const FADE_RIGHT = {
+  maskImage: 'linear-gradient(to right, #000 85%, transparent)',
+  WebkitMaskImage: 'linear-gradient(to right, #000 85%, transparent)',
+};
+const moreRight = ref(false);
+function measure() {
+  const el = stripEl.value;
+  moreRight.value = !!el && el.scrollLeft + el.clientWidth < el.scrollWidth - 1;
+}
+watch(
+  () => bins.value.map((b) => b.key).join('|'),
+  () => nextTick(measure),
+  { flush: 'post' },
+);
 const loading = computed(() => !ctx.data.dataset.value);
 const level = computed(() => bins.value[0]?.level ?? 'month');
-const title = computed(
-  () =>
-    (({ season: 'Pagal sezonus', month: 'Pagal mėnesius', day: 'Pagal dienas' }) as const)[
-      level.value
-    ],
+// One caption pattern: "{what} pagal {dimension} · {period}" (DATAVIZ-25).
+const title = computed(() => {
+  const base = (
+    {
+      season: 'Sumedžioti vilkai pagal sezonus',
+      month: 'Sumedžioti vilkai pagal mėnesius',
+      day: 'Sumedžioti vilkai pagal dienas',
+    } as const
+  )[level.value];
+  if (level.value === 'season') return base;
+  const s = ctx.derived.intervalSeason.value;
+  return `${base} · ${s != null ? `${s}/${s + 1}` : ctx.derived.periodLabel.value}`;
+});
+const hint = computed(() =>
+  level.value === 'month'
+    ? 'Spustelėkite mėnesį – bus rodomi tik jo įrašai.'
+    : level.value === 'season'
+      ? 'Spustelėkite sezoną – bus rodomi tik jo įrašai.'
+      : '',
 );
+
+// The day level fits the whole month in the panel: no minimum bar width with a mouse; touch
+// keeps 24 px targets and the fade shows the rest (J-13).
+const minWidth = computed(() => {
+  if (level.value === 'day') return props.large ? 'min-w-[24px]' : 'min-w-0';
+  return props.large ? 'min-w-[44px]' : 'min-w-[24px]';
+});
+// Days: counts only on bars of 3 and more, labels on 1, 5, 10, 15, 20, 25 and the last day.
+const showCount = (bin: HistogramBin) => bin.level !== 'day' || bin.count >= 3;
+function showLabel(bin: HistogramBin, index: number) {
+  if (bin.level !== 'day') return true;
+  const day = Number(bin.interval.from.slice(8, 10));
+  return [1, 5, 10, 15, 20, 25].includes(day) || index === bins.value.length - 1;
+}
 
 // The hub's clipped panel histogram is lower so it ends above y = 600 at 1440 × 900.
 const barArea = computed(() => (props.compact ? 40 : props.clipToWindow ? 68 : 96));
@@ -164,7 +215,9 @@ function yearMark(bin: HistogramBin, index: number) {
   if (bin.level === 'month') {
     return index === 0 || monthIndex(bin) === 1 ? bin.interval.from.slice(0, 4) : '';
   }
-  return index === 0 || bin.interval.from.endsWith('-01') ? MONTH_SHORT[monthIndex(bin)] : '';
+  // Days of one month: the caption names the period; a month mark only where months change.
+  if (index === 0) return '';
+  return bin.interval.from.endsWith('-01') ? MONTH_SHORT[monthIndex(bin)] : '';
 }
 
 function ariaLabelOf(bin: HistogramBin) {

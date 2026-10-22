@@ -114,6 +114,13 @@
         <StebFilters mobile />
       </div>
       <StebSheet ref="sheet" />
+      <!-- Phone legend above the collapsed sheet (DATAVIZ-01). -->
+      <div
+        v-if="!tableOpen"
+        class="absolute left-3 z-20 bottom-[calc(var(--hub-mobile-peek,96px)+8px)]"
+      >
+        <StebLegend phone />
+      </div>
     </template>
 
     <!-- Loading pill over the map. -->
@@ -394,9 +401,12 @@ body.hub-steb--railed .rightBottom {
 body.hub-steb--mobile #mapControlsRT {
   transform: translateY(var(--hub-mobile-header, 108px));
 }
-body.hub-steb--mobile .bottomLeft,
 body.hub-steb--mobile .rightBottom {
   transform: translateY(calc(-1 * var(--hub-steb-sheet, 0px)));
+}
+/* The scale line above the phone legend. */
+body.hub-steb--mobile .bottomLeft {
+  transform: translateY(calc(-1 * (var(--hub-steb-sheet, 0px) + 56px)));
 }
 /* 44 px touch targets on phones. */
 body.hub-steb--mobile .ol-control button,

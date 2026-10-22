@@ -1,9 +1,9 @@
 <template>
   <section v-if="rows.length || pending" :aria-labelledby="headingId" class="flex flex-col gap-1">
-    <h3 :id="headingId" class="text-xs font-semibold uppercase tracking-wide text-gray-600">
+    <h3 :id="headingId" class="text-xs font-semibold uppercase tracking-wide text-ink-muted">
       {{ S.otherRowsHeading }}
     </h3>
-    <p v-if="pending && !rows.length" role="status" class="text-xs text-gray-600">
+    <p v-if="pending && !rows.length" role="status" class="text-xs text-ink-muted">
       {{ S.loading }}
     </p>
     <ul class="flex flex-col gap-1">

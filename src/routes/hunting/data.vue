@@ -42,12 +42,17 @@
             role="complementary"
             class="hub-card absolute z-30"
           >
-            <component :is="T4.areaCard" :topics="topicList" focus-on-open />
+            <component
+              :is="T4.areaCard"
+              :topics="topicList"
+              focus-on-open
+              @close="onAreaCardClose"
+            />
           </div>
           <div v-if="T4.legend && !mapHidden" class="hub-legend absolute z-20">
             <component :is="T4.legend" />
           </div>
-          <component :is="T4.mapMessage" v-if="T4.mapMessage && isMapMessage && !mapHidden" />
+          <component :is="T4.mapMessage" v-if="T4.mapMessage && !mapHidden" />
           <component :is="T4.mapTooltip" v-if="T4.mapTooltip && !mapHidden" />
         </template>
       </template>
@@ -68,7 +73,11 @@
             @detent="(detent: string) => (sheetFull = detent === 'full')"
           />
           <!-- Not under the full sheet: its buttons would take focus behind it. -->
-          <component :is="T4.mapMessage" v-if="T4.mapMessage && isMapMessage && !sheetFull" />
+          <component :is="T4.mapMessage" v-if="T4.mapMessage && !sheetFull" />
+          <!-- Phone legend: floats bottom left, above the collapsed sheet (DATAVIZ-01). -->
+          <div v-if="T4.legend" class="hub-legend-phone absolute left-3 z-20">
+            <component :is="T4.legend" phone />
+          </div>
         </template>
       </template>
 
@@ -83,6 +92,12 @@
         </div>
         <component :is="T4.mapTooltip" v-if="T4.mapTooltip" />
       </template>
+      <div
+        v-if="topicKind === 'live' && ctx.liveMap.value && isMobile && T4.legend"
+        class="hub-legend-phone hub-legend-phone--live absolute left-3 z-20"
+      >
+        <component :is="T4.legend" phone />
+      </div>
 
       <HuntingHubShellOverviewCards
         v-if="topicKind === 'overview'"
@@ -93,9 +108,21 @@
       <HuntingHubShellAboutDialog ref="about" :topics="topics" />
     </template>
 
-    <!-- Last in the DOM so keyboard users reach the panel before the map controls. -->
+    <!-- The map's keyboard and screen reader equivalent is the table (MOBILE-A11Y-09). -->
+    <button
+      v-if="ctx && tableTarget"
+      type="button"
+      class="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-[calc(var(--hub-top)+8px)] focus:z-50 focus:rounded focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-brand max-md:focus:top-[calc(var(--hub-mobile-header)+8px)]"
+      :class="FOCUS_RING"
+      @click="tableTarget()"
+    >
+      {{ S.mapToTable }}
+    </button>
+    <!-- Last in the DOM so keyboard users reach the panel before the map controls. Fractional
+         zoom, so Lithuania fills the free map area instead of the next lower zoom step. -->
     <UiMap
       :show-scale-line="true"
+      :constrain-resolution="false"
       :projection="projection3857"
       :class="{ invisible: mapHidden }"
       :aria-hidden="topicKind === 'overview' ? 'true' : undefined"
@@ -126,10 +153,12 @@ import {
 } from 'vue';
 import { useRoute } from 'vue-router';
 import { useWindowSize, watchDebounced } from '@vueuse/core';
+import { transformExtent } from 'ol/proj';
 import { projection3857, vectorPositron } from '@/utils';
 import { HUB_CTX, type AboutOpenOptions, type HubContext } from '@/composables/hunting/hub/context';
 import type { TopicDef, TopicId } from '@/utils/hunting/hub/types';
 import {
+  HUB_MOBILE_PEEK,
   HUB_TOP_EMBED,
   hubCssVars,
   hubTop,
@@ -143,6 +172,7 @@ import { seasonOfDay } from '@/utils/hunting/dates';
 import { useHubState } from '@/composables/hunting/hub/useHubState';
 import { LIVE_HOSTS, TOPICS } from '@/utils/hunting/hub/topics';
 import { HUB_SHELL, type HubShell } from '@/components/hunting/hub/shell/shell';
+import { FOCUS_RING } from '@/components/hunting/hub/shell/controls';
 
 const mapLayers: any = inject('mapLayers');
 const route = useRoute();
@@ -275,7 +305,6 @@ const mapHidden = computed(
     topicKind.value === 'snapshot' &&
     tableReplacesMap(width.value, tableOpen.value, embed),
 );
-const isMapMessage = computed(() => ctx?.view.value?.map.kind === 'message');
 
 const railTitle = computed(() => (ctx ? TOPIC_TABS[ctx.sel.value.topic] : ''));
 const railValue = computed(() => ctx?.view.value?.kpis[0]?.value || '');
@@ -287,9 +316,35 @@ const overviewTop = () => {
   return isMobile.value ? mobileHeader(false) : hubTop(false) - HUB_TOP_EMBED;
 };
 const cssVars = computed(() => ({
+  '--hub-mobile-peek': `${HUB_MOBILE_PEEK}px`,
   ...hubCssVars(width.value, embed),
   '--hub-overview-top': `${overviewTop()}px`,
 }));
+
+// "Žemėlapio duomenys lentelėje": opens the topic's table (embedded, `lentele` makes the WP
+// view switch follow). Live topics standalone have their own visible "Lentelė" switch.
+const tableTarget = computed(() => {
+  if (!ctx) return null;
+  if (topicKind.value === 'snapshot') {
+    const tables = ctx.view.value?.tables || [];
+    const first =
+      tables.find((t) => t.id === ctx.topic.value.defaultTable && !t.disabled) ||
+      tables.find((t) => !t.disabled);
+    return first ? () => ctx.setTable(first.id) : null;
+  }
+  const live = ctx.embedLive.value;
+  if (topicKind.value === 'live' && live?.hasTable.value) return () => live.setTableOpen(true);
+  return null;
+});
+
+// The area card's ✕ or Esc: its button is gone, so give focus to the panel heading
+// (MOBILE-A11Y-10).
+function onAreaCardClose() {
+  nextTick(() => {
+    const el = document.getElementById(panelHeadingId);
+    if (el) focusElement(el);
+  });
+}
 
 // ---- Focus: a topic switch moves focus to the panel H1 (desktop; §10). On phones focus
 // stays on the topic menu, which is where the switch happened. Embedded, a switch made on
@@ -298,8 +353,19 @@ if (ctx) {
   watch(
     () => ctx.sel.value.topic,
     async () => {
-      if (isMobile.value) return;
       if (embed && !embedFocusAllowed(true)) return;
+      // Phones: focus stays where the switch happened (the topic menu); only when that
+      // control is gone (an overview card's action) it goes to the sheet's handle.
+      if (isMobile.value) {
+        await nextTick();
+        const active = document.activeElement;
+        if (active && active !== document.body) return;
+        const handle = document.querySelector<HTMLElement>(
+          'button[aria-controls="hub-sheet-body"]',
+        );
+        if (handle) focusElement(handle);
+        return;
+      }
       await nextTick();
       const started = performance.now();
       const tryFocus = () => {
@@ -329,6 +395,27 @@ if (ctx) {
 // the padding in sync while it is shown; the shell sets it on load and when the map comes
 // back from Apžvalga or a live topic, then centres Lithuania unless the URL or a place says
 // otherwise.
+// "Visa Lietuva" and every first view: fit Lithuania into the free map area (the view padding
+// leaves out the shell), with room for the legend at the bottom (DATAVIZ-13, J-18). It
+// replaces MapLayers.centerMap (the globe button, the live topics) while the hub is shown.
+const LITHUANIA_3857 = transformExtent([20.93, 53.89, 26.84, 56.46], 'EPSG:4326', 'EPSG:3857');
+const LEGEND_H_DESKTOP = 110;
+const LEGEND_H_PHONE = 44;
+function fitLithuania() {
+  const map = mapLayers.map ? toRaw(mapLayers.map) : null;
+  if (!map) return;
+  const padding = isMobile.value
+    ? [8, 8, LEGEND_H_PHONE + 16, 8]
+    : [16, 16, LEGEND_H_DESKTOP + 24, 16];
+  map.getView().fit(LITHUANIA_3857, { padding, duration: 0 });
+}
+if (ctx) {
+  mapLayers.centerMap = fitLithuania;
+  onBeforeUnmount(() => {
+    delete mapLayers.centerMap;
+  });
+}
+
 function recentre() {
   const map = mapLayers.map ? toRaw(mapLayers.map) : null;
   if (!ctx || !map) return;
@@ -354,10 +441,11 @@ if (ctx) {
 }
 
 const mapElement = () => mapLayers.map?.getTargetElement?.() as HTMLElement | undefined;
-const setMapLabel = (text: string) => {
+// Always a named region (phones too) that points to the table (MOBILE-A11Y-09).
+const setMapLabel = (text: string | null) => {
   const el = mapElement();
   if (!el) return;
-  if (!text) {
+  if (text === null) {
     el.removeAttribute('role');
     el.removeAttribute('aria-label');
     return;
@@ -365,6 +453,29 @@ const setMapLabel = (text: string) => {
   el.setAttribute('role', 'region');
   el.setAttribute('aria-label', S.mapRegion(text));
 };
+
+// UiMap's OpenLayers buttons: Lithuanian names (MOBILE-A11Y-07, J-25).
+function labelMapControls() {
+  const root = mapElement()?.closest('.hunting-hub') || document;
+  const name = (selector: string, label: string) =>
+    root.querySelectorAll<HTMLElement>(selector).forEach((el) => {
+      el.setAttribute('aria-label', label);
+      el.setAttribute('title', label);
+    });
+  name('.ol-zoom-in', 'Artinti');
+  name('.ol-zoom-out', 'Tolinti');
+  name('.ol-attribution button', 'Žemėlapio duomenų šaltiniai');
+  name('.ol-rotate-reset', 'Atstatyti kryptį');
+}
+if (ctx) {
+  onMounted(async () => {
+    await mapLayers.waitForLoaded;
+    await nextTick();
+    labelMapControls();
+    // The answer may have arrived before the map element existed.
+    if (ctx.topic.value.kind !== 'live') setMapLabel(answer.value);
+  });
+}
 
 // ---- Page metadata (§8.6): title, lang and noindex, restored on leave.
 const previousTitle = document.title;
@@ -397,7 +508,7 @@ onBeforeUnmount(() => {
   document.documentElement.lang = previousLang;
   robots.remove();
   stopMeta?.();
-  setMapLabel('');
+  setMapLabel(null);
 });
 </script>
 
@@ -420,6 +531,14 @@ onBeforeUnmount(() => {
 }
 .hunting-hub--rail .hub-legend {
   left: calc(var(--hub-rail-w) + 2 * var(--hub-gap) + 8px);
+}
+/* Phones: above the collapsed sheet (the sheet, z-30, covers it when raised). */
+.hub-legend-phone {
+  bottom: calc(var(--hub-mobile-peek, 96px) + 8px);
+}
+/* The Vilkai fallback map sits above the wolves sheet, which measures itself. */
+.hub-legend-phone--live {
+  bottom: calc(var(--hub-vilkai-sheet, 176px) + 8px);
 }
 </style>
 
@@ -450,12 +569,70 @@ body:has(.hunting-hub) {
 .hunting-hub--drawer .rightBottom {
   transform: translateX(calc(-1 * (var(--hub-drawer-w) + var(--hub-gap))));
 }
+/* Embedded: the site's floating accessibility button owns the page's bottom-right corner;
+   the zoom stack stays ≥ 72 px above the bottom (DATAVIZ-09, CONTROLS-14). */
+.hunting-hub--embed:not(.hunting-hub--mobile) .rightBottom {
+  bottom: 64px !important;
+}
 .hunting-hub--mobile #mapControlsRT {
   transform: translateY(var(--hub-overview-top));
 }
-.hunting-hub--mobile .bottomLeft,
+/* Phones: the scale line above the floating legend, the controls above the sheet. */
+.hunting-hub--mobile .bottomLeft {
+  transform: translateY(calc(-1 * (var(--hub-mobile-peek, 96px) + 56px)));
+}
 .hunting-hub--mobile .rightBottom {
-  transform: translateY(-96px);
+  transform: translateY(calc(-1 * var(--hub-mobile-peek, 96px)));
+}
+
+/* Map buttons in the site's look: 40 px white squares with a hairline, zoom as one stacked
+   group, the teal focus outline (CONTROLS-14, MOBILE-A11Y-07). */
+.hunting-hub .ol-zoom button,
+.hunting-hub .ol-attribution button,
+.hunting-hub .rightBottom > button {
+  width: 40px !important;
+  height: 40px !important;
+  margin: 0 !important;
+  background: #fff !important;
+  color: #121926 !important;
+  border: 1px solid #cdd5df !important;
+  border-radius: 8px !important;
+  box-shadow: 0 1px 3px rgba(18, 25, 38, 0.12) !important;
+  font-size: 18px !important;
+}
+.hunting-hub .ol-zoom {
+  display: flex;
+  flex-direction: column;
+  padding: 0 !important;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(18, 25, 38, 0.12);
+}
+.hunting-hub .ol-zoom button {
+  box-shadow: none !important;
+}
+.hunting-hub .ol-zoom .ol-zoom-in {
+  border-radius: 8px 8px 0 0 !important;
+  border-bottom-width: 0 !important;
+}
+.hunting-hub .ol-zoom .ol-zoom-out {
+  border-radius: 0 0 8px 8px !important;
+  border-top-color: #e3e8ef !important;
+}
+.hunting-hub .ol-attribution {
+  padding: 0 !important;
+}
+.hunting-hub .ol-zoom button:hover,
+.hunting-hub .ol-attribution button:hover,
+.hunting-hub .rightBottom > button:hover {
+  background: #e6eff0 !important;
+}
+.hunting-hub .ol-control button:focus-visible,
+.hunting-hub #mapControlsRT button:focus-visible,
+.hunting-hub .rightBottom button:focus-visible {
+  outline: 2px solid #004650 !important;
+  outline-offset: 2px !important;
+  position: relative;
+  z-index: 1;
 }
 /* 44 px touch targets for the map controls on phones (§4.3). */
 .hunting-hub--mobile .ol-control button,

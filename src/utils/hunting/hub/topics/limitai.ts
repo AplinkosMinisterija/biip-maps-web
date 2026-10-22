@@ -2,6 +2,7 @@
 // `limits.json` snapshot. Pure: view(), overview() and otherRow() read only their arguments.
 import { seasonLabel } from '../../dates';
 import { ATTRIBUTION_RULE, P_MOOSE, S, TOPIC_SUBTITLES, TOPIC_TABS } from '../strings';
+import { CHOROPLETH_UNSET_FILL } from '../colors';
 import type {
   CardDef,
   ChartDef,
@@ -201,9 +202,9 @@ function kpis(meta: Meta, a: Agg, season: number, muni: Municipality | null): Kp
     if (!muni && order !== null) {
       list.push(kpi('order', 'Patvirtinta įsakymu', formatInt(order), { tooltip: T.orderTooltip }));
     }
+    // The date in the value slot instead of a lone "—" (DATAVIZ-07).
     list.push(
-      kpi('use', 'Panaudojimas', DASH, {
-        sub: T.usedLater(season),
+      kpi('use', 'Panaudojimas paaiškės', `po ${season + 1}-05-15`, {
         muted: true,
         ariaLabel: `Panaudojimas ${T.usedLater(season)}`,
       }),
@@ -307,13 +308,15 @@ function map(meta: Meta, rows: LimitRow[], season: number, metric: string): Chor
     kind: 'choropleth',
     values,
     breaks: used_ ? CLASSES.panaudota : CLASSES.tankis,
-    palette: 'blue',
+    palette: 'teal',
     special: [
-      { key: 'unset', label: T.unsetLegend, fill: '#e5e7eb', codes: unset },
+      { key: 'unset', label: T.unsetLegend, fill: CHOROPLETH_UNSET_FILL, codes: unset },
       { key: 'pooled', label: S.legendPooled, fill: 'dotted', codes: pooled },
     ],
     legendTitle: used_ ? T.legendUsed(season) : T.legendDensity(season),
-    format: used_ ? (v: number) => formatPct(v / 100) : (v: number) => formatDec(v),
+    format: used_
+      ? (v: number) => formatPct(v / 100)
+      : (v: number) => `${formatDec(v)} / 10 000 ha`,
     labels,
     hatched,
     // Classes "< 40" … "≥ 80": a use of 0 % belongs to the first class, not to white.

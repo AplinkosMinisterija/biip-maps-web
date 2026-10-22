@@ -123,9 +123,9 @@ export const S = {
   legendNoData: 'Duomenų nėra',
   legendPooled: 'Neskelbiama (mažiau nei 3 MPV)', // the same wording as `pooledShort`
   legendFixedClasses: 'Klasės vienodos visiems sezonams.',
-  otherRowsHeading: 'Kiti rodikliai čia',
+  otherRowsHeading: 'Kiti šios savivaldybės rodikliai',
   loading: 'Įkeliami duomenys…',
-  loadError: 'Nepavyko įkelti duomenų.',
+  loadError: 'Nepavyko įkelti duomenų. Patikrinkite ryšį ir bandykite dar kartą.',
   retry: 'Bandyti dar kartą',
   empty: 'Pasirinktam sezonui ir vietai duomenų nėra.',
   emptyShowAll: 'Rodyti visą Lietuvą',
@@ -161,7 +161,9 @@ export const S = {
   prototypeFeedback: 'Pastabos apie puslapį',
   prototypeClose: 'Uždaryti pranešimą apie bandomąją aplinką',
   documentTitle: (tab: string) => `${tab} – Medžioklės duomenys – BĮIP žemėlapiai`,
-  mapRegion: (answer: string) => `Žemėlapis: ${answer}`,
+  mapRegion: (answer: string) =>
+    `${answer ? `Žemėlapis: ${answer.replace(/\.$/, '')}` : 'Žemėlapis'}. Tie patys duomenys – rodinyje „Lentelė“.`,
+  mapToTable: 'Žemėlapio duomenys lentelėje',
   // Coercion notices shared by the hub state (§3.4); topic-specific ones live in topics/*.ts.
   noticeSeasonOnly: (season: string) =>
     `Šie duomenys skelbiami tik sezonais – rodomas ${season} sezonas.`,

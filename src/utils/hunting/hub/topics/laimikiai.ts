@@ -343,7 +343,8 @@ function kpis(c: Ctx, muni: Municipality | null): KpiDef[] {
   const subject = c.sp ? '' : ` ${plural(agg.n, P_ANIMAL)}`;
   list.push(
     kpi('hunted', 'Sumedžiota', formatInt(agg.n), {
-      sub: c.prev === null ? undefined : d ? `${d.text} nei ${prevLabel}` : DASH,
+      // No sub-line when the Δ is not available; the ⓘ says why (J-23).
+      sub: c.prev !== null && d ? `${d.text} nei ${prevLabel}` : undefined,
       tooltip: d ? deltaTooltip(c, d, muni) : c.prev === null ? undefined : S.deltaSuppressed,
       ariaLabel:
         `Sumedžiota ${formatInt(agg.n)}${subject}` +
@@ -380,7 +381,7 @@ function kpis(c: Ctx, muni: Municipality | null): KpiDef[] {
   } else {
     list.push(
       kpi('dead', 'Rasta kritusių', formatInt(agg.dead), {
-        sub: `iš jų prie kelių ${formatInt(agg.road)}`,
+        sub: `${formatInt(agg.road)} iš jų – prie kelių`,
         ariaLabel: `Rasta kritusių ${formatInt(agg.dead)}, iš jų prie kelių ${formatInt(agg.road)}`,
       }),
     );
@@ -408,7 +409,7 @@ function chart(c: Ctx, muni: Municipality | null): ChartDef | undefined {
     const seasons = c.prevIdx && c.prev !== null && !c.current ? [c.prev, c.season] : [c.season];
     const bars = seasons.map((s) => {
       const n = cellOf(seasonIndex(c.rows, s), code, c.sp!.id).n;
-      return { label: seasonLabel(s), value: n, valueLabel: formatInt(n) };
+      return { label: seasonLabel(s), value: n, valueLabel: formatInt(n), current: s === c.season };
     });
     return { kind: 'columns', title: `${c.sp.name}: sumedžiota pagal sezonus`, bars };
   }
@@ -416,12 +417,14 @@ function chart(c: Ctx, muni: Municipality | null): ChartDef | undefined {
   if (!list.length) return undefined;
   const top = list.slice(0, TOP_BARS);
   const rest = sum(list.slice(TOP_BARS).map((x) => x.agg.n));
-  const bars = top.map((x) => ({
+  const bars: ChartDef['bars'] = top.map((x) => ({
     label: x.sp.name,
     value: x.agg.n,
     valueLabel: formatInt(x.agg.n),
   }));
-  if (rest > 0) bars.push({ label: OTHER_SPECIES, value: rest, valueLabel: formatInt(rest) });
+  if (rest > 0) {
+    bars.push({ label: OTHER_SPECIES, value: rest, valueLabel: formatInt(rest), other: true });
+  }
   return {
     kind: 'hbar',
     title: `${c.current ? 'Užregistruota el. žurnale' : 'Sumedžiota'} pagal rūšis · ${seasonLabel(c.season)}`,
@@ -467,7 +470,7 @@ function map(c: Ctx): ChoroplethDef | MapMessageDef {
     kind: 'choropleth',
     values,
     breaks: fixed.breaks,
-    palette: 'green',
+    palette: 'teal',
     special: [{ key: 'pooled', label: S.legendPooled, fill: 'dotted', codes: pooled }],
     legendTitle: T.legend(fixed.unit, c.season),
     format: (v: number) => `${formatDec(v)} ${T.perUnitShort(fixed.unit)}`,

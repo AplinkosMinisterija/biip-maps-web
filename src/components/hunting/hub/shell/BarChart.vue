@@ -1,37 +1,51 @@
 <template>
-  <figure class="flex flex-col gap-1">
-    <figcaption class="text-xs font-semibold text-gray-900">{{ chart.title }}</figcaption>
+  <figure class="flex flex-col gap-1.5">
+    <figcaption class="text-[13px] font-semibold leading-[18px] text-ink">
+      {{ chart.title }}
+    </figcaption>
 
-    <!-- Horizontal bars with value labels (Laimikiai top species). -->
-    <div v-if="chart.kind === 'hbar'" aria-hidden="true" class="flex flex-col gap-1">
-      <div
-        v-for="bar in chart.bars"
-        :key="`${bar.series || ''}${bar.label}`"
-        class="grid grid-cols-[7.5rem_1fr_auto] items-center gap-2 text-xs"
-      >
-        <span class="truncate text-gray-800" :title="bar.label">{{ bar.label }}</span>
-        <span class="h-3 rounded-sm bg-gray-100">
-          <span class="block h-3 rounded-sm bg-blue-700" :style="{ width: pct(bar.value) }" />
+    <!-- Horizontal bars (Laimikiai top species, Stebėjimai species): one grid, so every bar
+         shares one baseline and one length scale; "Kitos rūšys" grey, set apart, last. -->
+    <div
+      v-if="chart.kind === 'hbar'"
+      aria-hidden="true"
+      class="grid grid-cols-[7.5rem_1fr_3.75rem] items-center gap-x-2 gap-y-1.5 text-xs"
+    >
+      <template v-for="bar in hbars" :key="`${bar.series || ''}${bar.label}`">
+        <span
+          class="truncate"
+          :class="[bar.other ? 'mt-1.5 text-ink-muted' : 'text-ink']"
+          :title="bar.label"
+        >
+          {{ bar.label }}
         </span>
-        <span class="tabular-nums text-gray-900">{{ bar.valueLabel }}</span>
-      </div>
+        <span class="flex h-2.5 items-center" :class="bar.other ? 'mt-1.5' : ''">
+          <span
+            class="block h-2.5 rounded-r-sm"
+            :style="{ width: pct(bar.value), background: barColor(bar) }"
+          />
+        </span>
+        <span class="text-right tabular-nums text-ink" :class="bar.other ? 'mt-1.5' : ''">
+          {{ bar.valueLabel }}
+        </span>
+      </template>
     </div>
 
     <!-- Columns: one bar per label; stacked: one segment per series. -->
     <div v-else aria-hidden="true" class="flex flex-col gap-1">
-      <div class="flex h-[120px] items-end gap-1 border-b border-gray-400">
+      <div class="flex h-[120px] items-end gap-1 border-b border-line-strong">
         <div
           v-for="col in columns"
           :key="col.label"
           class="flex h-full min-w-0 flex-1 flex-col items-center justify-end"
         >
-          <!-- Stacked: one column, a segment per series. -->
+          <!-- Stacked: one column, a segment per series, 1 px white between segments. -->
           <template v-if="chart.kind === 'stacked'">
-            <span class="mb-0.5 text-[10px] leading-none tabular-nums text-gray-800">
+            <span class="mb-0.5 text-[11px] leading-none tabular-nums text-ink-muted">
               {{ col.totalLabel }}
             </span>
             <span
-              class="flex w-full max-w-[28px] flex-col-reverse"
+              class="flex w-full max-w-[28px] flex-col-reverse gap-px"
               :style="{ height: pct(col.total) }"
             >
               <span
@@ -40,6 +54,7 @@
                 class="block w-full"
                 :style="{
                   height: col.total ? `${(seg.value / col.total) * 100}%` : '0',
+                  minHeight: seg.value > 0 ? '2px' : '0',
                   background: colorOf(seg.series),
                 }"
               />
@@ -52,12 +67,16 @@
               :key="seg.series"
               class="flex h-full min-w-0 max-w-[28px] flex-1 flex-col items-center justify-end"
             >
-              <span class="mb-0.5 text-[10px] leading-none tabular-nums text-gray-800">
+              <span class="mb-0.5 text-[11px] leading-none tabular-nums text-ink">
                 {{ seg.label }}
               </span>
               <span
                 class="block w-full rounded-t-sm"
-                :style="{ height: pct(seg.value), background: colorOf(seg.series) }"
+                :style="{
+                  height: pct(seg.value),
+                  background:
+                    seg.current && !chart.series?.length ? BAR_CURRENT : colorOf(seg.series),
+                }"
               />
             </span>
           </span>
@@ -67,15 +86,15 @@
         <span
           v-for="col in columns"
           :key="col.label"
-          class="min-w-0 flex-1 truncate text-center text-[10px] text-gray-700"
+          class="min-w-0 flex-1 truncate text-center text-[11px] text-ink-muted"
         >
           {{ col.label }}
         </span>
       </div>
-      <ul v-if="chart.series?.length" class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-800">
-        <li v-for="s in chart.series" :key="s.id" class="flex items-center gap-1">
+      <ul v-if="chart.series?.length" class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-ink">
+        <li v-for="s in chart.series" :key="s.id" class="flex items-center gap-1.5">
           <span
-            class="inline-block h-3 w-3 rounded-sm border border-gray-500"
+            class="inline-block h-2.5 w-2.5 rounded-sm"
             :style="{ background: colorOf(s.id) }"
           />
           {{ s.label }}
@@ -83,7 +102,7 @@
       </ul>
     </div>
 
-    <p v-if="chart.note" class="text-xs text-gray-700">{{ chart.note }}</p>
+    <p v-if="chart.note" class="text-xs leading-4 text-ink-muted">{{ chart.note }}</p>
 
     <!-- Table twin for screen readers (§10). -->
     <table class="sr-only">
@@ -110,30 +129,31 @@
 
 <script setup lang="ts">
 import { computed, type PropType } from 'vue';
-import type { ChartDef } from '@/utils/hunting/hub/types';
+import type { ChartBar, ChartDef } from '@/utils/hunting/hub/types';
 import { formatInt } from '@/utils/hunting/dates';
+import { BAR_COLOR, BAR_CURRENT, BAR_OTHER, seriesColor } from '@/utils/hunting/hub/colors';
 
 const props = defineProps({
   chart: { type: Object as PropType<ChartDef>, required: true },
 });
 
-// Series colours: dark enough for 3:1 against white; the legend names each series.
-// Neighbours in the Žala order (stumbrai/lūšys, bebrai/lokiai) differ in hue, not only shade.
-const PALETTE = ['#1d4ed8', '#c2410c', '#15803d', '#7e22ce', '#be185d', '#4b5563', '#0f766e'];
-const colorOf = (series?: string) => {
-  const list = props.chart.series || [];
-  const i = Math.max(
-    0,
-    list.findIndex((s) => s.id === series),
-  );
-  return PALETTE[i % PALETTE.length];
-};
+// Colour follows the entity, never its position (DATAVIZ-03): species and named series get
+// their colour from utils/hunting/hub/colors.ts, any other single series the bar teal.
+const colorOf = (series?: string) => seriesColor(series);
+const barColor = (bar: ChartBar) =>
+  bar.other ? BAR_OTHER : bar.current ? BAR_CURRENT : bar.series ? colorOf(bar.series) : BAR_COLOR;
+
+// The residual "Kitos rūšys" bar always last.
+const hbars = computed(() => [
+  ...props.chart.bars.filter((b) => !b.other),
+  ...props.chart.bars.filter((b) => b.other),
+]);
 
 interface Column {
   label: string;
   total: number;
   totalLabel: string;
-  segments: { series: string; value: number; label: string }[];
+  segments: { series: string; value: number; label: string; current?: boolean }[];
 }
 
 const columns = computed<Column[]>(() => {
@@ -145,7 +165,12 @@ const columns = computed<Column[]>(() => {
       map.set(bar.label, col);
     }
     col.total += bar.value;
-    col.segments.push({ series: bar.series || '', value: bar.value, label: bar.valueLabel });
+    col.segments.push({
+      series: bar.series || '',
+      value: bar.value,
+      label: bar.valueLabel,
+      current: bar.current,
+    });
   }
   const cols = Array.from(map.values());
   // A column total is computed only when every part is an exact count: suppressed cells

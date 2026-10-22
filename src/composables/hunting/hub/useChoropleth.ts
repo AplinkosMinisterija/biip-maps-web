@@ -19,6 +19,17 @@ import { projection3857 } from '@/utils/constants';
 import { loadMunicipalityIndex } from '@/utils/hunting/municipalities';
 import { S } from '@/utils/hunting/hub/strings';
 import type { ChoroplethDef } from '@/utils/hunting/hub/types';
+import {
+  CHOROPLETH_NO_DATA_FILL,
+  CHOROPLETH_OUTLINE,
+  CHOROPLETH_RAMPS,
+  CHOROPLETH_ZERO_FILL,
+  DOT_FILL,
+  HATCH_LINE,
+  MAP_LAND,
+  SELECTION_HALO,
+  SELECTION_INK,
+} from '@/utils/hunting/hub/colors';
 import type { HubContext } from './context';
 
 export const HUB_CHOROPLETH_LAYER_ID = 'huntingHubChoropleth';
@@ -26,18 +37,18 @@ export const HUB_CHOROPLETH_SELECTION_LAYER_ID = 'huntingHubChoroplethSelection'
 
 export type ChoroplethPalette = ChoroplethDef['palette'];
 
-// Light → dark, 5 classes (ColorBrewer Greens / Blues / Oranges).
-export const CHOROPLETH_PALETTES: Record<ChoroplethPalette, string[]> = {
-  green: ['#edf8e9', '#bae4b3', '#74c476', '#31a354', '#006d2c'],
-  // Blues one step up: the first class must not read as white ("no data").
-  blue: ['#c6dbef', '#9ecae1', '#6baed6', '#3182bd', '#08519c'],
-  orange: ['#feedde', '#fdbe85', '#fd8d3c', '#e6550d', '#a63603'],
+// The colours live in utils/hunting/hub/colors.ts (one source for the map, the legend and the
+// class helpers); re-exported here for the legend component.
+export {
+  CHOROPLETH_NO_DATA_FILL,
+  CHOROPLETH_OUTLINE,
+  CHOROPLETH_RAMPS,
+  CHOROPLETH_ZERO_FILL,
+  DOT_FILL,
+  HATCH_LINE,
 };
-export const CHOROPLETH_OUTLINE = '#6b7280';
-export const CHOROPLETH_SELECTED = '#111827';
-export const CHOROPLETH_EMPTY_FILL = '#ffffff';
-export const HATCH_LINE = '#9ca3af';
-export const DOT_FILL = '#4b5563';
+// The white under the hatch and the dots ("Nėra MPV", "Neskelbiama").
+export const CHOROPLETH_EMPTY_FILL = CHOROPLETH_ZERO_FILL;
 
 // Neighbouring municipalities stay in view around a selected one.
 const SELECTED_MAX_ZOOM = 9;
@@ -53,7 +64,7 @@ export function classOf(value: number, breaks: number[]) {
 export type ChoroplethFill =
   | { kind: 'class'; index: number }
   | { kind: 'zero' } // white, value 0 and `zeroIsWhite`
-  | { kind: 'none' } // white, no value
+  | { kind: 'none' } // light grey, no value ("Duomenų nėra")
   | { kind: 'hatched' }
   | { kind: 'special'; fill: string | 'dotted' };
 
@@ -61,7 +72,7 @@ export type ChoroplethFill =
 // the class below the first break holds only the white 0, so the colours start at class 1.
 export function colorIndex(def: ChoroplethDef, index: number) {
   const skip = def.zeroIsWhite && def.breaks.length > 0 && def.breaks[0] <= 1 ? 1 : 0;
-  return Math.max(0, Math.min(index - skip, CHOROPLETH_PALETTES[def.palette].length - 1));
+  return Math.max(0, Math.min(index - skip, CHOROPLETH_RAMPS[def.palette].length - 1));
 }
 
 /** How one municipality is drawn (pure; shared by the layer style and the legend). */
@@ -158,13 +169,19 @@ function fillStyle(def: ChoroplethDef | null, code: number): Style {
         }),
     );
   }
-  if (fill.kind === 'none' || fill.kind === 'zero') {
+  if (fill.kind === 'zero') {
     return cachedStyle(
-      'empty',
-      () => new Style({ stroke: outline, fill: new Fill({ color: CHOROPLETH_EMPTY_FILL }) }),
+      'zero',
+      () => new Style({ stroke: outline, fill: new Fill({ color: CHOROPLETH_ZERO_FILL }) }),
     );
   }
-  const colors = CHOROPLETH_PALETTES[def.palette];
+  if (fill.kind === 'none') {
+    return cachedStyle(
+      'none',
+      () => new Style({ stroke: outline, fill: new Fill({ color: CHOROPLETH_NO_DATA_FILL }) }),
+    );
+  }
+  const colors = CHOROPLETH_RAMPS[def.palette];
   const index = colorIndex(def, fill.index);
   return cachedStyle(
     `${def.palette}:${index}`,
@@ -178,6 +195,17 @@ export interface LegendItem {
   fill: string | 'hatched' | 'dotted';
 }
 
+export interface LegendModel {
+  /** Integer counts (Žala, Vilkai): a label under every swatch ("<3", "3–5", …, "> 20"). */
+  counts: boolean;
+  /** One swatch per class; `label` is the class's full, non-overlapping text. */
+  classes: LegendItem[];
+  /** Continuous metrics: the break values, printed under the joins between the swatches. */
+  joins: string[];
+  /** Fills outside the scale: "0", "Nėra MPV", pooled, … and "Duomenų nėra". */
+  specials: LegendItem[];
+}
+
 // Class bounds are plain numbers: the unit is already in the legend title, and `format` may
 // append it ("15 / 1 000 ha–19 / 1 000 ha" would not read).
 const boundFormat = new Intl.NumberFormat('lt-LT', { maximumFractionDigits: 1 });
@@ -185,23 +213,27 @@ const numberLabel = (v: number) => boundFormat.format(v);
 const countFormat = new Intl.NumberFormat('lt-LT', { maximumFractionDigits: 0 });
 
 /**
- * Legend rows of a choropleth: one per class, then "Nėra MPV" (hatched) and "Duomenų nėra"
- * when such municipalities exist among `codes`. Classes are < b1, b1–b2, …, ≥ bn. Count maps
- * (`zeroIsWhite`, integer breaks) read as 0 · 1–2 · 3–5 · … · > 20 instead.
+ * Legend of a choropleth: one swatch per class, then "0", "Nėra MPV", the special fills and
+ * "Duomenų nėra" when such municipalities exist among `codes`. Classes are < b1, b1–b2, …,
+ * ≥ bn; their labels never share a bound ("15–18,9", "19–20,9"; whole-number metrics
+ * "40–49"). Count maps (`zeroIsWhite`, integer breaks) read as 0 · 1–2 · 3–5 · … · > 20.
  */
-export function legendItems(def: ChoroplethDef, codes: number[]): LegendItem[] {
-  const colors = CHOROPLETH_PALETTES[def.palette];
+export function legendModel(def: ChoroplethDef, codes: number[]): LegendModel {
+  const colors = CHOROPLETH_RAMPS[def.palette];
   const b = def.breaks;
   const counts = def.zeroIsWhite && b.length > 0 && b.every((v) => Number.isInteger(v) && v > 0);
-  const items: LegendItem[] = [];
-  if (counts) {
-    items.push({ key: 'zero', label: '0', fill: CHOROPLETH_EMPTY_FILL });
-  }
+  const classes: LegendItem[] = [];
+  const specials: LegendItem[] = [];
+  if (counts) specials.push({ key: 'zero', label: '0', fill: CHOROPLETH_ZERO_FILL });
   // count classes use plain integers: `format` may mask small values (e.g. '<3')
   const int = (v: number) => countFormat.format(v);
   const range = (lo: number, hi: number) => (lo === hi ? int(lo) : `${int(lo)}–${int(hi)}`);
+  // Whole-number values (percent of a limit) end one below the next break, others 0,1 below.
+  const wholeValues = [...def.values.values()].every((v) => v == null || Number.isInteger(v));
+  const step = wholeValues && b.every((v) => Number.isInteger(v)) ? 1 : 0.1;
+  const upper = (v: number) => numberLabel(Math.round((v - step) * 10) / 10);
   for (let i = 0; i <= b.length; i++) {
-    // a first class with no counts in it (only 0, drawn white) gets no row
+    // a first class with no counts in it (only 0, drawn white) gets no swatch
     if (counts && i === 0 && b[0] <= 1) continue;
     let label: string;
     if (counts) {
@@ -211,15 +243,15 @@ export function legendItems(def: ChoroplethDef, codes: number[]): LegendItem[] {
       else label = range(b[i - 1], b[i] - 1);
     } else if (i === 0) label = `< ${numberLabel(b[0])}`;
     else if (i === b.length) label = `≥ ${numberLabel(b[i - 1])}`;
-    else label = `${numberLabel(b[i - 1])}–${numberLabel(b[i])}`;
-    items.push({ key: `c${i}`, label, fill: colors[colorIndex(def, i)] });
+    else label = `${numberLabel(b[i - 1])}–${upper(b[i])}`;
+    classes.push({ key: `c${i}`, label, fill: colors[colorIndex(def, i)] });
   }
   if (codes.some((code) => def.hatched.has(code))) {
-    items.push({ key: 'hatched', label: S.legendNoMpv, fill: 'hatched' });
+    specials.push({ key: 'hatched', label: S.legendNoMpv, fill: 'hatched' });
   }
   (def.special || []).forEach((s) => {
     if (codes.some((code) => s.codes.has(code)))
-      items.push({ key: `s:${s.key}`, label: s.label, fill: s.fill });
+      specials.push({ key: `s:${s.key}`, label: s.label, fill: s.fill });
   });
   const missing = codes.some((code) => {
     if (def.hatched.has(code)) return false;
@@ -227,18 +259,30 @@ export function legendItems(def: ChoroplethDef, codes: number[]): LegendItem[] {
     const v = def.values.get(code);
     return v === null || v === undefined;
   });
-  if (missing) items.push({ key: 'none', label: S.legendNoData, fill: CHOROPLETH_EMPTY_FILL });
-  return items;
+  if (missing) specials.push({ key: 'none', label: S.legendNoData, fill: CHOROPLETH_NO_DATA_FILL });
+  return { counts, classes, joins: counts ? [] : b.map(numberLabel), specials };
 }
 
-const selectedStyle = new Style({
-  stroke: new Stroke({ color: CHOROPLETH_SELECTED, width: 3 }),
-});
+/** Every legend row in one list: the classes, then the fills outside the scale. */
+export function legendItems(def: ChoroplethDef, codes: number[]): LegendItem[] {
+  const model = legendModel(def, codes);
+  const zero = model.specials.filter((s) => s.key === 'zero');
+  return [...zero, ...model.classes, ...model.specials.filter((s) => s.key !== 'zero')];
+}
+
+// A dark line on a white halo: it reads on the lightest and the darkest class alike.
+const selectedStyle = [
+  new Style({ stroke: new Stroke({ color: SELECTION_HALO, width: 6 }) }),
+  new Style({ stroke: new Stroke({ color: SELECTION_INK, width: 2.5 }) }),
+];
+// Land and sea that are not one of the 60 municipalities (the territorial sea wedge): drawn
+// in the land colour without an outline, so it does not compete with the data.
+const landStyle = new Style({ fill: new Fill({ color: MAP_LAND }) });
 
 export interface ChoroplethHover {
   code: number;
   name: string;
-  text: string; // '{name} · {formatted value}'
+  text: string; // '{name}: {value with its unit}'
   x: number; // px, relative to the map viewport
   y: number;
 }
@@ -331,7 +375,7 @@ export function useChoropleth(ctx: HubContext): HubChoroplethApi {
     style: (feature) => {
       const code = featureCode(feature);
       // the territorial sea and anything else that is not one of the 60 municipalities
-      if (!styleCodes.has(code)) return undefined;
+      if (!styleCodes.has(code)) return styleDef ? landStyle : undefined;
       return fillStyle(styleDef, code);
     },
   });
@@ -353,18 +397,37 @@ export function useChoropleth(ctx: HubContext): HubChoroplethApi {
   let clickEntry: any = null;
   let previousPadding: number[] | undefined;
 
+  // The basemap's labels and its sea wedge compete with the classes: while a choropleth is
+  // shown the basemap is hidden and the map shows a flat land colour around Lithuania.
+  const baseLayer = () => mapLayers.visibleBaseLayer?.layer as { setVisible(v: boolean): void };
+  function setBasemap(on: boolean) {
+    if (!map) return;
+    baseLayer()?.setVisible(on);
+    map.getViewport().style.background = on ? '' : MAP_LAND;
+  }
+
+  // While a snapshot topic loads, the municipality outlines alone show where data will be.
+  const loadingOutlines = computed(
+    () =>
+      ctx.topic.value.kind === 'snapshot' &&
+      (ctx.data.phase.value === 'loading' || ctx.data.phase.value === 'slow'),
+  );
+
   function refresh() {
+    setBasemap(!def.value);
     styleDef = def.value;
     styleCodes = municipalityCodes.value;
     selected = active.value ? selectedSav() : null;
-    layer.setVisible(active.value);
+    layer.setVisible(active.value || loadingOutlines.value);
     selectionLayer.setVisible(active.value);
     layer.changed();
     selectionLayer.changed();
     if (!active.value) hover.value = null;
   }
 
-  watch([def, active, municipalityCodes, selectedSav], refresh, { immediate: true });
+  watch([def, active, municipalityCodes, selectedSav, loadingOutlines], refresh, {
+    immediate: true,
+  });
 
   // Pointer cursor over municipalities only while the choropleth is shown; the Vilkai map
   // sets its own list on mount and restores ours on unmount.
@@ -407,6 +470,13 @@ export function useChoropleth(ctx: HubContext): HubChoroplethApi {
       if (code !== null && code !== old && active.value && !live.value) fitTo(code);
     },
   );
+  // The map follows the place filter also when it arrives before the data, and when the
+  // view has a map message instead of classes (J-23).
+  watch(active, (on, was) => {
+    const code = ctx.sel.value.sav;
+    if (on && !was && code !== null && !live.value && (!route.query.x || !route.query.y))
+      fitTo(code);
+  });
 
   function onClick(e: MapBrowserEvent<any> & { features: FeatureLike[] }) {
     if (!mounted || !active.value) return;
@@ -434,7 +504,8 @@ export function useChoropleth(ctx: HubContext): HubChoroplethApi {
       },
       { layerFilter: (l) => l === layer, hitTolerance: 0 },
     );
-    if (code === undefined) {
+    // The selected municipality's card already shows its value.
+    if (code === undefined || code === selectedSav()) {
       hover.value = null;
       return;
     }
@@ -443,7 +514,7 @@ export function useChoropleth(ctx: HubContext): HubChoroplethApi {
     hover.value = {
       code,
       name,
-      text: value ? `${name} · ${value}` : name,
+      text: value ? `${name}: ${value}` : name,
       x: e.pixel[0],
       y: e.pixel[1],
     };
@@ -459,6 +530,7 @@ export function useChoropleth(ctx: HubContext): HubChoroplethApi {
     map = toRaw(mapLayers.map) as Map;
     map.addLayer(layer);
     map.addLayer(selectionLayer);
+    setBasemap(!def.value);
 
     mapLayers.click(onClick, { layers: [HUB_CHOROPLETH_LAYER_ID] });
     const callbacks: any[] = (mapLayers as any)._clickCallbacks || [];
@@ -492,6 +564,7 @@ export function useChoropleth(ctx: HubContext): HubChoroplethApi {
     map.un('pointermove', onPointerMove);
     map.getViewport()?.removeEventListener('pointerout', onPointerOut);
     if (previousPadding) map.getView().padding = previousPadding;
+    setBasemap(true);
     map = null;
   });
 

@@ -1,12 +1,12 @@
 <template>
-  <div class="flex flex-col items-start gap-2 rounded-md border border-gray-300 bg-gray-50 p-3">
-    <p class="text-sm text-gray-900">{{ empty.text }}</p>
+  <div class="flex flex-col items-start gap-2 rounded-md border border-line-strong bg-page p-3">
+    <p class="text-sm text-ink">{{ empty.text }}</p>
     <div v-if="actions.length" class="flex flex-wrap gap-2">
       <button
         v-for="action in actions"
         :key="action.label"
         type="button"
-        class="rounded-md border border-gray-500 bg-white px-3 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+        class="rounded-md border border-line-strong bg-white px-3 text-sm font-semibold text-ink hover:bg-brand-50"
         :class="[focusRing, large ? 'min-h-[44px]' : 'min-h-[32px]']"
         @click="apply(action.sel)"
       >

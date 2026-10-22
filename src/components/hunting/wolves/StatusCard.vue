@@ -3,13 +3,13 @@
   <section
     v-if="variant === 'line'"
     :aria-label="`Šis sezonas (${model.seasonLabel})`"
-    class="text-sm text-gray-800"
+    class="text-sm text-ink"
   >
-    <p v-if="loading" class="text-gray-600">Šis sezonas ({{ model.seasonLabel }}): įkeliama…</p>
+    <p v-if="loading" class="text-ink-muted">Šis sezonas ({{ model.seasonLabel }}): įkeliama…</p>
     <p v-else class="flex items-start gap-2">
       <span class="w-2.5 h-2.5 rounded-full shrink-0 mt-1.5" :class="dotClass" aria-hidden="true" />
       <span class="flex-1">
-        <span class="font-semibold text-gray-900">Šis sezonas ({{ model.seasonLabel }}):</span>
+        <span class="font-semibold text-ink">Šis sezonas ({{ model.seasonLabel }}):</span>
         {{ lineText }}
         <button
           v-if="model.state === 'unavailable'"
@@ -27,10 +27,10 @@
   <section
     v-else
     aria-labelledby="wolves-status-title"
-    class="rounded-lg border border-gray-200 bg-white text-sm text-gray-800"
+    class="rounded-lg border border-line bg-white text-sm text-ink"
     :class="compact ? '' : 'p-3'"
   >
-    <h2 id="wolves-status-title" :class="compact ? 'sr-only' : 'font-semibold text-gray-900'">
+    <h2 id="wolves-status-title" :class="compact ? 'sr-only' : 'font-semibold text-ink'">
       Šis sezonas ({{ model.seasonLabel }})
     </h2>
 
@@ -44,7 +44,7 @@
       aria-controls="wolves-status-body"
       @click="expanded = !expanded"
     >
-      <span v-if="loading" class="flex-1 text-gray-600">Įkeliama…</span>
+      <span v-if="loading" class="flex-1 text-ink-muted">Įkeliama…</span>
       <template v-else>
         <span class="w-2.5 h-2.5 rounded-full shrink-0" :class="dotClass" aria-hidden="true" />
         <span class="flex-1 font-semibold">{{ title }}</span>
@@ -58,20 +58,23 @@
       class="flex flex-col gap-2"
       :class="compact ? 'px-3 pb-3' : ''"
     >
-      <p class="text-xs text-gray-600">
+      <p class="text-xs text-ink-muted">
         Rodomi einamojo sezono duomenys, nepriklausomai nuo pasirinkto laikotarpio.
       </p>
 
       <div v-if="loading" aria-busy="true">
-        <div class="animate-pulse flex flex-col gap-2" aria-hidden="true">
-          <div class="h-4 bg-gray-200 rounded w-3/4" />
-          <div class="h-4 bg-gray-200 rounded w-1/2" />
+        <div
+          class="animate-pulse motion-reduce:animate-none flex flex-col gap-2"
+          aria-hidden="true"
+        >
+          <div class="h-4 bg-line-soft rounded w-3/4" />
+          <div class="h-4 bg-line-soft rounded w-1/2" />
         </div>
-        <p class="text-xs text-gray-600 mt-1">Įkeliama…</p>
+        <p class="text-xs text-ink-muted mt-1">Įkeliama…</p>
       </div>
 
       <template v-else>
-        <p v-if="!compact" class="flex items-start gap-2 font-semibold text-gray-900">
+        <p v-if="!compact" class="flex items-start gap-2 font-semibold text-ink">
           <span
             class="w-2.5 h-2.5 rounded-full shrink-0 mt-1.5"
             :class="dotClass"
@@ -112,7 +115,7 @@
           <ul
             v-if="more"
             id="wolves-status-details"
-            class="flex flex-col gap-1 text-xs text-gray-700"
+            class="flex flex-col gap-1 text-xs text-ink-muted"
           >
             <li v-for="text in details" :key="text">{{ text }}</li>
           </ul>
@@ -155,7 +158,7 @@ watch(
 const DOTS: Record<StatusState, string> = {
   unavailable: 'bg-gray-400',
   notApproved: 'bg-gray-400',
-  beforeStart: 'bg-blue-600',
+  beforeStart: 'bg-brand-secondary',
   exhausted: 'bg-red-600',
   littleLeft: 'bg-amber-500',
   ongoing: 'bg-green-600',
