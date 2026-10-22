@@ -35,10 +35,18 @@ export const TOPIC_SUBTITLES: Record<TopicId, string> = {
   stebejimai: 'Pranešimai apie stebėtus vilkus, lūšis, lokius ir stumbrus',
 };
 
+// A badge on its own (D10, OVERVIEW-18): the label says what it qualifies.
 export const BADGE_LABELS: Record<Badge, string> = {
-  vyksta: 'Vyksta',
-  preliminarus: 'Preliminarūs',
+  vyksta: 'Sezonas vyksta',
+  preliminarus: 'Preliminarūs duomenys',
   dalinis: 'Dalinis sezonas',
+  bandomoji: 'Bandomoji aplinka',
+};
+// Right after a season label ("2026/2027 sezonas [vyksta]"): the season is already named.
+export const BADGE_LABELS_AFTER_SEASON: Record<Badge, string> = {
+  vyksta: 'vyksta',
+  preliminarus: 'preliminarūs duomenys',
+  dalinis: 'dalinis sezonas',
   bandomoji: 'Bandomoji aplinka',
 };
 export const BANDOMOJI_TOOLTIP =
@@ -86,6 +94,14 @@ export const S = {
   segmentTable: 'Lentelė',
   segmentFilters: 'Filtrai',
   showOnMap: 'Rodyti žemėlapyje',
+  // Apžvalga (D8).
+  overviewLead: 'Prie kiekvieno skaičiaus nurodyta, kurio sezono jis.',
+  overviewMap: 'Rodyti žemėlapyje',
+  overviewTable: 'Rodyti lentelę',
+  overviewReportTitle: 'Pastebėjote žalą ar stambų plėšrūną?',
+  overviewReportText: 'Praneškite – pranešimai patenka į šiuos duomenis.',
+  overviewReportDamage: 'Pranešti apie žalą',
+  overviewReportObservation: 'Pildyti stebėjimo anketą',
   showInTable: 'Rodyti lentelėje',
   close: 'Uždaryti',
   csv: 'Atsisiųsti CSV',

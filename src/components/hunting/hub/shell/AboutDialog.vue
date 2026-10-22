@@ -2,7 +2,8 @@
   <Teleport to="body">
     <div
       v-if="isOpen"
-      class="fixed inset-0 z-[1000] flex items-stretch justify-center bg-black/50 md:items-center md:p-8"
+      class="fixed inset-0 z-[1000] flex items-stretch justify-center bg-black/50 md:p-8"
+      :class="tallFrame ? 'md:items-start' : 'md:items-center'"
       @click.self="close()"
     >
       <div
@@ -75,6 +76,10 @@ const ctx = inject(HUB_CTX)!;
 const PRIVACY_RULE =
   'Asmens duomenys neskelbiami: rodomos tik visos Lietuvos ir savivaldybių sumos, be MPV, ' +
   'pranešėjų ar tikslių vietų.';
+
+// Embedded Apžvalga: the frame grows to its content (D12b), so a centred dialog could open
+// below the visible part of the page; open it at the top of the frame instead.
+const tallFrame = computed(() => ctx.embed && ctx.topic.value.kind === 'overview');
 
 const isOpen = ref(false);
 const topicId = ref<TopicId>(ctx.sel.value.topic);

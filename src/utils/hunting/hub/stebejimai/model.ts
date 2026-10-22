@@ -624,6 +624,59 @@ export function answerText(
 }
 
 // ---------------------------------------------------------------------------
+// Apžvalga card (OVERVIEW-05)
+// ---------------------------------------------------------------------------
+
+/**
+ * The running season's numbers for the Apžvalga card: "8 užregistruoti stebėjimai", the
+ * species line "Vilkas – 4, lūšis – 2, rudasis lokys – 1." and the animals sentence. The
+ * records are all loaded rows; the season is the one of `today`. Null without a record in it.
+ */
+// Between a species and its count, so "stumbras – 1" never breaks before the dash.
+const NBSP = String.fromCharCode(160);
+
+export function stebOverviewNumbers(
+  records: StebRecord[],
+  today: string,
+): { value: string; unit: string; lines: string[] } | null {
+  const season = seasonOfDay(today);
+  const rows = filterRecords(
+    records,
+    { period: { kind: 'season', season }, gyvunas: null, faktas: null, sav: null },
+    today,
+    () => null,
+  );
+  const n = rows.length;
+  if (!n) return null;
+  const species = speciesSummary(rows)
+    .map((g) => `${g.label.toLocaleLowerCase('lt')}${NBSP}– ${formatInt(g.n)}`)
+    .join(', ');
+  const lines = [`${capitalise(species)}.`];
+  const m = animalsOf(rows);
+  if (m !== null) {
+    lines.push(
+      `Pranešimuose ${pluralLt(m, P_SPECIFIED)} ${formatInt(m)} ${pluralLt(m, P_ANIMAL)}.`,
+    );
+  }
+  return {
+    value: formatInt(n),
+    unit: `${pluralLt(n, P_REGISTERED)} ${pluralLt(n, P_OBSERVATION)}`,
+    lines,
+  };
+}
+
+/** A page of the WP site on the same environment (the parent page's origin when embedded). */
+export function wpPageUrl(path: string, parentOrigin: string | null, hostname: string) {
+  const base =
+    parentOrigin && ORIGIN_RE.test(parentOrigin)
+      ? parentOrigin
+      : Object.prototype.hasOwnProperty.call(WP_BY_MAPS_HOST, hostname)
+        ? WP_BY_MAPS_HOST[hostname]
+        : null;
+  return base ? `${base}${path}` : null;
+}
+
+// ---------------------------------------------------------------------------
 // Record link (§3.7)
 // ---------------------------------------------------------------------------
 
@@ -648,13 +701,7 @@ export function recordPageUrl(
 ): string | null {
   const valid = validRecordId(id);
   if (valid === null) return null;
-  const base =
-    parentOrigin && ORIGIN_RE.test(parentOrigin)
-      ? parentOrigin
-      : Object.prototype.hasOwnProperty.call(WP_BY_MAPS_HOST, hostname)
-        ? WP_BY_MAPS_HOST[hostname]
-        : null;
-  return base ? `${base}/stebeti-gyvunai/${valid}/` : null;
+  return wpPageUrl(`/stebeti-gyvunai/${valid}/`, parentOrigin, hostname);
 }
 
 // ---------------------------------------------------------------------------

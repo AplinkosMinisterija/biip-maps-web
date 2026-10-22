@@ -824,9 +824,10 @@ function runLiveTopicChecks(check: Check, eq: Eq) {
         topic.defaultTable,
         topic.dims.length,
         typeof topic.view,
+        // The Apžvalga card (OVERVIEW-05): descriptive without the live records.
         typeof topic.overview,
       ],
-      ['stebejimai', true, 'stebejimai', 'live', 'irasai', 0, 'undefined', 'undefined'],
+      ['stebejimai', true, 'stebejimai', 'live', 'irasai', 0, 'undefined', 'function'],
     );
   });
 

@@ -142,7 +142,7 @@ const SEASON_MONTHS = [4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3];
 
 export const T = {
   fixedNote: 'Tai gyventojų pranešimai, o ne įvertinta žala. Kompensacijos čia neskelbiamos.',
-  fixedNoteShort: 'Tai pranešimai, o ne įvertinta žala.',
+  fixedNoteCard: 'Tai gyventojų pranešimai, o ne įvertinta žala.',
   partialNotice:
     'Pranešimai apie žalą BĮIP renkami nuo 2026 m. sausio – 2025/2026 sezono duomenys daliniai.',
   escalationLabel: 'Kanopinių ir bebrų žala perduota seniūnijai',
@@ -863,22 +863,45 @@ export function overview(data: SnapshotData): OverviewCard {
   const meta = data.meta;
   const season = defaultSeason(meta);
   const c = makeCtx(data, season);
+  const state = seasonState(season, meta);
+  const r = reports(c, 0, 'visos');
+  const rep = reporters(c, 0, 'visos');
+  const unknown = r.withheld || r.hi === Infinity;
   const result: OverviewCard = {
     topic: 'zala',
     title: TOPIC_TABS.zala,
     question: H1.visos,
-    answer: answer(c, 0, 'visos', null, false),
-    badge: stateBadge(seasonState(season, meta)),
-    fixedNote: T.fixedNoteShort,
+    season,
+    state,
+    answer: answer(c, 0, 'visos', null),
+    fixedNote: T.fixedNoteCard,
   };
+  if (!unknown) {
+    const by =
+      rep === null && r.hi > 0
+        ? ' iš mažiau nei 3 pranešėjų'
+        : typeof rep === 'number' && rep > 0
+          ? ` iš ${formatInt(rep)} ${plural(rep, P_REPORTER_GEN)}`
+          : '';
+    result.value = formatCount(r);
+    result.unit =
+      `${isExact(r) ? plural(r.lo, P_REPORT) : P_REPORT[2]} apie žalą${by}` +
+      (state === 'vyksta' ? ` (iki ${meta.snapshotDate})` : '');
+  }
+  // The card answers its "Kur…?" question with places (OVERVIEW-19), then the wolves line.
+  const lines: string[] = [];
+  const top = topPlaces(c, 'visos');
+  if (top) lines.push(top);
   const wolves = attackedOf(c, ['vilkai']);
   if (wolves.hi > 0) {
     const n = isExact(wolves) ? wolves.lo : null;
-    result.secondary =
+    lines.push(
       n === null
         ? `Pranešimuose apie vilkų išpuolius nurodyta ${countPhrase(wolves, ['užpulto ūkinio gyvūno', 'užpultų ūkinių gyvūnų', 'užpultų ūkinių gyvūnų'])}.`
-        : `Pranešimuose apie vilkų išpuolius ${plural(n, P_SPECIFIED)} ${formatInt(n)} ${plural(n, P_ATTACKED_LIVESTOCK)}.`;
+        : `Pranešimuose apie vilkų išpuolius ${plural(n, P_SPECIFIED)} ${formatInt(n)} ${plural(n, P_ATTACKED_LIVESTOCK)}.`,
+    );
   }
+  if (lines.length) result.lines = lines;
   return result;
 }
 

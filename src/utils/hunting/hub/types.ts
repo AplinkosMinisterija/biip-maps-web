@@ -235,13 +235,22 @@ export interface TopicView {
   empty?: { text: string; actions: MapMessageDef['action'][] };
   card(sav: number): CardDef | null;
 }
+// One Apžvalga card (D8): every card has the same rows, so the same slot means the same thing
+// on every card. Eyebrow (`title`, the tab name) · question (the topic H1) · season row
+// (`season` + a chip for `state` unless final) · headline number (`value` [`outOf`] +
+// `unit`; without `value` the `answer` sentence takes its place) · ≤ 2 context `lines`, each
+// naming its own season when it is another one · `fixedNote` · actions (the shell's).
 export interface OverviewCard {
   topic: TopicId;
   title: string;
   question: string;
-  answer: string;
-  secondary?: string;
-  badge?: Badge;
+  season?: number;
+  state?: SeasonState;
+  value?: string; // "129 485", "19"
+  outOf?: string; // "iš 222"
+  unit?: string; // "sumedžioti gyvūnai – 8,5 % daugiau nei 2024/2025 sezone"
+  answer: string; // the one-sentence answer (also the card's text without a headline number)
+  lines?: string[];
   fixedNote?: string;
 }
 export interface OtherRow {

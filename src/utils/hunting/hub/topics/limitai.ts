@@ -520,18 +520,36 @@ export function overview(data: SnapshotData): OverviewCard {
   const meta = data.meta;
   const rows = data.limits ?? [];
   const season = defaultSeason(meta);
+  const a = aggOf(rows, season, null);
   const result: OverviewCard = {
     topic: 'limitai',
     title: TOPIC_TABS.limitai,
     question: H1,
-    answer: answer(meta, aggOf(rows, season, null), season, null),
-    // The allocation is not a running figure: no "Vyksta" badge on the card (§6.1 wireframe).
-    badge: isCurrent(season, meta) ? undefined : stateBadge(seasonState(season, meta)),
+    season,
+    // The same state as the panel ("vyksta" for the running allocation season).
+    state: seasonState(season, meta),
+    answer: answer(meta, a, season, null),
   };
+  if (isCurrent(season, meta)) {
+    const order = orderOf(meta, season);
+    result.value = formatInt(lim(a));
+    // Full form: the overview is often the first place a visitor meets the term (OVERVIEW-21).
+    result.unit =
+      'briedžių limitas medžioklės plotų naudotojams' +
+      (order !== null ? ` (įsakymu patvirtinta ${formatInt(order)})` : '');
+  } else {
+    result.value = formatInt(used(a));
+    result.outOf = `iš ${formatInt(lim(a))}`;
+    result.unit = `briedžių sumedžiota pagal paskirstytą limitą (${pctText(used(a), lim(a))})`;
+  }
   const closed = closedSeason(meta);
   if (closed !== null && closed !== season) {
-    const a = aggOf(rows, closed, null);
-    result.secondary = `${seasonLabel(closed)} sezone sumedžiota ${formatInt(used(a))} iš ${formatInt(lim(a))} (${pctText(used(a), lim(a))}).`;
+    const c = aggOf(rows, closed, null);
+    // One decimal, like the wolves share on the next card (OVERVIEW-25); panels keep theirs.
+    const r = ratio(used(c), lim(c));
+    result.lines = [
+      `${seasonLabel(closed)} sezone sumedžiota ${formatInt(used(c))} iš ${formatInt(lim(c))} paskirstyto limito (${r === null ? DASH : formatPct(r, 1)}).`,
+    ];
   }
   return result;
 }
