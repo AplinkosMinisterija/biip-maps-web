@@ -1,72 +1,96 @@
 <template>
   <section
     ref="sheetEl"
-    aria-labelledby="steb-sheet-title"
+    :aria-labelledby="showsPanel ? 'hub-title' : 'steb-sheet-title'"
     class="fixed inset-x-0 bottom-0 z-30 flex flex-col rounded-t-xl bg-white shadow-[0_-4px_16px_rgba(0,0,0,0.15)]"
     :class="[
+      detent === 'peek' && !showCard ? 'pt-3.5' : 'pt-11',
       showCard && dragHeight === null ? 'max-h-[60%]' : '',
       dragging ? '' : 'transition-[height] duration-200 motion-reduce:transition-none',
     ]"
     :style="{ height: sheetHeight }"
   >
-    <h2 id="steb-sheet-title" class="sr-only">{{ SS.h1 }}</h2>
-
-    <!-- Handle: a tap cycles peek → half → full and a drag snaps to the nearest one, as the
-         hub's sheet; with a record card open a tap (or a drag down) closes the card (the
-         sheet then shows its detent again), and the handle says so. -->
+    <!-- Handle: the sheet's top 44 px (at the peek it overlaps the question); a tap cycles
+         peek → half → full and a drag snaps to the nearest one, as the hub's sheet; with a
+         record card open a tap (or a drag down) closes the card (the sheet then shows its
+         detent again), and the handle says so. -->
     <button
       type="button"
-      class="flex h-6 w-full shrink-0 touch-none items-center justify-center rounded-t-xl"
-      :class="focusRing"
+      class="absolute inset-x-0 top-0 z-10 flex h-11 touch-none justify-center rounded-t-xl pt-1.5"
+      :class="FOCUS_RING_INSET"
       :aria-label="handleLabel"
       :aria-expanded="showCard ? undefined : detent !== 'peek'"
       aria-controls="steb-sheet-body"
       @click="cycle"
       @pointerdown="onDragStart"
     >
-      <span class="h-1 w-10 rounded-full bg-gray-300" aria-hidden="true" />
+      <span class="h-1 w-10 rounded-full bg-line-strong" aria-hidden="true" />
     </button>
-    <!-- The table one tap away from the peek; embedded, the WP page's switch does this. -->
+    <!-- Standalone: the table one tap away from the peek; embedded, the WP page's switch
+         does this. -->
     <button
-      v-if="detent === 'peek' && !showCard && !ctx.embed && hasTable"
+      v-if="peekTableLink"
       type="button"
-      class="absolute right-2 top-0 flex h-6 items-center gap-1 rounded px-2 text-xs font-semibold text-brand underline"
-      :class="focusRing"
+      class="absolute right-3 top-0 z-20 h-11 px-2 text-sm font-semibold text-brand underline underline-offset-2"
+      :class="FOCUS_RING_INSET"
       @click="setSegment('table')"
     >
       {{ SS.segmentTable }}
     </button>
 
+    <!-- The topic question; in the summary the panel's own heading takes its place. -->
+    <h2
+      v-if="!showsPanel"
+      id="steb-sheet-title"
+      class="shrink-0 truncate px-5 text-[15px] font-bold leading-5 text-ink"
+      :class="{ 'pr-24': peekTableLink, 'mb-2': detent !== 'peek' }"
+    >
+      {{ SS.h1 }}
+    </h2>
+
     <div id="steb-sheet-body" class="flex min-h-0 flex-1 flex-col">
       <!-- A selected record: its card replaces the sheet content. -->
-      <div v-if="showCard" class="overflow-y-auto px-3 pb-3">
+      <div v-if="showCard" class="overflow-y-auto px-5 pb-3">
         <StebCard sheet />
       </div>
 
-      <!-- Peek: the answer in two lines. -->
-      <div v-else-if="detent === 'peek'" class="flex flex-col gap-1 px-3 pb-2">
+      <!-- Peek: the answer in two lines; a tap opens the sheet. -->
+      <div v-else-if="detent === 'peek'" class="flex flex-col gap-1 px-5 pb-1">
         <template v-if="ctx.data.phase.value === 'error'">
-          <p class="text-sm font-medium text-gray-900">{{ SS.loadError }}</p>
+          <p class="text-sm font-medium text-ink">{{ SS.loadError }}</p>
           <button
             type="button"
-            class="min-h-[44px] self-start rounded-md border border-gray-400 bg-white px-3 text-sm font-semibold text-gray-900"
-            :class="focusRing"
+            class="min-h-[44px] self-start rounded-full border border-brand bg-white px-4 text-sm font-semibold text-brand hover:bg-brand-50"
+            :class="FOCUS_RING"
             @click="ctx.data.reload()"
           >
             {{ SS.retry }}
           </button>
         </template>
-        <p v-else-if="!ctx.derived.ready.value" role="status" class="text-sm text-gray-700">
+        <p v-else-if="!ctx.derived.ready.value" role="status" class="text-sm text-ink-muted">
           {{ SS.loading }}
         </p>
-        <p v-else class="line-clamp-2 text-sm leading-snug text-gray-900">{{ peekText }}</p>
+        <button
+          v-else
+          type="button"
+          class="block w-full rounded text-left"
+          :class="FOCUS_RING_INSET"
+          aria-controls="steb-sheet-body"
+          aria-expanded="false"
+          @click="cycle"
+        >
+          <span class="line-clamp-2 text-sm leading-5 text-ink">{{ peekText }}</span>
+        </button>
       </div>
 
       <template v-else>
+        <!-- Standalone only: embedded, the WP page's switch owns the view. -->
         <div
+          v-if="!ctx.embed"
           role="tablist"
           :aria-label="SS.segmentsLabel"
-          class="mx-3 mb-2 grid shrink-0 grid-cols-2 gap-1 rounded-lg bg-gray-100 p-1"
+          class="mx-5 mb-3 w-[calc(100%-40px)] shrink-0"
+          :class="[SEG, SEG_TOUCH]"
           @keydown="onTabKeydown"
         >
           <button
@@ -80,8 +104,8 @@
             :aria-controls="`steb-seg-panel-${seg.id}`"
             :tabindex="segment === seg.id ? 0 : -1"
             :disabled="seg.disabled"
-            class="min-h-[44px] rounded-md text-sm font-semibold disabled:opacity-50"
-            :class="[focusRing, segment === seg.id ? 'bg-brand text-white' : 'text-gray-900']"
+            class="flex-1 disabled:opacity-50"
+            :class="[SEG_ITEM, segment === seg.id ? SEG_ITEM_ON : '']"
             @click="setSegment(seg.id)"
           >
             {{ seg.label }}
@@ -89,16 +113,16 @@
         </div>
         <div
           :id="`steb-seg-panel-${segment}`"
-          role="tabpanel"
-          :aria-labelledby="`steb-seg-${segment}`"
-          class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-3"
+          :role="ctx.embed ? undefined : 'tabpanel'"
+          :aria-labelledby="ctx.embed ? undefined : `steb-seg-${segment}`"
+          class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-3"
         >
           <!-- Element-rooted branches (no fragment swaps; see the hub's MobileSheet). -->
           <div v-if="segment === 'summary'" class="flex flex-col gap-3">
             <StebPanel mobile />
           </div>
           <div v-else class="flex flex-col">
-            <StebTable variant="sheet" @show-on-map="onShowOnMap" @close="setSegment('summary')" />
+            <StebTable variant="sheet" @show-on-map="onShowOnMap" @close="onTableClose" />
           </div>
         </div>
       </template>
@@ -107,24 +131,37 @@
 </template>
 
 <script setup lang="ts">
-// Mobile bottom sheet of the Stebėjimai topic (STEB-SPEC §3.1), modelled on the wolves and
-// hub sheets: peek = the answer; half/full = Suvestinė | Lentelė; a selected record shows
-// its card. The table segment and `lentele` are one state (`tableOpen`): the WP page's
-// "Lentelė" expands the sheet to it, "Žemėlapis" lowers it back to the peek.
+// Mobile bottom sheet of the Stebėjimai topic (STEB-SPEC §3.1), modelled on the hub's
+// sheet: peek = the question and the answer; half/full = the summary (standalone with
+// Suvestinė | Lentelė); a selected record shows its card. The table and `lentele` are one
+// state (`tableOpen`): the WP page's "Lentelė" expands the sheet to it at the full detent,
+// "Žemėlapis" lowers it back to the peek.
 import { computed, inject, onBeforeUnmount, ref, watch } from 'vue';
 import { STEB_CTX } from '@/composables/hunting/hub/stebejimai/useStebState';
 import { HUB_MOBILE_PEEK, mobileHeader } from '@/utils/hunting/hub/layout';
 import { SS } from '@/utils/hunting/hub/stebejimai/strings';
+import {
+  FOCUS_RING,
+  FOCUS_RING_INSET,
+  SEG,
+  SEG_ITEM,
+  SEG_ITEM_ON,
+  SEG_TOUCH,
+} from '@/components/hunting/hub/shell/controls';
+import {
+  firstSentence,
+  SHEET_HANDLE,
+  useMapInert,
+  type SheetDetent,
+} from '@/components/hunting/hub/shell/sheet';
 import StebCard from './StebCard.vue';
 import StebPanel from './StebPanel.vue';
 import StebTable from './StebTable.vue';
 
-type Detent = 'peek' | 'half' | 'full';
+type Detent = SheetDetent;
 type Segment = 'summary' | 'table';
 
 const ctx = inject(STEB_CTX)!;
-const focusRing =
-  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
 
 const HEIGHTS: Record<Detent, string> = {
   peek: `${HUB_MOBILE_PEEK}px`,
@@ -136,6 +173,15 @@ const detent = ref<Detent>(ctx.state.tableOpen.value ? 'full' : 'peek');
 const segment = computed<Segment>(() => (ctx.state.tableOpen.value ? 'table' : 'summary'));
 const hasTable = computed(() => ctx.data.phase.value !== 'error');
 const showCard = computed(() => !!ctx.state.selection.value && !ctx.state.tableOpen.value);
+// The summary panel is on screen (it brings its own heading, `hub-title`).
+const showsPanel = computed(
+  () => !showCard.value && detent.value !== 'peek' && segment.value === 'summary',
+);
+const peekTableLink = computed(
+  () => detent.value === 'peek' && !showCard.value && !ctx.embed && hasTable.value,
+);
+// The full sheet covers the map: its controls leave the Tab order (WCAG 2.4.11).
+useMapInert(computed(() => !showCard.value && detent.value === 'full'));
 
 const segments = computed(() => [
   { id: 'summary' as const, label: SS.segmentSummary, disabled: false },
@@ -144,14 +190,15 @@ const segments = computed(() => [
 
 const handleLabel = computed(() => {
   if (showCard.value) return SS.closeRecord;
-  return detent.value === 'full' ? SS.sheetCollapse : SS.sheetExpand;
+  return SHEET_HANDLE[detent.value];
 });
 
 const peekText = computed(() => {
   if (!ctx.derived.records.value.length) {
     return ctx.isProductionHost ? SS.noRecordsProd : SS.noRecordsTest;
   }
-  return ctx.derived.answer.value.text;
+  // The first sentence when there are more: no clamp ellipsis after a full stop.
+  return firstSentence(ctx.derived.answer.value.text);
 });
 
 // Set while the sheet's own segment closes the table (it keeps the sheet height).
@@ -172,6 +219,13 @@ function setSegment(id: Segment) {
   ctx.state.setTable(id === 'table');
   if (id === 'table') detent.value = 'full';
   else if (detent.value === 'peek') detent.value = 'half';
+}
+
+// The table's own close button: standalone back to the summary; embedded the map, as the
+// WP page's "Žemėlapis" (the watch above lowers the sheet).
+function onTableClose() {
+  if (ctx.embed) ctx.state.setTable(false);
+  else setSegment('summary');
 }
 
 // Lowering the sheet to the peek closes the table (the peek has no segments).
