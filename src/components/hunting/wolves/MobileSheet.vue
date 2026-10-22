@@ -49,7 +49,8 @@
       <!-- Hub: its fallback and notes (empty on the wolves page). -->
       <slot />
       <HuntingWolvesFilterSentence />
-      <HuntingWolvesLoadState placement="panel" />
+      <!-- Embedded, the WP header line is the one place of the provenance (D9). -->
+      <HuntingWolvesLoadState placement="panel" :show-timestamp="!embed" />
       <!-- Hub: the current season's status line, below the answer. -->
       <slot name="status" />
       <!-- Hub: one loading line (the answer) until the records arrive, no empty tiles. -->
