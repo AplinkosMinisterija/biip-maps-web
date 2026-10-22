@@ -44,7 +44,9 @@ export interface TableCsvOptions<R = any> {
 }
 
 export function buildTableCsv<R>(table: TableDef<R>, options: TableCsvOptions<R>) {
-  const columns = table.columns.filter((c) => c.csv !== false);
+  // Original column index of each exported column (a row note's `from` counts all columns).
+  const exported = table.columns.map((c, i) => ({ c, i })).filter((x) => x.c.csv !== false);
+  const columns = exported.map((x) => x.c);
   const comment = (text: string) => `# ${csvSafe(text.replace(/[\r\n]+/g, ' '))}`;
   const lines = [csvProvenanceLine(options.provenance)];
   if (options.title) lines.push(comment(options.title));
@@ -52,7 +54,20 @@ export function buildTableCsv<R>(table: TableDef<R>, options: TableCsvOptions<R>
   const head = (c: ColumnDef<R>) =>
     c.unit === '%' && c.label.indexOf('%') < 0 ? `${c.label}, %` : c.label;
   lines.push(columns.map((c) => csvField(head(c))).join(CSV_SEPARATOR));
-  const row = (r: R) => columns.map((c) => csvField(csvCell(c, r))).join(CSV_SEPARATOR);
+  // A noted row (pooled, no MPV): the published cells before the note as they are, the note
+  // text in the first spanned column, the other spanned cells empty (as the table shows it).
+  const row = (r: R) => {
+    const note = table.rowNote?.(r) ?? null;
+    let noteDone = false;
+    return exported
+      .map(({ c, i }) => {
+        if (!note || i < note.from) return csvField(csvCell(c, r));
+        if (noteDone) return '';
+        noteDone = true;
+        return csvField(note.text);
+      })
+      .join(CSV_SEPARATOR);
+  };
   if (table.totals) {
     const totals = table.totals;
     const cells = columns.map((c, i) => {
