@@ -12,7 +12,7 @@
         :id="titleId"
         ref="titleEl"
         tabindex="-1"
-        class="flex items-center gap-2 rounded text-base font-semibold leading-6 outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+        class="flex items-center gap-2 rounded text-base font-semibold leading-6 outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
       >
         <span
           class="inline-block h-3 w-3 shrink-0 rounded-full border border-white ring-1 ring-gray-400"
@@ -77,7 +77,7 @@
         :href="link"
         :target="ctx.embed ? '_top' : '_blank'"
         :rel="ctx.embed ? undefined : 'noopener'"
-        class="inline-flex min-h-[32px] items-center gap-1 rounded font-semibold text-blue-800 underline max-md:min-h-[44px]"
+        class="inline-flex min-h-[32px] items-center gap-1 rounded font-semibold text-brand underline max-md:min-h-[44px]"
         :class="focusRing"
       >
         {{ SS.cardLink }}
@@ -113,7 +113,7 @@ const ctx = inject(STEB_CTX)!;
 const mapApi = inject(STEB_MAP_CTX, null);
 
 const focusRing =
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';
+  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
 const pagerClass = `min-h-[24px] max-md:min-h-[44px] px-2 py-1 rounded border border-gray-300 text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed ${focusRing}`;
 const titleId = props.sheet ? 'steb-card-title-sheet' : 'steb-card-title';
 

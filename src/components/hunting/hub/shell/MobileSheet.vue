@@ -24,7 +24,7 @@
     <button
       v-if="detent === 'peek' && !showCard && view?.tables.length && !ctx.embed"
       type="button"
-      class="absolute right-2 top-0 flex h-6 items-center gap-1 rounded px-2 text-xs font-semibold text-blue-800 underline"
+      class="absolute right-2 top-0 flex h-6 items-center gap-1 rounded px-2 text-xs font-semibold text-brand underline"
       :class="focusRing"
       @click="setSegment('table')"
     >
@@ -70,7 +70,7 @@
               :tabindex="segment === seg.id ? 0 : -1"
               :disabled="seg.disabled"
               class="min-h-[44px] rounded-md text-sm font-semibold disabled:opacity-50"
-              :class="[focusRing, segment === seg.id ? 'bg-gray-900 text-white' : 'text-gray-900']"
+              :class="[focusRing, segment === seg.id ? 'bg-brand text-white' : 'text-gray-900']"
               @click="setSegment(seg.id)"
             >
               {{ seg.label }}

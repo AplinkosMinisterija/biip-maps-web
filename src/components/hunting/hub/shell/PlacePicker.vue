@@ -10,7 +10,7 @@
       :class="[
         focusRing,
         mobile
-          ? 'h-11 px-4 text-base border-gray-900 whitespace-nowrap'
+          ? 'h-11 px-4 text-base border-line-strong whitespace-nowrap'
           : 'h-9 max-w-[12rem] lg:max-w-[18rem] px-3 text-sm border-gray-500 hover:bg-gray-50 whitespace-nowrap',
         current ? 'bg-gray-100' : '',
       ]"
@@ -64,7 +64,7 @@
           :aria-selected="item.code === (current ?? 0)"
           class="flex min-h-[32px] cursor-pointer items-center rounded px-2 text-sm"
           :class="[
-            i === active ? 'bg-gray-900 text-white' : 'text-gray-900 hover:bg-gray-100',
+            i === active ? 'bg-brand text-white' : 'text-gray-900 hover:bg-gray-100',
             item.code === (current ?? 0) ? 'font-semibold' : '',
           ]"
           @mousedown.prevent
@@ -115,7 +115,7 @@
           :aria-selected="item.code === (current ?? 0)"
           class="flex min-h-[48px] cursor-pointer items-center rounded px-3 text-base"
           :class="[
-            i === active ? 'bg-gray-900 text-white' : 'text-gray-900',
+            i === active ? 'bg-brand text-white' : 'text-gray-900',
             item.code === (current ?? 0) ? 'font-semibold' : '',
           ]"
           @click="pick(item.code)"

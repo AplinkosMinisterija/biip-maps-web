@@ -49,7 +49,7 @@
             v-for="(row, r) in rows"
             :key="rowKey(row, r)"
             class="border-b border-gray-100"
-            :class="isSelected(row) ? 'bg-blue-50' : ''"
+            :class="isSelected(row) ? 'bg-brand-50' : ''"
           >
             <template v-for="(col, i) in table.columns" :key="col.id">
               <th
@@ -58,7 +58,7 @@
                 :class="[
                   stickyLeft,
                   'py-1 pr-2 font-normal whitespace-nowrap',
-                  isSelected(row) ? 'bg-blue-50' : 'bg-white',
+                  isSelected(row) ? 'bg-brand-50' : 'bg-white',
                 ]"
               >
                 <button
@@ -145,7 +145,7 @@ const rowKey = (row: unknown, index: number) => {
 
 const stickyLeft = 'sticky left-0 z-10 text-left';
 const sortButtonClass =
-  'inline-flex items-end gap-1 w-full min-h-[24px] max-md:min-h-[44px] rounded font-semibold hover:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';
+  'inline-flex items-end gap-1 w-full min-h-[24px] max-md:min-h-[44px] rounded font-semibold hover:text-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
 const cellButtonClass =
-  'min-h-[24px] max-md:min-h-[44px] rounded text-left text-blue-800 underline decoration-dotted underline-offset-2 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';
+  'min-h-[24px] max-md:min-h-[44px] rounded text-left text-brand underline decoration-dotted underline-offset-2 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
 </script>

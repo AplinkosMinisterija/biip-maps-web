@@ -7,7 +7,7 @@
     <h2 v-else id="wolves-legend-title" class="font-semibold">
       <button
         type="button"
-        class="flex items-center gap-1 min-h-[44px] w-full text-left rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+        class="flex items-center gap-1 min-h-[44px] w-full text-left rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
         :aria-expanded="open"
         aria-controls="wolves-legend-items"
         @click="open = !open"

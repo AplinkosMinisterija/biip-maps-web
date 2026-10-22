@@ -65,7 +65,7 @@
             :href="AM_WOLVES_URL"
             target="_blank"
             rel="noopener"
-            class="font-semibold text-blue-800 underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+            class="font-semibold text-brand underline rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
           >
             Sumedžioti vilkai – am.lrv.lt<span class="sr-only"> (atidaroma naujame lange)</span>
           </a>
@@ -87,7 +87,7 @@
     <template #footer>
       <button
         type="button"
-        class="px-4 py-3 rounded bg-blue-700 text-white text-xs font-semibold hover:bg-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+        class="px-4 py-3 rounded bg-brand text-white text-xs font-semibold hover:bg-brand-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
         @click="close"
       >
         Uždaryti

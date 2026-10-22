@@ -1,6 +1,6 @@
 <template>
   <div
-    class="hunting-hub"
+    class="hunting-hub font-hub"
     :class="{
       'hunting-hub--mobile': isMobile,
       'hunting-hub--desktop': !isMobile && !isProductionHost,
@@ -97,6 +97,13 @@
 </template>
 
 <script setup lang="ts">
+// The site's fonts (medziokle.biip.lt): Noto Sans for text and controls, Atkinson
+// Hyperlegible for headline numbers (the home page counters). Self-hosted, latin-ext included.
+import '@fontsource/noto-sans/400.css';
+import '@fontsource/noto-sans/500.css';
+import '@fontsource/noto-sans/600.css';
+import '@fontsource/noto-sans/700.css';
+import '@fontsource/atkinson-hyperlegible/700.css';
 import {
   computed,
   getCurrentInstance,
@@ -401,6 +408,16 @@ onBeforeUnmount(() => {
 </style>
 
 <style>
+/* The site's text font, on body so content teleported out of the hub root (popovers,
+   sheets, dialogs) gets it too. */
+body:has(.hunting-hub) {
+  font-family: 'Noto Sans', ui-sans-serif, system-ui, sans-serif;
+  color: #121926;
+}
+.hunting-hub input[type='checkbox'],
+.hunting-hub input[type='radio'] {
+  accent-color: #004650;
+}
 /* UiMap's own controls sit under the shell; move them clear (§4). */
 .hunting-hub--desktop #mapControlsRT {
   transform: translateY(var(--hub-top));

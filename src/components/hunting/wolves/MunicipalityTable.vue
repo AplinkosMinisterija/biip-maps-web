@@ -39,14 +39,14 @@
             v-for="row in visibleRows"
             :key="row.code ?? 'none'"
             class="border-b border-gray-100"
-            :class="row.code !== null && row.code === state.sav.value ? 'bg-blue-50' : ''"
+            :class="row.code !== null && row.code === state.sav.value ? 'bg-brand-50' : ''"
           >
             <th
               scope="row"
               :class="[
                 stickyClass,
                 'py-1 pr-2 font-normal',
-                row.code !== null && row.code === state.sav.value ? 'bg-blue-50' : 'bg-white',
+                row.code !== null && row.code === state.sav.value ? 'bg-brand-50' : 'bg-white',
               ]"
             >
               <button
@@ -92,7 +92,7 @@
     <button
       v-if="zeroCount > 0"
       type="button"
-      class="self-start min-h-[44px] md:min-h-[24px] rounded px-2 text-sm font-semibold text-blue-800 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+      class="self-start min-h-[44px] md:min-h-[24px] rounded px-2 text-sm font-semibold text-brand hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
       :aria-expanded="showZero"
       @click="showZero = !showZero"
     >
@@ -241,7 +241,7 @@ function selectMunicipality(code: number) {
 
 const stickyClass = 'sticky left-0 z-10 text-left';
 const sortButtonClass =
-  'inline-flex items-center gap-1 min-h-[24px] max-md:min-h-[44px] rounded font-semibold hover:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';
+  'inline-flex items-center gap-1 min-h-[24px] max-md:min-h-[44px] rounded font-semibold hover:text-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
 const cellButtonClass =
-  'min-h-[24px] max-md:min-h-[44px] rounded text-left text-blue-800 underline decoration-dotted underline-offset-2 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';
+  'min-h-[24px] max-md:min-h-[44px] rounded text-left text-brand underline decoration-dotted underline-offset-2 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
 </script>

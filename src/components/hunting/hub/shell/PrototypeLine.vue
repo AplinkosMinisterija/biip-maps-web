@@ -8,7 +8,7 @@
           :href="FEEDBACK_URL"
           target="_blank"
           rel="noopener"
-          class="font-semibold text-blue-800 underline rounded"
+          class="font-semibold text-brand underline rounded"
           :class="[focusRing, dismissible ? 'inline-flex items-center min-h-[44px]' : '']"
         >
           {{ S.prototypeFeedback }}<span class="sr-only"> (atidaroma naujame lange)</span>

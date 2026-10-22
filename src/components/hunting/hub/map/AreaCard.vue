@@ -9,13 +9,13 @@
         :id="titleId"
         ref="titleEl"
         tabindex="-1"
-        class="text-base font-semibold leading-6 outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2 rounded"
+        class="text-base font-semibold leading-6 outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 rounded"
       >
         {{ card.title }}
       </h2>
       <button
         type="button"
-        class="shrink-0 min-h-[24px] min-w-[24px] max-md:min-h-[44px] max-md:min-w-[44px] px-2 rounded text-gray-700 hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+        class="shrink-0 min-h-[24px] min-w-[24px] max-md:min-h-[44px] max-md:min-w-[44px] px-2 rounded text-gray-700 hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
         :aria-label="`${S.close}: ${card.title}`"
         @click="close"
       >
@@ -37,7 +37,7 @@
     <div v-if="hasTables" class="flex justify-end">
       <button
         type="button"
-        class="inline-flex items-center gap-1 min-h-[32px] max-md:min-h-[44px] rounded-lg border border-gray-300 bg-white px-3 text-sm font-semibold text-gray-900 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+        class="inline-flex items-center gap-1 min-h-[32px] max-md:min-h-[44px] rounded-lg border border-gray-300 bg-white px-3 text-sm font-semibold text-gray-900 hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
         @click="showInTable"
       >
         <UiIcon name="document" :size="16" aria-hidden="true" />

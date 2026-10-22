@@ -7,7 +7,7 @@
     <h2 id="hub-legend-title" class="font-semibold">
       <button
         type="button"
-        class="flex items-center gap-1 min-h-[24px] max-md:min-h-[44px] w-full px-1 text-left text-xs rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+        class="flex items-center gap-1 min-h-[24px] max-md:min-h-[44px] w-full px-1 text-left text-xs rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
         :aria-expanded="open"
         aria-controls="hub-legend-items"
         @click="open = !open"

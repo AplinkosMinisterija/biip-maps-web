@@ -7,11 +7,11 @@
       :aria-expanded="isOpen ? 'true' : 'false'"
       :aria-controls="panelId"
       :aria-label="srLabel || undefined"
-      class="inline-flex items-center gap-1 h-9 rounded-full border px-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+      class="inline-flex items-center gap-1 h-9 rounded-full border px-3 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
       :class="[
         shrinkable ? 'max-w-full' : 'max-w-[320px]',
         active
-          ? 'border-gray-900 bg-gray-900 text-white'
+          ? 'border-brand bg-brand text-white'
           : 'border-gray-400 bg-white text-gray-900 hover:bg-gray-100',
       ]"
       @click="toggle"

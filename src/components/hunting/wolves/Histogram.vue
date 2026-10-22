@@ -15,7 +15,7 @@
         ref="backEl"
         type="button"
         aria-label="Grįžti į ankstesnį laikotarpį"
-        class="ml-auto inline-flex items-center rounded px-2 text-sm font-medium text-blue-800 hover:bg-blue-50 underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+        class="ml-auto inline-flex items-center rounded px-2 text-sm font-medium text-brand hover:bg-brand-50 underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
         :class="large ? 'min-h-[44px]' : 'min-h-[24px]'"
         @click="goBack"
       >
@@ -53,7 +53,7 @@
           <button
             type="button"
             :aria-label="ariaLabelOf(bin)"
-            class="group w-full flex flex-col items-center justify-end rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-1"
+            class="group w-full flex flex-col items-center justify-end rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
             :style="{ height: `${barArea + (compact ? 14 : 32)}px` }"
             @click="drill(bin)"
           >

@@ -20,7 +20,7 @@ defineProps({
 });
 
 const STYLE: Record<Badge, string> = {
-  vyksta: 'bg-blue-50 border-blue-700 text-blue-900',
+  vyksta: 'bg-brand-50 border-brand text-brand',
   preliminarus: 'bg-amber-50 border-amber-700 text-amber-900',
   dalinis: 'bg-amber-50 border-amber-700 text-amber-900',
   bandomoji: 'bg-gray-100 border-gray-600 text-gray-800',

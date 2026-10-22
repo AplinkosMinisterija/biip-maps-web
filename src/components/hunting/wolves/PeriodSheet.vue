@@ -6,7 +6,7 @@
       aria-haspopup="dialog"
       :aria-expanded="isOpen ? 'true' : 'false'"
       :aria-label="`Laikotarpis: ${periodLabel}`"
-      class="inline-flex max-w-full items-center gap-1 rounded-full border border-gray-900 bg-white px-4 h-11 text-base font-medium text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+      class="inline-flex max-w-full items-center gap-1 rounded-full border border-line-strong bg-white px-4 h-11 text-base font-medium text-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
       @click="open"
     >
       <span class="truncate">{{ periodLabel }}</span>
@@ -36,7 +36,7 @@
           </h2>
           <button
             type="button"
-            class="inline-flex items-center gap-1 rounded-md px-3 min-h-[44px] text-base font-medium text-gray-900 hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+            class="inline-flex items-center gap-1 rounded-md px-3 min-h-[44px] text-base font-medium text-gray-900 hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
             @click="close"
           >
             <span aria-hidden="true">✕</span> Uždaryti
@@ -53,14 +53,14 @@
         >
           <button
             type="button"
-            class="min-h-[48px] rounded-md border border-gray-400 bg-white px-4 text-base font-medium text-gray-900 hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+            class="min-h-[48px] rounded-md border border-gray-400 bg-white px-4 text-base font-medium text-gray-900 hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
             @click="clear"
           >
             Valyti
           </button>
           <button
             type="button"
-            class="flex-1 min-h-[48px] rounded-md bg-gray-900 px-4 text-base font-semibold text-white hover:bg-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+            class="flex-1 min-h-[48px] rounded-md bg-brand px-4 text-base font-semibold text-white hover:bg-brand-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
             @click="applyAndClose"
           >
             {{ applyLabel }}

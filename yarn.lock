@@ -193,6 +193,16 @@
   resolved "https://registry.yarnpkg.com/@eslint/js/-/js-8.57.1.tgz#de633db3ec2ef6a3c89e2f19038063e8a122e2c2"
   integrity sha512-d9zaMRSTIKDLhctzH12MtXvJKSSUhaHcjV+2Z+GK+EEY7XKpP5yR4x+N3TAcHTcu963nIr+TMcCb4DBCYX1z6Q==
 
+"@fontsource/atkinson-hyperlegible@^5.3.0":
+  version "5.3.0"
+  resolved "https://registry.yarnpkg.com/@fontsource/atkinson-hyperlegible/-/atkinson-hyperlegible-5.3.0.tgz#a40a38bb7f43ff19a4d2e495acef039b02faf66c"
+  integrity sha512-Sp8Ve8+rQmENY2Lv02VH7sLpntzTTvnncnJMTbRE7DX6TLxGraN4ykZfzaUWIoCFmaomwkvNiqmlPkrKBuDoSA==
+
+"@fontsource/noto-sans@^5.3.0":
+  version "5.3.0"
+  resolved "https://registry.yarnpkg.com/@fontsource/noto-sans/-/noto-sans-5.3.0.tgz#b89fca1fb672e173249250ac90fe75f5759a04c4"
+  integrity sha512-fBCog2PY7DiVVTEEqtI/Qdinx/knobHYfoGpjFXdfBX5RoJaBp1Prw2G75p0OIsdlMZg3cLo0c+YbIUYOxnQJw==
+
 "@hey-api/openapi-ts@^0.53.9":
   version "0.53.12"
   resolved "https://registry.yarnpkg.com/@hey-api/openapi-ts/-/openapi-ts-0.53.12.tgz#7cd49d9e04c6b95308a1b0f597d002e5c3e84977"

@@ -4,7 +4,7 @@
       <label :for="selectId" class="text-xs font-semibold text-gray-700">Rikiuoti</label>
       <select
         :id="selectId"
-        class="min-h-[44px] min-w-0 flex-1 rounded border border-gray-300 bg-white px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700"
+        class="min-h-[44px] min-w-0 flex-1 rounded border border-gray-300 bg-white px-2 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
         :value="sortValue"
         @change="onSortChange(($event.target as HTMLSelectElement).value)"
       >
@@ -36,7 +36,7 @@
         v-for="(row, r) in rows"
         :key="rowKey(row, r)"
         class="rounded-lg border p-3"
-        :class="isSelected(row) ? 'border-blue-700 bg-blue-50' : 'border-gray-200 bg-white'"
+        :class="isSelected(row) ? 'border-brand bg-brand-50' : 'border-gray-200 bg-white'"
       >
         <p class="font-semibold">{{ firstColumn ? cellText(firstColumn, row) : '' }}</p>
         <dl class="mt-1 grid grid-cols-[1fr_auto] gap-x-3 gap-y-1">
@@ -48,7 +48,7 @@
         <button
           v-if="savOf(row) !== null"
           type="button"
-          class="mt-2 min-h-[44px] rounded px-2 text-sm font-semibold text-blue-800 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+          class="mt-2 min-h-[44px] rounded px-2 text-sm font-semibold text-brand hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
           :aria-label="`${firstColumn ? cellText(firstColumn, row) : ''}: ${S.showOnMap}`"
           @click="emit('show-on-map', savOf(row)!)"
         >

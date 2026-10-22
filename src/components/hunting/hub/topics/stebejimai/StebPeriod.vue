@@ -116,12 +116,12 @@ const ctx = inject(STEB_CTX)!;
 const uid = `steb-period-${getCurrentInstance()?.uid ?? 0}`;
 
 const focusRing =
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';
+  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
 const rowClass = [
   'flex cursor-pointer items-center gap-3 text-gray-900',
   props.large ? 'min-h-[44px] text-base' : 'min-h-[32px] text-sm',
 ];
-const radioClass = `h-4 w-4 shrink-0 accent-gray-900 ${focusRing}`;
+const radioClass = `h-4 w-4 shrink-0 accent-brand ${focusRing}`;
 const selectClass = [
   'block w-full rounded-md border border-gray-400 bg-white px-2 text-gray-900',
   focusRing,

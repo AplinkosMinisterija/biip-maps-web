@@ -160,7 +160,7 @@ const labelClass = computed(() => [
 const selectClass = computed(() => [
   'block w-full appearance-none rounded-md border bg-white bg-no-repeat pl-1.5 pr-5 text-gray-900 cursor-pointer',
   'bg-[length:12px_12px] bg-[right_0.3rem_center]',
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2',
+  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand',
   'disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed',
   props.large ? 'h-12 text-base' : 'h-9 text-sm',
   props.invalid ? 'border-red-600 ring-1 ring-red-600' : 'border-gray-400',

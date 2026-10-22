@@ -322,10 +322,10 @@ const fallbackInfo = computed(() => {
 function chipClass(active: boolean) {
   return [
     'inline-flex items-center rounded-full border px-3 font-medium transition-colors cursor-pointer',
-    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2',
+    'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand',
     props.large ? 'h-11 text-base' : 'h-8 text-sm',
     active
-      ? 'bg-gray-900 border-gray-900 text-white'
+      ? 'bg-brand border-line-strong text-white'
       : 'bg-white border-gray-400 text-gray-900 hover:bg-gray-100',
   ];
 }

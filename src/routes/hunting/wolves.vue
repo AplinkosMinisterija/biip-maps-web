@@ -155,10 +155,10 @@ const isProductionHost = window.location.hostname === 'maps.biip.lt';
 const isMobile = useMediaQuery('(max-width: 767px)');
 
 const focusRing =
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';
+  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
 const headerButton = `px-2 py-1 min-h-[24px] rounded border border-gray-300 text-xs font-semibold text-gray-800 hover:bg-gray-100 flex items-center gap-1 ${focusRing}`;
 const viewButton = `px-4 min-h-[40px] rounded-md text-sm font-semibold flex items-center gap-2 ${focusRing}`;
-const viewButtonActive = 'bg-gray-900 text-white';
+const viewButtonActive = 'bg-brand text-white';
 const viewButtonIdle = 'text-gray-900 hover:bg-gray-100';
 const iconButton =
   'w-11 h-11 flex items-center justify-center rounded text-gray-800 hover:bg-gray-100';

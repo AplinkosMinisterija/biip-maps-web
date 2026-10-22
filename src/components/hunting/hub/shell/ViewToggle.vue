@@ -45,7 +45,7 @@ const props = defineProps({
 const emit = defineEmits(['update:tableOpen']);
 
 const button = `px-3 lg:px-4 min-h-[36px] rounded-md text-sm font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${focusRing}`;
-const activeClass = 'bg-gray-900 text-white';
+const activeClass = 'bg-brand text-white';
 const idleClass = 'text-gray-900 hover:bg-gray-100';
 
 const set = (open: boolean) => {

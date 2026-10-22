@@ -64,7 +64,7 @@
             <a
               v-else
               :href="hrefOf(card.topic)"
-              class="mt-auto self-end inline-flex min-h-[44px] items-center rounded px-2 text-sm font-semibold text-blue-800 underline md:min-h-[32px]"
+              class="mt-auto self-end inline-flex min-h-[44px] items-center rounded px-2 text-sm font-semibold text-brand underline md:min-h-[32px]"
               :class="focusRing"
               @click.prevent="ctx.setTopic(card.topic)"
             >
@@ -127,7 +127,7 @@ const provenance = computed<Provenance | null>(() => {
 
 // Embedded card actions: the style of the standalone link, 44 px targets on phones.
 const cardAction =
-  'inline-flex min-h-[44px] items-center rounded px-2 text-sm font-semibold text-blue-800 underline md:min-h-[32px]';
+  'inline-flex min-h-[44px] items-center rounded px-2 text-sm font-semibold text-brand underline md:min-h-[32px]';
 
 const hrefOf = (id: TopicId) => {
   const query: Record<string, string> = { tema: id };

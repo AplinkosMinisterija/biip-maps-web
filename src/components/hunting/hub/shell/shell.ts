@@ -26,8 +26,9 @@ export interface HubShell {
 
 export const HUB_SHELL: InjectionKey<HubShell> = Symbol('huntingHubShell');
 
-export const focusRing =
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';
+// The hub's focus outline (controls.ts FOCUS_RING), kept under its old name for the
+// components that import it from here.
+export { FOCUS_RING as focusRing } from './controls';
 
 export const FOCUSABLE =
   'button:not([disabled]), select:not([disabled]), input:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])';

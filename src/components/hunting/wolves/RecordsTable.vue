@@ -5,7 +5,7 @@
         <input
           v-model="visibleOnly"
           type="checkbox"
-          class="h-4 w-4 focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+          class="h-4 w-4 focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
         />
         <span>Tik matomame žemėlapio plote</span>
       </label>
@@ -26,7 +26,7 @@
       <li v-for="row in pageRows" :key="row.id">
         <button
           type="button"
-          class="w-full min-h-[44px] text-left rounded-lg border border-gray-200 bg-white px-3 py-2 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+          class="w-full min-h-[44px] text-left rounded-lg border border-gray-200 bg-white px-3 py-2 hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
           :aria-label="showOnMapLabel(row)"
           @click="showOnMap(row)"
         >
@@ -114,7 +114,7 @@
             <td class="py-1 pl-1 sticky right-0 bg-white">
               <button
                 type="button"
-                class="w-8 h-8 flex items-center justify-center rounded text-blue-800 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+                class="w-8 h-8 flex items-center justify-center rounded text-brand hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
                 :aria-label="showOnMapLabel(row)"
                 title="Rodyti žemėlapyje"
                 @click="showOnMap(row)"
@@ -261,7 +261,7 @@ function showOnMap(row: WolfRecord) {
 const tagClass =
   'inline-block rounded bg-amber-100 px-1.5 py-0.5 text-xxs font-semibold text-amber-900 whitespace-nowrap';
 const sortButtonClass =
-  'inline-flex items-center gap-1 min-h-[24px] rounded font-semibold hover:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';
+  'inline-flex items-center gap-1 min-h-[24px] rounded font-semibold hover:text-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
 const pagerButtonClass =
-  'min-h-[44px] md:min-h-[24px] rounded border border-gray-300 bg-white px-3 py-1 text-xs font-semibold text-gray-800 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';
+  'min-h-[44px] md:min-h-[24px] rounded border border-gray-300 bg-white px-3 py-1 text-xs font-semibold text-gray-800 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
 </script>

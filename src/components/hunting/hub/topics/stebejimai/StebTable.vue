@@ -44,7 +44,7 @@
         :class="[
           focusRing,
           active === tab.id
-            ? 'border-blue-700 text-blue-800'
+            ? 'border-brand text-brand'
             : 'border-transparent text-gray-600 hover:text-gray-900',
         ]"
         @click="selectTab(tab.id)"
@@ -61,7 +61,7 @@
         role="tabpanel"
         :aria-labelledby="tabId(active)"
         tabindex="0"
-        class="flex flex-col gap-3 rounded text-sm text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700"
+        class="flex flex-col gap-3 rounded text-sm text-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
       >
         <p v-if="loading" role="status" class="text-gray-700">{{ SS.loading }}</p>
         <p v-else-if="!ctx.derived.records.value.length" class="text-gray-700">
@@ -153,7 +153,7 @@
                       <button
                         v-if="r.x !== null"
                         type="button"
-                        class="flex h-8 w-8 items-center justify-center rounded text-blue-800 hover:bg-blue-50"
+                        class="flex h-8 w-8 items-center justify-center rounded text-brand hover:bg-brand-50"
                         :class="focusRing"
                         :aria-label="showLabel(r)"
                         :title="SS.showOnMap"
@@ -341,11 +341,11 @@ const narrow = computed(() =>
 );
 
 const focusRing =
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';
+  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
 const sortButton = `inline-flex min-h-[24px] items-center gap-1 rounded font-semibold hover:text-gray-900 ${focusRing}`;
 const pagerButton = `min-h-[44px] md:min-h-[24px] rounded border border-gray-300 bg-white px-3 py-1 text-xs font-semibold text-gray-800 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed ${focusRing}`;
-const actionButton = `inline-flex min-h-[44px] md:min-h-[28px] items-center gap-1 rounded px-1 text-sm font-semibold text-blue-800 underline hover:bg-blue-50 ${focusRing}`;
-const linkClass = `inline-flex min-h-[44px] md:min-h-[28px] items-center rounded px-1 font-semibold text-blue-800 underline ${focusRing}`;
+const actionButton = `inline-flex min-h-[44px] md:min-h-[28px] items-center gap-1 rounded px-1 text-sm font-semibold text-brand underline hover:bg-brand-50 ${focusRing}`;
+const linkClass = `inline-flex min-h-[44px] md:min-h-[28px] items-center rounded px-1 font-semibold text-brand underline ${focusRing}`;
 
 const linkTarget = ctx.embed ? '_top' : '_blank';
 const linkRel = ctx.embed ? undefined : 'noopener';

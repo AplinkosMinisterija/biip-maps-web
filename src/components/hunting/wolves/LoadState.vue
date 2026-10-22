@@ -25,7 +25,7 @@
         <button
           v-if="!isDefaultSeason"
           type="button"
-          class="self-start px-4 py-3 md:py-2 rounded bg-blue-50 text-blue-800 text-xs font-semibold hover:bg-blue-100"
+          class="self-start px-4 py-3 md:py-2 rounded bg-brand-50 text-brand text-xs font-semibold hover:bg-brand-100"
           :class="focusRing"
           @click="showDefaultSeason"
         >
@@ -57,7 +57,7 @@
       <span>Rodomi {{ fetchedAtText }} duomenys; naujesnių gauti nepavyko.</span>
       <button
         type="button"
-        class="px-2 py-1 min-h-[44px] md:min-h-[24px] rounded font-semibold text-blue-800 underline"
+        class="px-2 py-1 min-h-[44px] md:min-h-[24px] rounded font-semibold text-brand underline"
         :class="focusRing"
         @click="data.reload()"
       >
@@ -90,7 +90,7 @@ defineProps({
 const ctx = inject(WOLVES_CTX)!;
 const { data, state, derived } = ctx;
 const focusRing =
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';
+  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
 const GENERIC_ERROR = 'Nepavyko įkelti vilkų duomenų. Patikrinkite ryšį arba bandykite vėliau.';
 
 const loading = computed(() => data.phase.value === 'loading' || data.phase.value === 'slow');

@@ -14,7 +14,7 @@
     <p class="text-sm font-semibold text-red-900">{{ S.loadError }}</p>
     <button
       type="button"
-      class="rounded-md bg-gray-900 px-4 text-sm font-semibold text-white hover:bg-gray-800"
+      class="rounded-md bg-brand px-4 text-sm font-semibold text-white hover:bg-brand-hover"
       :class="[focusRing, large ? 'min-h-[44px]' : 'min-h-[36px]']"
       @click="ctx.data.reload()"
     >

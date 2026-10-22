@@ -112,7 +112,7 @@
     <button
       v-if="!ctx.derived.isDefault.value"
       type="button"
-      class="shrink-0 whitespace-nowrap rounded px-1 text-sm font-semibold text-blue-800 underline"
+      class="shrink-0 whitespace-nowrap rounded px-1 text-sm font-semibold text-brand underline"
       :class="focusRing"
       @click="ctx.state.reset()"
     >
@@ -221,7 +221,7 @@
         <button
           v-if="ctx.derived.activeCount.value > 0"
           type="button"
-          class="min-h-[44px] self-start rounded text-base font-semibold text-blue-800 underline"
+          class="min-h-[44px] self-start rounded text-base font-semibold text-brand underline"
           :class="focusRing"
           @click="ctx.state.clearFilters()"
         >
@@ -258,12 +258,12 @@ const { width } = useWindowSize();
 const compact = computed(() => width.value < (ctx.embed ? DESKTOP_MIN : WIDE_MIN));
 
 const focusRing =
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';
+  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
 const rowClass = 'flex min-h-[32px] cursor-pointer items-center gap-3 text-sm text-gray-900';
 const rowClassLarge = 'flex min-h-[44px] cursor-pointer items-center gap-3 text-base text-gray-900';
-const radioClass = `h-4 w-4 shrink-0 accent-gray-900 ${focusRing}`;
+const radioClass = `h-4 w-4 shrink-0 accent-brand ${focusRing}`;
 const selectClass = `block h-9 w-full rounded-md border border-gray-400 bg-white px-2 text-sm text-gray-900 ${focusRing}`;
-const mobileChip = `inline-flex h-11 items-center gap-1 rounded-full border border-gray-900 bg-white px-4 text-base font-medium text-gray-900 ${focusRing}`;
+const mobileChip = `inline-flex h-11 items-center gap-1 rounded-full border border-line-strong bg-white px-4 text-base font-medium text-gray-900 ${focusRing}`;
 
 const periodChip = computed(() => periodChipLabel(ctx.state.period.value, ctx.today));
 const optionLabel = (list: { key: string; label: string }[], key: string | null, all: string) =>

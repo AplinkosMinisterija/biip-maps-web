@@ -36,7 +36,7 @@
           v-if="hasDims"
           type="button"
           :aria-label="S.filtersChip(activeDims)"
-          class="flex h-11 shrink-0 items-center gap-1 rounded-full border border-gray-900 bg-white px-4 text-base font-medium text-gray-900"
+          class="flex h-11 shrink-0 items-center gap-1 rounded-full border border-line-strong bg-white px-4 text-base font-medium text-gray-900"
           :class="focusRing"
           @click="$emit('filters')"
         >

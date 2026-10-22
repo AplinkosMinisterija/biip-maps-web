@@ -10,7 +10,7 @@
       v-if="!ctx.derived.isDefaultView.value"
       type="button"
       aria-label="Atstatyti numatytąjį vaizdą"
-      class="shrink-0 px-3 py-1 min-h-[44px] md:min-h-[24px] rounded border border-gray-300 text-xs font-semibold text-gray-800 hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+      class="shrink-0 px-3 py-1 min-h-[44px] md:min-h-[24px] rounded border border-gray-300 text-xs font-semibold text-gray-800 hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
       @click="ctx.state.reset()"
     >
       Atstatyti

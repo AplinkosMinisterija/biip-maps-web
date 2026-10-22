@@ -6,7 +6,7 @@
         type="button"
         :aria-expanded="isOpen ? 'true' : 'false'"
         :aria-controls="`${uid}-panel`"
-        class="inline-flex items-center gap-1 rounded px-1 text-sm font-medium text-blue-800 hover:underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+        class="inline-flex items-center gap-1 rounded px-1 text-sm font-medium text-brand hover:underline underline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
         :class="large ? 'min-h-[44px]' : 'min-h-[24px]'"
         @click="isOpen = !isOpen"
       >
@@ -16,7 +16,7 @@
       <button
         v-if="activeCount"
         type="button"
-        class="inline-flex items-center rounded px-1 text-sm text-gray-800 underline underline-offset-2 hover:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+        class="inline-flex items-center rounded px-1 text-sm text-gray-800 underline underline-offset-2 hover:text-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
         :class="large ? 'min-h-[44px]' : 'min-h-[24px]'"
         aria-label="Išvalyti papildomus filtrus"
         @click="clear"
@@ -40,7 +40,7 @@
         >
           <input
             type="checkbox"
-            class="h-4 w-4 accent-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+            class="h-4 w-4 accent-brand focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
             :checked="ctx.state.attrs.value[group.key].includes(option.code)"
             @change="toggle(group.key, option.code, ($event.target as HTMLInputElement).checked)"
           />

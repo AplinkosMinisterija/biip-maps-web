@@ -12,7 +12,7 @@
         :name="name"
         :value="o.season"
         :checked="o.season === modelValue"
-        class="h-4 w-4 accent-gray-900"
+        class="h-4 w-4 accent-brand"
         :class="focusRing"
         @change="emit('update:modelValue', o.season)"
       />

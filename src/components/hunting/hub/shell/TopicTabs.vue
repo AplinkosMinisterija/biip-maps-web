@@ -26,7 +26,7 @@
         :class="[
           focusRing,
           id === active
-            ? 'bg-gray-900 text-white'
+            ? 'bg-brand text-white'
             : 'text-gray-800 hover:bg-gray-100 hover:text-gray-900',
         ]"
         @click="ctx.setTopic(id)"

@@ -13,7 +13,7 @@
       </p>
       <a
         href="/hunting/public"
-        class="self-start px-4 py-3 rounded bg-blue-700 text-white text-sm font-semibold hover:bg-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+        class="self-start px-4 py-3 rounded bg-brand text-white text-sm font-semibold hover:bg-brand-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
       >
         Atidaryti žemėlapį
       </a>

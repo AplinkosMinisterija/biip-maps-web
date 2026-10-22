@@ -64,7 +64,7 @@ import { SS } from '@/utils/hunting/hub/stebejimai/strings';
 
 const ctx = inject(STEB_CTX)!;
 const focusRing =
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';
+  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
 
 const query =
   typeof window !== 'undefined' && window.matchMedia

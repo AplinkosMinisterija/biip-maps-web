@@ -187,9 +187,9 @@ const isMobile: Ref<boolean> = hub ? hub.isMobile : useMediaQuery('(max-width: 7
 const { width } = useWindowSize();
 
 const focusRing =
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';
+  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
 const viewButton = `px-3 min-h-[32px] rounded-md text-sm font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${focusRing}`;
-const viewButtonActive = 'bg-gray-900 text-white';
+const viewButtonActive = 'bg-brand text-white';
 const viewButtonIdle = 'text-gray-900 hover:bg-white';
 
 // The shell renders only the production gate on maps.biip.lt; never start requests there.

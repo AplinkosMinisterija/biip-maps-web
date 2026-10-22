@@ -26,7 +26,7 @@
       <button
         v-if="variant === 'drawer' && !embed"
         type="button"
-        class="inline-flex items-center gap-1 min-h-[32px] rounded px-2 text-sm font-semibold text-gray-800 hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+        class="inline-flex items-center gap-1 min-h-[32px] rounded px-2 text-sm font-semibold text-gray-800 hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
         :aria-expanded="true"
         :aria-controls="DRAWER_ID"
         @click="close"
@@ -52,10 +52,10 @@
         :aria-selected="activeTab === tab.id"
         :aria-controls="panelId(tab.id)"
         :tabindex="activeTab === tab.id ? 0 : -1"
-        class="min-h-[44px] md:min-h-[36px] whitespace-nowrap px-3 text-sm font-semibold border-b-2 -mb-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+        class="min-h-[44px] md:min-h-[36px] whitespace-nowrap px-3 text-sm font-semibold border-b-2 -mb-px focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
         :class="
           activeTab === tab.id
-            ? 'border-blue-700 text-blue-800'
+            ? 'border-brand text-brand'
             : 'border-transparent text-gray-600 hover:text-gray-900'
         "
         @click="selectTab(tab.id)"
@@ -77,7 +77,7 @@
         :aria-labelledby="tabId(tab.id)"
         :hidden="activeTab !== tab.id"
         tabindex="0"
-        class="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 rounded"
+        class="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand rounded"
       >
         <template v-if="activeTab === tab.id">
           <HuntingWolvesRecordsTable

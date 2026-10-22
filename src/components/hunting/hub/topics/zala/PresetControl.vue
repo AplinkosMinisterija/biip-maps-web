@@ -18,10 +18,10 @@
         role="radio"
         :aria-checked="activePreset === preset ? 'true' : 'false'"
         :tabindex="activePreset === preset ? 0 : -1"
-        class="flex flex-col items-start rounded px-2 py-1 text-left text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-1"
+        class="flex flex-col items-start rounded px-2 py-1 text-left text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
         :class="[
           large ? 'min-h-[44px]' : 'min-h-[32px]',
-          activePreset === preset ? 'bg-gray-900 text-white' : 'text-gray-900 hover:bg-gray-100',
+          activePreset === preset ? 'bg-brand text-white' : 'text-gray-900 hover:bg-gray-100',
         ]"
         @click="select(preset, i)"
       >
@@ -49,11 +49,11 @@
         :key="group"
         type="button"
         :aria-pressed="grupe === group ? 'true' : 'false'"
-        class="inline-flex items-center rounded-full border px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-1"
+        class="inline-flex items-center rounded-full border px-3 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
         :class="[
           large ? 'min-h-[44px]' : 'min-h-[28px]',
           grupe === group
-            ? 'border-gray-900 bg-gray-900 text-white'
+            ? 'border-brand bg-brand text-white'
             : 'border-gray-400 bg-white text-gray-900 hover:bg-gray-100',
         ]"
         @click="toggleGroup(group)"

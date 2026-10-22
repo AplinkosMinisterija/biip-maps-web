@@ -15,10 +15,10 @@
       :aria-controls="panelId(tab.id)"
       :tabindex="active === tab.id ? 0 : -1"
       :title="tab.disabled || undefined"
-      class="min-h-[44px] md:min-h-[36px] whitespace-nowrap px-3 text-sm font-semibold border-b-2 -mb-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+      class="min-h-[44px] md:min-h-[36px] whitespace-nowrap px-3 text-sm font-semibold border-b-2 -mb-px focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
       :class="[
         active === tab.id
-          ? 'border-blue-700 text-blue-800'
+          ? 'border-brand text-brand'
           : 'border-transparent text-gray-600 hover:text-gray-900',
         tab.disabled ? 'italic' : '',
       ]"

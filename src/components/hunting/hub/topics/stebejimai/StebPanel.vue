@@ -137,8 +137,8 @@ defineProps({
 const ctx = inject(STEB_CTX)!;
 
 const focusRing =
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';
-const linkButton = `font-semibold text-blue-800 underline rounded ${focusRing}`;
+  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
+const linkButton = `font-semibold text-brand underline rounded ${focusRing}`;
 const buttonClass = `min-h-[44px] md:min-h-[32px] rounded-md border border-gray-400 bg-white px-3 text-sm font-semibold text-gray-900 hover:bg-gray-50 ${focusRing}`;
 
 const phase = computed(() => ctx.data.phase.value);

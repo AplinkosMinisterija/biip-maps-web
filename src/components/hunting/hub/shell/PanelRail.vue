@@ -3,7 +3,7 @@
   <div class="flex h-full w-full flex-col items-center gap-3 py-3">
     <button
       type="button"
-      class="flex h-11 w-11 items-center justify-center rounded-md bg-gray-900 text-white hover:bg-gray-800"
+      class="flex h-11 w-11 items-center justify-center rounded-md bg-brand text-white hover:bg-brand-hover"
       :class="focusRing"
       :aria-label="`${S.railExpand}: ${title}`"
       :title="S.railExpand"

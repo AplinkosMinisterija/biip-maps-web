@@ -14,7 +14,7 @@
         <button
           v-if="model.state === 'unavailable'"
           type="button"
-          class="ml-1 font-semibold text-blue-800 underline rounded min-h-[44px] md:min-h-[24px]"
+          class="ml-1 font-semibold text-brand underline rounded min-h-[44px] md:min-h-[24px]"
           :class="focusRing"
           @click="ctx.data.reloadTotals()"
         >
@@ -83,7 +83,7 @@
         <button
           v-if="model.state === 'unavailable'"
           type="button"
-          class="self-start px-3 py-2 min-h-[44px] md:min-h-0 rounded bg-blue-50 text-blue-800 font-semibold text-xs hover:bg-blue-100"
+          class="self-start px-3 py-2 min-h-[44px] md:min-h-0 rounded bg-brand-50 text-brand font-semibold text-xs hover:bg-brand-100"
           :class="focusRing"
           @click="ctx.data.reloadTotals()"
         >
@@ -101,7 +101,7 @@
           />
           <button
             type="button"
-            class="self-start text-xs font-semibold text-blue-800 underline rounded min-h-[44px] md:min-h-[24px]"
+            class="self-start text-xs font-semibold text-brand underline rounded min-h-[44px] md:min-h-[24px]"
             :class="focusRing"
             :aria-expanded="more"
             aria-controls="wolves-status-details"
@@ -237,7 +237,7 @@ const showProgress = computed(() =>
 );
 
 const focusRing =
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';
+  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
 
 const details = computed(() => {
   const m = model.value;

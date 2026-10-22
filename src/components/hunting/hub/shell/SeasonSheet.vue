@@ -7,7 +7,7 @@
       :aria-expanded="isOpen ? 'true' : 'false'"
       :aria-label="S.seasonChip(seasonLabel(season))"
       :disabled="disabled || !options.length"
-      class="inline-flex h-11 max-w-full items-center gap-1 rounded-full border border-gray-900 bg-white px-4 text-base font-medium text-gray-900 disabled:border-gray-300 disabled:text-gray-700"
+      class="inline-flex h-11 max-w-full items-center gap-1 rounded-full border border-line-strong bg-white px-4 text-base font-medium text-gray-900 disabled:border-gray-300 disabled:text-gray-700"
       :class="focusRing"
       @click="isOpen = true"
     >

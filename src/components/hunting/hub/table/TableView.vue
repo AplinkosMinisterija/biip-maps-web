@@ -19,7 +19,7 @@
       <button
         v-if="mode !== 'sheet' && !ctx.embed"
         type="button"
-        class="inline-flex items-center gap-1 min-h-[32px] rounded px-2 text-sm font-semibold text-gray-800 hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+        class="inline-flex items-center gap-1 min-h-[32px] rounded px-2 text-sm font-semibold text-gray-800 hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
         :aria-controls="HUB_TABLE_ID"
         :aria-expanded="true"
         @click="close"
@@ -47,7 +47,7 @@
         :aria-labelledby="`${uid}-tab-${table.id}`"
         :hidden="active?.id !== table.id"
         tabindex="0"
-        class="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 rounded"
+        class="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand rounded"
         :class="mode === 'sheet' || active?.id !== table.id ? '' : 'flex-1 min-h-0 flex flex-col'"
       >
         <template v-if="active?.id === table.id">
@@ -81,7 +81,7 @@
         {{ view.provenance.text }} ·
         <button
           type="button"
-          class="min-h-[24px] max-md:min-h-[44px] rounded text-blue-800 underline underline-offset-2 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700"
+          class="min-h-[24px] max-md:min-h-[44px] rounded text-brand underline underline-offset-2 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
           @click="ctx.openAbout()"
         >
           {{ S.provenanceLink }}

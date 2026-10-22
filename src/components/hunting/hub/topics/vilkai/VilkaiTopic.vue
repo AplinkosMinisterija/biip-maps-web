@@ -302,11 +302,11 @@ const { width } = useWindowSize();
 const showStagingBadge = !isProductionHost;
 
 const focusRing =
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';
+  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
 const viewButton = `px-3 min-h-[32px] rounded-md text-sm font-semibold flex items-center gap-2 ${focusRing}`;
-const viewButtonActive = 'bg-gray-900 text-white';
+const viewButtonActive = 'bg-brand text-white';
 const viewButtonIdle = 'text-gray-900 hover:bg-white';
-const linkButton = `font-semibold text-blue-800 underline rounded ${focusRing}`;
+const linkButton = `font-semibold text-brand underline rounded ${focusRing}`;
 const badgeClass =
   'shrink-0 rounded border border-gray-400 bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-800';
 

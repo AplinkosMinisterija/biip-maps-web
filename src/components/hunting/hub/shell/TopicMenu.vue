@@ -36,7 +36,7 @@
         role="option"
         :aria-selected="id === activeTopic"
         class="flex min-h-[52px] cursor-pointer flex-col justify-center rounded-md px-3 py-1"
-        :class="i === active ? 'bg-gray-900 text-white' : 'text-gray-900'"
+        :class="i === active ? 'bg-brand text-white' : 'text-gray-900'"
         @mousedown.prevent
         @click="pick(id)"
       >

@@ -78,7 +78,7 @@
             <td class="py-1 pr-2">
               <button
                 type="button"
-                class="text-left text-blue-800 underline-offset-2 hover:underline rounded min-h-[24px]"
+                class="text-left text-brand underline-offset-2 hover:underline rounded min-h-[24px]"
                 :class="focusRing"
                 :aria-pressed="row.code === ctx.state.sav.value"
                 @click="toggleSav(row.code)"
@@ -121,7 +121,7 @@ const emit = defineEmits(['view']);
 const ctx = inject(WOLVES_CTX)!;
 const uid = `hub-vilkai-fallback-${getCurrentInstance()?.uid ?? 0}`;
 const focusRing =
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';
+  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
 
 const seasons = computed(() => vilkaiFallbackSeasons(props.snapshot));
 // The wolves period when it is a closed season of the copy, else the newest one. A choice

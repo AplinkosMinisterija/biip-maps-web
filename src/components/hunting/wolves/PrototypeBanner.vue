@@ -6,7 +6,7 @@
         Prototipas bandomojoje aplinkoje: dalis duomenų bandomieji, skaičiai dar tikrinami.
         <a
           href="/hunting/public"
-          class="underline font-semibold max-md:inline-flex max-md:items-center max-md:min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2 rounded"
+          class="underline font-semibold max-md:inline-flex max-md:items-center max-md:min-h-[44px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand rounded"
         >
           Atidaryti dabartinį žemėlapį
         </a>
@@ -14,7 +14,7 @@
       <button
         v-if="dismissible"
         type="button"
-        class="shrink-0 -m-2 w-11 h-11 flex items-center justify-center rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+        class="shrink-0 -m-2 w-11 h-11 flex items-center justify-center rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
         aria-label="Uždaryti pranešimą apie prototipą"
         @click="dismiss"
       >

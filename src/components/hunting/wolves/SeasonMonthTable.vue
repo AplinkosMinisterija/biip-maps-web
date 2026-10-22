@@ -197,5 +197,5 @@ function selectMonth(season: number, month: number) {
 
 const stickyClass = 'sticky left-0 z-10 bg-white';
 const cellButtonClass =
-  'min-h-[24px] min-w-[24px] max-md:min-h-[44px] max-md:min-w-[44px] rounded px-1 font-semibold text-blue-800 underline decoration-dotted underline-offset-2 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';
+  'min-h-[24px] min-w-[24px] max-md:min-h-[44px] max-md:min-w-[44px] rounded px-1 font-semibold text-brand underline decoration-dotted underline-offset-2 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
 </script>

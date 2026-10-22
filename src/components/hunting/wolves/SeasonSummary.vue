@@ -99,7 +99,7 @@
       :href="AM_WOLVES_URL"
       target="_blank"
       rel="noopener"
-      class="self-start text-xs font-semibold text-blue-800 underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+      class="self-start text-xs font-semibold text-brand underline rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
     >
       Oficiali sezono suvestinė – am.lrv.lt
       <span class="sr-only">(atidaroma naujame lange)</span>
@@ -118,7 +118,7 @@ const { data, derived } = ctx;
 
 const tips = reactive({ located: false, limit: false, paper: false });
 const tipButton =
-  'w-11 h-11 -my-3 md:w-6 md:h-6 md:my-0 shrink-0 inline-flex items-center justify-center rounded-full text-blue-800 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';
+  'w-11 h-11 -my-3 md:w-6 md:h-6 md:my-0 shrink-0 inline-flex items-center justify-center rounded-full text-brand hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
 
 const tipGlyph =
   'w-4 h-4 rounded-full border border-current text-[10px] font-bold leading-none flex items-center justify-center';

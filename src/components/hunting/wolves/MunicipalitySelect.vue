@@ -5,7 +5,7 @@
     <select
       :id="id"
       :value="value"
-      class="block w-full rounded-md border border-gray-400 bg-white px-2 text-sm text-gray-900 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+      class="block w-full rounded-md border border-gray-400 bg-white px-2 text-sm text-gray-900 cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
       :class="isMobile ? 'h-12' : 'h-9'"
       @change="onChange(($event.target as HTMLSelectElement).value)"
     >
