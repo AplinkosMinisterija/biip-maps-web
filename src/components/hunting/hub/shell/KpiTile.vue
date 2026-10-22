@@ -11,7 +11,7 @@
       :class="[
         KPI_VALUE,
         kpi.muted ? '!text-ink-muted' : '',
-        long ? 'text-sm leading-5' : 'text-[28px] leading-8',
+        long ? 'text-sm leading-5' : SIZES[size],
       ]"
     >
       <!-- A date never breaks at its hyphens ("po 2027-05-15"). -->
@@ -66,7 +66,10 @@ import { focusRing } from './shell';
 const props = defineProps({
   kpi: { type: Object as PropType<KpiDef>, required: true },
   large: { type: Boolean, default: false },
+  // One size for the whole row (KpiStrip picks it from the longest number).
+  size: { type: String as PropType<'lg' | 'md' | 'sm'>, default: 'lg' },
 });
+const SIZES = { lg: 'text-[28px] leading-8', md: 'text-[22px] leading-7', sm: 'text-lg leading-6' };
 
 const LABEL = 'flex-1 text-[13px] font-medium leading-[18px] text-ink-muted';
 const tipOpen = ref(false);
