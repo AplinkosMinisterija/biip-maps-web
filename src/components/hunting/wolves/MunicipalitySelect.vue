@@ -1,12 +1,12 @@
 <template>
   <!-- Native select: UiDropdown has no focus ring and a low-contrast, unbound label (§12). -->
   <div v-if="index" class="flex flex-col gap-1">
-    <label :for="id" class="text-sm font-semibold text-gray-900">Savivaldybė</label>
+    <label :for="id" class="text-sm font-semibold text-ink">Vieta</label>
     <select
       :id="id"
       :value="value"
-      class="block w-full rounded-md border border-gray-400 bg-white px-2 text-sm text-gray-900 cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-      :class="isMobile ? 'h-12' : 'h-9'"
+      class="cursor-pointer"
+      :class="[FIELD, isMobile ? FIELD_TOUCH : 'h-9 text-sm']"
       @change="onChange(($event.target as HTMLSelectElement).value)"
     >
       <option value="">Visa Lietuva</option>
@@ -20,6 +20,7 @@
 <script setup lang="ts">
 import { computed, getCurrentInstance, inject, onMounted, shallowRef } from 'vue';
 import { WOLVES_CTX } from '@/composables/hunting/context';
+import { FIELD, FIELD_TOUCH } from '@/components/hunting/hub/shell/controls';
 import { loadMunicipalityIndex, type MunicipalityIndex } from '@/utils/hunting/municipalities';
 
 const ctx = inject(WOLVES_CTX)!;

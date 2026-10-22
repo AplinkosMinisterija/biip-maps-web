@@ -1,119 +1,42 @@
 <template>
-  <fieldset class="min-w-0">
-    <legend :class="staged ? 'sr-only' : 'text-sm font-semibold text-gray-900 mb-2'">
-      Laikotarpis
-    </legend>
+  <div class="min-w-0">
+    <!-- The hub's period panel (one radio group, as Stebėjimai; CONTROLS-06). -->
+    <HuntingHubShellPeriodPanel
+      :kind="choice"
+      :season="seasonPick"
+      :seasons="seasons"
+      all-label="Visi sezonai"
+      :nuo="nuo"
+      :iki="iki"
+      :years="years"
+      :today="ctx.today"
+      :invalid="invalid"
+      :large="large"
+      :show-legend="!staged && showSeasonNote"
+      @pick="pick"
+      @season="onSeason"
+      @parts="onPartsChange"
+    />
 
-    <div class="flex flex-wrap gap-2">
-      <button
-        v-for="chip in seasonChips"
-        :key="chip.preset"
-        type="button"
-        :aria-pressed="current.preset === chip.preset ? 'true' : 'false'"
-        :class="chipClass(current.preset === chip.preset)"
-        @click="apply(seasonInterval(chip.season), chip.preset)"
-      >
-        {{ chip.label }}
-      </button>
-
-      <div class="relative">
-        <label :for="`${uid}-older`" class="sr-only">Ankstesni sezonai</label>
-        <select
-          :id="`${uid}-older`"
-          :value="olderValue"
-          :class="[chipClass(!!olderValue), 'appearance-none pr-8']"
-          @change="onOlderChange($event)"
-        >
-          <option value="">Ankstesni sezonai</option>
-          <option v-for="season in olderSeasons" :key="season" :value="`season:${season}`">
-            {{ seasonLabel(season) }} sezonas
-          </option>
-          <option value="all">Visi sezonai</option>
-        </select>
-        <span
-          aria-hidden="true"
-          class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs"
-          :class="olderValue ? 'text-white' : 'text-gray-700'"
-        >
-          ▾
-        </span>
-      </div>
-
-      <button
-        type="button"
-        :aria-pressed="current.preset === 'last30' ? 'true' : 'false'"
-        :class="chipClass(current.preset === 'last30')"
-        @click="apply(last30Interval, 'last30')"
-      >
-        Paskutinės 30 d.
-      </button>
-
-      <button
-        type="button"
-        :aria-expanded="datesOpen ? 'true' : 'false'"
-        :aria-controls="`${uid}-dates`"
-        :class="chipClass(current.preset === 'custom')"
-        @click="datesOpen = !datesOpen"
-      >
-        Pasirinkti datas
-        <span aria-hidden="true" class="ml-1 text-xs">{{ datesOpen ? '▴' : '▾' }}</span>
-      </button>
-    </div>
-
-    <div v-show="datesOpen" :id="`${uid}-dates`" class="mt-3 space-y-3">
-      <HuntingWolvesDatePartsSelect
-        :model-value="nuo"
-        kind="nuo"
-        :years="years"
-        :today="ctx.today"
-        :id-prefix="`${uid}-nuo`"
-        :large="large"
-        @update:model-value="(value: DateParts) => onPartsChange('nuo', value)"
-      />
-      <HuntingWolvesDatePartsSelect
-        :model-value="iki"
-        kind="iki"
-        :years="years"
-        :today="ctx.today"
-        :id-prefix="`${uid}-iki`"
-        :large="large"
-        :invalid="invalid"
-        :described-by="`${uid}-iki-error`"
-        @update:model-value="(value: DateParts) => onPartsChange('iki', value)"
-      />
-      <p
-        v-if="invalid"
-        :id="`${uid}-iki-error`"
-        role="alert"
-        class="text-sm text-red-700 font-medium"
-      >
-        Data „Iki“ negali būti ankstesnė nei „Nuo“.
-      </p>
-      <p class="text-xs text-gray-700">
-        Palikus „Iki“ tuščią, rodomas visas „Nuo“ laikotarpis (metai, mėnuo ar diena).
-      </p>
-    </div>
-
-    <p
-      v-if="showSeasonNote && fallbackInfo"
-      class="mt-3 flex items-start gap-1 text-xs text-gray-800"
-    >
+    <p v-if="showSeasonNote && fallbackInfo" class="mt-3 flex items-start gap-1 text-xs text-ink">
       <!-- Drawn, not the "ⓘ" character: default fonts render that glyph as a box (SPEC2 §7). -->
       <span :class="infoGlyph" aria-hidden="true">i</span>
       <span>{{ fallbackInfo }}</span>
     </p>
-    <p v-if="showSeasonNote && shownSeason !== null" class="mt-2 text-xs text-gray-700">
+    <p v-if="showSeasonNote && shownSeason !== null" class="mt-2 text-xs text-ink-muted">
       Vilkų medžioklė: {{ shownSeason }}-10-15 – {{ shownSeason + 1 }}-03-31. Sezonas baigiamas
       anksčiau, jei išnaudojamas limitas.
     </p>
-  </fieldset>
+  </div>
 </template>
 
 <script setup lang="ts">
-// Period presets plus the Nuo/Iki (Metai · Mėnuo · Diena) picker (SPEC §4.4, §6.2).
+// Period presets plus the Nuo/Iki (Metai · Mėnuo · Diena) picker (SPEC §4.4, §6.2), drawn by
+// the hub's HuntingHubShellPeriodPanel: Medžioklės sezonas [select] · Paskutinės 30 d. ·
+// Visi sezonai · Nuo–iki. The URL keys and presets are unchanged.
 // Live mode (default) applies every change to the shared state immediately.
 // Staged mode (used by PeriodSheet) only emits `update:draft`; the sheet applies it.
-import { computed, getCurrentInstance, inject, ref, watch, type PropType } from 'vue';
+import { computed, inject, ref, watch, type PropType } from 'vue';
 import { WOLVES_CTX } from '@/composables/hunting/context';
 import type { Interval, PresetId } from '@/utils/hunting/types';
 import {
@@ -149,7 +72,6 @@ const props = defineProps({
 const emit = defineEmits(['update:draft']);
 
 const ctx = inject(WOLVES_CTX)!;
-const uid = `wolves-period-${getCurrentInstance()?.uid ?? 0}`;
 
 const cur = computed(() => ctx.currentSeason);
 const minYear = computed(() => ctx.data.dataset.value?.minYear ?? 2017);
@@ -165,22 +87,11 @@ const current = computed<Draft>(() =>
 const last30Interval = computed<Interval>(() => ({ from: addDays(ctx.today, -29), to: ctx.today }));
 const allInterval = computed<Interval>(() => ({ from: FIRST_DAY, to: ctx.today }));
 
-const seasonChips = computed(() =>
-  [cur.value, cur.value - 1].map((season) => ({
-    season,
-    preset: `season:${season}` as PresetId,
-    label: `${seasonLabel(season)} sezonas`,
-  })),
-);
-const olderSeasons = computed(() => {
+// Newest first, down to the first season that can hold a record.
+const seasons = computed(() => {
   const list: number[] = [];
-  for (let s = cur.value - 2; s >= minSeason.value; s--) list.push(s);
+  for (let s = cur.value; s >= minSeason.value; s--) list.push(s);
   return list;
-});
-const olderValue = computed(() => {
-  const p = current.value.preset;
-  if (p === 'all') return 'all';
-  return olderSeasons.value.some((s) => p === `season:${s}`) ? p : '';
 });
 
 function matchPreset(interval: Interval): PresetId {
@@ -201,28 +112,62 @@ function apply(interval: Interval, preset: PresetId) {
   }
 }
 
-function onOlderChange(event: Event) {
-  const select = event.target as HTMLSelectElement;
-  const value = select.value;
-  if (!value) {
-    // The placeholder is not a period: keep the current one.
-    select.value = olderValue.value;
-    return;
-  }
-  if (value === 'all') return apply(allInterval.value, 'all');
-  const season = Number(value.replace('season:', ''));
-  apply(seasonInterval(season), value as PresetId);
-}
+// --- The radio group ------------------------------------------------------------
 
-// --- Nuo / Iki ---------------------------------------------------------------
+type Kind = 'season' | '30d' | 'all' | 'range';
+const kindOf = (preset: PresetId): Kind => {
+  if (preset.startsWith('season:')) return 'season';
+  if (preset === 'last30') return '30d';
+  if (preset === 'all') return 'all';
+  return 'range';
+};
+const seasonOf = (preset: PresetId) =>
+  preset.startsWith('season:') ? Number(preset.slice(7)) : ctx.derived.defaultSeason.value;
 
-const datesOpen = ref(current.value.preset === 'custom');
+// The radio follows the applied preset, except that "Nuo–iki" stays chosen when its dates
+// give a preset's interval (a whole season, say). The season select keeps the chosen season,
+// or shows the default (fallback) one.
+const choice = ref<Kind>(kindOf(current.value.preset));
+const seasonPick = ref<number>(seasonOf(current.value.preset));
+let fromRange = false;
 watch(
   () => current.value.preset,
   (preset) => {
-    if (preset === 'custom') datesOpen.value = true;
+    if (!fromRange) choice.value = kindOf(preset);
+    fromRange = false;
+    if (preset.startsWith('season:')) seasonPick.value = seasonOf(preset);
   },
 );
+
+function applyRange() {
+  const result = intervalFromParts(nuo.value, iki.value);
+  if (!result.valid) {
+    // Keep the previous valid interval applied.
+    invalid.value = true;
+    return;
+  }
+  invalid.value = false;
+  const interval = { from: result.from, to: result.to };
+  if (sameInterval(interval, current.value.interval)) return;
+  const preset = matchPreset(interval);
+  fromRange = preset !== current.value.preset;
+  apply(interval, preset);
+}
+
+function pick(kind: Kind) {
+  choice.value = kind;
+  if (kind === 'season') apply(seasonInterval(seasonPick.value), `season:${seasonPick.value}`);
+  else if (kind === '30d') apply(last30Interval.value, 'last30');
+  else if (kind === 'all') apply(allInterval.value, 'all');
+  else applyRange();
+}
+
+function onSeason(season: number) {
+  seasonPick.value = season;
+  pick('season');
+}
+
+// --- Nuo / Iki ---------------------------------------------------------------
 
 const partsOf = (day: string): DateParts => ({
   year: day.slice(0, 4),
@@ -279,16 +224,8 @@ watch(
 function onPartsChange(row: 'nuo' | 'iki', value: DateParts) {
   if (row === 'nuo') nuo.value = value;
   else iki.value = value;
-  const result = intervalFromParts(nuo.value, iki.value);
-  if (!result.valid) {
-    // Keep the previous valid interval applied.
-    invalid.value = true;
-    return;
-  }
-  invalid.value = false;
-  const interval = { from: result.from, to: result.to };
-  if (sameInterval(interval, current.value.interval)) return;
-  apply(interval, matchPreset(interval));
+  choice.value = 'range';
+  applyRange();
 }
 
 const years = computed(() => {
@@ -318,15 +255,4 @@ const fallbackInfo = computed(() => {
   }
   return `${seasonLabel(cur.value)} sezono vilkų su žinoma vieta dar nėra. Rodomas praėjęs sezonas.`;
 });
-
-function chipClass(active: boolean) {
-  return [
-    'inline-flex items-center rounded-full border px-3 font-medium transition-colors cursor-pointer',
-    'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand',
-    props.large ? 'h-11 text-base' : 'h-8 text-sm',
-    active
-      ? 'bg-brand border-line-strong text-white'
-      : 'bg-white border-gray-400 text-gray-900 hover:bg-gray-100',
-  ];
-}
 </script>

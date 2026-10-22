@@ -3,7 +3,7 @@
     <legend class="sr-only">{{ title }}</legend>
     <span
       aria-hidden="true"
-      class="block mb-1 font-semibold text-gray-900"
+      class="block mb-1 font-semibold text-ink"
       :class="large ? 'text-base' : 'text-sm'"
     >
       {{ title }}
@@ -150,19 +150,19 @@ function update(part: keyof DateParts, value: string) {
 
 // A compact chevron (instead of the wide native one) leaves room for "Visos dienos" in a 360 px panel.
 const CHEVRON =
-  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%23374151' stroke-width='1.5'/%3E%3C/svg%3E\")";
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%234b5565' stroke-width='1.5'/%3E%3C/svg%3E\")";
 
 const labelClass = computed(() => [
-  'block mb-1 text-gray-700',
+  'block mb-1 text-ink-muted',
   props.large ? 'text-sm' : 'text-xs',
 ]);
 
 const selectClass = computed(() => [
-  'block w-full appearance-none rounded-md border bg-white bg-no-repeat pl-1.5 pr-5 text-gray-900 cursor-pointer',
+  'block w-full appearance-none rounded border bg-white bg-no-repeat pl-1.5 pr-5 text-ink cursor-pointer hover:border-brand',
   'bg-[length:12px_12px] bg-[right_0.3rem_center]',
   'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand',
-  'disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed',
+  'disabled:bg-page disabled:text-ink-muted disabled:border-line disabled:cursor-not-allowed',
   props.large ? 'h-12 text-base' : 'h-9 text-sm',
-  props.invalid ? 'border-red-600 ring-1 ring-red-600' : 'border-gray-400',
+  props.invalid ? 'border-red-600 ring-1 ring-red-600' : 'border-line-strong',
 ]);
 </script>
