@@ -110,14 +110,14 @@
             <HuntingWolvesHistogram clip-to-window />
           </div>
 
-          <footer class="flex flex-col gap-1 text-xs text-gray-600">
+          <footer v-if="!embed" class="flex flex-col gap-1 text-xs text-ink-muted">
             <p v-if="!fallback && provenanceTime">
               {{ S.provenanceLive(provenanceTime) }} ·
               <button type="button" :class="linkButton" @click="openAbout">
                 {{ S.provenanceLink }}
               </button>
             </p>
-            <p>
+            <p v-if="showStagingBadge">
               {{ S.prototypeLine }}
               <template v-if="FEEDBACK_URL">
                 ·
@@ -194,7 +194,10 @@
           :snapshot="fallbackSnapshot"
           @view="(view: TopicView) => (fallbackView = view)"
         />
-        <p v-if="!prototypeDismissed" class="flex items-center gap-2 text-xs text-gray-600">
+        <p
+          v-if="showStagingBadge && !prototypeDismissed"
+          class="flex items-center gap-2 text-xs text-ink-muted"
+        >
           <span class="flex-1">
             {{ S.prototypeLine }}
             <template v-if="FEEDBACK_URL">
@@ -206,7 +209,7 @@
           </span>
           <button
             type="button"
-            :aria-label="`${S.close}: ${S.prototypeLine}`"
+            :aria-label="S.prototypeClose"
             class="w-11 h-11 flex items-center justify-center rounded text-gray-700 hover:bg-gray-100"
             :class="focusRing"
             @click="dismissPrototype"
@@ -297,9 +300,10 @@ const embed = !!hub?.embed;
 const isProductionHost = hub ? hub.isProductionHost : window.location.hostname === 'maps.biip.lt';
 const isMobile: Ref<boolean> = hub ? hub.isMobile : useMediaQuery('(max-width: 767px)');
 const { width } = useWindowSize();
-// The shell hides non-final figures behind a badge; the live tab always reads the
-// environment's own API, so every non-production host gets "Bandomoji aplinka" (SPEC2 §5).
-const showStagingBadge = !isProductionHost;
+// The live tab always reads the environment's own API, so the standalone app marks every
+// non-production host "Bandomoji aplinka" (SPEC2 §5). Embedded, the WP header line is the one
+// place of that marker (and of the provenance), so the panel shows neither.
+const showStagingBadge = !isProductionHost && !embed;
 
 const focusRing =
   'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';

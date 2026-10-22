@@ -33,7 +33,15 @@ import {
   stateQuery,
 } from './embed';
 import { hubTop, isRailed, mapPadding, tableReplacesMap } from './layout';
-import { ABOUT_LOCALE_RULE, TOPIC_ORDER } from './strings';
+import {
+  ABOUT_LOCALE_RULE,
+  BADGE_LABELS,
+  BANDOMOJI_TOOLTIP,
+  S,
+  TOPIC_ORDER,
+  TOPIC_SUBTITLES,
+  TOPIC_TABS,
+} from './strings';
 import { getTopic, hasTopic, LIVE_HOSTS, TOPICS } from './topics';
 import {
   keptQuery,
@@ -57,11 +65,17 @@ type StebModelModule = {
   STEB_FAKTAS_RE?: RegExp;
 };
 type StebSelfCheckModule = { runStebejimaiChecks?: () => SelfCheckResult[] };
+type StebStringsModule = { SS?: Record<string, unknown> };
 const stebModel: StebModelModule | undefined = Object.values(
   import.meta.glob<StebModelModule>('@/utils/hunting/hub/stebejimai/model.ts', { eager: true }),
 )[0];
 const stebSelfCheck: StebSelfCheckModule | undefined = Object.values(
   import.meta.glob<StebSelfCheckModule>('@/utils/hunting/hub/stebejimai/selfcheck.ts', {
+    eager: true,
+  }),
+)[0];
+const stebStrings: StebStringsModule | undefined = Object.values(
+  import.meta.glob<StebStringsModule>('@/utils/hunting/hub/stebejimai/strings.ts', {
     eager: true,
   }),
 )[0];
@@ -328,8 +342,67 @@ export function runHubUnitChecks(): SelfCheckResult[] {
   );
   runEmbedChecks(check, eq);
   runLiveTopicChecks(check, eq);
+  runCopyChecks(check);
   results.push(...stebejimaiModuleChecks());
   return results;
+}
+
+// ---------------------------------------------------------------------------
+// UI copy: forbidden words (strings.ts header) in every shared text
+// ---------------------------------------------------------------------------
+
+// Every text of a strings table: plain strings, and functions called with sample arguments.
+function textsOf(table: Record<string, unknown> | undefined): string[] {
+  if (!table) return [];
+  return Object.values(table).flatMap((value) => {
+    if (typeof value === 'string') return [value];
+    if (typeof value !== 'function') return [];
+    try {
+      return [String((value as (...args: unknown[]) => unknown)('2026-10-09', 3, 'x', 'y'))];
+    } catch (err) {
+      return [];
+    }
+  });
+}
+
+/** The shared UI texts: hub strings, Stebėjimai strings, badges and every topic's About. */
+export function uiTexts(): string[] {
+  return [
+    ...textsOf(S as unknown as Record<string, unknown>),
+    ...textsOf(stebStrings?.SS),
+    ...Object.values(BADGE_LABELS),
+    BANDOMOJI_TOOLTIP,
+    ...Object.values(TOPIC_TABS),
+    ...Object.values(TOPIC_SUBTITLES),
+    ...TOPICS.flatMap((t) => [
+      t.tab,
+      t.menuSubtitle,
+      ...t.about.source,
+      ...t.about.meaning,
+      ...t.about.missing,
+      ...t.about.compare,
+      ...(t.aboutCommon || []),
+    ]),
+  ];
+}
+
+// Words that must never render: "būrelis" (official: MPV naudotojas), and the prototype /
+// test-version wording, which would reach production when the gate is lifted (D9).
+export const FORBIDDEN_UI_WORDS: readonly RegExp[] = [/būrel/i, /prototip/i, /bandomoji versija/i];
+
+export function forbiddenWordsIn(texts: string[]): string[] {
+  const text = texts.join(' ');
+  return FORBIDDEN_UI_WORDS.filter((re) => re.test(text)).map((re) => re.source);
+}
+
+function runCopyChecks(check: Check) {
+  check('Tekstai: be „būrel…“, „prototip…“, „Bandomoji versija“', () => {
+    const found = forbiddenWordsIn(uiTexts());
+    // The check itself must catch a planted word.
+    const planted = forbiddenWordsIn(['Prototipas rodo kopiją', 'Bandomoji versija']);
+    if (planted.length !== 2) return `planted words not caught: ${planted.join(', ')}`;
+    return found.length === 0 || `found ${found.join(', ')}`;
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -797,7 +870,7 @@ function runLiveTopicChecks(check: Check, eq: Eq) {
     if (!common.length) problems.push('no aboutCommon');
     if (common.join(' ').indexOf('tikslių vietų') >= 0) problems.push('"tikslių vietų"');
     if (common.indexOf(ABOUT_LOCALE_RULE) < 0) problems.push('no ABOUT_LOCALE_RULE');
-    if (/būrel/i.test(texts)) problems.push('"būrelis"');
+    forbiddenWordsIn([texts]).forEach((word) => problems.push(`"${word}"`));
     const counts = [about.source, about.meaning, about.missing, about.compare].map((l) => l.length);
     if (JSON.stringify(counts) !== JSON.stringify([2, 4, 2, 2])) {
       problems.push(`sections ${counts.join('/')}`);

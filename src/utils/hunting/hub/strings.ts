@@ -5,7 +5,7 @@
 import type { PluralForms } from '@/utils/hunting/dates';
 import type { Badge, TopicId } from './types';
 
-// Link of the prototype line "Pastabos apie prototipą"; the link is hidden while empty.
+// Link of the staging line "Pastabos apie puslapį"; the link is hidden while empty.
 export const FEEDBACK_URL = '';
 
 export const TOPIC_ORDER: TopicId[] = [
@@ -121,10 +121,12 @@ export const S = {
   provenanceLive: (time: string) => `Duomenys atnaujinti ${time} · BĮIP ir BIOMON`,
   provenanceLink: 'Apie duomenis', // appended as a link after " · "
   provenanceSnapshotTitle: (date: string) =>
-    `Prototipas rodo ${date} parengtą BĮIP suvestinių kopiją. Duomenys neatsinaujina.`,
+    `Rodoma ${date} parengta BĮIP suvestinių kopija; vėlesni įrašai į ją nepatenka.`,
   provenanceCsv: (date: string) => `# Duomenys: ${date} momentinė kopija; BĮIP`,
-  prototypeLine: 'Bandomoji versija',
-  prototypeFeedback: 'Pastabos apie prototipą',
+  // The staging marker (standalone app off production only; embedded, the WP header has it).
+  prototypeLine: 'Bandomoji aplinka',
+  prototypeFeedback: 'Pastabos apie puslapį',
+  prototypeClose: 'Uždaryti pranešimą apie bandomąją aplinką',
   documentTitle: (tab: string) => `${tab} – Medžioklės duomenys – BĮIP žemėlapiai`,
   mapRegion: (answer: string) => `Žemėlapis: ${answer}`,
   // Coercion notices shared by the hub state (§3.4); topic-specific ones live in topics/*.ts.
