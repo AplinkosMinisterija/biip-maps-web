@@ -1,9 +1,5 @@
 <template>
-  <div
-    role="tablist"
-    aria-label="Lentelės"
-    class="flex gap-1 border-b border-gray-200 overflow-x-auto"
-  >
+  <div role="tablist" aria-label="Lentelės" class="flex min-w-0 gap-1 overflow-x-auto p-0.5">
     <button
       v-for="tab in tables"
       :id="tabId(tab.id)"
@@ -15,12 +11,11 @@
       :aria-controls="panelId(tab.id)"
       :tabindex="active === tab.id ? 0 : -1"
       :title="tab.disabled || undefined"
-      class="min-h-[44px] md:min-h-[36px] whitespace-nowrap px-3 text-sm font-semibold border-b-2 -mb-px focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
       :class="[
-        active === tab.id
-          ? 'border-brand text-brand'
-          : 'border-transparent text-gray-600 hover:text-gray-900',
-        tab.disabled ? 'italic' : '',
+        PILL_TAB,
+        'whitespace-nowrap max-md:h-11',
+        active === tab.id ? PILL_TAB_ON : '',
+        tab.disabled && active !== tab.id ? 'text-ink-muted' : '',
       ]"
       @click="select(tab.id)"
       @keydown="onKeydown"
@@ -33,9 +28,11 @@
 <script setup lang="ts">
 import { nextTick, type PropType } from 'vue';
 import type { TableDef } from '@/utils/hunting/hub/types';
+import { PILL_TAB, PILL_TAB_ON } from '../shell/controls';
 
-// Tabs of the hub tables (WAI-ARIA tabs: arrows, Home/End). A disabled table stays
-// reachable so its reason (`TableDef.disabled`) can be read in the panel.
+// Tabs of the hub tables (WAI-ARIA tabs: arrows, Home/End), as pill tabs: the WP topic tabs
+// above are the only underline tabs of the page (D1). A disabled table stays reachable so
+// its reason (`TableDef.disabled`) can be read in the panel.
 const props = defineProps({
   tables: { type: Array as PropType<TableDef[]>, required: true },
   active: { type: String, required: true },

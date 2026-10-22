@@ -8,18 +8,23 @@
     :style="containerStyle"
     @keydown.esc="mode !== 'sheet' && close()"
   >
+    <!-- Title row: what, where and when (the region's name); standalone also "Uždaryti". -->
     <div
-      class="flex items-center justify-between gap-2"
+      class="flex items-start justify-between gap-3"
       :class="mode === 'sheet' ? 'pb-2' : 'px-4 pt-4 pb-2'"
     >
-      <h2 :id="`${uid}-title`" :class="mode === 'sheet' ? 'sr-only' : 'text-base font-semibold'">
-        {{ S.viewTable }}
+      <h2
+        :id="`${uid}-title`"
+        class="font-bold text-ink"
+        :class="mode === 'sheet' ? 'text-[15px] leading-5' : 'text-base leading-[22px]'"
+      >
+        {{ active ? captionOf(active) : S.viewTable }}
       </h2>
       <!-- Embedded, the WP page's view switch closes the table (Esc still does). -->
       <button
         v-if="mode !== 'sheet' && !ctx.embed"
         type="button"
-        class="inline-flex items-center gap-1 min-h-[32px] rounded px-2 text-sm font-semibold text-gray-800 hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+        :class="[BTN_TEXT, 'shrink-0 text-ink']"
         :aria-controls="HUB_TABLE_ID"
         :aria-expanded="true"
         @click="close"
@@ -29,14 +34,29 @@
       </button>
     </div>
 
-    <HuntingHubTableTableTabs
-      ref="tabsRef"
+    <!-- Sub-tabs left, the table's action right (clear of the site's accessibility button in
+         the bottom-right corner); on phones the button wraps above the cards. -->
+    <div
+      class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2"
       :class="mode === 'sheet' ? '' : 'px-4'"
-      :tables="tables"
-      :active="active?.id || ''"
-      :id-prefix="uid"
-      @select="selectTab"
-    />
+    >
+      <HuntingHubTableTableTabs
+        ref="tabsRef"
+        :tables="tables"
+        :active="active?.id || ''"
+        :id-prefix="uid"
+        @select="selectTab"
+      />
+      <!-- Element-rooted: Vue 3.5.29 mis-patches a v-if'd async component that is still
+           loading (insertBefore error, vuejs/core#15551). -->
+      <div v-if="active" class="contents">
+        <HuntingHubTableCsvButton
+          :table="active"
+          :caption="captionOf(active)"
+          :sort="sortOf(active)"
+        />
+      </div>
+    </div>
 
     <div class="flex-1 min-h-0" :class="mode === 'sheet' ? 'py-3' : 'flex flex-col px-4 py-3'">
       <div
@@ -47,55 +67,53 @@
         :aria-labelledby="`${uid}-tab-${table.id}`"
         :hidden="active?.id !== table.id"
         tabindex="0"
-        class="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand rounded"
-        :class="mode === 'sheet' || active?.id !== table.id ? '' : 'flex-1 min-h-0 flex flex-col'"
+        :class="[
+          FOCUS_RING,
+          'rounded',
+          mode === 'sheet' || active?.id !== table.id ? '' : 'flex-1 min-h-0 flex flex-col',
+        ]"
       >
         <template v-if="active?.id === table.id">
-          <p v-if="table.disabled" class="text-sm text-gray-700">{{ table.disabled }}</p>
+          <p v-if="table.disabled" class="text-sm text-ink-muted">{{ table.disabled }}</p>
           <HuntingHubTableCardList
             v-else-if="useCards"
-            v-model:sort="sorts[table.id]"
+            :sort="sortOf(table)"
             :table="table"
             :caption="captionOf(table)"
             :selected-sav="ctx.sel.value.sav"
+            @update:sort="(next: SortState | null) => (sorts[table.id] = next)"
             @show-on-map="showOnMap"
           />
           <HuntingHubTableDataTable
             v-else
-            v-model:sort="sorts[table.id]"
+            :sort="sortOf(table)"
             :fill="mode !== 'sheet'"
             :table="table"
             :caption="captionOf(table)"
             :selected-sav="ctx.sel.value.sav"
+            @update:sort="(next: SortState | null) => (sorts[table.id] = next)"
             @show-on-map="showOnMap"
           />
         </template>
       </div>
     </div>
 
+    <!-- Standalone only: embedded, the WP header line carries the provenance (D9). -->
     <div
-      class="border-t border-gray-200 flex flex-wrap items-center justify-between gap-2"
+      v-if="!ctx.embed"
+      class="border-t border-line-soft"
       :class="mode === 'sheet' ? 'pt-3' : 'px-4 py-3'"
     >
-      <p class="text-xs text-gray-600" :title="provenanceTitle">
+      <p class="text-xs text-ink-muted" :title="provenanceTitle">
         {{ view.provenance.text }} ·
         <button
           type="button"
-          class="min-h-[24px] max-md:min-h-[44px] rounded text-brand underline underline-offset-2 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+          :class="[INLINE_LINK, 'min-h-[24px] rounded font-normal max-md:min-h-[44px]']"
           @click="ctx.openAbout()"
         >
           {{ S.provenanceLink }}
         </button>
       </p>
-      <!-- Element-rooted: Vue 3.5.29 mis-patches a v-if'd async component that is still
-           loading (insertBefore error, vuejs/core#15551). -->
-      <div v-if="active" class="contents">
-        <HuntingHubTableCsvButton
-          :table="active"
-          :caption="captionOf(active)"
-          :sort="sorts[active.id] ?? null"
-        />
-      </div>
     </div>
   </component>
 </template>
@@ -109,7 +127,8 @@ import { embedFocusAllowed } from '@/utils/hunting/hub/embed';
 import { HUB_DRAWER_W, HUB_GAP, HUB_TOP } from '@/utils/hunting/hub/layout';
 import { S } from '@/utils/hunting/hub/strings';
 import type { TableDef } from '@/utils/hunting/hub/types';
-import type { SortState } from './sort';
+import { BTN_TEXT, FOCUS_RING, INLINE_LINK } from '../shell/controls';
+import { effectiveSort, type SortState } from './sort';
 
 // Tables of the active snapshot topic (SPEC2 §4.1 "Table mode"):
 // - ≥ 1280 px: right drawer (560 px) next to the panel rail; the map stays;
@@ -149,8 +168,10 @@ const active = computed<TableDef | null>(() => {
   return list.find((t) => t.id === wanted) || list[0];
 });
 
-// Sort per table id; the topics' own order until a header is clicked. Reset per topic.
+// Sort per table id; the table's default (or its own order) until the visitor picks one.
+// Reset per topic. The CSV follows the same order.
 const sorts = ref<Record<string, SortState | null>>({});
+const sortOf = (table: TableDef) => effectiveSort(table, sorts.value[table.id]);
 watch(
   () => ctx.sel.value.topic,
   () => (sorts.value = {}),
@@ -161,8 +182,10 @@ const placeName = computed(() => {
   if (sav === null) return S.placeAll;
   return ctx.data.snapshot.value?.meta.municipalities.find((m) => m.code === sav)?.name || '';
 });
-// <caption> = tab label + season + place (§10).
+// Heading and <caption>: the topic's title (what, where, when), else tab label + season +
+// place (§10).
 const captionOf = (table: TableDef) =>
+  table.title ||
   [table.label, `${seasonLabel(ctx.sel.value.season)} sezonas`, placeName.value]
     .filter(Boolean)
     .join(' · ');

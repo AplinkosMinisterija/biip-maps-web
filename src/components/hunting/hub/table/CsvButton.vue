@@ -1,7 +1,7 @@
 <template>
   <button
     type="button"
-    class="inline-flex items-center justify-center gap-2 min-h-[44px] md:min-h-[32px] rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+    :class="[BTN_SECONDARY, 'shrink-0 whitespace-nowrap disabled:cursor-not-allowed max-md:h-11']"
     :disabled="!table.rows.length || !!table.disabled"
     @click="download"
   >
@@ -16,6 +16,7 @@ import { HUB_CTX } from '@/composables/hunting/hub/context';
 import { buildTableCsv, downloadCsv, tableCsvFileName } from '@/utils/hunting/hub/csv';
 import { S } from '@/utils/hunting/hub/strings';
 import type { Provenance, TableDef } from '@/utils/hunting/hub/types';
+import { BTN_SECONDARY } from '../shell/controls';
 import { sortRows, type SortState } from './sort';
 
 // CSV of one hub table as shown (same columns, same sort, totals first). The first line
