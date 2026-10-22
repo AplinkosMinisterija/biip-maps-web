@@ -15,13 +15,14 @@ export const overviewSeason = (today: string) => seasonOfDay(today);
 // the live observations; each figure names its season.
 export const about = {
   source: [
-    'Kortelės rodo tuos pačius skaičius kaip temų skiltys: BĮIP duomenų kopiją (jos data ' +
-      'nurodyta eilutėje „Duomenys … būklei“), tiesioginį vilkų skaitiklį, oficialius AM ' +
-      'skaičius apie vilkus ir stebėjimus iš BĮIP.',
+    'Kortelės rodo tuos pačius skaičius kaip temų skiltys. Laimikiai, limitai ir žala – iš BĮIP ' +
+      'duomenų kopijos (jos data – eilutėje „Duomenys … būklei“); vilkų skaitiklis ir ' +
+      'stebėjimai – tiesiogiai iš BĮIP; praėjusio sezono vilkų skaičius – oficialus AM.',
   ],
   meaning: [
-    'Kiekviena kortelė atsako į vieną klausimą. Prie kiekvieno skaičiaus nurodyta, kurio sezono ' +
-      'jis; vykstančio sezono skaičiai dar keisis.',
+    'Kiekviena kortelė atsako į vieną klausimą. Virš skaičiaus nurodytas jo sezonas: kol ' +
+      'einamojo sezono skaičiai nepilni, rodomas ankstesnis sezonas; vykstančio sezono skaičiai ' +
+      'dar keisis.',
     'Laimikių ir briedžių limitų savivaldybės skaičiai – jai priskirtų MPV suma; žalos ir ' +
       'stebėjimų – pagal pranešime nurodytą vietą.',
   ],
@@ -31,8 +32,9 @@ export const about = {
 
 const aboutCommon = [
   ABOUT_LOCALE_RULE,
-  'Asmens duomenys neskelbiami. Stebėjimai rodomi su pranešime nurodyta vieta; kitų temų ' +
-    'skaičiai – savivaldybių ir Lietuvos sumos.',
+  'Asmens duomenys neskelbiami. Stebėjimai rodomi su pranešime nurodyta vieta, vilkai – ' +
+    'apytiksliai (1 km tinklelio langelio centre); kitų temų skaičiai – savivaldybių ir ' +
+    'Lietuvos sumos.',
 ];
 
 export const apzvalga: TopicDef = {
