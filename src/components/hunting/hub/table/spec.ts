@@ -13,7 +13,7 @@ export const TABLE =
 export const TH =
   'sticky top-0 z-20 border-b border-line bg-white px-2 py-2 align-bottom text-xs font-semibold leading-4 text-ink-muted';
 // Numeric columns stay compact: the first column takes the remaining width (DATAVIZ-21).
-export const NUM = 'w-[1%] whitespace-nowrap pl-6 pr-2 text-right tabular-nums';
+export const NUM = 'w-[1%] whitespace-nowrap pl-4 pr-2 text-right tabular-nums';
 export const TEXT = 'px-2 text-left';
 // The sticky first column; z above the body cells, under the header.
 export const STICKY_FIRST = 'sticky left-0 z-10 text-left';

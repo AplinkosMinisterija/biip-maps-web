@@ -483,7 +483,7 @@ function seasonTable(meta: Meta, rows: LimitRow[], muni: Municipality | null): T
     title: `Briedžių limitai pagal sezonus · ${muni ? muni.name : 'Lietuva'}`,
     columns,
     rows: data,
-    footnotes: dashes.length ? [`${DASH} – ${dashes.join('; ')}.`] : [],
+    footnotes: dashes.length ? [`„${DASH}“ – ${dashes.join('; ')}.`] : [],
     csvName: csvName('briedziu-limitai', 'sezonai', seasonsDesc(meta)[0], code),
   };
 }

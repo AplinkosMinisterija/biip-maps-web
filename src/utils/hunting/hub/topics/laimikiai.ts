@@ -623,14 +623,16 @@ function speciesTable(c: Ctx, muni: Municipality | null): TableDef<SpeciesRow> {
   const all = [totals, ...rows];
   const dashes: string[] = [];
   if (all.some((r) => r.m === null || r.f === null || r.j === null)) {
-    dashes.push('šios rūšies laimikis pagal lytį ir amžių neskirstomas');
+    dashes.push(
+      'stulpeliuose „Patinai“, „Patelės“, „Jaunikliai“ – šios rūšies laimikis pagal lytį ir amžių neskirstomas',
+    );
   }
   if (columns.some((col) => col.id === 'delta') && all.some((r) => !r.delta)) {
     dashes.push(
       `stulpelyje „Pokytis“ – ${S.deltaSuppressed.charAt(0).toLowerCase()}${S.deltaSuppressed.slice(1, -1)} (mažiau nei ${DELTA_MIN})`,
     );
   }
-  if (dashes.length) footnotes.unshift(`${DASH} – ${dashes.join('; ')}.`);
+  if (dashes.length) footnotes.unshift(`${DASH} ${dashes.join('; ')}.`);
 
   const place = muni ? muni.name : 'Lietuva';
   return {

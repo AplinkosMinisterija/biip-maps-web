@@ -86,7 +86,7 @@
         vilkus, todėl į sumas jos neįtraukiamos.
       </li>
       <li v-if="rows.some((r) => r.limit === DASH)">
-        {{ DASH }} – limitas tam sezonui nepaskelbtas.
+        „{{ DASH }}“ – limitas tam sezonui nepaskelbtas.
       </li>
     </ul>
   </div>
