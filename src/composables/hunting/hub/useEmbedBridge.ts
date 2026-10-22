@@ -20,7 +20,7 @@ import {
   type EmbedState,
   type EmbedView,
 } from '@/utils/hunting/hub/embed';
-import { TOPIC_TABS } from '@/utils/hunting/hub/strings';
+import { S, TOPIC_TABS } from '@/utils/hunting/hub/strings';
 import { getTopic } from '@/utils/hunting/hub/topics';
 
 // Debounce of outgoing `state` messages (§5.4).
@@ -150,19 +150,27 @@ export function useEmbedBridge(ctx: HubContext, shell: HubShell | null): void {
         ? 'staging'
         : 'other';
     let provenance: EmbedProvenance;
+    // `text` (D12a): the one provenance line of the page, shown in the WP header only.
     if (overview) {
+      const asOf = ctx.data.snapshot.value?.meta?.snapshotDate || null;
       provenance = {
         kind: 'snapshot',
-        asOf: ctx.data.snapshot.value?.meta?.snapshotDate || null,
+        asOf,
         environment,
+        text: asOf ? S.provenanceOverview(asOf) : undefined,
       };
     } else if (kind === 'live') {
       // The Vilkai snapshot fallback reports the copy it shows, not live data.
       const p = live?.provenance.value;
-      provenance = { kind: p?.kind ?? 'live', asOf: p?.asOf || null, environment };
+      provenance = { kind: p?.kind ?? 'live', asOf: p?.asOf || null, environment, text: p?.text };
     } else {
       const p = ctx.view.value?.provenance;
-      provenance = { kind: p?.kind ?? 'snapshot', asOf: p?.asOf || null, environment };
+      provenance = {
+        kind: p?.kind ?? 'snapshot',
+        asOf: p?.asOf || null,
+        environment,
+        text: p?.text,
+      };
     }
 
     return { tema, view, hasTable, title: TOPIC_TABS[tema], query, shareQuery, provenance };
@@ -219,6 +227,8 @@ export function useEmbedBridge(ctx: HubContext, shell: HubShell | null): void {
       () => ctx.embedLive.value?.table.value,
       () => ctx.embedLive.value?.provenance.value.kind,
       () => ctx.embedLive.value?.provenance.value.asOf,
+      () => ctx.embedLive.value?.provenance.value.text,
+      () => ctx.view.value?.provenance.text,
       // Not in the URL: the overview's snapshot date, and the live topic's share link
       // (registered on mount; its default period can settle after its data loads).
       () => ctx.data.snapshot.value?.meta?.snapshotDate,

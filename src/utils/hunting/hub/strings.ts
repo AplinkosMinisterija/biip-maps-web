@@ -3,9 +3,9 @@
 // "būrelis" (use "medžioklės plotų naudotojas" / "MPV naudotojas"), "ūkiai"/"ūkių" for
 // reporters, "viršyta", "pažeidimas", "populiacija".
 import type { PluralForms } from '@/utils/hunting/dates';
-import type { Badge, TopicId } from './types';
+import type { Badge, SeasonState, TopicId } from './types';
 
-// Link of the prototype line "Pastabos apie prototipą"; the link is hidden while empty.
+// Link of the staging line "Pastabos apie puslapį"; the link is hidden while empty.
 export const FEEDBACK_URL = '';
 
 export const TOPIC_ORDER: TopicId[] = [
@@ -35,10 +35,18 @@ export const TOPIC_SUBTITLES: Record<TopicId, string> = {
   stebejimai: 'Pranešimai apie stebėtus vilkus, lūšis, lokius ir stumbrus',
 };
 
+// A badge on its own (D10, OVERVIEW-18): the label says what it qualifies.
 export const BADGE_LABELS: Record<Badge, string> = {
-  vyksta: 'Vyksta',
-  preliminarus: 'Preliminarūs',
+  vyksta: 'Sezonas vyksta',
+  preliminarus: 'Preliminarūs duomenys',
   dalinis: 'Dalinis sezonas',
+  bandomoji: 'Bandomoji aplinka',
+};
+// Right after a season label ("2026/2027 sezonas [vyksta]"): the season is already named.
+export const BADGE_LABELS_AFTER_SEASON: Record<Badge, string> = {
+  vyksta: 'vyksta',
+  preliminarus: 'preliminarūs duomenys',
+  dalinis: 'dalinis sezonas',
   bandomoji: 'Bandomoji aplinka',
 };
 export const BANDOMOJI_TOOLTIP =
@@ -72,13 +80,25 @@ export const S = {
   topic: 'Tema', // tablet <select> label
   topicsNav: 'Temos', // nav aria-label
   season: 'Sezonas', // popover title
-  seasonChip: (season: string) => `Sezonas ${season}`,
+  // Filter chips: "Name: value", the value lower-case unless it is a proper noun (§OVERVIEW-20).
+  seasonChip: (season: string) => `Sezonas: ${season}`,
+  place: 'Vieta',
   placeChip: (name: string) => `Vieta: ${name}`,
   placeAll: 'Visa Lietuva',
+  placeAllLower: 'visa Lietuva',
   placeSearch: 'Ieškoti savivaldybės',
   placeNone: 'Nerasta',
-  filtersChip: (n: number) => `Filtrai (${n})`,
-  moreFilters: (n: number) => `Daugiau filtrų (${n})`,
+  filters: 'Filtrai',
+  filtersChip: (n: number) => (n ? `Filtrai (${n})` : 'Filtrai'),
+  moreFilters: (n: number) => (n ? `Daugiau filtrų (${n})` : 'Daugiau filtrų'),
+  // Reset: "Atstatyti filtrus" in the bar, "Atstatyti" in sheet footers and popovers.
+  resetFilters: 'Atstatyti filtrus',
+  reset: 'Atstatyti',
+  species: 'Rūšis',
+  speciesAll: 'visos',
+  speciesSearch: 'Ieškoti rūšies',
+  animals: 'Gyvūnai',
+  metricSwitch: 'Žemėlapyje rodoma',
   viewMap: 'Žemėlapis',
   viewTable: 'Lentelė',
   railExpand: 'Išskleisti skydelį',
@@ -86,6 +106,14 @@ export const S = {
   segmentTable: 'Lentelė',
   segmentFilters: 'Filtrai',
   showOnMap: 'Rodyti žemėlapyje',
+  // Apžvalga (D8).
+  overviewLead: 'Prie kiekvieno skaičiaus nurodyta, kurio sezono jis.',
+  overviewMap: 'Rodyti žemėlapyje',
+  overviewTable: 'Rodyti lentelę',
+  overviewReportTitle: 'Pastebėjote žalą ar stambų plėšrūną?',
+  overviewReportText: 'Praneškite – pranešimai patenka į šiuos duomenis.',
+  overviewReportDamage: 'Pranešti apie žalą',
+  overviewReportObservation: 'Pildyti stebėjimo anketą',
   showInTable: 'Rodyti lentelėje',
   close: 'Uždaryti',
   csv: 'Atsisiųsti CSV',
@@ -93,11 +121,11 @@ export const S = {
   legendChip: (legendTitle: string) => `Legenda: ${legendTitle}`,
   legendNoMpv: 'Nėra MPV',
   legendNoData: 'Duomenų nėra',
-  legendPooled: 'Neskelbiama (< 3 MPV)',
+  legendPooled: 'Neskelbiama (mažiau nei 3 MPV)', // the same wording as `pooledShort`
   legendFixedClasses: 'Klasės vienodos visiems sezonams.',
-  otherRowsHeading: 'Kiti rodikliai čia',
+  otherRowsHeading: 'Kiti šios savivaldybės rodikliai',
   loading: 'Įkeliami duomenys…',
-  loadError: 'Nepavyko įkelti duomenų.',
+  loadError: 'Nepavyko įkelti duomenų. Patikrinkite ryšį ir bandykite dar kartą.',
   retry: 'Bandyti dar kartą',
   empty: 'Pasirinktam sezonui ir vietai duomenų nėra.',
   emptyShowAll: 'Rodyti visą Lietuvą',
@@ -117,22 +145,43 @@ export const S = {
   deltaSuppressed: 'Per maži skaičiai procentams palyginti.',
   deltaSame: 'tiek pat',
   // Provenance (§5).
-  provenanceSnapshot: (date: string) => `Duomenys: ${date} momentinė kopija · BĮIP`,
-  provenanceLive: (time: string) => `Duomenys atnaujinti ${time} · BĮIP ir BIOMON`,
+  // One wording per kind (OVERVIEW-09); embedded, the hub sends the line to the WP header
+  // (`state.provenance.text`), which shows it once for the whole page.
+  provenanceSnapshot: (date: string) => `Duomenys ${date} būklei · BĮIP`,
+  // `at` = 'yyyy-MM-dd HH:mm' (Vilnius).
+  provenanceLive: (at: string) => `Duomenys atnaujinti ${at} · BĮIP ir BIOMON`,
+  provenanceOverview: (date: string) =>
+    `Duomenys ${date} būklei · vilkų ir stebėjimų – tiesiogiai iš BĮIP`,
   provenanceLink: 'Apie duomenis', // appended as a link after " · "
   provenanceSnapshotTitle: (date: string) =>
-    `Prototipas rodo ${date} parengtą BĮIP suvestinių kopiją. Duomenys neatsinaujina.`,
+    `Rodoma ${date} parengta BĮIP suvestinių kopija; vėlesni įrašai į ją nepatenka.`,
   provenanceCsv: (date: string) => `# Duomenys: ${date} momentinė kopija; BĮIP`,
-  prototypeLine: 'Bandomoji versija',
-  prototypeFeedback: 'Pastabos apie prototipą',
+  // The staging marker (standalone app off production only; embedded, the WP header has it).
+  prototypeLine: 'Bandomoji aplinka',
+  prototypeFeedback: 'Pastabos apie puslapį',
+  prototypeClose: 'Uždaryti pranešimą apie bandomąją aplinką',
   documentTitle: (tab: string) => `${tab} – Medžioklės duomenys – BĮIP žemėlapiai`,
-  mapRegion: (answer: string) => `Žemėlapis: ${answer}`,
+  mapRegion: (answer: string) =>
+    `${answer ? `Žemėlapis: ${answer.replace(/\.$/, '')}` : 'Žemėlapis'}. Tie patys duomenys – rodinyje „Lentelė“.`,
+  mapToTable: 'Žemėlapio duomenys lentelėje',
   // Coercion notices shared by the hub state (§3.4); topic-specific ones live in topics/*.ts.
   noticeSeasonOnly: (season: string) =>
     `Šie duomenys skelbiami tik sezonais – rodomas ${season} sezonas.`,
+  // A topic switch landed on another season (J-06): the target's default one.
+  noticeSeasonDefault: (topic: string, season: string, state: SeasonState) =>
+    state === 'galutinis'
+      ? `${topic}: rodomas ${season} sezonas – naujausias, kurio duomenys pilni.`
+      : state === 'vyksta'
+        ? `${topic}: rodomas ${season} sezonas – jis dar vyksta, skaičiai keisis.`
+        : `${topic}: rodomas ${season} sezonas (${BADGE_LABELS_AFTER_SEASON[state]}).`,
   noticeSeasonMissing: (topic: string, season: string, fallback: string) =>
     `${topic} duomenų už ${season} nėra – rodomas ${fallback} sezonas.`,
 } as const;
+
+// A chip value after "Name: " starts lower-case ("Rūšis: briedis"); proper nouns (places)
+// are passed as they are.
+export const chipValue = (label: string) =>
+  label.charAt(0).toLocaleLowerCase('lt') + label.slice(1);
 
 // Plural forms (§12), for `pluralLt` from `utils/hunting/dates.ts`.
 export const P_HUNTED: PluralForms = ['sumedžiotas', 'sumedžioti', 'sumedžiota'];

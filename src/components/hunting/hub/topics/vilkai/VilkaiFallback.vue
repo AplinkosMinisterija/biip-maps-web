@@ -1,11 +1,12 @@
 <template>
-  <section aria-label="Momentinė kopija" class="flex flex-col gap-3 text-sm text-gray-800">
-    <p class="font-semibold text-gray-900" aria-live="polite">{{ view.answer }}</p>
-    <p v-if="view.notice" class="text-xs text-gray-600">{{ view.notice }}</p>
+  <section aria-label="Momentinė kopija" class="flex flex-col gap-3 text-sm text-ink">
+    <!-- Announced by the Vilkai tab's live region (one voice per change). -->
+    <p class="font-semibold text-ink">{{ view.answer }}</p>
+    <p v-if="view.notice" class="text-xs text-ink-muted">{{ view.notice }}</p>
 
     <button
       type="button"
-      class="self-start px-3 py-2 min-h-[44px] md:min-h-[32px] rounded border border-gray-300 text-xs font-semibold text-gray-800 hover:bg-gray-100"
+      class="self-start px-4 py-2 min-h-[44px] md:min-h-[32px] rounded-full border border-brand bg-white text-xs font-semibold text-brand hover:bg-brand-50"
       :class="focusRing"
       @click="ctx.data.reload()"
     >
@@ -13,13 +14,11 @@
     </button>
 
     <div class="flex flex-col gap-1">
-      <label :for="`${uid}-season`" class="text-xs font-semibold text-gray-900">{{
-        S.season
-      }}</label>
+      <label :for="`${uid}-season`" class="text-xs font-semibold text-ink">{{ S.season }}</label>
       <select
         :id="`${uid}-season`"
         :value="String(season)"
-        class="block w-full rounded-md border border-gray-400 bg-white px-2 text-sm text-gray-900 cursor-pointer h-11 md:h-9"
+        class="block w-full rounded-md border border-line-strong bg-white px-2 text-sm text-ink cursor-pointer h-11 md:h-9"
         :class="focusRing"
         @change="season = Number(($event.target as HTMLSelectElement).value)"
       >
@@ -31,16 +30,16 @@
       <div
         v-for="kpi in view.kpis"
         :key="kpi.id"
-        class="rounded-lg border border-gray-200 p-3"
+        class="rounded-lg border border-line p-3"
         :aria-label="kpi.ariaLabel"
       >
-        <dt class="text-xs text-gray-600">{{ kpi.label }}</dt>
-        <dd class="text-2xl font-semibold tabular-nums text-gray-900">{{ kpi.value }}</dd>
+        <dt class="text-xs text-ink-muted">{{ kpi.label }}</dt>
+        <dd class="text-2xl tabular-nums" :class="KPI_VALUE">{{ kpi.value }}</dd>
       </div>
     </dl>
 
-    <p v-for="note in view.notes" :key="note" class="text-xs text-gray-700">{{ note }}</p>
-    <p v-if="view.empty" class="text-gray-700">{{ view.empty.text }}</p>
+    <p v-for="note in view.notes" :key="note" class="text-xs text-ink-muted">{{ note }}</p>
+    <p v-if="view.empty" class="text-ink-muted">{{ view.empty.text }}</p>
 
     <div v-for="table in view.tables" :key="table.id" class="max-h-[320px] overflow-y-auto">
       <table class="w-full border-collapse text-left text-xs">
@@ -50,7 +49,7 @@
           }}
         </caption>
         <thead class="sticky top-0 bg-white">
-          <tr class="border-b border-gray-200 text-gray-600">
+          <tr class="border-b border-line text-ink-muted">
             <th
               v-for="column in table.columns"
               :key="column.id"
@@ -63,7 +62,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-if="table.totals" class="border-b border-gray-200 font-semibold">
+          <tr v-if="table.totals" class="border-b border-line font-semibold">
             <th scope="row" class="py-1.5 pr-2">{{ S.totalsRow }}</th>
             <td class="py-1.5 pr-2 text-right tabular-nums">
               {{ cell(table.columns[1], table.totals) }}
@@ -72,13 +71,13 @@
           <tr
             v-for="row in table.rows"
             :key="row.code"
-            class="border-b border-gray-100"
+            class="border-b border-line-soft"
             :class="row.code === ctx.state.sav.value ? 'bg-amber-50' : ''"
           >
             <td class="py-1 pr-2">
               <button
                 type="button"
-                class="text-left text-blue-800 underline-offset-2 hover:underline rounded min-h-[24px]"
+                class="text-left text-brand underline-offset-2 hover:underline rounded min-h-[24px]"
                 :class="focusRing"
                 :aria-pressed="row.code === ctx.state.sav.value"
                 @click="toggleSav(row.code)"
@@ -90,12 +89,17 @@
           </tr>
         </tbody>
       </table>
-      <p v-for="note in table.footnotes" :key="note" class="mt-1 text-xs text-gray-600">
+      <p v-for="note in table.footnotes" :key="note" class="mt-1 text-xs text-ink-muted">
         {{ note }}
       </p>
     </div>
 
-    <p class="text-xs text-gray-600" :title="S.provenanceSnapshotTitle(view.provenance.asOf)">
+    <!-- Embedded, the WP header line is the one place of the provenance (D9). -->
+    <p
+      v-if="!embed"
+      class="text-xs text-ink-muted"
+      :title="S.provenanceSnapshotTitle(view.provenance.asOf)"
+    >
       {{ view.provenance.text }}
     </p>
   </section>
@@ -107,8 +111,10 @@
 // The place stays the wolves state's `sav`, so the URL and the map outline keep working.
 import { computed, getCurrentInstance, inject, watch, type PropType } from 'vue';
 import { WOLVES_CTX } from '@/composables/hunting/context';
+import { HUB_CTX } from '@/composables/hunting/hub/context';
 import { seasonInterval, seasonLabel } from '@/utils/hunting/dates';
 import { S } from '@/utils/hunting/hub/strings';
+import { FOCUS_RING, KPI_VALUE } from '@/components/hunting/hub/shell/controls';
 import type { ColumnDef, SnapshotData } from '@/utils/hunting/hub/types';
 import { vilkaiFallbackSeasons, vilkaiFallbackView } from '@/utils/hunting/hub/topics/vilkai';
 
@@ -119,9 +125,9 @@ const props = defineProps({
 const emit = defineEmits(['view']);
 
 const ctx = inject(WOLVES_CTX)!;
+const embed = !!inject(HUB_CTX, null)?.embed;
 const uid = `hub-vilkai-fallback-${getCurrentInstance()?.uid ?? 0}`;
-const focusRing =
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';
+const focusRing = FOCUS_RING;
 
 const seasons = computed(() => vilkaiFallbackSeasons(props.snapshot));
 // The wolves period when it is a closed season of the copy, else the newest one. A choice

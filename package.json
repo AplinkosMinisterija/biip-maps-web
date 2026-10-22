@@ -15,6 +15,8 @@
     "openapi-ts:boundaries": "openapi-ts -f openapi-ts.boundaries.config.ts"
   },
   "dependencies": {
+    "@fontsource/atkinson-hyperlegible": "^5.3.0",
+    "@fontsource/noto-sans": "^5.3.0",
     "@sentry/vue": "^7.60.1",
     "@turf/buffer": "^6.5.0",
     "@turf/center": "^6.5.0",

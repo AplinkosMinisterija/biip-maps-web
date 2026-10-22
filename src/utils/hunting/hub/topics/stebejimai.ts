@@ -2,11 +2,13 @@
 // observed wolves, lynx, bears and bison. The tab is live (`kind: 'live'`): the route mounts
 // `HuntingHubTopicsStebejimaiStebejimaiTopic` (LIVE_HOSTS), which loads the records from the
 // environment's public proxy and owns its filters, URL keys, map layers, tables and card.
-// This module holds only the TopicDef: the hub's registry entry, seasons for a topic
-// switch and the About texts. No snapshot view, no Apžvalga card, no "Kiti rodikliai" row.
+// This module holds the TopicDef: the hub's registry entry, seasons for a topic switch, the
+// About texts and the descriptive Apžvalga card (the shell fills in the running season's
+// count once the records have loaded, `stebOverviewLive` in stebejimai/model.ts). No snapshot
+// view, no "Kiti rodikliai" row.
 import { seasonOfDay } from '@/utils/hunting/dates';
 import { ABOUT_LOCALE_RULE, TOPIC_SUBTITLES, TOPIC_TABS } from '../strings';
-import type { AboutDef, Meta, SeasonState, TopicDef } from '../types';
+import type { AboutDef, Meta, OverviewCard, SeasonState, TopicDef } from '../types';
 import { seasonsDesc } from './common';
 
 const currentSeasonOf = (meta: Meta) =>
@@ -14,6 +16,21 @@ const currentSeasonOf = (meta: Meta) =>
 
 function stebejimaiSeasonState(season: number, meta: Meta): SeasonState {
   return season >= currentSeasonOf(meta) ? 'vyksta' : 'galutinis';
+}
+
+// Kept in step with SS.h1 (stebejimai/strings.ts), which this module does not import.
+const STEB_H1 = 'Kur ir kokie gyvūnai stebėti?';
+
+// Without the live records (still loading, or failed): what the topic publishes.
+function stebejimaiOverview(_data: unknown, today: string): OverviewCard {
+  return {
+    topic: 'stebejimai',
+    title: TOPIC_TABS.stebejimai,
+    question: STEB_H1,
+    season: seasonOfDay(today),
+    state: 'vyksta',
+    answer: `${TOPIC_SUBTITLES.stebejimai} – su vieta žemėlapyje.`,
+  };
 }
 
 const about: AboutDef = {
@@ -59,6 +76,8 @@ export const stebejimai: TopicDef = {
   defaultSeason: (_meta, today) => seasonOfDay(today),
   dims: [],
   defaultTable: 'irasai',
+  attribution: 'place',
+  overview: stebejimaiOverview,
   about,
   aboutCommon,
 };

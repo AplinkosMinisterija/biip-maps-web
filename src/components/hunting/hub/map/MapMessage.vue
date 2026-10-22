@@ -1,18 +1,41 @@
 <template>
+  <!-- Loading: a chip at the top centre of the free map area (DATAVIZ-22). -->
   <div
-    v-if="message"
+    v-if="loading"
+    class="pointer-events-none absolute z-20 flex justify-center"
+    :style="{ ...areaStyle, bottom: 'auto', paddingTop: '12px' }"
+  >
+    <p
+      class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-ink shadow-[0_2px_8px_rgba(18,25,38,0.12)]"
+    >
+      {{ S.loading }}
+    </p>
+  </div>
+  <div
+    v-else-if="failed || message"
     class="pointer-events-none absolute z-20 flex items-center justify-center"
     :style="areaStyle"
   >
+    <!-- The load error where the data would be; the panel has the same alert and retry. -->
     <div
+      v-if="failed"
+      aria-hidden="true"
+      class="pointer-events-auto mx-4 flex max-w-[360px] flex-col gap-3 rounded-lg border border-[#B42318] bg-[#FEF3F2] p-4 text-sm font-semibold text-[#7A271A] shadow-[0_2px_8px_rgba(18,25,38,0.08)]"
+    >
+      <p>{{ S.loadError }}</p>
+    </div>
+    <div
+      v-else-if="message"
       role="status"
-      class="pointer-events-auto bg-white rounded-lg shadow-lg p-4 max-w-[360px] mx-4 text-sm text-gray-900 flex flex-col gap-3"
+      class="pointer-events-auto mx-4 flex max-w-[360px] flex-col gap-3 p-4 text-sm text-ink"
+      :class="FLOAT_CARD"
     >
       <p>{{ message.text }}</p>
       <button
         v-if="message.action"
         type="button"
-        class="self-start inline-flex items-center gap-1 min-h-[32px] max-md:min-h-[44px] rounded-lg border border-gray-300 bg-white px-3 text-sm font-semibold text-blue-800 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+        class="self-start"
+        :class="[BTN_SECONDARY, ctx.isMobile.value ? 'h-11' : '']"
         @click="apply(message.action.sel)"
       >
         {{ message.action.label }}
@@ -25,10 +48,20 @@
 import { computed, inject } from 'vue';
 import { HUB_CTX } from '@/composables/hunting/hub/context';
 import type { HubSelection, MapMessageDef } from '@/utils/hunting/hub/types';
+import { S } from '@/utils/hunting/hub/strings';
+import { BTN_SECONDARY, FLOAT_CARD } from '../shell/controls';
 
 // Map message (SPEC2 §8.5): when the topic view has no choropleth (species without classes,
 // current season), the map keeps the outlines and this card is centred over the free map area.
+// It also shows the snapshot's loading chip and load error over the map (DATAVIZ-22).
 const ctx = inject(HUB_CTX)!;
+
+const snapshotTopic = computed(() => ctx.topic.value.kind === 'snapshot');
+const loading = computed(
+  () =>
+    snapshotTopic.value && (ctx.data.phase.value === 'loading' || ctx.data.phase.value === 'slow'),
+);
+const failed = computed(() => snapshotTopic.value && ctx.data.phase.value === 'error');
 
 const message = computed<MapMessageDef | null>(() => {
   const map = ctx.view.value?.map;

@@ -10,6 +10,8 @@ export const P_NO_POINT: PluralForms = [
 ];
 // Rail label: "13 stebėjimų".
 export const P_OBSERVATION_GEN: PluralForms = ['stebėjimas', 'stebėjimai', 'stebėjimų'];
+// Phone Filtrai sheet button: "Rodyti 8 stebėjimus".
+export const P_OBSERVATION_ACC: PluralForms = ['stebėjimą', 'stebėjimus', 'stebėjimų'];
 // Truncation note: the participle and the adjective agree with the number, as in
 // "užregistruota 10 stebėjimų": "rodoma 10 000 naujausių įrašų", "rodomi 9 999 naujausi įrašai".
 const P_SHOWN: PluralForms = ['rodomas', 'rodomi', 'rodoma'];
@@ -36,6 +38,11 @@ export const SS = {
   allSpeciesLower: 'visos rūšys',
   allFactsLower: 'visi faktai',
   allPlacesLower: 'visa Lietuva',
+  // Chip values of the unset filters ("Rūšis: visos", "Faktas: visi", "Laikotarpis: visas").
+  allSpeciesChip: 'visos',
+  allFactsChip: 'visi',
+  allPeriodChip: 'visas',
+  showObservations: (label: string) => `Rodyti ${label}`,
   optionCount: (label: string, n: number) => `${label} (${formatInt(n)})`,
   resetFilters: 'Atstatyti filtrus',
   // Period options (§3.3).
@@ -49,14 +56,15 @@ export const SS = {
   // Filter sentence (§3.2).
   // A place such as "Biržų r. sav." already ends the sentence with its period.
   sentence: (period: string, species: string, fact: string, place: string) =>
-    `Rodoma: ${period}; ${species}; ${fact}; ${place}${place.endsWith('.') ? '' : '.'}`,
+    `Rodoma: ${period} · ${species} · ${fact} · ${place}${place.endsWith('.') ? '' : '.'}`,
   chartTitle: 'Stebėjimai pagal rūšį',
   noPoint: (k: number) => `${formatInt(k)} ${pluralLt(k, P_NO_POINT)}.`,
   truncated: (shown: number, total: number) => {
     const text = truncatedPart(shown, total);
     return `${text.charAt(0).toUpperCase()}${text.slice(1)}.`;
   },
-  provenance: (time: string) => `Duomenys gauti ${time} tiesiogiai iš BĮIP`,
+  // `at` = 'yyyy-MM-dd HH:mm' (Vilnius); the same wording as the hub's live lines.
+  provenance: (at: string) => `Duomenys atnaujinti ${at} · BĮIP`,
   // States (§3.9).
   loading: 'Įkeliami duomenys…',
   loadError: 'Nepavyko įkelti duomenų.',

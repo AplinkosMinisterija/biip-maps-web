@@ -1,24 +1,48 @@
 // Municipality choropleth of the hunting data hub (SPEC2 §8.5).
-// One vector tile layer over the public municipalities PMTiles archive, styled from the
-// current TopicView's ChoroplethDef with fixed classes. The source is built once; a data or
-// selection change only calls `layer.changed()`. The layer is hidden (not removed) while a
-// topic without a choropleth (Vilkai, Apžvalga) is active, and removed on unmount.
+// One vector layer of the 60 municipality polygons of the public municipalities PMTiles
+// archive, styled from the current TopicView's ChoroplethDef with fixed classes. The source is
+// built once; a data or selection change only calls `layer.changed()`. The layer is hidden (not
+// removed) while a topic without a choropleth (Vilkai, Apžvalga) is active, and removed on
+// unmount.
+//
+// Not a vector tile layer: OpenLayers clips the fills of every tile to the tile's extent, and
+// at the hub's fractional zoom the tile edges fall between pixels, so the anti-aliased clip
+// edges let the background through as thin light lines across the fills. The polygons are
+// merged per municipality from the z7 tiles instead (the tiles loadMunicipalityIndex reads
+// anyway) and drawn untiled. The tiled layer only covers the moment until they are ready, or
+// stays if the merge fails.
 import { computed, inject, onBeforeUnmount, onMounted, provide, ref, toRaw, watch } from 'vue';
 import type { ComputedRef, InjectionKey, Ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { Feature } from 'ol';
 import type { Map, MapBrowserEvent } from 'ol';
 import type { FeatureLike } from 'ol/Feature';
-import { MVT } from 'ol/format';
+import { GeoJSON, MVT } from 'ol/format';
+import type { Geometry } from 'ol/geom';
+import VectorLayer from 'ol/layer/Vector';
 import VectorTileLayer from 'ol/layer/VectorTile';
+import VectorSource from 'ol/source/Vector';
 import { Fill, Stroke, Style } from 'ol/style';
 // @ts-expect-error ol-pmtiles has no types
 import { PMTilesVectorSource } from 'ol-pmtiles';
+import { feature as turfFeature, featureCollection, union } from '@turf/turf';
 import { boundariesHost } from '@/config';
 import { projection3857 } from '@/utils/constants';
-import { loadMunicipalityIndex } from '@/utils/hunting/municipalities';
+import { loadMunicipalityIndex, type MunicipalityIndex } from '@/utils/hunting/municipalities';
 import { S } from '@/utils/hunting/hub/strings';
 import type { ChoroplethDef } from '@/utils/hunting/hub/types';
+import { atCountryFit } from '@/utils/hunting/hub/mapFit';
+import {
+  CHOROPLETH_NO_DATA_FILL,
+  CHOROPLETH_OUTLINE,
+  CHOROPLETH_RAMPS,
+  CHOROPLETH_ZERO_FILL,
+  DOT_FILL,
+  HATCH_LINE,
+  MAP_LAND,
+  SELECTION_HALO,
+  SELECTION_INK,
+} from '@/utils/hunting/hub/colors';
 import type { HubContext } from './context';
 
 export const HUB_CHOROPLETH_LAYER_ID = 'huntingHubChoropleth';
@@ -26,18 +50,18 @@ export const HUB_CHOROPLETH_SELECTION_LAYER_ID = 'huntingHubChoroplethSelection'
 
 export type ChoroplethPalette = ChoroplethDef['palette'];
 
-// Light → dark, 5 classes (ColorBrewer Greens / Blues / Oranges).
-export const CHOROPLETH_PALETTES: Record<ChoroplethPalette, string[]> = {
-  green: ['#edf8e9', '#bae4b3', '#74c476', '#31a354', '#006d2c'],
-  // Blues one step up: the first class must not read as white ("no data").
-  blue: ['#c6dbef', '#9ecae1', '#6baed6', '#3182bd', '#08519c'],
-  orange: ['#feedde', '#fdbe85', '#fd8d3c', '#e6550d', '#a63603'],
+// The colours live in utils/hunting/hub/colors.ts (one source for the map, the legend and the
+// class helpers); re-exported here for the legend component.
+export {
+  CHOROPLETH_NO_DATA_FILL,
+  CHOROPLETH_OUTLINE,
+  CHOROPLETH_RAMPS,
+  CHOROPLETH_ZERO_FILL,
+  DOT_FILL,
+  HATCH_LINE,
 };
-export const CHOROPLETH_OUTLINE = '#6b7280';
-export const CHOROPLETH_SELECTED = '#111827';
-export const CHOROPLETH_EMPTY_FILL = '#ffffff';
-export const HATCH_LINE = '#9ca3af';
-export const DOT_FILL = '#4b5563';
+// The white under the hatch and the dots ("Nėra MPV", "Neskelbiama").
+export const CHOROPLETH_EMPTY_FILL = CHOROPLETH_ZERO_FILL;
 
 // Neighbouring municipalities stay in view around a selected one.
 const SELECTED_MAX_ZOOM = 9;
@@ -53,7 +77,7 @@ export function classOf(value: number, breaks: number[]) {
 export type ChoroplethFill =
   | { kind: 'class'; index: number }
   | { kind: 'zero' } // white, value 0 and `zeroIsWhite`
-  | { kind: 'none' } // white, no value
+  | { kind: 'none' } // light grey, no value ("Duomenų nėra")
   | { kind: 'hatched' }
   | { kind: 'special'; fill: string | 'dotted' };
 
@@ -61,7 +85,7 @@ export type ChoroplethFill =
 // the class below the first break holds only the white 0, so the colours start at class 1.
 export function colorIndex(def: ChoroplethDef, index: number) {
   const skip = def.zeroIsWhite && def.breaks.length > 0 && def.breaks[0] <= 1 ? 1 : 0;
-  return Math.max(0, Math.min(index - skip, CHOROPLETH_PALETTES[def.palette].length - 1));
+  return Math.max(0, Math.min(index - skip, CHOROPLETH_RAMPS[def.palette].length - 1));
 }
 
 /** How one municipality is drawn (pure; shared by the layer style and the legend). */
@@ -158,13 +182,19 @@ function fillStyle(def: ChoroplethDef | null, code: number): Style {
         }),
     );
   }
-  if (fill.kind === 'none' || fill.kind === 'zero') {
+  if (fill.kind === 'zero') {
     return cachedStyle(
-      'empty',
-      () => new Style({ stroke: outline, fill: new Fill({ color: CHOROPLETH_EMPTY_FILL }) }),
+      'zero',
+      () => new Style({ stroke: outline, fill: new Fill({ color: CHOROPLETH_ZERO_FILL }) }),
     );
   }
-  const colors = CHOROPLETH_PALETTES[def.palette];
+  if (fill.kind === 'none') {
+    return cachedStyle(
+      'none',
+      () => new Style({ stroke: outline, fill: new Fill({ color: CHOROPLETH_NO_DATA_FILL }) }),
+    );
+  }
+  const colors = CHOROPLETH_RAMPS[def.palette];
   const index = colorIndex(def, fill.index);
   return cachedStyle(
     `${def.palette}:${index}`,
@@ -178,6 +208,17 @@ export interface LegendItem {
   fill: string | 'hatched' | 'dotted';
 }
 
+export interface LegendModel {
+  /** Integer counts (Žala, Vilkai): a label under every swatch ("<3", "3–5", …, "> 20"). */
+  counts: boolean;
+  /** One swatch per class; `label` is the class's full, non-overlapping text. */
+  classes: LegendItem[];
+  /** Continuous metrics: the break values, printed under the joins between the swatches. */
+  joins: string[];
+  /** Fills outside the scale: "0", "Nėra MPV", pooled, … and "Duomenų nėra". */
+  specials: LegendItem[];
+}
+
 // Class bounds are plain numbers: the unit is already in the legend title, and `format` may
 // append it ("15 / 1 000 ha–19 / 1 000 ha" would not read).
 const boundFormat = new Intl.NumberFormat('lt-LT', { maximumFractionDigits: 1 });
@@ -185,23 +226,27 @@ const numberLabel = (v: number) => boundFormat.format(v);
 const countFormat = new Intl.NumberFormat('lt-LT', { maximumFractionDigits: 0 });
 
 /**
- * Legend rows of a choropleth: one per class, then "Nėra MPV" (hatched) and "Duomenų nėra"
- * when such municipalities exist among `codes`. Classes are < b1, b1–b2, …, ≥ bn. Count maps
- * (`zeroIsWhite`, integer breaks) read as 0 · 1–2 · 3–5 · … · > 20 instead.
+ * Legend of a choropleth: one swatch per class, then "0", "Nėra MPV", the special fills and
+ * "Duomenų nėra" when such municipalities exist among `codes`. Classes are < b1, b1–b2, …,
+ * ≥ bn; their labels never share a bound ("15–18,9", "19–20,9"; whole-number metrics
+ * "40–49"). Count maps (`zeroIsWhite`, integer breaks) read as 0 · 1–2 · 3–5 · … · > 20.
  */
-export function legendItems(def: ChoroplethDef, codes: number[]): LegendItem[] {
-  const colors = CHOROPLETH_PALETTES[def.palette];
+export function legendModel(def: ChoroplethDef, codes: number[]): LegendModel {
+  const colors = CHOROPLETH_RAMPS[def.palette];
   const b = def.breaks;
   const counts = def.zeroIsWhite && b.length > 0 && b.every((v) => Number.isInteger(v) && v > 0);
-  const items: LegendItem[] = [];
-  if (counts) {
-    items.push({ key: 'zero', label: '0', fill: CHOROPLETH_EMPTY_FILL });
-  }
+  const classes: LegendItem[] = [];
+  const specials: LegendItem[] = [];
+  if (counts) specials.push({ key: 'zero', label: '0', fill: CHOROPLETH_ZERO_FILL });
   // count classes use plain integers: `format` may mask small values (e.g. '<3')
   const int = (v: number) => countFormat.format(v);
   const range = (lo: number, hi: number) => (lo === hi ? int(lo) : `${int(lo)}–${int(hi)}`);
+  // Whole-number values (percent of a limit) end one below the next break, others 0,1 below.
+  const wholeValues = [...def.values.values()].every((v) => v == null || Number.isInteger(v));
+  const step = wholeValues && b.every((v) => Number.isInteger(v)) ? 1 : 0.1;
+  const upper = (v: number) => numberLabel(Math.round((v - step) * 10) / 10);
   for (let i = 0; i <= b.length; i++) {
-    // a first class with no counts in it (only 0, drawn white) gets no row
+    // a first class with no counts in it (only 0, drawn white) gets no swatch
     if (counts && i === 0 && b[0] <= 1) continue;
     let label: string;
     if (counts) {
@@ -211,15 +256,15 @@ export function legendItems(def: ChoroplethDef, codes: number[]): LegendItem[] {
       else label = range(b[i - 1], b[i] - 1);
     } else if (i === 0) label = `< ${numberLabel(b[0])}`;
     else if (i === b.length) label = `≥ ${numberLabel(b[i - 1])}`;
-    else label = `${numberLabel(b[i - 1])}–${numberLabel(b[i])}`;
-    items.push({ key: `c${i}`, label, fill: colors[colorIndex(def, i)] });
+    else label = `${numberLabel(b[i - 1])}–${upper(b[i])}`;
+    classes.push({ key: `c${i}`, label, fill: colors[colorIndex(def, i)] });
   }
   if (codes.some((code) => def.hatched.has(code))) {
-    items.push({ key: 'hatched', label: S.legendNoMpv, fill: 'hatched' });
+    specials.push({ key: 'hatched', label: S.legendNoMpv, fill: 'hatched' });
   }
   (def.special || []).forEach((s) => {
     if (codes.some((code) => s.codes.has(code)))
-      items.push({ key: `s:${s.key}`, label: s.label, fill: s.fill });
+      specials.push({ key: `s:${s.key}`, label: s.label, fill: s.fill });
   });
   const missing = codes.some((code) => {
     if (def.hatched.has(code)) return false;
@@ -227,18 +272,75 @@ export function legendItems(def: ChoroplethDef, codes: number[]): LegendItem[] {
     const v = def.values.get(code);
     return v === null || v === undefined;
   });
-  if (missing) items.push({ key: 'none', label: S.legendNoData, fill: CHOROPLETH_EMPTY_FILL });
-  return items;
+  if (missing) specials.push({ key: 'none', label: S.legendNoData, fill: CHOROPLETH_NO_DATA_FILL });
+  return { counts, classes, joins: counts ? [] : b.map(numberLabel), specials };
 }
 
-const selectedStyle = new Style({
-  stroke: new Stroke({ color: CHOROPLETH_SELECTED, width: 3 }),
-});
+/** Every legend row in one list: the classes, then the fills outside the scale. */
+export function legendItems(def: ChoroplethDef, codes: number[]): LegendItem[] {
+  const model = legendModel(def, codes);
+  const zero = model.specials.filter((s) => s.key === 'zero');
+  return [...zero, ...model.classes, ...model.specials.filter((s) => s.key !== 'zero')];
+}
+
+// A dark line on a white halo: it reads on the lightest and the darkest class alike.
+const selectedStyle = [
+  new Style({ stroke: new Stroke({ color: SELECTION_HALO, width: 6 }) }),
+  new Style({ stroke: new Stroke({ color: SELECTION_INK, width: 2.5 }) }),
+];
+// Land and sea that are not one of the 60 municipalities (the territorial sea wedge): drawn
+// in the land colour without an outline, so it does not compete with the data.
+const landStyle = new Style({ fill: new Fill({ color: MAP_LAND }) });
+
+interface MergedMunicipality {
+  code: number;
+  name: string;
+  geometry: Geometry;
+}
+
+// One polygon per municipality from its tile pieces (the pieces overlap in the tile buffers).
+async function mergeMunicipalities(index: MunicipalityIndex): Promise<MergedMunicipality[]> {
+  const pieces = new globalThis.Map<number, any[]>();
+  Object.values(index.tiles).forEach((list) =>
+    list.forEach((piece) => {
+      const parts = pieces.get(piece.code) || [];
+      parts.push(turfFeature(piece.geometry));
+      pieces.set(piece.code, parts);
+    }),
+  );
+  const geoJson = new GeoJSON();
+  const out: MergedMunicipality[] = [];
+  let done = 0;
+  for (const [code, parts] of pieces) {
+    // about 250 ms for all 60: yield now and then, so the merge is no long task
+    if (++done % 8 === 0) await new Promise((resolve) => setTimeout(resolve));
+    const merged = parts.length === 1 ? parts[0] : union(featureCollection(parts));
+    if (!merged) continue;
+    const name = index.byCode[code]?.name || '';
+    out.push({ code, name, geometry: geoJson.readGeometry(merged.geometry) as Geometry });
+  }
+  if (!out.length) throw new Error('No municipality polygons merged');
+  return out;
+}
+
+// Memoised per page load, like the index; a failed attempt can be retried.
+let mergedPromise: Promise<MergedMunicipality[]> | null = null;
+function loadMergedMunicipalities() {
+  if (!mergedPromise) {
+    mergedPromise = loadMunicipalityIndex()
+      .then(mergeMunicipalities)
+      .catch((err) => {
+        mergedPromise = null;
+        throw err;
+      });
+  }
+  return mergedPromise;
+}
 
 export interface ChoroplethHover {
   code: number;
   name: string;
-  text: string; // '{name} · {formatted value}'
+  text: string; // '{name}: {value with its unit}'
   x: number; // px, relative to the map viewport
   y: number;
 }
@@ -316,55 +418,96 @@ export function useChoropleth(ctx: HubContext): HubChoroplethApi {
 
   const featureCode = (feature: FeatureLike) => Number(feature.getId() ?? feature.get('code'));
 
-  const source = new PMTilesVectorSource({
+  const fill = (feature: FeatureLike) => {
+    const code = featureCode(feature);
+    // the territorial sea and anything else that is not one of the 60 municipalities
+    if (!styleCodes.has(code)) return styleDef ? landStyle : undefined;
+    return fillStyle(styleDef, code);
+  };
+  const outlineSelected = (feature: FeatureLike) =>
+    selected !== null && featureCode(feature) === selected ? selectedStyle : undefined;
+
+  const tileSource = new PMTilesVectorSource({
     url: `${boundariesHost}/tiles/municipalities.pmtiles`,
     overlaps: false,
     projection: projection3857,
     format: new MVT({ featureClass: Feature as any, idProperty: 'code' }),
   });
+  const mergedSource = new VectorSource<Feature>();
 
-  const layer = new VectorTileLayer({
-    renderMode: 'vector',
-    zIndex: 10,
-    visible: false,
-    source,
-    style: (feature) => {
-      const code = featureCode(feature);
-      // the territorial sea and anything else that is not one of the 60 municipalities
-      if (!styleCodes.has(code)) return undefined;
-      return fillStyle(styleDef, code);
-    },
-  });
-  layer.set('id', HUB_CHOROPLETH_LAYER_ID);
-
-  // Separate layer for the selection, so neighbouring fills never paint over its outline.
-  const selectionLayer = new VectorTileLayer({
-    renderMode: 'vector',
-    zIndex: 11,
-    visible: false,
-    source,
-    style: (feature) =>
-      selected !== null && featureCode(feature) === selected ? selectedStyle : undefined,
-  });
-  selectionLayer.set('id', HUB_CHOROPLETH_SELECTION_LAYER_ID);
+  // The merged layers once their polygons are there, the tiled ones until then.
+  const tiled = {
+    fill: new VectorTileLayer({
+      renderMode: 'vector',
+      zIndex: 10,
+      visible: false,
+      source: tileSource,
+      style: fill,
+    }),
+    // Separate layer for the selection, so neighbouring fills never paint over its outline.
+    selection: new VectorTileLayer({
+      renderMode: 'vector',
+      zIndex: 11,
+      visible: false,
+      source: tileSource,
+      style: outlineSelected,
+    }),
+  };
+  const merged = {
+    fill: new VectorLayer({ zIndex: 10, visible: false, source: mergedSource, style: fill }),
+    selection: new VectorLayer({
+      zIndex: 11,
+      visible: false,
+      source: mergedSource,
+      style: outlineSelected,
+    }),
+  };
+  let mergedReady = false;
+  const fillLayers = [tiled.fill, merged.fill];
+  fillLayers.forEach((l) => l.set('id', HUB_CHOROPLETH_LAYER_ID));
+  [tiled.selection, merged.selection].forEach((l) =>
+    l.set('id', HUB_CHOROPLETH_SELECTION_LAYER_ID),
+  );
+  const allLayers = [tiled.fill, tiled.selection, merged.fill, merged.selection];
 
   let map: Map | null = null;
   let mounted = false;
   let clickEntry: any = null;
   let previousPadding: number[] | undefined;
 
+  // The basemap's labels and its sea wedge compete with the classes: while a choropleth is
+  // shown the basemap is hidden and the map shows a flat land colour around Lithuania.
+  const baseLayer = () => mapLayers.visibleBaseLayer?.layer as { setVisible(v: boolean): void };
+  function setBasemap(on: boolean) {
+    if (!map) return;
+    baseLayer()?.setVisible(on);
+    map.getViewport().style.background = on ? '' : MAP_LAND;
+  }
+
+  // While a snapshot topic loads, the municipality outlines alone show where data will be.
+  const loadingOutlines = computed(
+    () =>
+      ctx.topic.value.kind === 'snapshot' &&
+      (ctx.data.phase.value === 'loading' || ctx.data.phase.value === 'slow'),
+  );
+
   function refresh() {
+    setBasemap(!def.value);
     styleDef = def.value;
     styleCodes = municipalityCodes.value;
     selected = active.value ? selectedSav() : null;
-    layer.setVisible(active.value);
-    selectionLayer.setVisible(active.value);
-    layer.changed();
-    selectionLayer.changed();
+    const shown = active.value || loadingOutlines.value;
+    tiled.fill.setVisible(shown && !mergedReady);
+    tiled.selection.setVisible(active.value && !mergedReady);
+    merged.fill.setVisible(shown && mergedReady);
+    merged.selection.setVisible(active.value && mergedReady);
+    allLayers.forEach((l) => l.changed());
     if (!active.value) hover.value = null;
   }
 
-  watch([def, active, municipalityCodes, selectedSav], refresh, { immediate: true });
+  watch([def, active, municipalityCodes, selectedSav, loadingOutlines], refresh, {
+    immediate: true,
+  });
 
   // Pointer cursor over municipalities only while the choropleth is shown; the Vilkai map
   // sets its own list on mount and restores ours on unmount.
@@ -373,12 +516,15 @@ export function useChoropleth(ctx: HubContext): HubChoroplethApi {
   });
 
   // The live topic keeps its own view padding and zoom (useWolvesMap).
+  // Untouched since the country fit, the country is fitted again into the new free area.
   function applyPadding() {
     if (!map || !active.value || live.value) return;
     const view = map.getView();
+    const refit = atCountryFit(view);
     const center = view.getCenter();
     view.padding = [...ctx.layout.mapPadding.value];
-    if (center) view.setCenter(center);
+    if (refit) mapLayers.centerMap();
+    else if (center) view.setCenter(center);
   }
   watch([() => ctx.layout.mapPadding.value.join(','), active], applyPadding);
 
@@ -407,6 +553,13 @@ export function useChoropleth(ctx: HubContext): HubChoroplethApi {
       if (code !== null && code !== old && active.value && !live.value) fitTo(code);
     },
   );
+  // The map follows the place filter also when it arrives before the data, and when the
+  // view has a map message instead of classes (J-23).
+  watch(active, (on, was) => {
+    const code = ctx.sel.value.sav;
+    if (on && !was && code !== null && !live.value && (!route.query.x || !route.query.y))
+      fitTo(code);
+  });
 
   function onClick(e: MapBrowserEvent<any> & { features: FeatureLike[] }) {
     if (!mounted || !active.value) return;
@@ -432,9 +585,10 @@ export function useChoropleth(ctx: HubContext): HubChoroplethApi {
         const c = featureCode(f);
         return styleCodes.has(c) ? c : undefined;
       },
-      { layerFilter: (l) => l === layer, hitTolerance: 0 },
+      { layerFilter: (l) => fillLayers.includes(l as any), hitTolerance: 0 },
     );
-    if (code === undefined) {
+    // The selected municipality's card already shows its value.
+    if (code === undefined || code === selectedSav()) {
       hover.value = null;
       return;
     }
@@ -443,7 +597,7 @@ export function useChoropleth(ctx: HubContext): HubChoroplethApi {
     hover.value = {
       code,
       name,
-      text: value ? `${name} · ${value}` : name,
+      text: value ? `${name}: ${value}` : name,
       x: e.pixel[0],
       y: e.pixel[1],
     };
@@ -457,8 +611,24 @@ export function useChoropleth(ctx: HubContext): HubChoroplethApi {
     await mapLayers.waitForLoaded;
     if (!mounted || !mapLayers.map) return;
     map = toRaw(mapLayers.map) as Map;
-    map.addLayer(layer);
-    map.addLayer(selectionLayer);
+    allLayers.forEach((l) => map!.addLayer(l));
+    setBasemap(!def.value);
+    loadMergedMunicipalities()
+      .then((list) => {
+        if (!mounted) return;
+        mergedSource.addFeatures(
+          list.map(({ code, name, geometry }) => {
+            const feature = new Feature({ geometry, code, name });
+            feature.setId(code);
+            return feature;
+          }),
+        );
+        mergedReady = true;
+        refresh();
+      })
+      .catch(() => {
+        // the tiled layer stays (with its seams at fractional zooms)
+      });
 
     mapLayers.click(onClick, { layers: [HUB_CHOROPLETH_LAYER_ID] });
     const callbacks: any[] = (mapLayers as any)._clickCallbacks || [];
@@ -478,8 +648,7 @@ export function useChoropleth(ctx: HubContext): HubChoroplethApi {
   onBeforeUnmount(() => {
     mounted = false;
     if (!map) return;
-    map.removeLayer(layer);
-    map.removeLayer(selectionLayer);
+    allLayers.forEach((l) => map!.removeLayer(l));
     // MapLayers has no API to remove a click callback; drop ours so it does not outlive the route
     const callbacks: any[] = (mapLayers as any)._clickCallbacks;
     if (clickEntry && Array.isArray(callbacks)) {
@@ -492,6 +661,7 @@ export function useChoropleth(ctx: HubContext): HubChoroplethApi {
     map.un('pointermove', onPointerMove);
     map.getViewport()?.removeEventListener('pointerout', onPointerOut);
     if (previousPadding) map.getView().padding = previousPadding;
+    setBasemap(true);
     map = null;
   });
 

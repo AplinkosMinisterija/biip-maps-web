@@ -1,27 +1,24 @@
 <template>
   <div ref="root" class="relative shrink-0">
-    <button
+    <!-- The "Sezonas" name is dropped on tablets to keep the filter bar on one line. -->
+    <HuntingHubShellFilterChip
       ref="trigger"
-      type="button"
+      :name="S.season"
+      name-class="sr-only lg:not-sr-only"
+      :value="seasonLabel(season)"
+      :open="isOpen"
       aria-haspopup="dialog"
       :aria-expanded="isOpen ? 'true' : 'false'"
       :disabled="disabled || !options.length"
-      class="flex h-9 items-center gap-1 whitespace-nowrap rounded-full border border-gray-500 bg-white px-3 text-sm font-semibold text-gray-900 hover:bg-gray-50 disabled:cursor-default disabled:border-gray-300 disabled:text-gray-700 disabled:hover:bg-white"
-      :class="focusRing"
       @click="toggle"
-    >
-      <!-- The "Sezonas" prefix is dropped on tablets to keep the filter bar on one line. -->
-      <span class="sr-only lg:not-sr-only">{{ S.seasonChip('').trim() }}</span>
-      {{ seasonLabel(season) }}
-      <UiIcon v-if="!disabled" name="chevron-down" :size="14" aria-hidden="true" />
-    </button>
+    />
 
     <div
       v-if="isOpen"
       ref="panel"
       role="dialog"
       :aria-label="S.season"
-      class="absolute left-0 top-full z-50 mt-1 w-72 rounded-lg border border-gray-200 bg-white p-2 shadow-lg"
+      :class="[POPOVER, 'w-72']"
       @keydown="onKeydown"
       @pointerdown="byPointer = true"
     >
@@ -40,7 +37,8 @@ import { computed, inject, nextTick, onBeforeUnmount, ref } from 'vue';
 import { HUB_CTX } from '@/composables/hunting/hub/context';
 import { S } from '@/utils/hunting/hub/strings';
 import { seasonLabel } from '@/utils/hunting/dates';
-import { focusRing, focusWhenReady, trapTab } from './shell';
+import { focusWhenReady, trapTab } from './shell';
+import { POPOVER } from './controls';
 import { useSeasonOptions } from './useSeasonOptions';
 
 // Desktop season chip with a radio list in a popover (§4.1). Apžvalga shows it disabled with
@@ -54,7 +52,7 @@ const season = computed(() => ctx.sel.value.season);
 const options = useSeasonOptions(ctx);
 
 const root = ref<HTMLElement | null>(null);
-const trigger = ref<HTMLButtonElement | null>(null);
+const trigger = ref<{ focus(): void } | null>(null);
 const panel = ref<HTMLElement | null>(null);
 const isOpen = ref(false);
 

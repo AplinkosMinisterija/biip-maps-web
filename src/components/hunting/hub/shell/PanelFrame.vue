@@ -47,8 +47,9 @@ async function expand() {
 </script>
 
 <style scoped>
+/* Left edge on the site grid when embedded (--hub-panel-left = the gutter, decision D3). */
 .hub-panel {
-  left: var(--hub-gap);
+  left: var(--hub-panel-left, var(--hub-gap));
   top: calc(var(--hub-top) + var(--hub-gap));
   bottom: var(--hub-gap);
   width: var(--hub-panel-w);

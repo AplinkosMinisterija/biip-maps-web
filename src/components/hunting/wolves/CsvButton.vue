@@ -1,7 +1,7 @@
 <template>
   <button
     type="button"
-    class="inline-flex items-center justify-center gap-2 min-h-[44px] md:min-h-[32px] rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+    :class="[BTN_SECONDARY, 'shrink-0 whitespace-nowrap disabled:cursor-not-allowed max-md:h-11']"
     :disabled="!records.length"
     @click="download"
   >
@@ -14,6 +14,7 @@
 import { computed, inject } from 'vue';
 import { WOLVES_CTX } from '@/composables/hunting/context';
 import { hasMunicipalities } from '@/utils/hunting/municipalities';
+import { BTN_SECONDARY } from '@/components/hunting/hub/shell/controls';
 
 import { CSV_MIME, buildCsv, csvFileName } from '@/utils/hunting/csv';
 

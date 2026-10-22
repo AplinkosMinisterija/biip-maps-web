@@ -1,122 +1,78 @@
 <template>
-  <!-- In the 48 px filter bar the presets and the chips share one row (a second row would
-       overflow the bar); the mobile sheet stacks them. -->
-  <div class="flex min-w-0 gap-2" :class="large ? 'flex-col' : 'flex-row items-center'">
-    <!-- Presets: a radio group rendered as a segmented control (SPEC2 §6.5). -->
-    <div
-      role="radiogroup"
-      :aria-label="groupDim.label"
-      class="inline-flex min-w-0 gap-1 rounded-md border border-gray-400 bg-white p-0.5"
-      :class="large ? 'flex-wrap' : 'flex-nowrap shrink-0'"
-      @keydown="onKeydown"
-    >
-      <button
-        v-for="(preset, i) in presets"
-        :key="preset"
-        ref="presetButtons"
-        type="button"
-        role="radio"
-        :aria-checked="activePreset === preset ? 'true' : 'false'"
-        :tabindex="activePreset === preset ? 0 : -1"
-        class="flex flex-col items-start rounded px-2 py-1 text-left text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-1"
-        :class="[
-          large ? 'min-h-[44px]' : 'min-h-[32px]',
-          activePreset === preset ? 'bg-gray-900 text-white' : 'text-gray-900 hover:bg-gray-100',
-        ]"
-        @click="select(preset, i)"
+  <!-- Phones (the Filtrai sheet): the tree itself, 48 px rows. -->
+  <HuntingHubTopicsZalaZalaGroupTree
+    v-if="large"
+    :name="`${uid}-m`"
+    large
+    :model-value="grupe"
+    @update:model-value="setGrupe"
+  />
+  <!-- Filter bar, every width: one dropdown chip "Gyvūnai: …" like Sezonas and Vieta (D2). -->
+  <HuntingHubTopicsVilkaiChipPopover
+    v-else
+    :name="groupDim.label"
+    :value="chipValue(labelOf(grupe))"
+    :title="groupDim.label"
+    :active="grupe !== 'visos'"
+    :padded="false"
+    shrinkable
+    initial-focus="input:checked"
+    panel-class="w-[22rem]"
+  >
+    <template #default="{ close }">
+      <div
+        @pointerdown="byPointer = true"
+        @keydown.enter.prevent="close()"
+        @change="onChange(close)"
       >
-        <span class="font-medium">{{ PRESET_LABELS[preset] }}</span>
-        <span
-          v-if="PRESET_SUBLABELS[preset]"
-          class="text-xs"
-          :class="activePreset === preset ? 'text-gray-100' : 'text-gray-700'"
-        >
-          {{ PRESET_SUBLABELS[preset] }}
-        </span>
-      </button>
-    </div>
-
-    <!-- Single groups of the active preset: toggle chips (pressed = only this group). -->
-    <div
-      v-if="activePreset !== 'visos'"
-      class="flex gap-1"
-      :class="large ? 'flex-wrap' : 'flex-nowrap shrink-0'"
-      role="group"
-      :aria-label="`${PRESET_LABELS[activePreset]}: grupė`"
-    >
-      <button
-        v-for="group in PRESETS[activePreset]"
-        :key="group"
-        type="button"
-        :aria-pressed="grupe === group ? 'true' : 'false'"
-        class="inline-flex items-center rounded-full border px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-1"
-        :class="[
-          large ? 'min-h-[44px]' : 'min-h-[28px]',
-          grupe === group
-            ? 'border-gray-900 bg-gray-900 text-white'
-            : 'border-gray-400 bg-white text-gray-900 hover:bg-gray-100',
-        ]"
-        @click="toggleGroup(group)"
-      >
-        {{ GROUP_LABELS[group] }}
-      </button>
-    </div>
-  </div>
+        <HuntingHubTopicsZalaZalaGroupTree
+          :name="uid"
+          :model-value="grupe"
+          @update:model-value="setGrupe"
+        />
+      </div>
+    </template>
+  </HuntingHubTopicsVilkaiChipPopover>
 </template>
 
 <script setup lang="ts">
-// Žala presets (SPEC2 §6.5): Visi · Plėšrūnai · Kanopiniai, stumbrai, bebrai, with chips for
-// the single groups of the active preset. Writes `grupe` through the hub state.
-import { computed, inject, ref } from 'vue';
+// Žala "Gyvūnai" filter (decision D2): one dimension, one control, one selected state. The
+// chip opens the radio tree; a choice applies at once (a click also closes the popover,
+// arrow keys keep it open, Enter and Esc close it). Writes `grupe` through the hub state;
+// the URL values do not change.
+import { getCurrentInstance, inject, computed, ref } from 'vue';
 import { HUB_CTX } from '@/composables/hunting/hub/context';
+import { chipValue } from '@/utils/hunting/hub/strings';
 import type { DamageGroup } from '@/utils/hunting/hub/types';
 import {
   GROUP_LABELS,
-  PRESETS,
   PRESET_LABELS,
-  PRESET_SUBLABELS,
   groupDim,
   grupeOf,
-  presetOf,
+  type Grupe,
   type Preset,
 } from '@/utils/hunting/hub/topics/zala';
 
 defineProps({
-  large: { type: Boolean, default: false }, // mobile: 44 px targets
+  large: { type: Boolean, default: false }, // the phone Filtrai sheet
 });
 
 const ctx = inject(HUB_CTX)!;
-const presets = Object.keys(PRESETS) as Preset[];
-const presetButtons = ref<HTMLButtonElement[]>([]);
+const uid = `hub-zala-grupe-${getCurrentInstance()?.uid ?? 0}`;
 
 const grupe = computed(() => grupeOf(ctx.sel.value));
-const activePreset = computed(() => presetOf(grupe.value));
+const labelOf = (g: Grupe) =>
+  g in PRESET_LABELS ? PRESET_LABELS[g as Preset] : GROUP_LABELS[g as DamageGroup];
 
 function setGrupe(value: string) {
+  if (value === grupe.value) return;
   ctx.setDim(groupDim.key, value === 'visos' ? null : value);
 }
 
-function select(preset: Preset, index?: number) {
-  if (preset !== activePreset.value || grupe.value !== preset) setGrupe(preset);
-  if (index !== undefined) presetButtons.value[index]?.focus();
-}
-
-// Pressing the active chip again returns to its preset.
-function toggleGroup(group: DamageGroup) {
-  setGrupe(grupe.value === group ? activePreset.value : group);
-}
-
-// Radio group keyboard: arrows and Home/End move and select.
-function onKeydown(event: KeyboardEvent) {
-  const i = presets.indexOf(activePreset.value);
-  let next = -1;
-  if (event.key === 'ArrowRight' || event.key === 'ArrowDown') next = (i + 1) % presets.length;
-  else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp')
-    next = (i - 1 + presets.length) % presets.length;
-  else if (event.key === 'Home') next = 0;
-  else if (event.key === 'End') next = presets.length - 1;
-  if (next < 0) return;
-  event.preventDefault();
-  select(presets[next], next);
+// A click on a row (a native radio `change`) closes the popover; arrow keys do not.
+const byPointer = ref(false);
+function onChange(close: () => void) {
+  if (byPointer.value) close();
+  byPointer.value = false;
 }
 </script>

@@ -9,7 +9,7 @@
       <div
         role="search"
         :aria-label="SS.filtersLabel"
-        class="absolute inset-x-0 z-40 flex h-12 items-center gap-2 border-b border-gray-200 bg-white px-2"
+        class="absolute inset-x-0 z-40 flex h-14 items-center gap-2 border-b border-line bg-white px-[var(--hub-gutter,16px)]"
         :class="embed ? 'top-0' : 'top-14'"
       >
         <StebFilters />
@@ -48,7 +48,7 @@
         v-if="!railed"
         id="hub-panel"
         aria-labelledby="hub-title"
-        class="absolute bottom-2 left-2 top-[calc(var(--hub-top)+8px)] z-30 w-[var(--hub-panel-w)] overflow-y-auto rounded-lg bg-white shadow-lg"
+        class="absolute bottom-2 left-[var(--hub-panel-left)] top-[calc(var(--hub-top)+8px)] z-30 w-[var(--hub-panel-w)] overflow-y-auto rounded-lg bg-white shadow-lg"
       >
         <div class="p-4">
           <StebPanel />
@@ -108,19 +108,26 @@
       <div
         role="search"
         :aria-label="SS.filtersLabel"
-        class="absolute inset-x-0 z-30 flex h-[52px] items-center gap-2 bg-white px-3 py-1 shadow-md"
+        class="absolute inset-x-0 z-30 flex h-[60px] min-w-0 items-center gap-2 bg-white px-4 py-2 shadow-md"
         :class="embed ? 'top-0' : 'top-14'"
       >
         <StebFilters mobile />
       </div>
       <StebSheet ref="sheet" />
+      <!-- Phone legend above the collapsed sheet (DATAVIZ-01). -->
+      <div
+        v-if="!tableOpen"
+        class="absolute left-3 z-20 bottom-[calc(var(--hub-mobile-peek,96px)+8px)]"
+      >
+        <StebLegend phone />
+      </div>
     </template>
 
     <!-- Loading pill over the map. -->
     <div
       v-if="loadingPill"
       class="pointer-events-none absolute right-0 z-20 flex justify-center"
-      :class="isMobile ? 'left-0' : 'left-[calc(var(--hub-panel-w)+16px)]'"
+      :class="isMobile ? 'left-0' : 'left-[var(--hub-content-left)]'"
       :style="{ top: `${pillTop}px` }"
     >
       <p role="status" class="rounded-full bg-white px-4 py-2 text-sm text-gray-900 shadow">
@@ -158,7 +165,7 @@ import {
   useStebState,
   type StebContext,
 } from '@/composables/hunting/hub/stebejimai/useStebState';
-import { formatInt, todayVilnius } from '@/utils/hunting/dates';
+import { formatDateTime, formatInt, todayVilnius } from '@/utils/hunting/dates';
 import {
   hubCssVars,
   hubTop,
@@ -187,9 +194,9 @@ const isMobile: Ref<boolean> = hub ? hub.isMobile : useMediaQuery('(max-width: 7
 const { width } = useWindowSize();
 
 const focusRing =
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';
+  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
 const viewButton = `px-3 min-h-[32px] rounded-md text-sm font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${focusRing}`;
-const viewButtonActive = 'bg-gray-900 text-white';
+const viewButtonActive = 'bg-brand text-white';
 const viewButtonIdle = 'text-gray-900 hover:bg-white';
 
 // The shell renders only the production gate on maps.biip.lt; never start requests there.
@@ -238,13 +245,16 @@ const railCount = computed(() =>
 const railLabel = computed(() =>
   ctx?.derived.ready.value ? SS.railLabel(ctx.derived.filtered.value.length) : '',
 );
+// Embedded, the table's content ends at the site container's right edge (D3), clear of the
+// site's accessibility button: the right gutter minus the rows' own 16 px padding.
+const EMBED_DRAWER_RIGHT = 'pr-[calc(var(--hub-gutter,24px)-16px)]';
 const drawerClass = computed(() =>
   railed.value
     ? 'absolute right-0 top-[var(--hub-top)] bottom-0 w-[var(--hub-drawer-w)] z-30 bg-white shadow-lg flex flex-col'
-    : 'absolute right-0 top-[var(--hub-top)] bottom-0 left-[calc(var(--hub-panel-w)+16px)] z-30 bg-white shadow-lg flex flex-col',
+    : `absolute right-0 top-[var(--hub-top)] bottom-0 left-[var(--hub-content-left)] z-30 bg-white shadow-lg flex flex-col${embed ? ` ${EMBED_DRAWER_RIGHT}` : ''}`,
 );
 const legendLeft = computed(() =>
-  railed.value ? 'left-[64px]' : 'left-[calc(var(--hub-panel-w)+16px)]',
+  railed.value ? 'left-[64px]' : 'left-[var(--hub-content-left)]',
 );
 const loadingPill = computed(
   () => !!ctx && !ctx.derived.ready.value && ctx.data.phase.value !== 'error' && !replacesMap.value,
@@ -321,7 +331,15 @@ const liveControls: EmbedLiveControls = {
   table: computed(() =>
     ctx && hasTable.value && ctx.state.tableOpen.value ? ctx.state.table.value : null,
   ),
-  provenance: computed(() => ({ kind: 'live' as const, asOf: null })),
+  provenance: computed(() => {
+    const at = ctx?.data.fetchedAt.value;
+    const ready = ctx?.data.phase.value === 'ready';
+    return {
+      kind: 'live' as const,
+      asOf: null,
+      text: at && ready ? SS.provenance(formatDateTime(at)) : undefined,
+    };
+  }),
 };
 
 onMounted(() => {
@@ -365,30 +383,20 @@ defineExpose({ openAbout, railed });
 </script>
 
 <style>
-/* UiMap's own controls: below the bars (embedded: 48 px; the hub sets --hub-top /
+/* UiMap's own controls: below the bars (embedded: 56 px; the hub sets --hub-top /
    --hub-mobile-header), right of the panel or rail, left of the drawer, above the mobile
    sheet. Same offsets as the Vilkai host's rules. */
 body.hub-steb--desktop #mapControlsRT {
-  transform: translateY(var(--hub-top, 104px));
+  transform: translateY(var(--hub-top, 112px));
 }
 body.hub-steb--desktop .bottomLeft {
-  transform: translateX(336px);
-}
-@media (min-width: 1024px) {
-  body.hub-steb--desktop .bottomLeft {
-    transform: translateX(376px);
-  }
-}
-@media (min-width: 1280px) {
-  body.hub-steb--desktop .bottomLeft {
-    transform: translateX(396px);
-  }
+  transform: translateX(calc(var(--hub-content-left, 396px) - 8px));
 }
 body.hub-steb--railed .bottomLeft {
   transform: translateX(64px);
 }
 body.hub-steb--railed #mapControlsRT {
-  transform: translate(-560px, var(--hub-top, 104px));
+  transform: translate(-560px, var(--hub-top, 112px));
 }
 body.hub-steb--railed .rightBottom {
   transform: translateX(-560px);
@@ -396,9 +404,12 @@ body.hub-steb--railed .rightBottom {
 body.hub-steb--mobile #mapControlsRT {
   transform: translateY(var(--hub-mobile-header, 108px));
 }
-body.hub-steb--mobile .bottomLeft,
 body.hub-steb--mobile .rightBottom {
   transform: translateY(calc(-1 * var(--hub-steb-sheet, 0px)));
+}
+/* The scale line above the phone legend. */
+body.hub-steb--mobile .bottomLeft {
+  transform: translateY(calc(-1 * (var(--hub-steb-sheet, 0px) + 56px)));
 }
 /* 44 px touch targets on phones. */
 body.hub-steb--mobile .ol-control button,

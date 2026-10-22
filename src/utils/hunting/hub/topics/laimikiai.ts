@@ -32,8 +32,11 @@ import type {
 import {
   DASH,
   NONE,
+  NOTE_NO_MPV,
+  NOTE_POOLED,
   asOfSeason,
   csvName,
+  DELTA_MIN,
   delta,
   deltaAria,
   deltaPhrase,
@@ -343,7 +346,8 @@ function kpis(c: Ctx, muni: Municipality | null): KpiDef[] {
   const subject = c.sp ? '' : ` ${plural(agg.n, P_ANIMAL)}`;
   list.push(
     kpi('hunted', 'Sumedžiota', formatInt(agg.n), {
-      sub: c.prev === null ? undefined : d ? `${d.text} nei ${prevLabel}` : DASH,
+      // No sub-line when the Δ is not available; the ⓘ says why (J-23).
+      sub: c.prev !== null && d ? `${d.text} nei ${prevLabel}` : undefined,
       tooltip: d ? deltaTooltip(c, d, muni) : c.prev === null ? undefined : S.deltaSuppressed,
       ariaLabel:
         `Sumedžiota ${formatInt(agg.n)}${subject}` +
@@ -380,7 +384,7 @@ function kpis(c: Ctx, muni: Municipality | null): KpiDef[] {
   } else {
     list.push(
       kpi('dead', 'Rasta kritusių', formatInt(agg.dead), {
-        sub: `iš jų prie kelių ${formatInt(agg.road)}`,
+        sub: `${formatInt(agg.road)} iš jų – prie kelių`,
         ariaLabel: `Rasta kritusių ${formatInt(agg.dead)}, iš jų prie kelių ${formatInt(agg.road)}`,
       }),
     );
@@ -408,7 +412,7 @@ function chart(c: Ctx, muni: Municipality | null): ChartDef | undefined {
     const seasons = c.prevIdx && c.prev !== null && !c.current ? [c.prev, c.season] : [c.season];
     const bars = seasons.map((s) => {
       const n = cellOf(seasonIndex(c.rows, s), code, c.sp!.id).n;
-      return { label: seasonLabel(s), value: n, valueLabel: formatInt(n) };
+      return { label: seasonLabel(s), value: n, valueLabel: formatInt(n), current: s === c.season };
     });
     return { kind: 'columns', title: `${c.sp.name}: sumedžiota pagal sezonus`, bars };
   }
@@ -416,12 +420,14 @@ function chart(c: Ctx, muni: Municipality | null): ChartDef | undefined {
   if (!list.length) return undefined;
   const top = list.slice(0, TOP_BARS);
   const rest = sum(list.slice(TOP_BARS).map((x) => x.agg.n));
-  const bars = top.map((x) => ({
+  const bars: ChartDef['bars'] = top.map((x) => ({
     label: x.sp.name,
     value: x.agg.n,
     valueLabel: formatInt(x.agg.n),
   }));
-  if (rest > 0) bars.push({ label: OTHER_SPECIES, value: rest, valueLabel: formatInt(rest) });
+  if (rest > 0) {
+    bars.push({ label: OTHER_SPECIES, value: rest, valueLabel: formatInt(rest), other: true });
+  }
   return {
     kind: 'hbar',
     title: `${c.current ? 'Užregistruota el. žurnale' : 'Sumedžiota'} pagal rūšis · ${seasonLabel(c.season)}`,
@@ -467,7 +473,7 @@ function map(c: Ctx): ChoroplethDef | MapMessageDef {
     kind: 'choropleth',
     values,
     breaks: fixed.breaks,
-    palette: 'green',
+    palette: 'teal',
     special: [{ key: 'pooled', label: S.legendPooled, fill: 'dotted', codes: pooled }],
     legendTitle: T.legend(fixed.unit, c.season),
     format: (v: number) => `${formatDec(v)} ${T.perUnitShort(fixed.unit)}`,
@@ -508,6 +514,10 @@ interface MuniRow {
 
 const intOrNone = (v: number | null) => (v === null ? DASH : formatInt(v));
 
+// "2025/2026", or "2026/2027 (iki 2026-10-09)" while the season runs.
+const seasonTitle = (c: Ctx) =>
+  c.current ? `${seasonLabel(c.season)} (iki ${c.meta.snapshotDate})` : seasonLabel(c.season);
+
 function speciesTable(c: Ctx, muni: Municipality | null): TableDef<SpeciesRow> {
   const code = muni?.code ?? null;
   const inconsistent = deadInconsistent(c.rows, c.season);
@@ -546,6 +556,7 @@ function speciesTable(c: Ctx, muni: Municipality | null): TableDef<SpeciesRow> {
       id: 'delta',
       label: `Pokytis${prevLabel}`,
       numeric: true,
+      unit: '%',
       value: (r) => (r.delta ? Math.round(r.delta.pct * 10) / 10 : null),
       display: (r) => (r.delta ? r.delta.text : DASH),
       tooltip: S.deltaSuppressed,
@@ -592,6 +603,7 @@ function speciesTable(c: Ctx, muni: Municipality | null): TableDef<SpeciesRow> {
       id: 'app',
       label: 'Iš el. žurnalo, %',
       numeric: true,
+      unit: '%',
       value: (r) => (r.appPct === null ? null : Math.round(r.appPct * 1000) / 10),
       display: (r) => (r.appPct === null ? DASH : formatPct(r.appPct)),
     },
@@ -610,10 +622,26 @@ function speciesTable(c: Ctx, muni: Municipality | null): TableDef<SpeciesRow> {
     .filter((s) => s <= c.season && deadInconsistent(c.rows, s))
     .sort((a, b) => a - b);
   footnotes.push(T.deadNote(bad));
+  // The dash, where it appears: not split by sex and age, or a change too small to compare.
+  const all = [totals, ...rows];
+  const dashes: string[] = [];
+  if (all.some((r) => r.m === null || r.f === null || r.j === null)) {
+    dashes.push(
+      'stulpeliuose „Patinai“, „Patelės“, „Jaunikliai“ – šios rūšies laimikis pagal lytį ir amžių neskirstomas',
+    );
+  }
+  if (columns.some((col) => col.id === 'delta') && all.some((r) => !r.delta)) {
+    dashes.push(
+      `stulpelyje „Pokytis“ – ${S.deltaSuppressed.charAt(0).toLowerCase()}${S.deltaSuppressed.slice(1, -1)} (mažiau nei ${DELTA_MIN})`,
+    );
+  }
+  if (dashes.length) footnotes.unshift(`${DASH} ${dashes.join('; ')}.`);
 
+  const place = muni ? muni.name : 'Lietuva';
   return {
     id: 'rusys',
     label: 'Rūšys',
+    title: `${c.current ? 'Užregistruota el. žurnale' : 'Sumedžiota'} pagal rūšis · ${place} · ${seasonTitle(c)}`,
     columns,
     rows,
     totals,
@@ -691,20 +719,31 @@ function municipalityTable(c: Ctx): TableDef<MuniRow> {
       id: 'delta',
       label: 'Pokytis, %',
       numeric: true,
+      unit: '%',
       value: (r) => (r.delta ? Math.round(r.delta.pct * 10) / 10 : null),
       display: (r) => (r.noMpv || r.pooled ? NONE : r.delta ? r.delta.text : DASH),
       tooltip: S.deltaSuppressed,
     },
   ];
   const pooled = pooledNote(c.meta);
+  const footnotes = pooled ? [ATTRIBUTION_RULE, pooled] : [ATTRIBUTION_RULE];
+  if ([totals, ...rows].some((r) => !r.noMpv && !r.pooled && !r.delta)) {
+    footnotes.unshift(
+      `${DASH} stulpelyje „Pokytis“ – ${S.deltaSuppressed.charAt(0).toLowerCase()}${S.deltaSuppressed.slice(1)}`,
+    );
+  }
   return {
     id: 'vietoves',
     label: 'Savivaldybės',
+    title: `${c.sp ? `${c.sp.name}: sumedžiota` : 'Sumedžiota'} pagal savivaldybes · ${seasonTitle(c)}`,
     columns,
     rows,
     totals,
-    footnotes: pooled ? [ATTRIBUTION_RULE, pooled] : [ATTRIBUTION_RULE],
+    footnotes,
     rowSav: (r) => (r.noMpv ? null : r.code),
+    // Pooled: MPV and their area are published, the figures are not; no MPV: nothing.
+    rowNote: (r) =>
+      r.noMpv ? { text: NOTE_NO_MPV, from: 1 } : r.pooled ? { text: NOTE_POOLED, from: 3 } : null,
     disabled: c.current ? T.currentMuniDisabled(c.season) : undefined,
     csvName: csvName('laimikiai', 'savivaldybes', c.season, null),
   };
@@ -815,18 +854,27 @@ export function overview(data: SnapshotData): OverviewCard {
   const season = defaultSeason(meta);
   const sel: HubSelection = { topic: 'laimikiai', season, sav: null, dims: {}, table: null };
   const c = makeCtx(data, sel);
+  const n = cellOf(c.idx, null, null).n;
+  const d = placeDelta(c, null);
   const card: OverviewCard = {
     topic: 'laimikiai',
     title: TOPIC_TABS.laimikiai,
     question: H1,
+    season,
+    state: seasonState(season, meta),
+    value: formatInt(n),
+    unit:
+      `${plural(n, P_HUNTED)} ${plural(n, P_ANIMAL)}` +
+      (d && c.prev !== null ? ` – ${deltaPhrase(d, c.prev)}` : ''),
     answer: answer(c, null),
-    badge: stateBadge(seasonState(season, meta)),
   };
+  // The running season is a context line that names itself (OVERVIEW-03).
   const running = asOfSeason(meta);
   if (running !== season && seasonState(running, meta) === 'vyksta') {
-    const n = cellOf(seasonIndex(c.rows, running), null, null).n;
-    card.secondary = `Šio sezono el. žurnale iki ${meta.snapshotDate}: ${formatInt(n)}`;
-    card.badge = 'vyksta';
+    const r = cellOf(seasonIndex(c.rows, running), null, null).n;
+    card.lines = [
+      `${seasonLabel(running)} sezonas vyksta: el. žurnale iki ${meta.snapshotDate} užregistruota ${formatInt(r)} (dauguma laimikių pateikiama po sezono).`,
+    ];
   }
   return card;
 }
@@ -871,7 +919,7 @@ export const speciesDim: DimDef = {
     };
     present.sort((a, b) => rank(a.group) - rank(b.group) || b.n - a.n);
     return [
-      { value: ALL_SPECIES, label: 'Visos' },
+      { value: ALL_SPECIES, label: 'Visos rūšys' },
       ...present.map((x) => ({ value: x.sp.slug, label: x.sp.name, group: x.group })),
     ];
   },
@@ -881,7 +929,7 @@ export const speciesDim: DimDef = {
 export const about = {
   source: [
     'BĮIP medžioklės žurnalas: MPV naudotojų sezono ataskaitos ir elektroninis medžioklės žurnalas.',
-    'Duomenys – momentinė kopija (data nurodyta apačioje); ištrinti įrašai neįtraukti.',
+    'Duomenys – BĮIP duomenų kopija; jos data nurodyta eilutėje „Duomenys … būklei“. Ištrinti įrašai neįtraukti.',
   ],
   meaning: [
     'Sumedžiota – visi MPV naudotojų ataskaitose ir el. žurnale nurodyti sumedžioti gyvūnai, įskaitant sumedžiotus sužeistus ar sergančius gyvūnus. Rasti kritę gyvūnai skaičiuojami atskirai. Tankis – sumedžiota per 1 000 ha medžioklės plotų vienetų ploto.',

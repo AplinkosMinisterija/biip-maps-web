@@ -1,6 +1,6 @@
 <template>
   <header
-    class="absolute inset-x-0 top-0 z-40 flex flex-col gap-1 bg-white px-3 pb-2 shadow-md"
+    class="absolute inset-x-0 top-0 z-40 flex flex-col gap-1 bg-white px-4 pb-2 shadow-md"
     :class="{ 'pt-2': ctx.embed }"
     :style="{ maxHeight: `${mobileHeader(ctx.embed)}px` }"
   >
@@ -23,7 +23,9 @@
       </div>
     </div>
 
-    <div role="search" aria-label="Filtrai" class="flex items-center gap-2 overflow-x-auto">
+    <!-- One row, never scrolling sideways (CONTROLS-07): the season chip keeps its width, the
+         place chip takes the rest (truncated), "Filtrai" stays visible at the end. -->
+    <div role="search" aria-label="Filtrai" class="flex min-w-0 items-center gap-2">
       <!-- Element-rooted: Vue 3.5.29 mis-patches a v-if'd async component that is still
            loading (a quick topic switch; insertBefore error, vuejs/core#15551). -->
       <div v-if="topicKind === 'overview'" class="contents">
@@ -32,20 +34,24 @@
       <template v-else-if="topicKind === 'snapshot'">
         <HuntingHubShellSeasonSheet />
         <HuntingHubShellPlacePicker mobile />
-        <button
+        <HuntingHubShellFilterChip
           v-if="hasDims"
-          type="button"
-          :aria-label="S.filtersChip(activeDims)"
-          class="flex h-11 shrink-0 items-center gap-1 rounded-full border border-gray-900 bg-white px-4 text-base font-medium text-gray-900"
-          :class="focusRing"
+          class="shrink-0"
+          touch
+          :value="S.filters"
+          :badge="activeDims"
+          :active="activeDims > 0"
+          :chevron="false"
+          :sr-label="S.filtersChip(activeDims)"
+          aria-haspopup="dialog"
           @click="$emit('filters')"
-        >
-          <UiIcon name="filter" :size="18" aria-hidden="true" />
-          <span v-if="activeDims" aria-hidden="true">{{ activeDims }}</span>
-        </button>
+        />
       </template>
       <!-- Live topics (Vilkai) teleport their own chips here. -->
-      <div :id="HUB_SLOTS.mobileChips" class="flex min-w-0 items-center gap-2" />
+      <div
+        :id="HUB_SLOTS.mobileChips"
+        class="flex min-w-0 flex-1 items-center gap-2 empty:hidden"
+      />
     </div>
   </header>
 </template>
@@ -55,7 +61,8 @@ import { computed, inject } from 'vue';
 import { HUB_CTX } from '@/composables/hunting/hub/context';
 import { S } from '@/utils/hunting/hub/strings';
 import { mobileHeader } from '@/utils/hunting/hub/layout';
-import { focusRing, HUB_SLOTS } from './shell';
+import { HUB_SLOTS } from './shell';
+import { ICON_BTN, ICON_BTN_TOUCH } from './controls';
 import { useShare } from './useShare';
 import { useActiveDimCount, useDimChips } from './useDimChips';
 
@@ -70,5 +77,5 @@ const chips = useDimChips(ctx);
 const hasDims = computed(() => chips.value.length > 0);
 const activeDims = useActiveDimCount(ctx);
 
-const iconButton = `w-11 h-11 flex items-center justify-center rounded text-gray-800 hover:bg-gray-100 ${focusRing}`;
+const iconButton = `${ICON_BTN} ${ICON_BTN_TOUCH}`;
 </script>

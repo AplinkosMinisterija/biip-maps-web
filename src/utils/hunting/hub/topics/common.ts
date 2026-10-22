@@ -71,8 +71,19 @@ export const formatPct = (ratio: number, digits: 0 | 1 = 0) =>
 export const plural = (n: number, forms: PluralForms) => pluralLt(n, forms);
 export const MINUS = '−';
 export const NBSP = String.fromCharCode(160); // between a number and '%', after '≥'
-export const DASH = '—'; // value unknown or suppressed
+// One glyph for "nėra / netaikoma": the en dash (U+2013), in tables, tiles and CSV notes
+// alike (DATAVIZ-18); each table defines it in a footnote where it appears.
+export const DASH = '–'; // value unknown, not split or suppressed
 export const NONE = '–'; // not applicable (no MPV)
+// A withheld damages count in a numeric table column ("neskelbiama" in text).
+export const WITHHELD_MARK = 'x';
+
+// Rows without figures of their own (DATAVIZ-10): one note over the value columns.
+export const NOTE_POOLED = 'Neskelbiama (mažiau nei 3 MPV)';
+export const NOTE_NO_MPV = 'Nėra MPV';
+// Footnotes of the glyphs, added where a table shows them.
+export const FOOTNOTE_WITHHELD = `${WITHHELD_MARK} („neskelbiama“) – skaičius paslėptas, kad iš sumų nebūtų galima apskaičiuoti mažesnių nei 3 skaičių.`;
+export const FOOTNOTE_PCT_DIGITS = 'Procentai pateikti vieno skaitmens po kablelio tikslumu.';
 
 // Share a / b with the numerator and denominator spelled out (§5 "Percentages").
 export function shareText(a: number, b: number, digits: 0 | 1 = 0) {

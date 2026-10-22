@@ -1,98 +1,88 @@
 <template>
-  <div class="flex flex-col gap-3 text-sm text-gray-900">
+  <div class="flex flex-col gap-3 text-sm text-ink">
     <div class="overflow-x-auto max-w-full">
-      <table class="min-w-full border-collapse text-left text-sm">
+      <table :class="TABLE">
         <caption class="sr-only">
           {{
             `Sumedžioti vilkai pagal savivaldybes: ${periodLabel}`
           }}
         </caption>
         <thead>
-          <tr class="border-b border-gray-200 text-xs text-gray-600">
-            <th
-              scope="col"
-              :class="[stickyClass, 'py-2 pr-2 font-semibold bg-white']"
-              :aria-sort="ariaSort('name')"
-            >
-              <button type="button" :class="sortButtonClass" @click="toggleSort('name')">
-                Savivaldybė <span aria-hidden="true">{{ sortArrow('name') }}</span>
+          <tr>
+            <th scope="col" :class="[TH, STICKY_FIRST, 'z-30 pl-0']" :aria-sort="ariaSort('name')">
+              <button type="button" :class="SORT_BTN" @click="toggleSort('name')">
+                <span :class="sortKey === 'name' ? SORT_LABEL_ON : ''">Savivaldybė</span>
+                <span
+                  aria-hidden="true"
+                  :class="[SORT_ICON, sortKey === 'name' ? SORT_ICON_ON : SORT_ICON_IDLE]"
+                  v-text="sortArrow('name')"
+                />
               </button>
             </th>
-            <th
-              scope="col"
-              class="py-2 px-1 font-semibold text-right"
-              :aria-sort="ariaSort('count')"
-            >
-              <button type="button" :class="sortButtonClass" @click="toggleSort('count')">
-                Vilkų <span aria-hidden="true">{{ sortArrow('count') }}</span>
+            <th scope="col" :class="[TH, NUM]" :aria-sort="ariaSort('count')">
+              <button type="button" :class="[SORT_BTN, 'justify-end']" @click="toggleSort('count')">
+                <span
+                  aria-hidden="true"
+                  :class="[SORT_ICON, sortKey === 'count' ? SORT_ICON_ON : SORT_ICON_IDLE]"
+                  v-text="sortArrow('count')"
+                />
+                <span :class="sortKey === 'count' ? SORT_LABEL_ON : ''">Vilkai</span>
               </button>
             </th>
-            <th scope="col" class="py-2 px-1 font-semibold text-right">Suaugę</th>
-            <th scope="col" class="py-2 px-1 font-semibold text-right">Jaunikliai</th>
-            <th scope="col" class="py-2 px-1 font-semibold text-right">Patinai</th>
-            <th scope="col" class="py-2 px-1 font-semibold text-right">Patelės</th>
-            <th scope="col" class="py-2 pl-1 font-semibold text-right">Paskutinis</th>
+            <th scope="col" :class="[TH, NUM]">Suaugę</th>
+            <th scope="col" :class="[TH, NUM]">Jaunikliai</th>
+            <th scope="col" :class="[TH, NUM]">Patinai</th>
+            <th scope="col" :class="[TH, NUM]">Patelės</th>
+            <th scope="col" :class="[TH, NUM, 'pr-0']">Paskutinis</th>
           </tr>
         </thead>
         <tbody>
-          <tr
-            v-for="row in visibleRows"
-            :key="row.code ?? 'none'"
-            class="border-b border-gray-100"
-            :class="row.code !== null && row.code === state.sav.value ? 'bg-blue-50' : ''"
-          >
+          <!-- Totals first (as every hub table): the national figures. -->
+          <tr>
+            <th scope="row" :class="[TOTALS_CELL, STICKY_FIRST, 'pl-0']">Iš viso Lietuvoje</th>
+            <td :class="[TOTALS_CELL, NUM]">{{ formatInt(totals.count) }}</td>
+            <td :class="[TOTALS_CELL, NUM]">{{ formatInt(totals.adults) }}</td>
+            <td :class="[TOTALS_CELL, NUM]">{{ formatInt(totals.juniors) }}</td>
+            <td :class="[TOTALS_CELL, NUM]">{{ formatInt(totals.males) }}</td>
+            <td :class="[TOTALS_CELL, NUM]">{{ formatInt(totals.females) }}</td>
+            <td :class="[TOTALS_CELL, NUM, 'pr-0']">{{ totals.lastDay || DASH }}</td>
+          </tr>
+          <tr v-for="row in visibleRows" :key="row.code ?? 'none'" :class="TR">
             <th
               scope="row"
               :class="[
-                stickyClass,
-                'py-1 pr-2 font-normal',
-                row.code !== null && row.code === state.sav.value ? 'bg-blue-50' : 'bg-white',
+                TD,
+                STICKY_FIRST,
+                'pl-0 font-normal',
+                row.code !== null && row.code === state.sav.value ? TD_SELECTED : TD_BG,
               ]"
             >
               <button
                 v-if="row.code !== null"
                 type="button"
-                :class="cellButtonClass"
+                :class="ROW_ACTION"
                 :aria-pressed="row.code === state.sav.value"
                 :aria-label="`${row.name}: ${row.count}. Rodyti šią savivaldybę.`"
                 @click="selectMunicipality(row.code)"
               >
-                {{ row.name }}
+                <span>{{ row.name }}</span>
+                <UiIcon name="pin" :size="16" :class="ROW_ACTION_PIN" aria-hidden="true" />
               </button>
-              <span v-else class="text-gray-700">{{ row.name }}</span>
+              <span v-else class="text-ink-muted">{{ row.name }}</span>
             </th>
-            <td class="py-1 px-1 text-right tabular-nums font-semibold">
-              {{ formatInt(row.count) }}
+            <td v-for="key in VALUE_KEYS" :key="key" :class="[TD, NUM, cellBg(row)]">
+              {{ formatInt(row[key]) }}
             </td>
-            <td class="py-1 px-1 text-right tabular-nums">{{ formatInt(row.adults) }}</td>
-            <td class="py-1 px-1 text-right tabular-nums">{{ formatInt(row.juniors) }}</td>
-            <td class="py-1 px-1 text-right tabular-nums">{{ formatInt(row.males) }}</td>
-            <td class="py-1 px-1 text-right tabular-nums">{{ formatInt(row.females) }}</td>
-            <td class="py-1 pl-1 text-right tabular-nums whitespace-nowrap">
-              {{ row.lastDay || '—' }}
-            </td>
+            <td :class="[TD, NUM, 'pr-0', cellBg(row)]">{{ row.lastDay || DASH }}</td>
           </tr>
         </tbody>
-        <tfoot>
-          <tr class="border-t-2 border-gray-300 font-semibold">
-            <th scope="row" :class="[stickyClass, 'py-2 pr-2 bg-white']">Iš viso Lietuvoje</th>
-            <td class="py-2 px-1 text-right tabular-nums">{{ formatInt(totals.count) }}</td>
-            <td class="py-2 px-1 text-right tabular-nums">{{ formatInt(totals.adults) }}</td>
-            <td class="py-2 px-1 text-right tabular-nums">{{ formatInt(totals.juniors) }}</td>
-            <td class="py-2 px-1 text-right tabular-nums">{{ formatInt(totals.males) }}</td>
-            <td class="py-2 px-1 text-right tabular-nums">{{ formatInt(totals.females) }}</td>
-            <td class="py-2 pl-1 text-right tabular-nums whitespace-nowrap">
-              {{ totals.lastDay || '—' }}
-            </td>
-          </tr>
-        </tfoot>
       </table>
     </div>
 
     <button
       v-if="zeroCount > 0"
       type="button"
-      class="self-start min-h-[44px] md:min-h-[24px] rounded px-2 text-sm font-semibold text-blue-800 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+      :class="[BTN_TEXT, BTN_TEXT_TOUCH, 'self-start md:min-h-[32px]']"
       :aria-expanded="showZero"
       @click="showZero = !showZero"
     >
@@ -103,12 +93,14 @@
       }}
     </button>
 
-    <p v-if="selectedName" class="text-xs text-gray-700">
-      Lentelėje rodomos visos savivaldybės; pasirinkta „{{ selectedName }}“ paryškinta.
-    </p>
-    <p class="text-xs text-gray-600">
-      Savivaldybė nustatyta pagal sumedžiojimo vietą; prie ribų galimas nedidelis netikslumas.
-    </p>
+    <ul :class="FOOTNOTES">
+      <li v-if="selectedName">
+        Lentelėje rodomos visos savivaldybės; pasirinkta „{{ selectedName }}“ paryškinta.
+      </li>
+      <li>
+        Savivaldybė nustatyta pagal sumedžiojimo vietą; prie ribų galimas nedidelis netikslumas.
+      </li>
+    </ul>
   </div>
 </template>
 
@@ -118,8 +110,30 @@ import { WOLVES_CTX } from '@/composables/hunting/context';
 import { loadMunicipalityIndex, type MunicipalityIndex } from '@/utils/hunting/municipalities';
 import { formatInt } from '@/utils/hunting/dates';
 import { countByMunicipality, filterRecords, type MunicipalityCount } from '@/utils/hunting/wolves';
+import { DASH } from '@/utils/hunting/hub/topics/common';
+import { BTN_TEXT, BTN_TEXT_TOUCH } from '@/components/hunting/hub/shell/controls';
+import {
+  FOOTNOTES,
+  NUM,
+  ROW_ACTION,
+  ROW_ACTION_PIN,
+  SORT_BTN,
+  SORT_ICON,
+  SORT_ICON_IDLE,
+  SORT_ICON_ON,
+  SORT_LABEL_ON,
+  STICKY_FIRST,
+  TABLE,
+  TD,
+  TD_BG,
+  TD_SELECTED,
+  TH,
+  TOTALS_CELL,
+  TR,
+} from '@/components/hunting/hub/table/spec';
 
 type Row = Omit<MunicipalityCount, 'lastDay'> & { lastDay: string | null };
+const VALUE_KEYS = ['count', 'adults', 'juniors', 'males', 'females'] as const;
 
 const emptyRow = (code: number | null, name: string): Row => ({
   code,
@@ -227,7 +241,9 @@ function toggleSort(key: 'count' | 'name') {
 const ariaSort = (key: 'count' | 'name') =>
   sortKey.value === key ? (sortDir.value === 'asc' ? 'ascending' : 'descending') : 'none';
 const sortArrow = (key: 'count' | 'name') =>
-  sortKey.value === key ? (sortDir.value === 'asc' ? '▲' : '▼') : '';
+  sortKey.value === key ? (sortDir.value === 'asc' ? '▲' : '▼') : '↕';
+const cellBg = (row: Row) =>
+  row.code !== null && row.code === state.sav.value ? TD_SELECTED : TD_BG;
 
 function selectMunicipality(code: number) {
   const next = state.sav.value === code ? null : code;
@@ -238,10 +254,4 @@ function selectMunicipality(code: number) {
     mapLayers.zoomToExtent(info.extent3857, { animate: !reduceMotion, maxZoom: 12 });
   }
 }
-
-const stickyClass = 'sticky left-0 z-10 text-left';
-const sortButtonClass =
-  'inline-flex items-center gap-1 min-h-[24px] max-md:min-h-[44px] rounded font-semibold hover:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';
-const cellButtonClass =
-  'min-h-[24px] max-md:min-h-[44px] rounded text-left text-blue-800 underline decoration-dotted underline-offset-2 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';
 </script>

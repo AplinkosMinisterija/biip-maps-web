@@ -3,7 +3,7 @@
     {{ provenance.text }} ·
     <button
       type="button"
-      class="font-semibold text-blue-800 underline rounded"
+      class="font-semibold text-brand underline rounded"
       :class="[focusRing, large ? 'inline-flex items-center min-h-[44px]' : '']"
       @click="ctx.openAbout()"
     >

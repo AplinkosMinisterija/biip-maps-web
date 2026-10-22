@@ -4,19 +4,17 @@
     <label
       v-for="o in options"
       :key="o.season"
-      class="flex cursor-pointer items-center gap-2 rounded-md px-2 hover:bg-gray-50"
-      :class="large ? 'min-h-[48px] text-base' : 'min-h-[36px] text-sm'"
+      :class="[OPTION, large ? OPTION_TOUCH : '', o.season === modelValue ? OPTION_SELECTED : '']"
     >
       <input
         type="radio"
         :name="name"
         :value="o.season"
         :checked="o.season === modelValue"
-        class="h-4 w-4 accent-gray-900"
-        :class="focusRing"
+        :class="CHECK"
         @change="emit('update:modelValue', o.season)"
       />
-      <span class="font-semibold text-gray-900">{{ o.label }}</span>
+      <span class="font-semibold">{{ o.label }}</span>
       <HuntingHubShellStateBadge v-if="o.badge" :badge="o.badge" />
     </label>
   </fieldset>
@@ -25,7 +23,7 @@
 <script setup lang="ts">
 import { ref, type PropType } from 'vue';
 import { S } from '@/utils/hunting/hub/strings';
-import { focusRing } from './shell';
+import { CHECK, OPTION, OPTION_SELECTED, OPTION_TOUCH } from './controls';
 import type { SeasonOption } from './useSeasonOptions';
 
 const props = defineProps({

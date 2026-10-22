@@ -2,20 +2,21 @@
   <aside
     v-if="card && sav !== null"
     :aria-labelledby="titleId"
-    class="bg-white rounded-lg shadow-lg w-[360px] max-w-full p-4 text-sm text-gray-900 flex flex-col gap-3"
+    class="bg-white rounded-lg shadow-lg w-[360px] max-w-full p-4 text-sm text-ink flex flex-col gap-3"
+    @keydown.esc.stop="close"
   >
     <div class="flex items-start justify-between gap-2">
       <h2
         :id="titleId"
         ref="titleEl"
         tabindex="-1"
-        class="text-base font-semibold leading-6 outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2 rounded"
+        class="text-base font-semibold leading-6 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand rounded"
       >
         {{ card.title }}
       </h2>
       <button
         type="button"
-        class="shrink-0 min-h-[24px] min-w-[24px] max-md:min-h-[44px] max-md:min-w-[44px] px-2 rounded text-gray-700 hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+        class="shrink-0 min-h-[24px] min-w-[24px] max-md:min-h-[44px] max-md:min-w-[44px] px-2 rounded text-ink-muted hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
         :aria-label="`${S.close}: ${card.title}`"
         @click="close"
       >
@@ -30,14 +31,14 @@
     </ul>
 
     <template v-if="card.other">
-      <hr class="border-gray-200" />
+      <hr class="border-line" />
       <HuntingHubMapOtherTopicsRows :sav="sav" :topics="topics" />
     </template>
 
     <div v-if="hasTables" class="flex justify-end">
       <button
         type="button"
-        class="inline-flex items-center gap-1 min-h-[32px] max-md:min-h-[44px] rounded-lg border border-gray-300 bg-white px-3 text-sm font-semibold text-gray-900 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+        class="inline-flex items-center gap-1 min-h-[32px] max-md:min-h-[44px] rounded-lg border border-line-strong bg-white px-3 text-sm font-semibold text-ink hover:bg-page focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
         @click="showInTable"
       >
         <UiIcon name="document" :size="16" aria-hidden="true" />
@@ -54,7 +55,8 @@ import { S } from '@/utils/hunting/hub/strings';
 import type { CardDef, TopicDef } from '@/utils/hunting/hub/types';
 
 // Municipality card of a snapshot topic (SPEC2 §6.3–6.6): the topic's `view.card(sav)` lines,
-// "Kiti rodikliai čia", "Rodyti lentelėje" and ✕ (clears `sav`). The shell positions it:
+// "Kiti šios savivaldybės rodikliai", "Rodyti lentelėje" and ✕ or Esc (clears `sav`; the
+// shell returns focus on `close`). The shell positions it:
 // bottom right on desktop, in place of the sheet content on phones.
 const props = defineProps({
   // Topic registry, passed through to "Kiti rodikliai čia".

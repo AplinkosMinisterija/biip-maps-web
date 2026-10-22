@@ -26,7 +26,8 @@ export interface EmbedLiveControls {
   setTableOpen(open: boolean, table?: string): void;
   hasTable: Ref<boolean>;
   table: Ref<string | null>;
-  provenance: Ref<{ kind: 'snapshot' | 'live'; asOf: string | null }>;
+  // `text`: the exact provenance line for the WP header (D12a), when known.
+  provenance: Ref<{ kind: 'snapshot' | 'live'; asOf: string | null; text?: string }>;
 }
 
 // How the About dialog was opened: `onClose(byUser)` runs once when it closes; byUser is

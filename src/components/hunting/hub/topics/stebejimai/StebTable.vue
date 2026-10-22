@@ -6,16 +6,20 @@
     :class="sheet ? 'flex flex-col' : drawerClass"
     @keydown.esc.stop="!sheet && close()"
   >
-    <div class="flex items-center justify-between gap-2" :class="sheet ? 'pb-2' : 'px-4 pb-2 pt-4'">
-      <h2 :id="`${uid}-title`" :class="sheet ? 'sr-only' : 'text-base font-semibold'">
-        {{ SS.tableTitle }}
+    <!-- Title row: what, when and where; standalone also "Uždaryti". -->
+    <div class="flex items-start justify-between gap-3" :class="sheet ? 'pb-2' : 'px-4 pb-2 pt-4'">
+      <h2
+        :id="`${uid}-title`"
+        class="font-bold text-ink"
+        :class="sheet ? 'text-[15px] leading-5' : 'text-base leading-[22px]'"
+      >
+        {{ title }}
       </h2>
       <!-- Embedded, the WP page's view switch closes the table; Esc still does. -->
       <button
         v-if="!sheet && !ctx.embed"
         type="button"
-        class="inline-flex min-h-[32px] items-center gap-1 rounded px-2 text-sm font-semibold text-gray-800 hover:bg-gray-100"
-        :class="focusRing"
+        :class="[BTN_TEXT, 'shrink-0 text-ink']"
         :aria-controls="TABLE_ID"
         @click="close"
       >
@@ -24,33 +28,44 @@
       </button>
     </div>
 
+    <!-- Pill sub-tabs left, the CSV right (clear of the site's accessibility button). -->
     <div
-      role="tablist"
-      :aria-label="SS.tablesLabel"
-      class="flex gap-1 overflow-x-auto border-b border-gray-200"
+      class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2"
       :class="sheet ? '' : 'px-4'"
     >
-      <button
-        v-for="tab in tabs"
-        :id="tabId(tab.id)"
-        :key="tab.id"
-        :ref="(el) => setTabRef(tab.id, el)"
-        type="button"
-        role="tab"
-        :aria-selected="active === tab.id"
-        :aria-controls="panelId(tab.id)"
-        :tabindex="active === tab.id ? 0 : -1"
-        class="-mb-px min-h-[44px] whitespace-nowrap border-b-2 px-3 text-sm font-semibold md:min-h-[36px]"
-        :class="[
-          focusRing,
-          active === tab.id
-            ? 'border-blue-700 text-blue-800'
-            : 'border-transparent text-gray-600 hover:text-gray-900',
-        ]"
-        @click="selectTab(tab.id)"
-        @keydown="onTabKeydown"
+      <div
+        role="tablist"
+        :aria-label="SS.tablesLabel"
+        class="flex min-w-0 gap-1 overflow-x-auto p-0.5"
       >
-        {{ tab.label }}
+        <button
+          v-for="tab in tabs"
+          :id="tabId(tab.id)"
+          :key="tab.id"
+          :ref="(el) => setTabRef(tab.id, el)"
+          type="button"
+          role="tab"
+          :aria-selected="active === tab.id"
+          :aria-controls="panelId(tab.id)"
+          :tabindex="active === tab.id ? 0 : -1"
+          :class="[PILL_TAB, 'whitespace-nowrap max-md:h-11', active === tab.id ? PILL_TAB_ON : '']"
+          @click="selectTab(tab.id)"
+          @keydown="onTabKeydown"
+        >
+          {{ tab.label }}
+        </button>
+      </div>
+      <button
+        type="button"
+        :class="[
+          BTN_SECONDARY,
+          'shrink-0 whitespace-nowrap disabled:cursor-not-allowed max-md:h-11',
+        ]"
+        :disabled="!ctx.derived.ready.value"
+        @click="downloadCurrent"
+      >
+        <UiIcon name="download" :size="16" aria-hidden="true" />
+        {{ S.csv }}
       </button>
     </div>
 
@@ -61,13 +76,13 @@
         role="tabpanel"
         :aria-labelledby="tabId(active)"
         tabindex="0"
-        class="flex flex-col gap-3 rounded text-sm text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700"
+        :class="[FOCUS_RING, 'flex flex-col gap-3 rounded text-sm text-ink']"
       >
-        <p v-if="loading" role="status" class="text-gray-700">{{ SS.loading }}</p>
-        <p v-else-if="!ctx.derived.records.value.length" class="text-gray-700">
+        <p v-if="loading" role="status" class="text-ink-muted">{{ SS.loading }}</p>
+        <p v-else-if="!ctx.derived.records.value.length" class="text-ink-muted">
           {{ SS.tableEmpty }}
         </p>
-        <p v-else-if="!rows.length" class="text-gray-700">{{ SS.tableFilteredEmpty }}</p>
+        <p v-else-if="!rows.length" class="text-ink-muted">{{ SS.tableFilteredEmpty }}</p>
 
         <!-- Įrašai: cards where the table would not fit (by the panel's own width), else a
              sortable table. -->
@@ -76,120 +91,124 @@
             <li
               v-for="r in pageRows"
               :key="r.key"
-              class="rounded-lg border border-gray-200 bg-white px-3 py-2"
+              class="rounded-lg border border-line bg-white p-3"
             >
-              <p class="font-semibold tabular-nums">
+              <!-- The title is the "show on map" action; every public field below. -->
+              <button
+                v-if="r.x !== null"
+                type="button"
+                :class="cardTitleButton"
+                :aria-label="showLabel(r)"
+                @click="showRecord(r)"
+              >
+                <span>{{ dateTimeText(r) }} · {{ r.species || NOT_SET_LABEL }}</span>
+                <UiIcon name="chevron-right" :size="16" class="shrink-0" aria-hidden="true" />
+              </button>
+              <p v-else class="text-[15px] font-semibold leading-5 tabular-nums">
                 {{ dateTimeText(r) }} · {{ r.species || NOT_SET_LABEL }}
+                <span class="font-normal text-ink-muted">· {{ SS.noPlace }}</span>
               </p>
-              <p>{{ SS.colCount }}: {{ countText(r) }}</p>
-              <p>{{ SS.colFact }}: {{ factText(r) }}</p>
-              <p>{{ SS.colMunicipality }}: {{ r.municipality || NOT_SET_LABEL }}</p>
-              <p>{{ SS.colEldership }}: {{ r.eldership || NOT_SET_LABEL }}</p>
-              <p>{{ SS.cardMpv }}: {{ r.huntingArea || NOT_SET_LABEL }}</p>
-              <div class="mt-2 flex flex-wrap items-center gap-3">
-                <button
-                  v-if="r.x !== null"
-                  type="button"
-                  :class="actionButton"
-                  :aria-label="showLabel(r)"
-                  @click="showRecord(r)"
-                >
-                  <UiIcon name="pin" :size="16" aria-hidden="true" />
-                  {{ SS.showOnMap }}
-                </button>
-                <span v-else class="text-gray-600">{{ SS.noPlace }}</span>
-                <a
-                  v-if="ctx.state.linkOf(r)"
-                  :href="ctx.state.linkOf(r)!"
-                  :target="linkTarget"
-                  :rel="linkRel"
-                  :aria-label="viewLabel(r)"
-                  :class="linkClass"
-                >
-                  {{ SS.view }}
-                </a>
-              </div>
+              <dl class="mt-1 grid grid-cols-[minmax(0,9rem)_minmax(0,1fr)] gap-x-3 gap-y-0.5">
+                <template v-for="field in cardFields(r)" :key="field.label">
+                  <dt class="text-[13px] leading-5 text-ink-muted">{{ field.label }}</dt>
+                  <dd class="leading-5">{{ field.value }}</dd>
+                </template>
+              </dl>
+              <a
+                v-if="ctx.state.linkOf(r)"
+                :href="ctx.state.linkOf(r)!"
+                :target="linkTarget"
+                :rel="linkRel"
+                :aria-label="viewLabel(r)"
+                :class="[INLINE_LINK, 'mt-1 inline-flex min-h-[44px] items-center']"
+              >
+                {{ SS.view }}
+              </a>
             </li>
           </ul>
 
           <div v-else class="overflow-x-auto">
-            <table class="w-full border-collapse text-left text-xs">
+            <table :class="TABLE">
               <caption class="sr-only">
                 {{
                   caption
                 }}
               </caption>
               <thead>
-                <tr class="border-b border-gray-200 text-gray-600">
+                <tr>
                   <th
-                    v-for="col in columns"
+                    v-for="(col, i) in columns"
                     :key="col.key"
                     scope="col"
-                    class="py-2 pr-2 font-semibold"
+                    :class="[TH, i === 0 ? 'pl-0' : '']"
                     :aria-sort="ariaSort(col.key)"
                   >
-                    <button type="button" :class="sortButton" @click="toggleSort(col.key)">
-                      <abbr v-if="col.key === 'mpv'" :title="SS.colMpvTitle">{{ col.label }}</abbr>
-                      <template v-else>{{ col.label }}</template>
-                      <span aria-hidden="true">{{ sortArrow(col.key) }}</span>
+                    <button type="button" :class="SORT_BTN" @click="toggleSort(col.key)">
+                      <abbr v-if="col.key === 'mpv'" :title="SS.colMpvTitle" class="no-underline">
+                        <span :class="sortKey === col.key ? SORT_LABEL_ON : ''">{{
+                          col.label
+                        }}</span>
+                      </abbr>
+                      <span v-else :class="sortKey === col.key ? SORT_LABEL_ON : ''">{{
+                        col.label
+                      }}</span>
+                      <span
+                        aria-hidden="true"
+                        :class="[SORT_ICON, sortKey === col.key ? SORT_ICON_ON : SORT_ICON_IDLE]"
+                        v-text="sortArrow(col.key)"
+                      />
                     </button>
                   </th>
-                  <th scope="col" class="sticky right-0 bg-white py-2 pl-1 font-semibold">
+                  <th scope="col" :class="[TH, 'sticky right-0 z-30 w-12 px-1']">
                     <span class="sr-only">{{ SS.colActions }}</span>
                   </th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="r in pageRows" :key="r.key" class="border-b border-gray-100 align-top">
-                  <td class="whitespace-nowrap py-2 pr-2 tabular-nums">{{ dateTimeText(r) }}</td>
-                  <td class="py-2 pr-2">{{ r.species || NOT_SET_LABEL }}</td>
-                  <td class="py-2 pr-2 tabular-nums">{{ countText(r) }}</td>
-                  <td class="py-2 pr-2">{{ factText(r) }}</td>
-                  <td class="py-2 pr-2">{{ r.municipality || NOT_SET_LABEL }}</td>
-                  <td class="py-2 pr-2">{{ r.eldership || NOT_SET_LABEL }}</td>
-                  <td class="py-2 pr-2">{{ r.huntingArea || NOT_SET_LABEL }}</td>
-                  <td class="sticky right-0 bg-white py-1 pl-1">
-                    <div class="flex items-center gap-1 whitespace-nowrap">
-                      <button
-                        v-if="r.x !== null"
-                        type="button"
-                        class="flex h-8 w-8 items-center justify-center rounded text-blue-800 hover:bg-blue-50"
-                        :class="focusRing"
-                        :aria-label="showLabel(r)"
-                        :title="SS.showOnMap"
-                        @click="showRecord(r)"
-                      >
-                        <UiIcon name="pin" :size="18" aria-hidden="true" />
-                      </button>
-                      <span v-else class="px-1 text-gray-600">{{ SS.noPlace }}</span>
-                      <a
-                        v-if="ctx.state.linkOf(r)"
-                        :href="ctx.state.linkOf(r)!"
-                        :target="linkTarget"
-                        :rel="linkRel"
-                        :aria-label="viewLabel(r)"
-                        :class="linkClass"
-                      >
-                        {{ SS.view }}
-                      </a>
-                    </div>
+                <tr v-for="r in pageRows" :key="r.key" :class="TR">
+                  <td :class="[TD, TD_BG, 'whitespace-nowrap pl-0 tabular-nums']">
+                    {{ dateTimeText(r) }}
+                  </td>
+                  <td :class="[TD, TD_BG]">{{ r.species || NOT_SET_LABEL }}</td>
+                  <td :class="[TD, TD_BG, 'tabular-nums']">{{ countText(r) }}</td>
+                  <td :class="[TD, TD_BG]">{{ factText(r) }}</td>
+                  <td :class="[TD, TD_BG]">{{ r.municipality || NOT_SET_LABEL }}</td>
+                  <td :class="[TD, TD_BG]">{{ r.eldership || NOT_SET_LABEL }}</td>
+                  <td :class="[TD, TD_BG]">{{ mpvName(r.huntingArea) || NOT_SET_LABEL }}</td>
+                  <!-- One 40 px icon button at the row end; the record page link is in the
+                       card the button opens. -->
+                  <td :class="[TD, TD_BG, 'sticky right-0 z-10 px-1 py-0 align-middle']">
+                    <button
+                      v-if="r.x !== null"
+                      type="button"
+                      :class="ROW_ICON_BTN"
+                      :aria-label="showLabel(r)"
+                      :title="SS.showOnMap"
+                      @click="showRecord(r)"
+                    >
+                      <UiIcon name="pin" :size="18" aria-hidden="true" />
+                    </button>
+                    <span v-else class="block whitespace-nowrap px-1 py-2 text-xs text-ink-muted">
+                      {{ SS.noPlace }}
+                    </span>
                   </td>
                 </tr>
               </tbody>
             </table>
           </div>
 
+          <!-- No aria-live: the range is read with the buttons, a live region read it twice. -->
           <div class="flex flex-wrap items-center justify-between gap-2">
-            <p class="text-xs tabular-nums text-gray-700" aria-live="polite">
+            <p class="text-xs tabular-nums text-ink-muted">
               {{ SS.range(rangeFrom, rangeTo, rows.length) }}
             </p>
             <div v-if="pageCount > 1" class="flex gap-2">
-              <button type="button" :class="pagerButton" :disabled="page === 0" @click="page--">
+              <button type="button" :class="PAGER_BTN" :disabled="page === 0" @click="page--">
                 {{ SS.previous }}
               </button>
               <button
                 type="button"
-                :class="pagerButton"
+                :class="PAGER_BTN"
                 :disabled="page >= pageCount - 1"
                 @click="page++"
               >
@@ -199,31 +218,31 @@
           </div>
         </template>
 
-        <!-- Rūšys / Savivaldybės: one row per group, totals at the bottom. -->
+        <!-- Rūšys / Savivaldybės: totals first, one row per group; the name is the action. -->
         <div v-else class="overflow-x-auto">
-          <table class="w-full border-collapse text-left text-sm">
+          <table :class="TABLE">
             <caption class="sr-only">
               {{
                 caption
               }}
             </caption>
             <thead>
-              <tr class="border-b border-gray-200 text-xs text-gray-600">
-                <th scope="col" class="py-2 pr-2 font-semibold">
+              <tr>
+                <th scope="col" :class="[TH, TEXT, 'pl-0']">
                   {{ active === 'rusys' ? SS.colSpecies : SS.colMunicipality }}
                 </th>
-                <th scope="col" class="py-2 pr-2 text-right font-semibold">
-                  {{ SS.colObservations }}
-                </th>
-                <th scope="col" class="py-2 pr-2 text-right font-semibold">{{ SS.colAnimals }}</th>
-                <th scope="col" class="py-2 pl-1">
-                  <span class="sr-only">{{ SS.colActions }}</span>
-                </th>
+                <th scope="col" :class="[TH, NUM]">{{ COL_OBSERVATIONS }}</th>
+                <th scope="col" :class="[TH, NUM]">{{ COL_ANIMALS }}</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="g in groups" :key="g.key" class="border-b border-gray-100">
-                <th scope="row" class="py-2 pr-2 font-normal">
+              <tr>
+                <th scope="row" :class="[TOTALS_CELL, 'pl-0 text-left']">{{ SS.totals }}</th>
+                <td :class="[TOTALS_CELL, NUM]">{{ formatInt(rows.length) }}</td>
+                <td :class="[TOTALS_CELL, NUM]">{{ animalsText(animalsOf(rows)) }}</td>
+              </tr>
+              <tr v-for="g in groups" :key="g.key" :class="TR">
+                <th scope="row" :class="[TD, TD_BG, 'pl-0 font-normal']">
                   <span class="flex items-center gap-2">
                     <span
                       v-if="active === 'rusys'"
@@ -231,50 +250,27 @@
                       :style="{ background: speciesColor(g.key) }"
                       aria-hidden="true"
                     />
-                    {{ g.label }}
+                    <button
+                      v-if="groupAction(g)"
+                      type="button"
+                      :class="ROW_ACTION"
+                      :aria-label="SS.showOnMapOf(g.label)"
+                      :title="SS.showOnMap"
+                      @click="showGroup(g)"
+                    >
+                      <span>{{ g.label }}</span>
+                      <UiIcon name="pin" :size="16" :class="ROW_ACTION_PIN" aria-hidden="true" />
+                    </button>
+                    <span v-else>{{ g.label }}</span>
                   </span>
                 </th>
-                <td class="py-2 pr-2 text-right tabular-nums">{{ formatInt(g.n) }}</td>
-                <td class="py-2 pr-2 text-right tabular-nums">{{ animalsText(g.animals) }}</td>
-                <td class="py-1 pl-1 text-right">
-                  <button
-                    v-if="groupAction(g)"
-                    type="button"
-                    :class="actionButton"
-                    :aria-label="SS.showOnMapOf(g.label)"
-                    @click="showGroup(g)"
-                  >
-                    {{ SS.showOnMap }}
-                  </button>
-                </td>
+                <td :class="[TD, TD_BG, NUM]">{{ formatInt(g.n) }}</td>
+                <td :class="[TD, TD_BG, NUM]">{{ animalsText(g.animals) }}</td>
               </tr>
             </tbody>
-            <tfoot>
-              <tr class="font-semibold">
-                <th scope="row" class="py-2 pr-2 text-left">{{ SS.totals }}</th>
-                <td class="py-2 pr-2 text-right tabular-nums">{{ formatInt(rows.length) }}</td>
-                <td class="py-2 pr-2 text-right tabular-nums">
-                  {{ animalsText(animalsOf(rows)) }}
-                </td>
-                <td />
-              </tr>
-            </tfoot>
           </table>
         </div>
       </div>
-    </div>
-
-    <div class="flex justify-end border-t border-gray-200" :class="sheet ? 'pt-3' : 'px-4 py-3'">
-      <button
-        type="button"
-        class="inline-flex min-h-[44px] items-center gap-2 rounded-md border border-gray-400 bg-white px-3 text-sm font-semibold text-gray-900 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 md:min-h-[32px]"
-        :class="focusRing"
-        :disabled="!ctx.derived.ready.value"
-        @click="downloadCurrent"
-      >
-        <UiIcon name="download" :size="16" aria-hidden="true" />
-        {{ S.csv }}
-      </button>
     </div>
   </component>
 </template>
@@ -310,6 +306,34 @@ import {
 } from '@/utils/hunting/hub/stebejimai/model';
 import { speciesColor } from '@/utils/hunting/hub/stebejimai/layers';
 import { SS } from '@/utils/hunting/hub/stebejimai/strings';
+import {
+  BTN_SECONDARY,
+  BTN_TEXT,
+  FOCUS_RING,
+  INLINE_LINK,
+  PILL_TAB,
+  PILL_TAB_ON,
+} from '@/components/hunting/hub/shell/controls';
+import {
+  NUM,
+  PAGER_BTN,
+  ROW_ACTION,
+  ROW_ACTION_PIN,
+  ROW_ICON_BTN,
+  SORT_BTN,
+  SORT_ICON,
+  SORT_ICON_IDLE,
+  SORT_ICON_ON,
+  SORT_LABEL_ON,
+  TABLE,
+  TD,
+  TD_BG,
+  TEXT,
+  TH,
+  TOTALS_CELL,
+  TR,
+} from '@/components/hunting/hub/table/spec';
+import { mpvName } from '@/components/hunting/hub/table/text';
 
 type SortKey = 'date' | 'species' | 'count' | 'fact' | 'muni' | 'elder' | 'mpv';
 
@@ -340,12 +364,10 @@ const narrow = computed(() =>
   panelWidth.value > 0 ? panelWidth.value < CARDS_BELOW : narrowViewport.value,
 );
 
-const focusRing =
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';
-const sortButton = `inline-flex min-h-[24px] items-center gap-1 rounded font-semibold hover:text-gray-900 ${focusRing}`;
-const pagerButton = `min-h-[44px] md:min-h-[24px] rounded border border-gray-300 bg-white px-3 py-1 text-xs font-semibold text-gray-800 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed ${focusRing}`;
-const actionButton = `inline-flex min-h-[44px] md:min-h-[28px] items-center gap-1 rounded px-1 text-sm font-semibold text-blue-800 underline hover:bg-blue-50 ${focusRing}`;
-const linkClass = `inline-flex min-h-[44px] md:min-h-[28px] items-center rounded px-1 font-semibold text-blue-800 underline ${focusRing}`;
+// Summary table heads in the nominative plural, as the other hub tables (DATAVIZ-11).
+const COL_OBSERVATIONS = 'Stebėjimai';
+const COL_ANIMALS = 'Gyvūnai';
+const cardTitleButton = `-mx-1 -my-2 inline-flex min-h-[44px] w-[calc(100%+0.5rem)] items-center justify-between gap-2 rounded px-1 text-left text-[15px] font-semibold leading-5 text-brand tabular-nums underline-offset-2 hover:underline ${FOCUS_RING}`;
 
 const linkTarget = ctx.embed ? '_top' : '_blank';
 const linkRel = ctx.embed ? undefined : 'noopener';
@@ -388,6 +410,17 @@ const placeCaption = computed(() => {
 const caption = computed(() =>
   SS.caption(TABLE_LABELS[active.value], ctx.derived.periodLabel.value, placeCaption.value),
 );
+// Heading: the topic, then the table, period and place.
+const title = computed(() => `Stebėjimai: ${caption.value}`);
+
+// Every public field of a record for its phone card (the title has date and species).
+const cardFields = (r: StebRecord) => [
+  { label: SS.colCount, value: countText(r) },
+  { label: SS.colFact, value: factText(r) },
+  { label: SS.colMunicipality, value: r.municipality || NOT_SET_LABEL },
+  { label: SS.colEldership, value: r.eldership || NOT_SET_LABEL },
+  { label: SS.cardMpv, value: mpvName(r.huntingArea) || NOT_SET_LABEL },
+];
 
 // ---- Įrašai: sort and pages.
 const columns: { key: SortKey; label: string }[] = [
@@ -452,7 +485,7 @@ function toggleSort(key: SortKey) {
 const ariaSort = (key: SortKey) =>
   sortKey.value === key ? (sortDir.value === 'asc' ? 'ascending' : 'descending') : 'none';
 const sortArrow = (key: SortKey) =>
-  sortKey.value === key ? (sortDir.value === 'asc' ? '▲' : '▼') : '';
+  sortKey.value === key ? (sortDir.value === 'asc' ? '▲' : '▼') : '↕';
 
 const showLabel = (r: StebRecord) =>
   SS.showOnMapOf(`${dateTimeText(r)}, ${r.species || NOT_SET_LABEL}`);

@@ -3,14 +3,24 @@
 // footnotes as '#' lines. Cells go through `csvField` (formula neutralisation, quoting).
 import { CSV_BOM, CSV_EOL, CSV_MIME, CSV_SEPARATOR, csvField, csvSafe } from '@/utils/hunting/csv';
 import { S } from './strings';
+import { FOOTNOTE_PCT_DIGITS } from './topics/common';
 import type { ColumnDef, Provenance, TableDef } from './types';
+
+// "Not applicable" glyphs of the tables: an empty cell in the CSV (J-24).
+const NOT_APPLICABLE = /^[–—-]$/;
 
 export { CSV_MIME };
 
-/** Raw cell value: numbers stay numbers (decimal comma), a null value uses `display` ('<3'). */
+/**
+ * Raw cell value: numbers stay numbers (decimal comma), a null value uses `display` ('<3'),
+ * and a dash ("nėra / netaikoma") is an empty cell, so numeric columns stay numeric.
+ */
 export function csvCell<R>(column: ColumnDef<R>, row: R): string {
   const value = column.value(row);
-  if (value === null || value === undefined) return column.display ? column.display(row) : '';
+  if (value === null || value === undefined) {
+    const text = column.display ? column.display(row) : '';
+    return NOT_APPLICABLE.test(text.trim()) ? '' : text;
+  }
   if (typeof value === 'number') {
     // at most 2 decimals, so float noise never reaches the spreadsheet
     const rounded = Number.isInteger(value) ? value : Math.round(value * 100) / 100;
@@ -34,12 +44,30 @@ export interface TableCsvOptions<R = any> {
 }
 
 export function buildTableCsv<R>(table: TableDef<R>, options: TableCsvOptions<R>) {
-  const columns = table.columns.filter((c) => c.csv !== false);
+  // Original column index of each exported column (a row note's `from` counts all columns).
+  const exported = table.columns.map((c, i) => ({ c, i })).filter((x) => x.c.csv !== false);
+  const columns = exported.map((x) => x.c);
   const comment = (text: string) => `# ${csvSafe(text.replace(/[\r\n]+/g, ' '))}`;
   const lines = [csvProvenanceLine(options.provenance)];
   if (options.title) lines.push(comment(options.title));
-  lines.push(columns.map((c) => csvField(c.label)).join(CSV_SEPARATOR));
-  const row = (r: R) => columns.map((c) => csvField(csvCell(c, r))).join(CSV_SEPARATOR);
+  // Percent columns name their unit (J-24).
+  const head = (c: ColumnDef<R>) =>
+    c.unit === '%' && c.label.indexOf('%') < 0 ? `${c.label}, %` : c.label;
+  lines.push(columns.map((c) => csvField(head(c))).join(CSV_SEPARATOR));
+  // A noted row (pooled, no MPV): the published cells before the note as they are, the note
+  // text in the first spanned column, the other spanned cells empty (as the table shows it).
+  const row = (r: R) => {
+    const note = table.rowNote?.(r) ?? null;
+    let noteDone = false;
+    return exported
+      .map(({ c, i }) => {
+        if (!note || i < note.from) return csvField(csvCell(c, r));
+        if (noteDone) return '';
+        noteDone = true;
+        return csvField(note.text);
+      })
+      .join(CSV_SEPARATOR);
+  };
   if (table.totals) {
     const totals = table.totals;
     const cells = columns.map((c, i) => {
@@ -50,6 +78,7 @@ export function buildTableCsv<R>(table: TableDef<R>, options: TableCsvOptions<R>
   }
   (options.rows || table.rows).forEach((r) => lines.push(row(r)));
   table.footnotes.forEach((note) => lines.push(comment(note)));
+  if (columns.some((c) => c.unit === '%')) lines.push(comment(FOOTNOTE_PCT_DIGITS));
   return CSV_BOM + lines.join(CSV_EOL) + CSV_EOL;
 }
 

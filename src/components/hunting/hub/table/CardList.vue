@@ -1,10 +1,10 @@
 <template>
-  <div class="flex flex-col gap-3 text-sm text-gray-900">
+  <div class="flex flex-col gap-3 text-sm text-ink">
     <div class="flex items-center gap-2">
-      <label :for="selectId" class="text-xs font-semibold text-gray-700">Rikiuoti</label>
+      <label :for="selectId" class="text-[13px] font-semibold text-ink-muted">Rikiuoti</label>
       <select
         :id="selectId"
-        class="min-h-[44px] min-w-0 flex-1 rounded border border-gray-300 bg-white px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700"
+        :class="[FIELD, 'h-11 min-w-0 flex-1 text-sm']"
         :value="sortValue"
         @change="onSortChange(($event.target as HTMLSelectElement).value)"
       >
@@ -21,44 +21,61 @@
     </div>
 
     <ul :aria-label="caption" class="flex flex-col gap-2">
-      <li v-if="table.totals" class="rounded-lg border border-gray-300 bg-gray-50 p-3">
-        <p class="font-semibold">{{ totalsLabel }}</p>
-        <dl class="mt-1 grid grid-cols-[1fr_auto] gap-x-3 gap-y-1">
-          <template v-for="col in valueColumns" :key="col.id">
-            <dt class="text-gray-700">{{ col.label }}</dt>
-            <dd class="text-right tabular-nums font-semibold">
+      <li v-if="table.totals" :class="[cardClass, 'border-line bg-page']">
+        <p class="text-[15px] font-semibold leading-5">{{ totalsLabel }}</p>
+        <dl :class="gridClass">
+          <div v-for="col in valueColumns" :key="col.id" :class="pairClass">
+            <dt :class="dtClass">{{ col.label }}</dt>
+            <dd :class="[ddClass, 'font-semibold']">
               <HuntingHubTableCell :col="col" :row="table.totals" />
             </dd>
-          </template>
+          </div>
         </dl>
       </li>
       <li
         v-for="(row, r) in rows"
         :key="rowKey(row, r)"
-        class="rounded-lg border p-3"
-        :class="isSelected(row) ? 'border-blue-700 bg-blue-50' : 'border-gray-200 bg-white'"
+        :class="[cardClass, isSelected(row) ? 'border-brand bg-brand-50' : 'border-line bg-white']"
       >
-        <p class="font-semibold">{{ firstColumn ? cellText(firstColumn, row) : '' }}</p>
-        <dl class="mt-1 grid grid-cols-[1fr_auto] gap-x-3 gap-y-1">
-          <template v-for="col in valueColumns" :key="col.id">
-            <dt class="text-gray-700">{{ col.label }}</dt>
-            <dd class="text-right tabular-nums"><HuntingHubTableCell :col="col" :row="row" /></dd>
-          </template>
-        </dl>
-        <button
-          v-if="savOf(row) !== null"
-          type="button"
-          class="mt-2 min-h-[44px] rounded px-2 text-sm font-semibold text-blue-800 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
-          :aria-label="`${firstColumn ? cellText(firstColumn, row) : ''}: ${S.showOnMap}`"
-          @click="emit('show-on-map', savOf(row)!)"
-        >
-          {{ S.showOnMap }}
-        </button>
+        <div class="flex items-center justify-between gap-2">
+          <!-- The name is the "show on map" action (one control per card). -->
+          <button
+            v-if="savOf(row) !== null"
+            type="button"
+            :class="titleButtonClass"
+            :aria-pressed="isSelected(row)"
+            :aria-label="`${nameOf(row)}: ${S.showOnMap}`"
+            @click="emit('show-on-map', savOf(row)!)"
+          >
+            <span>{{ nameOf(row) }}</span>
+            <UiIcon name="chevron-right" :size="16" class="shrink-0" aria-hidden="true" />
+          </button>
+          <p v-else class="text-[15px] font-semibold leading-5">{{ nameOf(row) }}</p>
+          <span
+            v-if="summaryOf(row)"
+            class="shrink-0 text-[15px] leading-5 tabular-nums text-ink-muted"
+          >
+            {{ summaryOf(row) }}
+          </span>
+        </div>
+        <template v-if="!summaryOf(row)">
+          <dl v-if="publishedColumns(row).length" :class="gridClass">
+            <div v-for="col in publishedColumns(row)" :key="col.id" :class="pairClass">
+              <dt :class="dtClass">{{ col.label }}</dt>
+              <dd :class="ddClass"><HuntingHubTableCell :col="col" :row="row" /></dd>
+            </div>
+          </dl>
+          <p v-if="noteOf(row)" class="mt-1 text-[13px] leading-[18px] text-ink-muted">
+            {{ noteOf(row)!.text }}
+          </p>
+        </template>
       </li>
-      <li v-if="!rows.length" class="text-gray-700">{{ S.empty }}</li>
+      <li v-if="!rows.length" class="text-ink-muted">{{ S.empty }}</li>
     </ul>
 
-    <ul v-if="table.footnotes.length" class="flex flex-col gap-1 text-xs text-gray-700">
+    <!-- Visible under the cards: "<3", ranges and "x" cannot be explained by a hover title on
+         touch screens. -->
+    <ul v-if="table.footnotes.length" class="flex flex-col gap-1 text-[13px] text-ink-muted">
       <li v-for="(note, i) in table.footnotes" :key="i">{{ note }}</li>
     </ul>
   </div>
@@ -67,13 +84,14 @@
 <script setup lang="ts">
 import { computed, ref, type PropType } from 'vue';
 import { S } from '@/utils/hunting/hub/strings';
-import type { TableDef } from '@/utils/hunting/hub/types';
+import type { ColumnDef, TableDef } from '@/utils/hunting/hub/types';
+import { FIELD, FOCUS_RING } from '../shell/controls';
 import { cellText, sortRows, type SortDir, type SortState } from './sort';
 
-// Mobile (< 600 px) form of a hub table: one card per row with its name and at most four
-// values, in the same order as the desktop table (shared sort state via v-model:sort).
-const MAX_VALUES = 4;
-
+// Phone (< 600 px) form of a hub table: one card per row with its name and every value of
+// the desktop table, in the same order (shared sort state via v-model:sort). The name is the
+// "show on map" action. A row with a note (pooled, no MPV) shows the note instead of the
+// values it does not have; `cardSummary` folds a row into one line ("0 pranešimų").
 const props = defineProps({
   table: { type: Object as PropType<TableDef>, required: true },
   caption: { type: String, required: true },
@@ -84,7 +102,7 @@ const emit = defineEmits(['update:sort', 'show-on-map']);
 
 const selectId = computed(() => `hub-cards-sort-${props.table.id}`);
 
-const localSort = ref<SortState | null>(null);
+const localSort = ref<SortState | null>(props.table.defaultSort ?? null);
 const currentSort = computed(() => (props.sort === undefined ? localSort.value : props.sort));
 const sortValue = computed(() =>
   currentSort.value ? `${currentSort.value.col}:${currentSort.value.dir}` : '',
@@ -101,12 +119,8 @@ function onSortChange(value: string) {
 }
 
 const firstColumn = computed(() => props.table.columns[0]);
-// Name + up to four values; numeric columns first, in the table's column order.
-const valueColumns = computed(() => {
-  const rest = props.table.columns.slice(1);
-  const numeric = rest.filter((c) => c.numeric);
-  return [...numeric, ...rest.filter((c) => !c.numeric)].slice(0, MAX_VALUES);
-});
+// Every value column, in the table's column order.
+const valueColumns = computed(() => props.table.columns.slice(1));
 
 const rows = computed(() => sortRows(props.table, currentSort.value));
 
@@ -117,6 +131,15 @@ const totalsLabel = computed(() => {
   return text && text !== '–' ? text : S.totalsRow;
 });
 
+const nameOf = (row: unknown) => (firstColumn.value ? cellText(firstColumn.value, row) : '');
+const noteOf = (row: unknown) => props.table.rowNote?.(row) ?? null;
+const summaryOf = (row: unknown) => props.table.cardSummary?.(row) ?? null;
+// The values a row has: all of them, or those before its note.
+const publishedColumns = (row: unknown): ColumnDef<any>[] => {
+  const note = noteOf(row);
+  return note ? valueColumns.value.slice(0, Math.max(0, note.from - 1)) : valueColumns.value;
+};
+
 const savOf = (row: unknown) => props.table.rowSav?.(row) ?? null;
 const isSelected = (row: unknown) => {
   const code = savOf(row);
@@ -126,4 +149,11 @@ const rowKey = (row: unknown, index: number) => {
   const code = savOf(row);
   return code !== null ? `sav-${code}` : `row-${index}`;
 };
+
+const cardClass = 'rounded-lg border p-3';
+const gridClass = 'mt-1 grid grid-cols-2 gap-x-4 gap-y-1';
+const pairClass = 'flex min-w-0 items-baseline justify-between gap-2';
+const dtClass = 'min-w-0 text-[13px] leading-[18px] text-ink-muted';
+const ddClass = 'shrink-0 text-right text-[15px] leading-5 tabular-nums text-ink';
+const titleButtonClass = `-mx-1 -my-2 inline-flex min-h-[44px] min-w-0 items-center gap-1 rounded px-1 text-left text-[15px] font-semibold leading-5 text-brand underline-offset-2 hover:underline ${FOCUS_RING}`;
 </script>

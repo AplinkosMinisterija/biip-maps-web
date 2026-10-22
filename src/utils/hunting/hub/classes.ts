@@ -1,19 +1,10 @@
 // Choropleth classes of the hunting data hub (SPEC2 §6.3–§6.5, §8.5). Breaks are fixed
 // per topic and metric (stored in the topic modules), so colours mean the same in every
 // season. Five classes: < b1, b1–b2, b2–b3, b3–b4, ≥ b4.
+import { CHOROPLETH_RAMPS, CHOROPLETH_ZERO_FILL } from './colors';
 import type { ChoroplethDef } from './types';
 
 export type Palette = ChoroplethDef['palette'];
-
-// Light → dark (§8.5); legend shows text labels next to every swatch.
-export const PALETTES: Record<Palette, string[]> = {
-  green: ['#edf8e9', '#bae4b3', '#74c476', '#31a354', '#006d2c'],
-  blue: ['#eff3ff', '#bdd7e7', '#6baed6', '#3182bd', '#08519c'],
-  orange: ['#feedde', '#fdbe85', '#fd8d3c', '#e6550d', '#a63603'],
-};
-export const OUTLINE_COLOR = '#6b7280';
-export const SELECTED_COLOR = '#111827';
-export const ZERO_FILL = '#ffffff';
 
 /** Class index 0…breaks.length of a value: the number of breaks ≤ value. */
 export function classIndex(value: number, breaks: number[]) {
@@ -30,8 +21,8 @@ export function classColor(
   zeroIsWhite = false,
 ): string | null {
   if (value === null || value === undefined || Number.isNaN(value)) return null;
-  if (zeroIsWhite && value === 0) return ZERO_FILL;
-  const colors = PALETTES[palette];
+  if (zeroIsWhite && value === 0) return CHOROPLETH_ZERO_FILL;
+  const colors = CHOROPLETH_RAMPS[palette];
   return colors[Math.min(classIndex(value, breaks), colors.length - 1)];
 }
 

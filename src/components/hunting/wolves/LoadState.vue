@@ -4,7 +4,7 @@
     <div
       v-if="loadingWithoutData"
       role="status"
-      class="absolute z-30 left-1/2 -translate-x-1/2 top-16 md:top-4 max-w-[calc(100%-32px)] flex items-center gap-2 rounded-full bg-white shadow-md px-4 py-2 text-sm text-gray-800"
+      class="absolute z-30 left-1/2 -translate-x-1/2 top-16 md:top-4 max-w-[calc(100%-32px)] flex items-center gap-2 rounded-full bg-white shadow-md px-4 py-2 text-sm text-ink"
     >
       <UiIcon name="spinner" :size="18" aria-hidden="true" />
       <span>{{ pillText }}</span>
@@ -14,9 +14,9 @@
       class="absolute z-20 inset-0 flex items-center justify-center pointer-events-none p-4"
     >
       <div
-        class="pointer-events-auto bg-white rounded-lg shadow-md p-4 max-w-sm flex flex-col gap-2 text-sm text-gray-800 md:ml-[416px]"
+        class="pointer-events-auto bg-white rounded-lg shadow-md p-4 max-w-sm flex flex-col gap-2 text-sm text-ink md:ml-[416px]"
       >
-        <p class="font-semibold text-gray-900">
+        <p class="font-semibold text-ink">
           Pasirinktu laikotarpiu sumedžiotų vilkų su žinoma vieta nėra.
         </p>
         <p v-if="outsideWolfWindow">
@@ -25,7 +25,7 @@
         <button
           v-if="!isDefaultSeason"
           type="button"
-          class="self-start px-4 py-3 md:py-2 rounded bg-blue-50 text-blue-800 text-xs font-semibold hover:bg-blue-100"
+          class="self-start px-4 py-3 md:py-2 rounded bg-brand-50 text-brand text-xs font-semibold hover:bg-brand-100"
           :class="focusRing"
           @click="showDefaultSeason"
         >
@@ -53,24 +53,24 @@
         Bandyti dar kartą
       </button>
     </UiAlert>
-    <div v-else-if="staleError" class="flex flex-wrap items-center gap-2 text-xs text-gray-700">
+    <div v-else-if="staleError" class="flex flex-wrap items-center gap-2 text-xs text-ink-muted">
       <span>Rodomi {{ fetchedAtText }} duomenys; naujesnių gauti nepavyko.</span>
       <button
         type="button"
-        class="px-2 py-1 min-h-[44px] md:min-h-[24px] rounded font-semibold text-blue-800 underline"
+        class="px-2 py-1 min-h-[44px] md:min-h-[24px] rounded font-semibold text-brand underline"
         :class="focusRing"
         @click="data.reload()"
       >
         Bandyti dar kartą
       </button>
     </div>
-    <p v-else-if="refreshing" class="text-xs text-gray-700">
+    <p v-else-if="refreshing" class="text-xs text-ink-muted">
       Rodomi {{ fetchedAtText }} duomenys. Atnaujinama…
     </p>
-    <p v-else-if="showTimestamp && refreshedAt" class="text-xs text-gray-600">
+    <p v-else-if="showTimestamp && refreshedAt" class="text-xs text-ink-muted">
       Duomenys atnaujinti {{ refreshedAt }}
     </p>
-    <p v-else-if="showTimestamp && data.fetchedAt.value" class="text-xs text-gray-600">
+    <p v-else-if="showTimestamp && data.fetchedAt.value" class="text-xs text-ink-muted">
       Duomenys gauti {{ fetchedAtText }}
     </p>
   </template>
@@ -90,7 +90,7 @@ defineProps({
 const ctx = inject(WOLVES_CTX)!;
 const { data, state, derived } = ctx;
 const focusRing =
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';
+  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
 const GENERIC_ERROR = 'Nepavyko įkelti vilkų duomenų. Patikrinkite ryšį arba bandykite vėliau.';
 
 const loading = computed(() => data.phase.value === 'loading' || data.phase.value === 'slow');

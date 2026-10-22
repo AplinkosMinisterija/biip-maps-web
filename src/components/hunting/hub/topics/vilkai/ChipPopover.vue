@@ -1,24 +1,18 @@
 <template>
-  <div ref="rootEl" class="relative" :class="shrinkable ? 'min-w-0 max-w-[320px]' : ''">
-    <button
+  <div ref="rootEl" class="relative" :class="shrinkable ? 'min-w-0 max-w-[22rem]' : 'shrink-0'">
+    <HuntingHubShellFilterChip
       ref="triggerEl"
-      type="button"
+      :name="name"
+      :value="value"
+      :active="active"
+      :open="isOpen"
+      :name-class="nameClass"
+      :sr-label="srLabel"
       aria-haspopup="dialog"
       :aria-expanded="isOpen ? 'true' : 'false'"
-      :aria-controls="panelId"
-      :aria-label="srLabel || undefined"
-      class="inline-flex items-center gap-1 h-9 rounded-full border px-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
-      :class="[
-        shrinkable ? 'max-w-full' : 'max-w-[320px]',
-        active
-          ? 'border-gray-900 bg-gray-900 text-white'
-          : 'border-gray-400 bg-white text-gray-900 hover:bg-gray-100',
-      ]"
+      :aria-controls="isOpen ? panelId : undefined"
       @click="toggle"
-    >
-      <span class="truncate">{{ label }}</span>
-      <span aria-hidden="true" class="text-xs">{{ isOpen ? '▴' : '▾' }}</span>
-    </button>
+    />
 
     <div
       v-if="isOpen"
@@ -26,9 +20,9 @@
       ref="panelEl"
       role="dialog"
       tabindex="-1"
-      :aria-label="title || label"
-      class="absolute left-0 top-full mt-2 z-50 focus:outline-none rounded-lg bg-white shadow-lg border border-gray-200 p-4 max-h-[calc(100vh-128px)] overflow-y-auto"
-      :class="panelClass"
+      :aria-label="title || name"
+      class="absolute left-0 top-full z-50 mt-2 max-h-[calc(100vh-128px)] overflow-y-auto rounded-lg border border-line bg-white shadow-[0_8px_24px_rgba(18,25,38,0.12)] focus:outline-none"
+      :class="[panelClass, padded ? 'p-4' : 'p-2']"
       @keydown="onKeydown"
     >
       <slot :close="close" />
@@ -42,23 +36,31 @@
 import { getCurrentInstance, nextTick, ref } from 'vue';
 import { onClickOutside } from '@vueuse/core';
 
-defineProps({
-  label: { type: String, required: true },
-  // Dialog name when it differs from the chip text.
+const props = defineProps({
+  // Chip text "name: value" (HuntingHubShellFilterChip).
+  name: { type: String, required: true },
+  value: { type: String, required: true },
+  // Dialog name when it differs from the chip name.
   title: { type: String, default: '' },
-  // Dark chip: a non-default value is set.
+  // A non-default value is set (the teal chip).
   active: { type: Boolean, default: false },
   panelClass: { type: String, default: 'w-[360px]' },
+  // 16 px padding for forms; option lists (rows with their own padding) use 8 px.
+  padded: { type: Boolean, default: true },
   // The chip may shrink below its text (truncated with "…") when the filter row is short.
   shrinkable: { type: Boolean, default: false },
+  // Tablets: 'sr-only lg:not-sr-only' hides the name.
+  nameClass: { type: String, default: '' },
   // Accessible name when the visible text is a short form ("Stumbras" for "Rūšis: Stumbras").
   srLabel: { type: String, default: '' },
+  // Selector of the element that gets focus on open (default: the first control).
+  initialFocus: { type: String, default: '' },
 });
 
 const panelId = `hub-vilkai-popover-${getCurrentInstance()?.uid ?? 0}`;
 const isOpen = ref(false);
 const rootEl = ref<HTMLElement | null>(null);
-const triggerEl = ref<HTMLButtonElement | null>(null);
+const triggerEl = ref<{ focus(): void; el: HTMLButtonElement | null } | null>(null);
 const panelEl = ref<HTMLElement | null>(null);
 
 const FOCUSABLE =
@@ -75,7 +77,9 @@ async function open() {
   await nextTick();
   panelEl.value?.focus();
   for (let attempt = 0; attempt < 10 && isOpen.value; attempt++) {
-    const first = focusables()[0];
+    const first =
+      (props.initialFocus && panelEl.value?.querySelector<HTMLElement>(props.initialFocus)) ||
+      focusables()[0];
     if (first) {
       first.focus();
       return;

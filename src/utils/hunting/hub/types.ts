@@ -8,6 +8,8 @@
 //   so a total row can be larger than the sum of its published (non-null) parts.
 // - `MetaStatic` is defined here from SPEC2 §9.3 (the spec references it without a body).
 
+import type { Ramp } from './colors';
+
 export type TopicId = 'apzvalga' | 'vilkai' | 'laimikiai' | 'limitai' | 'zala' | 'stebejimai';
 export type SnapshotFile = 'meta' | 'loots' | 'limits' | 'damages' | 'wolves';
 export type SeasonState = 'vyksta' | 'preliminarus' | 'dalinis' | 'galutinis';
@@ -166,6 +168,10 @@ export interface ChartBar {
   value: number;
   valueLabel: string;
   series?: string;
+  /** The current or selected bar (accent colour). */
+  current?: boolean;
+  /** A residual "other" bar (Kitos rūšys): grey, set apart, always last. */
+  other?: boolean;
 }
 export interface ChartDef {
   kind: 'hbar' | 'columns' | 'stacked';
@@ -180,7 +186,7 @@ export interface ChoroplethDef {
   kind: 'choropleth';
   values: Map<number, number | null>;
   breaks: number[];
-  palette: 'green' | 'blue' | 'orange';
+  palette: Ramp /* utils/hunting/hub/colors.ts */;
   legendTitle: string;
   format(v: number): string;
   labels?: Map<number, string> /* per-municipality value text, when `format` cannot rebuild it */;
@@ -201,17 +207,34 @@ export interface ColumnDef<R> {
   numeric?: boolean;
   value(r: R): string | number | null;
   display?(r: R): string;
+  /** Sort key when `value` is not one ("<3" = 1.5, a range by its middle); default `value`. */
+  sort?(r: R): string | number | null;
+  /** '%': a percent column; the CSV head gets ", %" (J-24). */
+  unit?: '%';
   tooltip?: string;
   csv?: boolean /* default true */;
+}
+/** A row without figures of its own: one note spans the value columns from `from` on. */
+export interface RowNote {
+  text: string;
+  from: number /* index of the first spanned column (≥ 1) */;
 }
 export interface TableDef<R = any> {
   id: string;
   label: string;
+  /** Visible heading: what, where and when ("Sumedžiota pagal rūšis · 2025/2026"). */
+  title?: string;
   columns: ColumnDef<R>[];
   rows: R[];
   totals?: R;
   footnotes: string[];
   rowSav?(r: R): number | null;
+  /** Rows with a note (pooled, no MPV) are kept last, in their own order, whatever the sort. */
+  rowNote?(r: R): RowNote | null;
+  /** Phone cards: one line instead of the values ("0 pranešimų"), or null. */
+  cardSummary?(r: R): string | null;
+  /** Order until the visitor picks another one (null or absent: the rows' own order). */
+  defaultSort?: { col: string; dir: 'asc' | 'desc' };
   disabled?: string;
   csvName: string;
 }
@@ -235,13 +258,22 @@ export interface TopicView {
   empty?: { text: string; actions: MapMessageDef['action'][] };
   card(sav: number): CardDef | null;
 }
+// One Apžvalga card (D8): every card has the same rows, so the same slot means the same thing
+// on every card. Eyebrow (`title`, the tab name) · question (the topic H1) · season row
+// (`season` + a chip for `state` unless final) · headline number (`value` [`outOf`] +
+// `unit`; without `value` the `answer` sentence takes its place) · ≤ 2 context `lines`, each
+// naming its own season when it is another one · `fixedNote` · actions (the shell's).
 export interface OverviewCard {
   topic: TopicId;
   title: string;
   question: string;
-  answer: string;
-  secondary?: string;
-  badge?: Badge;
+  season?: number;
+  state?: SeasonState;
+  value?: string; // "129 485", "19"
+  outOf?: string; // "iš 222"
+  unit?: string; // "sumedžioti gyvūnai – 8,5 % daugiau nei 2024/2025 sezone"
+  answer: string; // the one-sentence answer (also the card's text without a headline number)
+  lines?: string[];
   fixedNote?: string;
 }
 export interface OtherRow {
@@ -280,6 +312,9 @@ export interface TopicDef {
   otherRow?(data: SnapshotData, sav: number): OtherRow | null; // "Kiti rodikliai čia"
   otherRowFiles?: SnapshotFile[]; // files `otherRow` reads, when they differ from `files`
   about: AboutDef;
+  // How a municipality gets its figures (J-09): 'mpv' = the sum of its assigned MPV (the
+  // default, with ATTRIBUTION_RULE in About), 'place' = the place named in the record.
+  attribution?: 'mpv' | 'place';
   // Lines of the About dialog's "Bendros taisyklės" block; when set, they replace the
   // shell's default lines (which speak of municipality sums, without MPV or exact places).
   aboutCommon?: string[];

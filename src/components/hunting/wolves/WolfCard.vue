@@ -12,13 +12,13 @@
         id="wolf-card-title"
         ref="titleEl"
         tabindex="-1"
-        class="text-base font-semibold leading-6 outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2 rounded"
+        class="text-base font-semibold leading-6 outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 rounded"
       >
         Sumedžiotas vilkas
       </h2>
       <button
         type="button"
-        class="shrink-0 min-h-[24px] min-w-[24px] max-md:min-h-[44px] max-md:min-w-[44px] px-2 rounded text-gray-700 hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+        class="shrink-0 min-h-[24px] min-w-[24px] max-md:min-h-[44px] max-md:min-w-[44px] px-2 rounded text-gray-700 hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
         @click="close"
       >
         <span aria-hidden="true">✕</span> Uždaryti
@@ -96,7 +96,7 @@ import { pluralLt as plural } from '@/utils/hunting/dates';
 import { ageLabel, methodLabel, packLabel, sexLabel, sourceLabel } from '@/utils/hunting/labels';
 
 const pagerClass =
-  'min-h-[24px] max-md:min-h-[44px] px-2 py-1 rounded border border-gray-300 text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2';
+  'min-h-[24px] max-md:min-h-[44px] px-2 py-1 rounded border border-gray-300 text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
 
 const ctx = inject(WOLVES_CTX)!;
 const mapApi = inject(WOLVES_MAP_CTX, null);

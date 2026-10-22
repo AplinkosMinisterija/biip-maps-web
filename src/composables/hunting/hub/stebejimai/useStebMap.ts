@@ -14,6 +14,7 @@ import { boundingExtent } from 'ol/extent';
 import { transform } from 'ol/proj';
 import { projection, projection3857, vectorPositron } from '@/utils';
 import type { StebRecord } from '@/utils/hunting/hub/stebejimai/model';
+import { atCountryFit, markCountryFit } from '@/utils/hunting/hub/mapFit';
 import {
   STEB_CLUSTER_LAYER_ID,
   clusterMembers,
@@ -140,6 +141,13 @@ export function useStebMap(ctx: StebContext, options: StebMapOptions): StebMapAp
     });
   }
 
+  // Lithuania into the free map area (the hub's fit).
+  function fitCountry() {
+    if (!map) return;
+    mapLayers.centerMap();
+    markCountryFit(map.getView());
+  }
+
   function focusMap() {
     const el = map?.getTargetElement() as HTMLElement | undefined;
     if (!el) return;
@@ -208,22 +216,25 @@ export function useStebMap(ctx: StebContext, options: StebMapOptions): StebMapAp
     async () => {
       await nextTick();
       if (!map) return;
-      if (ctx.state.sav.value === null) mapLayers.centerMap();
+      if (ctx.state.sav.value === null) fitCountry();
       else fitRecords(ctx.derived.filtered.value, PLACE_FIT_MAX_ZOOM);
     },
   );
 
-  // The view keeps the content in the area the panels leave free.
+  // The view keeps the content in the area the panels leave free; untouched since the
+  // country fit, it fits the country again.
   watch(
     () => options.padding().join(','),
     () => {
       if (!map) return;
+      const view = map.getView();
+      const refit = atCountryFit(view);
       // OL keeps the picture still when the padding changes; re-apply the centre so the
       // content moves into the uncovered area.
-      const view = map.getView();
       const center = view.getCenter();
       view.padding = options.padding();
-      if (center) view.setCenter(center);
+      if (refit) fitCountry();
+      else if (center) view.setCenter(center);
     },
   );
 
@@ -250,7 +261,7 @@ export function useStebMap(ctx: StebContext, options: StebMapOptions): StebMapAp
     const view = map.getView();
     previousPadding = view.padding;
     view.padding = options.padding();
-    if (!route.query.x || !route.query.y) mapLayers.centerMap();
+    if (!route.query.x || !route.query.y) fitCountry();
 
     layers.clusterSource.on('change', onClusterChange);
     updateSelectionRing();

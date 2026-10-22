@@ -1,16 +1,16 @@
 <template>
   <section v-if="rows.length || pending" :aria-labelledby="headingId" class="flex flex-col gap-1">
-    <h3 :id="headingId" class="text-xs font-semibold uppercase tracking-wide text-gray-600">
+    <h3 :id="headingId" class="text-xs font-semibold uppercase tracking-wide text-ink-muted">
       {{ S.otherRowsHeading }}
     </h3>
-    <p v-if="pending && !rows.length" role="status" class="text-xs text-gray-600">
+    <p v-if="pending && !rows.length" role="status" class="text-xs text-ink-muted">
       {{ S.loading }}
     </p>
     <ul class="flex flex-col gap-1">
       <li v-for="row in rows" :key="row.topic">
         <button
           type="button"
-          class="flex w-full items-center justify-between gap-2 min-h-[32px] max-md:min-h-[44px] rounded px-1 py-1 text-left text-sm text-blue-800 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+          class="flex w-full items-center justify-between gap-2 min-h-[32px] max-md:min-h-[44px] rounded px-1 py-1 text-left text-sm text-brand hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
           @click="ctx.setTopic(row.topic)"
         >
           <span>{{ row.text }}</span>

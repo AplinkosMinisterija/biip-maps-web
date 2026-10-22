@@ -4,7 +4,7 @@
 // a cell withheld so that no small count can be worked out is "neskelbiama". Sums of parts that
 // include such cells become ranges.
 // Pure: view(), overview() and otherRow() read only their arguments.
-import { seasonLabel } from '../../dates';
+import { seasonLabel, type PluralForms } from '../../dates';
 import { MONTH_NAMES, MONTH_SHORT } from '../../labels';
 import {
   P_ATTACKED_LIVESTOCK,
@@ -39,7 +39,9 @@ import type {
 } from '../types';
 import {
   DASH,
+  FOOTNOTE_WITHHELD,
   SUPPRESSED_RANGE_TOOLTIP,
+  WITHHELD_MARK,
   ZERO,
   asOfSeason,
   cell,
@@ -94,9 +96,10 @@ export const PRESET_LABELS: Record<Preset, string> = {
   plesrunai: 'Plėšrūnai',
   augalai: 'Kanopiniai, stumbrai, bebrai',
 };
-export const PRESET_SUBLABELS: Partial<Record<Preset, string>> = {
-  plesrunai: 'ūkiniai gyvūnai, bitynai',
-  augalai: 'pasėliai, miškas, melioracija',
+// One help line per preset in the "Gyvūnai" tree (what the damage is to).
+export const PRESET_HELP: Partial<Record<Preset, string>> = {
+  plesrunai: 'Žala ūkiniams gyvūnams ir bitynams',
+  augalai: 'Žala pasėliams, miškui ir melioracijai',
 };
 export const GROUP_LABELS: Record<DamageGroup, string> = {
   kanopiniai: 'Kanopiniai',
@@ -111,10 +114,10 @@ const GROUP_SHORT: Record<DamageGroup, string> = { ...GROUP_LABELS, lokiai: 'Lok
 
 const H1: Record<Grupe, string> = {
   visos: 'Kur laukiniai gyvūnai daro žalą?',
-  plesrunai: 'Kur plėšrūnai puola gyvulius ir bitynus?',
+  plesrunai: 'Kur plėšrūnai puola ūkinius gyvūnus ir bitynus?',
   augalai: 'Kur žvėrys daro žalą pasėliams, miškui ir melioracijai?',
-  vilkai: 'Kur vilkai puola gyvulius?',
-  lusys: 'Kur lūšys puola gyvulius?',
+  vilkai: 'Kur vilkai puola ūkinius gyvūnus?',
+  lusys: 'Kur lūšys puola ūkinius gyvūnus?',
   lokiai: 'Kur rudieji lokiai daro žalą?',
   kanopiniai: 'Kur kanopiniai žvėrys daro žalą?',
   stumbrai: 'Kur stumbrai daro žalą?',
@@ -142,11 +145,11 @@ const SEASON_MONTHS = [4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3];
 
 export const T = {
   fixedNote: 'Tai gyventojų pranešimai, o ne įvertinta žala. Kompensacijos čia neskelbiamos.',
-  fixedNoteShort: 'Tai pranešimai, o ne įvertinta žala.',
+  fixedNoteCard: 'Tai gyventojų pranešimai, o ne įvertinta žala.',
   partialNotice:
     'Pranešimai apie žalą BĮIP renkami nuo 2026 m. sausio – 2025/2026 sezono duomenys daliniai.',
-  escalationLabel: 'Kanopinių ir bebrų žala perduota seniūnijai',
-  escalationLabelShort: 'Perduota seniūnijai',
+  escalationLabel: 'Kanopinių ir bebrų pranešimai, perduoti seniūnijai',
+  escalationLabelShort: 'Perduoti seniūnijai',
   escalationTooltip:
     'Ūkininkas pažymėjo, kad su medžiotojais nepavyko susitarti, ir pranešimas perduotas seniūnijai. Tai ne patikrintas faktas.',
   livestockNote: 'Pranešime nurodytas skaičius; neatskiriama, ar gyvūnas žuvo, ar sužeistas.',
@@ -156,6 +159,8 @@ export const T = {
     'Savivaldybių lygmens duomenys bus paskelbti suderinus su duomenų apsaugos pareigūnu.',
   legend: (season: string) => `Pranešimai apie žalą · ${season} · pagal pranešime nurodytą vietą`,
   placeNote: 'Savivaldybė nustatyta pagal pranešime nurodytą žalos vietą.',
+  topCut: 'kitų savivaldybių tikslūs skaičiai neskelbiami.',
+  rankNote: 'Rikiuojama pagal mažiausią galimą skaičių.',
 };
 
 // ---------------------------------------------------------------------------
@@ -316,9 +321,12 @@ function escalation(c: Ctx, muni: number, g: Grupe) {
 function escalationText(e: { esc: Count; all: Count }) {
   if (e.all.lo === 0 || e.esc.hi === Infinity || e.all.hi === Infinity) return null;
   if (isExact(e.esc) && isExact(e.all)) {
+    const ratio = e.esc.lo / e.all.lo;
     return {
-      pct: formatPct(e.esc.lo / e.all.lo),
+      pct: formatPct(ratio),
       of: `${formatInt(e.esc.lo)} iš ${formatInt(e.all.lo)}`,
+      lo: ratio,
+      hi: ratio,
     };
   }
   const lo = e.esc.lo / e.all.hi;
@@ -327,6 +335,8 @@ function escalationText(e: { esc: Count; all: Count }) {
   return {
     pct: loPct === Math.round(hi * 100) ? formatPct(lo) : `${loPct}–${formatPct(hi)}`,
     of: `${formatCount(e.esc)} iš ${formatCount(e.all)}`,
+    lo,
+    hi,
   };
 }
 
@@ -388,22 +398,83 @@ function answer(c: Ctx, muni: number, g: Grupe, placeName: string | null, withTo
   text += '.';
   if (!placeName && withTop) {
     const top = topPlaces(c, g);
-    if (top) text += ` Daugiausia – ${top}.`;
+    if (top) text += ` ${top}`;
   }
   return placeName ? `${placeName} ${text}` : text;
 }
 
-// "Kėdainių r. sav. (92), …": the three municipalities with the most reports, so the "Kur…?"
-// heading gets places, not only a count. Ranked by the published lower bound, so a withheld
-// count known to be at least 22 is not left out; such a figure is shown as its range.
+const P_MUNI: PluralForms = ['savivaldybė', 'savivaldybės', 'savivaldybių'];
+
+export interface RankedPlace {
+  name: string;
+  n: Count;
+}
+
+/**
+ * The leading places whose rank is certain (J-03): ordered by the lower bound, entry i is
+ * kept only while its lower bound is at least the upper bound of every place not yet named,
+ * and at most `max`; `cut` when a further place could still belong in the list. A count with
+ * a lower bound below 3 is never named.
+ *
+ * Ties at the cut-off: when a place not named could have as many as the last one named, the
+ * whole tie group is named if the list stays at most `tieMax` long; otherwise the list stops
+ * before the group and is `cut`. `tie` then gives the group's exact value and size (null
+ * when its members are ranges).
+ */
+export function certainTop(
+  list: RankedPlace[],
+  max = 3,
+  tieMax = 5,
+): { top: RankedPlace[]; cut: boolean; tie: { value: number; count: number } | null } {
+  const sorted = list
+    .slice()
+    .sort((a, b) => b.n.lo - a.n.lo || a.n.hi - b.n.hi || a.name.localeCompare(b.name, 'lt'));
+  // maxHiAfter[i]: the largest upper bound among sorted[i..].
+  const maxHiAfter: number[] = new Array(sorted.length + 1).fill(0);
+  for (let i = sorted.length - 1; i >= 0; i--) {
+    maxHiAfter[i] = Math.max(sorted[i].n.hi, maxHiAfter[i + 1]);
+  }
+  const certain = (i: number) => sorted[i].n.lo >= 3 && sorted[i].n.lo >= maxHiAfter[i + 1];
+  // After k names, no place left could have as many as the last one named.
+  const clean = (k: number) => sorted[k - 1].n.lo > maxHiAfter[k];
+  let k = 0;
+  while (k < sorted.length && k < max && certain(k)) k++;
+  if (k < max || clean(k)) {
+    // Cut: fewer than `max` named although another place may have 3 or more reports.
+    return { top: sorted.slice(0, k), cut: k < max && maxHiAfter[k] >= 3, tie: null };
+  }
+  // A tie at the cut-off: take in the places that share it, while their rank is certain.
+  let end = k;
+  while (end < sorted.length && end < tieMax && !clean(end) && certain(end)) end++;
+  if (clean(end)) return { top: sorted.slice(0, end), cut: false, tie: null };
+  // Too many (or not provably tied): stop before the group, every place that may reach it.
+  const value = sorted[k - 1].n.lo;
+  const start = sorted.findIndex((x) => x.n.lo <= value);
+  const group = sorted.slice(start).filter((x) => x.n.hi >= value);
+  const exactTie = group.every((x) => x.n.lo === value && x.n.hi === value);
+  return {
+    top: sorted.slice(0, start),
+    cut: true,
+    tie: exactTie ? { value, count: group.length } : null,
+  };
+}
+
+// "Daugiausia – Kėdainių r. sav. (92), …": the municipalities with the most reports, so the
+// "Kur…?" heading gets places, not only a count. Only places whose rank the published
+// (partly suppressed) counts prove are named; none, and the clause is left out.
 function topPlaces(c: Ctx, g: Grupe) {
   if (!ZALA_MUNICIPALITY) return null;
-  const list = c.meta.municipalities
-    .map((m) => ({ name: m.name, n: reports(c, m.code, g) }))
-    .filter((x) => x.n.lo >= 3)
-    .sort((a, b) => b.n.lo - a.n.lo || a.n.hi - b.n.hi || a.name.localeCompare(b.name, 'lt'))
-    .slice(0, 3);
-  return list.length ? list.map((x) => `${x.name} (${formatCount(x.n)})`).join(', ') : null;
+  const { top, cut, tie } = certainTop(
+    c.meta.municipalities.map((m) => ({ name: m.name, n: reports(c, m.code, g) })),
+  );
+  // "dar 6 savivaldybės – po 7": a tie too large to name.
+  const tieText = tie
+    ? `${top.length ? 'dar ' : ''}${formatInt(tie.count)} ${plural(tie.count, P_MUNI)} – po ${formatInt(tie.value)}`
+    : null;
+  if (!top.length) return tieText ? `Daugiausia – ${tieText}.` : null;
+  const list = top.map((x) => `${x.name} (${formatCount(x.n)})`).join(', ');
+  if (tieText) return `Daugiausia – ${list}; ${tieText}.`;
+  return cut ? `Daugiausia – ${list}; ${T.topCut}` : `Daugiausia – ${list}.`;
 }
 
 // ---------------------------------------------------------------------------
@@ -494,12 +565,16 @@ function kpis(c: Ctx, muni: number, g: Grupe): KpiDef[] {
   const e = escalation(c, muni, g);
   if (e && list.length < 3) {
     const t = escalationText(e);
-    const label = g === 'visos' || g === 'augalai' ? T.escalationLabel : T.escalationLabelShort;
+    // Short label; the sub-line names what is counted, so the tile does not wrap (DATAVIZ-07).
+    const label = T.escalationLabelShort;
+    const ofWhat = g === 'visos' || g === 'augalai' ? ` kanopinių ir bebrų ${P_REPORT[2]}` : '';
     list.push(
       kpi('escalated', label, t ? t.pct : DASH, {
-        sub: t ? t.of : undefined,
+        sub: t ? `${t.of}${ofWhat}` : undefined,
         tooltip: t ? T.escalationTooltip : escalationMissingTooltip(e),
-        ariaLabel: t ? `${label}: ${t.pct}, ${t.of}` : `${label}: neskelbiama`,
+        ariaLabel: t
+          ? `${T.escalationLabel}: ${t.pct}, ${t.of}${ofWhat}`
+          : `${T.escalationLabel}: neskelbiama`,
       }),
     );
   }
@@ -550,6 +625,13 @@ function chart(c: Ctx, g: Grupe): ChartDef {
   }
   if (bars.some((b) => b.valueLabel === S.suppressed))
     notes.push(`${S.suppressed}: ${S.suppressedReports}`);
+  // Range and "≥" totals explained next to the chart (DATAVIZ-16).
+  const ranged = Object.values(totals).filter((t) => /[–≥]/.test(t));
+  if (ranged.length) {
+    const why =
+      SUPPRESSED_RANGE_TOOLTIP.charAt(0).toLowerCase() + SUPPRESSED_RANGE_TOOLTIP.slice(1);
+    notes.push(`${ranged.slice(0, 2).join(', ')} ir pan. – ${why}`);
+  }
   return {
     kind: 'stacked',
     title: `Pranešimai pagal mėnesius · Lietuva · ${seasonLabel(c.season)}`,
@@ -566,6 +648,14 @@ function chart(c: Ctx, g: Grupe): ChartDef {
 
 export const BREAKS = [3, 6, 11, 21]; // 0 white · 1–2 · 3–5 · 6–10 · 11–20 · > 20
 
+// Tooltip text with its unit: "59 pranešimai", "<3 pranešimai", "129–133 pranešimai".
+function reportsText(n: Count) {
+  const text = formatCount(n);
+  if (text === S.withheld) return text;
+  const last = isSuppressed(n) ? 2 : n.hi === Infinity ? n.lo : n.hi;
+  return `${text} ${plural(last, P_REPORT)}`;
+}
+
 function map(c: Ctx, g: Grupe): ChoroplethDef | MapMessageDef {
   if (!ZALA_MUNICIPALITY) return { kind: 'message', text: T.municipalityPending };
   const values = new Map<number, number | null>();
@@ -575,14 +665,14 @@ function map(c: Ctx, g: Grupe): ChoroplethDef | MapMessageDef {
     const n = reports(c, m.code, g);
     if (!isExact(n) && !isSuppressed(n)) ranges = true;
     values.set(m.code, countMapValue(n));
-    labels.set(m.code, formatCount(n));
+    labels.set(m.code, reportsText(n));
   });
   const state = seasonState(c.season, c.meta);
   return {
     kind: 'choropleth',
     values,
     breaks: BREAKS,
-    palette: 'orange',
+    palette: 'warm',
     legendTitle: T.legend(seasonWithAsOf(c.season, state, c.meta.snapshotDate)),
     format: formatMapCount,
     labels,
@@ -616,6 +706,8 @@ interface LivestockRow {
   groups: Record<string, Count>;
 }
 
+const isZero = (c: Count) => !c.withheld && c.lo === 0 && c.hi === 0;
+
 const countColumn = <R>(
   id: string,
   label: string,
@@ -627,8 +719,40 @@ const countColumn = <R>(
   numeric: true,
   value: (r) => countValue(get(r)),
   display: (r) => formatCount(get(r)),
+  // "<3" sorts as 1.5, a range by its middle, a withheld cell last (as on the map).
+  sort: (r) => countMapValue(get(r)),
   tooltip,
 });
+
+// Table titles: what, where and when (DATAVIZ-19).
+const seasonTitle = (c: Ctx) =>
+  seasonWithAsOf(c.season, seasonState(c.season, c.meta), c.meta.snapshotDate);
+const grupeTitle = (g: Grupe) =>
+  g === 'visos'
+    ? ''
+    : ` (${(g in PRESETS ? PRESET_LABELS[g as Preset] : GROUP_LABELS[g as DamageGroup]).toLowerCase()})`;
+
+const RANGE = /^\d[\d\s]*–\d|^≥/;
+const PCT_RANGE = /^\d+–\d+/;
+
+// Footnotes for the glyphs a damages table shows ("<3", ranges, "x"), each with an example
+// taken from the table itself (J-12, DATAVIZ-15, DATAVIZ-18).
+function glyphNotes<R>(columns: ColumnDef<R>[], rows: R[]) {
+  const texts: string[] = [];
+  columns
+    .filter((col) => col.numeric && col.display)
+    .forEach((col) => rows.forEach((r) => texts.push(col.display!(r))));
+  const notes: string[] = [];
+  if (texts.indexOf(S.suppressed) >= 0) notes.push(`${S.suppressed} – ${S.suppressedReports}`);
+  const range = texts.find((t) => RANGE.test(t) && !/%$/.test(t));
+  if (range) {
+    notes.push(
+      `${range} – tikslus skaičius neskelbiamas, nes kai kurios jo dalys mažesnės nei 3; rodomas galimas intervalas.`,
+    );
+  }
+  if (texts.indexOf(S.withheld) >= 0) notes.push(FOOTNOTE_WITHHELD);
+  return notes;
+}
 
 function municipalityTable(c: Ctx, g: Grupe): TableDef<MuniRow> {
   // Escalation column: kanopiniai + bebrai only (for the others the letter is automatic).
@@ -649,7 +773,7 @@ function municipalityTable(c: Ctx, g: Grupe): TableDef<MuniRow> {
   const totals = toRow(0, S.totalsRow);
   const columns: ColumnDef<MuniRow>[] = [
     { id: 'name', label: 'Savivaldybė', value: (r) => r.name },
-    countColumn('reports', 'Pranešimai', (r) => r.reports, S.suppressedReports),
+    countColumn('reports', 'Pranešimai', (r) => r.reports, `${S.suppressedReports} ${T.rankNote}`),
     {
       id: 'reporters',
       label: 'Pranešėjai',
@@ -674,24 +798,59 @@ function municipalityTable(c: Ctx, g: Grupe): TableDef<MuniRow> {
       // Short head, so the table fits the drawer; the tooltip names the groups.
       label: 'Perduota seniūnijai, %',
       numeric: true,
-      value: (r) => (r.escalation ? r.escalation.pct : null),
-      display: (r) => (r.escalation ? r.escalation.pct : DASH),
+      unit: '%',
+      // Exact shares as a number (1 decimal), ranges as their text ("33–57").
+      value: (r) => {
+        const e = r.escalation;
+        if (!e) return null;
+        return e.lo === e.hi ? Math.round(e.lo * 1000) / 10 : e.pct.replace(/\s*%$/, '');
+      },
+      display: (r) => r.escalation?.pct ?? DASH,
+      sort: (r) => {
+        const e = r.escalation;
+        return e ? (e.lo + e.hi) / 2 : null;
+      },
       tooltip: `Tik kanopinių ir bebrų pranešimai. ${T.escalationTooltip}`,
     },
   ];
+  const all = [totals, ...rows];
+  const footnotes = glyphNotes(columns, all);
+  const pctRange = all.map((r) => r.escalation?.pct).find((t) => t && PCT_RANGE.test(t));
+  if (pctRange) {
+    footnotes.push(
+      `${pctRange} – tiksli dalis neskelbiama, nes kai kurie skaičiai mažesni nei 3; rodomos galimos dalies ribos, todėl intervalas gali būti platus.`,
+    );
+  }
+  if (all.some((r) => !r.escalation)) {
+    footnotes.push(
+      `${DASH} stulpelyje „Perduota seniūnijai“ – nėra kanopinių ir bebrų pranešimų, iš kurių skaičiuojama dalis, jų mažiau nei 3 arba dalis neskelbiama.`,
+    );
+  }
+  if (g !== 'visos')
+    footnotes.push(
+      `${DASH} stulpelyje „Pranešėjai“ – ${T.reportersGroupOnly.charAt(0).toLowerCase()}${T.reportersGroupOnly.slice(1)}`,
+    );
+  footnotes.push(
+    T.placeNote,
+    'Iš viso – skaičiuojama iš visų pranešimų, todėl gali būti didesnė už paskelbtų dalių sumą.',
+    T.fixedNote,
+  );
   return {
     id: 'savivaldybes',
     label: 'Savivaldybės',
+    title: `Pranešimai apie žalą${grupeTitle(g)} pagal savivaldybes · ${seasonTitle(c)}`,
     columns,
     rows,
     totals,
-    footnotes: [
-      `${S.suppressed} – ${S.suppressedReports}`,
-      T.placeNote,
-      'Iš viso – skaičiuojama iš visų pranešimų, todėl gali būti didesnė už paskelbtų dalių sumą.',
-      T.fixedNote,
-    ],
+    footnotes,
+    // Most reports first, as the answer names them; alphabetical is one click away.
+    defaultSort: { col: 'reports', dir: 'desc' },
     rowSav: (r) => r.code,
+    // Phone cards: a municipality without any report is one line (same numbers, less noise).
+    cardSummary: (r) =>
+      isZero(r.reports) && GROUPS.every((grp) => isZero(r.groups[grp]))
+        ? `0 ${plural(0, P_REPORT)}`
+        : null,
     disabled: ZALA_MUNICIPALITY ? undefined : T.municipalityPending,
     csvName: csvName('zala', 'savivaldybes', c.season, null),
   };
@@ -714,21 +873,23 @@ function monthTable(c: Ctx): TableDef<MonthRow> {
     total: countAt(c, 0, '*', 'reports'),
     groups: totalGroups,
   };
+  const columns: ColumnDef<MonthRow>[] = [
+    { id: 'month', label: 'Mėnuo', value: (r) => r.label },
+    countColumn('total', 'Iš viso', (r) => r.total, SUPPRESSED_RANGE_TOOLTIP),
+    ...GROUPS.map((grp) =>
+      countColumn<MonthRow>(grp, GROUP_SHORT[grp], (r) => r.groups[grp], S.suppressedReports),
+    ),
+  ];
   return {
     id: 'menesiai',
     label: 'Mėnesiai',
-    columns: [
-      { id: 'month', label: 'Mėnuo', value: (r) => r.label },
-      countColumn('total', 'Iš viso', (r) => r.total, SUPPRESSED_RANGE_TOOLTIP),
-      ...GROUPS.map((grp) =>
-        countColumn<MonthRow>(grp, GROUP_SHORT[grp], (r) => r.groups[grp], S.suppressedReports),
-      ),
-    ],
+    title: `Pranešimai apie žalą pagal mėnesius · Lietuva · ${seasonTitle(c)}`,
+    columns,
     rows,
     totals,
     footnotes: [
       'Tik Lietuvos mastu: mėnesių duomenys savivaldybėms neskelbiami.',
-      `${S.suppressed} – ${S.suppressedReports}`,
+      ...glyphNotes(columns, [totals, ...rows]),
     ],
     csvName: csvName('zala', 'menesiai', c.season, null),
   };
@@ -742,22 +903,36 @@ function livestockTable(c: Ctx): TableDef<LivestockRow> {
   }).filter((r) => PREDATORS.some((grp) => r.groups[grp].hi > 0));
   const totalGroups: Record<string, Count> = {};
   PREDATORS.forEach((grp) => (totalGroups[grp] = attackedOf(c, [grp])));
+  const columns: ColumnDef<LivestockRow>[] = [
+    { id: 'cls', label: 'Gyvūnai', value: (r) => r.label },
+    ...PREDATORS.map((grp) =>
+      countColumn<LivestockRow>(grp, GROUP_SHORT[grp], (r) => r.groups[grp], T.livestockNote),
+    ),
+  ];
+  const totals: LivestockRow = { label: S.totalsRow, groups: totalGroups };
+  const texts = [totals, ...rows].flatMap((r) =>
+    PREDATORS.map((grp) => formatCount(r.groups[grp])),
+  );
+  const footnotes = [T.livestockNote, 'Tik Lietuvos mastu.'];
+  if (texts.indexOf(S.suppressed) >= 0) {
+    footnotes.push(`${S.suppressed} – gyvūnų skaičius 1 arba 2, tikslus skaičius neskelbiamas.`);
+  }
+  if (texts.indexOf(S.withheld) >= 0) {
+    footnotes.push(
+      `${WITHHELD_MARK} („${S.withheld}“) – gyvūnai nurodyti mažiau nei 3 pranešimų eilutėse.`,
+    );
+  }
+  if (texts.some((t) => t.indexOf('≥') === 0)) {
+    footnotes.push('≥ – dalis skaičių neskelbiama, rodoma mažiausia galima suma.');
+  }
   return {
     id: 'gyvuliai',
     label: 'Užpulti gyvūnai',
-    columns: [
-      { id: 'cls', label: 'Gyvūnai', value: (r) => r.label },
-      ...PREDATORS.map((grp) =>
-        countColumn<LivestockRow>(grp, GROUP_SHORT[grp], (r) => r.groups[grp], T.livestockNote),
-      ),
-    ],
+    title: `Pranešimuose nurodyti užpulti ūkiniai gyvūnai · Lietuva · ${seasonTitle(c)}`,
+    columns,
     rows,
-    totals: { label: S.totalsRow, groups: totalGroups },
-    footnotes: [
-      T.livestockNote,
-      'Tik Lietuvos mastu.',
-      `„${S.withheld}“ – gyvūnai nurodyti mažiau nei 3 pranešimų eilutėse; „≥“ – dalis skaičių neskelbiama.`,
-    ],
+    totals,
+    footnotes,
     csvName: csvName('zala', 'gyvuliai', c.season, null),
   };
 }
@@ -830,22 +1005,45 @@ export function overview(data: SnapshotData): OverviewCard {
   const meta = data.meta;
   const season = defaultSeason(meta);
   const c = makeCtx(data, season);
+  const state = seasonState(season, meta);
+  const r = reports(c, 0, 'visos');
+  const rep = reporters(c, 0, 'visos');
+  const unknown = r.withheld || r.hi === Infinity;
   const result: OverviewCard = {
     topic: 'zala',
     title: TOPIC_TABS.zala,
     question: H1.visos,
-    answer: answer(c, 0, 'visos', null, false),
-    badge: stateBadge(seasonState(season, meta)),
-    fixedNote: T.fixedNoteShort,
+    season,
+    state,
+    answer: answer(c, 0, 'visos', null),
+    fixedNote: T.fixedNoteCard,
   };
+  if (!unknown) {
+    const by =
+      rep === null && r.hi > 0
+        ? ' iš mažiau nei 3 pranešėjų'
+        : typeof rep === 'number' && rep > 0
+          ? ` iš ${formatInt(rep)} ${plural(rep, P_REPORTER_GEN)}`
+          : '';
+    result.value = formatCount(r);
+    result.unit =
+      `${isExact(r) ? plural(r.lo, P_REPORT) : P_REPORT[2]} apie žalą${by}` +
+      (state === 'vyksta' ? ` (iki ${meta.snapshotDate})` : '');
+  }
+  // The card answers its "Kur…?" question with places (OVERVIEW-19), then the wolves line.
+  const lines: string[] = [];
+  const top = topPlaces(c, 'visos');
+  if (top) lines.push(top);
   const wolves = attackedOf(c, ['vilkai']);
   if (wolves.hi > 0) {
     const n = isExact(wolves) ? wolves.lo : null;
-    result.secondary =
+    lines.push(
       n === null
         ? `Pranešimuose apie vilkų išpuolius nurodyta ${countPhrase(wolves, ['užpulto ūkinio gyvūno', 'užpultų ūkinių gyvūnų', 'užpultų ūkinių gyvūnų'])}.`
-        : `Pranešimuose apie vilkų išpuolius ${plural(n, P_SPECIFIED)} ${formatInt(n)} ${plural(n, P_ATTACKED_LIVESTOCK)}.`;
+        : `Pranešimuose apie vilkų išpuolius ${plural(n, P_SPECIFIED)} ${formatInt(n)} ${plural(n, P_ATTACKED_LIVESTOCK)}.`,
+    );
   }
+  if (lines.length) result.lines = lines;
   return result;
 }
 
@@ -886,7 +1084,7 @@ export const groupDim: DimDef = {
 export const about = {
   source: [
     'Gyventojų pranešimai apie laukinių gyvūnų padarytą žalą (BĮIP, medziokle.biip.lt forma).',
-    'Duomenys – momentinė kopija (data nurodyta apačioje). Data – pranešime nurodyta žalos pastebėjimo data (Lietuvos laiku).',
+    'Duomenys – BĮIP duomenų kopija; jos data nurodyta eilutėje „Duomenys … būklei“. Data – pranešime nurodyta žalos pastebėjimo data (Lietuvos laiku).',
   ],
   meaning: [
     'Skaičiuojami pranešimai, o ne įvertinta žala. Kanopinių žvėrių ir bebrų žalą pirmiausia sprendžia MPV naudotojas; vilkų, lūšių, lokių ir stumbrų – seniūnija ir savivaldybės komisija.',
@@ -912,6 +1110,7 @@ export const zala: TopicDef = {
   defaultSeason: (meta) => defaultSeason(meta),
   dims: [groupDim],
   defaultTable: 'savivaldybes',
+  attribution: 'place',
   view,
   overview: (data) => overview(data),
   otherRow,
