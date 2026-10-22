@@ -190,6 +190,9 @@ export const S = {
       : state === 'vyksta'
         ? `${topic}: rodomas ${season} sezonas – jis dar vyksta, skaičiai keisis.`
         : `${topic}: rodomas ${season} sezonas (${BADGE_LABELS_AFTER_SEASON[state]}).`,
+  // A linked table this selection does not offer (embed, §5.9): the one shown instead.
+  noticeTableFallback: (shown: string) =>
+    `Nuorodoje nurodyta lentelė šiam pasirinkimui neskelbiama – rodoma lentelė „${shown}“.`,
   noticeSeasonMissing: (topic: string, season: string, fallback: string) =>
     `${topic} duomenų už ${season} nėra – rodomas ${fallback} sezonas.`,
 } as const;
