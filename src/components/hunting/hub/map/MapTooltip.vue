@@ -2,7 +2,7 @@
   <div
     v-if="hover"
     aria-hidden="true"
-    class="pointer-events-none absolute z-20 rounded bg-gray-900 px-2 py-1 text-xs font-semibold text-white shadow whitespace-nowrap"
+    class="pointer-events-none absolute z-20 whitespace-nowrap rounded bg-ink px-2 py-1 text-xs font-semibold text-white shadow"
     :style="{ left: `${hover.x + 12}px`, top: `${hover.y + 12}px` }"
   >
     {{ hover.text }}
@@ -13,7 +13,7 @@
 import { computed, inject } from 'vue';
 import { HUB_CHOROPLETH_CTX } from '@/composables/hunting/hub/useChoropleth';
 
-// Desktop hover tooltip "{name} · {value}" (SPEC2 §8.5). Mouse only and aria-hidden:
+// Desktop hover tooltip "{name}: {value with its unit}" (SPEC2 §8.5, DATAVIZ-17). Mouse only and aria-hidden:
 // keyboard and screen reader users get the same values from the place picker and the table.
 // Place it inside the map container's positioned parent (coordinates are map pixels).
 const choropleth = inject(HUB_CHOROPLETH_CTX)!;

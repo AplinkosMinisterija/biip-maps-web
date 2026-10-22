@@ -215,6 +215,14 @@
           </button>
         </p>
       </HuntingWolvesMobileSheet>
+      <!-- Phone legend above the collapsed sheet (DATAVIZ-01); the fallback map uses the
+           shell's choropleth legend. -->
+      <div
+        v-if="!fallback && !tableOpen"
+        class="absolute left-3 z-20 bottom-[calc(var(--hub-vilkai-sheet,176px)+8px)]"
+      >
+        <HuntingWolvesMapLegend phone />
+      </div>
     </template>
 
     <!-- The loading pill and the empty-result card, below the shell's bars. -->
@@ -664,9 +672,12 @@ body.hub-vilkai--railed .rightBottom {
 body.hub-vilkai--mobile #mapControlsRT {
   transform: translateY(var(--hub-mobile-header, 108px));
 }
-body.hub-vilkai--mobile .bottomLeft,
 body.hub-vilkai--mobile .rightBottom {
   transform: translateY(calc(-1 * var(--hub-vilkai-sheet, 0px)));
+}
+/* The scale line above the phone legend. */
+body.hub-vilkai--mobile .bottomLeft {
+  transform: translateY(calc(-1 * (var(--hub-vilkai-sheet, 0px) + 56px)));
 }
 /* 44 px touch targets on phones, as on the wolves page. */
 body.hub-vilkai--mobile .ol-control button,
