@@ -36,7 +36,7 @@
       <div
         role="tablist"
         :aria-label="SS.tablesLabel"
-        class="flex min-w-0 gap-1 overflow-x-auto p-0.5"
+        class="flex min-w-0 gap-1 overflow-x-auto p-0.5 max-md:flex-wrap max-md:overflow-visible"
       >
         <button
           v-for="tab in tabs"

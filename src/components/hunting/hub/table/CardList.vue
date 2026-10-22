@@ -43,7 +43,7 @@
             v-if="savOf(row) !== null"
             type="button"
             :class="titleButtonClass"
-            :aria-pressed="isSelected(row)"
+            :aria-current="isSelected(row) ? 'true' : undefined"
             :aria-label="`${nameOf(row)}: ${S.showOnMap}`"
             @click="emit('show-on-map', savOf(row)!)"
           >

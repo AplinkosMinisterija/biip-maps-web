@@ -43,7 +43,11 @@
       class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2"
       :class="variant === 'drawer' ? 'px-4' : ''"
     >
-      <div role="tablist" aria-label="Lentelės" class="flex min-w-0 gap-1 overflow-x-auto p-0.5">
+      <div
+        role="tablist"
+        aria-label="Lentelės"
+        class="flex min-w-0 gap-1 overflow-x-auto p-0.5 max-md:flex-wrap max-md:overflow-visible"
+      >
         <button
           v-for="tab in tabs"
           :id="tabId(tab.id)"
