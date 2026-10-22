@@ -215,6 +215,7 @@ export function vilkaiFallbackSeasons(data: SnapshotData): number[] {
   return Array.from(seasons).sort((a, b) => b - a);
 }
 
+const P_WOLF: PluralForms = ['vilkas', 'vilkai', 'vilkų'];
 const located = (n: number) => `${formatInt(n)} ${pluralLt(n, P_LOCATED)}`;
 
 /** The generic snapshot panel's content while the live wolves data is unavailable. */
@@ -271,9 +272,9 @@ export function vilkaiFallbackView(data: SnapshotData, sel: HubSelection): Topic
     kind: 'choropleth',
     values,
     breaks: VILKAI_FALLBACK_BREAKS,
-    palette: 'orange',
-    legendTitle: `Sumedžioti vilkai su vieta, ${label}`,
-    format: formatInt,
+    palette: 'warm',
+    legendTitle: `Sumedžioti vilkai su vieta · ${label}`,
+    format: (v: number) => `${formatInt(v)} ${pluralLt(v, P_WOLF)}`,
     hatched: new Set<number>(),
     zeroIsWhite: true,
   };

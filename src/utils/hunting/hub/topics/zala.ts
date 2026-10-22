@@ -494,12 +494,16 @@ function kpis(c: Ctx, muni: number, g: Grupe): KpiDef[] {
   const e = escalation(c, muni, g);
   if (e && list.length < 3) {
     const t = escalationText(e);
-    const label = g === 'visos' || g === 'augalai' ? T.escalationLabel : T.escalationLabelShort;
+    // Short label; the sub-line names what is counted, so the tile does not wrap (DATAVIZ-07).
+    const label = T.escalationLabelShort;
+    const ofWhat = g === 'visos' || g === 'augalai' ? ` kanopinių ir bebrų ${P_REPORT[2]}` : '';
     list.push(
       kpi('escalated', label, t ? t.pct : DASH, {
-        sub: t ? t.of : undefined,
+        sub: t ? `${t.of}${ofWhat}` : undefined,
         tooltip: t ? T.escalationTooltip : escalationMissingTooltip(e),
-        ariaLabel: t ? `${label}: ${t.pct}, ${t.of}` : `${label}: neskelbiama`,
+        ariaLabel: t
+          ? `${T.escalationLabel}: ${t.pct}, ${t.of}${ofWhat}`
+          : `${T.escalationLabel}: neskelbiama`,
       }),
     );
   }
@@ -550,6 +554,13 @@ function chart(c: Ctx, g: Grupe): ChartDef {
   }
   if (bars.some((b) => b.valueLabel === S.suppressed))
     notes.push(`${S.suppressed}: ${S.suppressedReports}`);
+  // Range and "≥" totals explained next to the chart (DATAVIZ-16).
+  const ranged = Object.values(totals).filter((t) => /[–≥]/.test(t));
+  if (ranged.length) {
+    const why =
+      SUPPRESSED_RANGE_TOOLTIP.charAt(0).toLowerCase() + SUPPRESSED_RANGE_TOOLTIP.slice(1);
+    notes.push(`${ranged.slice(0, 2).join(', ')} ir pan. – ${why}`);
+  }
   return {
     kind: 'stacked',
     title: `Pranešimai pagal mėnesius · Lietuva · ${seasonLabel(c.season)}`,
@@ -566,6 +577,14 @@ function chart(c: Ctx, g: Grupe): ChartDef {
 
 export const BREAKS = [3, 6, 11, 21]; // 0 white · 1–2 · 3–5 · 6–10 · 11–20 · > 20
 
+// Tooltip text with its unit: "59 pranešimai", "<3 pranešimai", "129–133 pranešimai".
+function reportsText(n: Count) {
+  const text = formatCount(n);
+  if (text === S.withheld) return text;
+  const last = isSuppressed(n) ? 2 : n.hi === Infinity ? n.lo : n.hi;
+  return `${text} ${plural(last, P_REPORT)}`;
+}
+
 function map(c: Ctx, g: Grupe): ChoroplethDef | MapMessageDef {
   if (!ZALA_MUNICIPALITY) return { kind: 'message', text: T.municipalityPending };
   const values = new Map<number, number | null>();
@@ -575,14 +594,14 @@ function map(c: Ctx, g: Grupe): ChoroplethDef | MapMessageDef {
     const n = reports(c, m.code, g);
     if (!isExact(n) && !isSuppressed(n)) ranges = true;
     values.set(m.code, countMapValue(n));
-    labels.set(m.code, formatCount(n));
+    labels.set(m.code, reportsText(n));
   });
   const state = seasonState(c.season, c.meta);
   return {
     kind: 'choropleth',
     values,
     breaks: BREAKS,
-    palette: 'orange',
+    palette: 'warm',
     legendTitle: T.legend(seasonWithAsOf(c.season, state, c.meta.snapshotDate)),
     format: formatMapCount,
     labels,

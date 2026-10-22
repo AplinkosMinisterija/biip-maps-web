@@ -12,6 +12,7 @@ import { Circle, Fill, Stroke, Style, Text } from 'ol/style';
 import { PMTilesVectorSource } from 'ol-pmtiles';
 import { boundariesHost } from '@/config';
 import { projection, projection3857 } from '@/utils/constants';
+import { SELECTION_HALO, SELECTION_INK, WOLF_COLOR } from './hub/colors';
 import type { WolfRecord } from './types';
 
 // Layer ids (set with layer.set('id', ...)); used by mapLayers.click / pointerCursor.
@@ -19,9 +20,12 @@ export const WOLVES_MUNICIPALITIES_LAYER_ID = 'huntingWolvesMunicipalities';
 export const WOLVES_CLUSTER_LAYER_ID = 'huntingWolvesCluster';
 export const WOLVES_SELECTION_LAYER_ID = 'huntingWolvesSelection';
 
-export const WOLF_COLOR = '#B45309';
+// The species colour map (utils/hunting/hub/colors.ts) keeps wolves at #B45309.
+export { WOLF_COLOR };
 export const WOLF_STROKE_COLOR = '#ffffff';
-export const SELECTION_COLOR = '#1D4ED8';
+// Selected point: a dark ring with a white halo outside it, legible on any basemap.
+export const SELECTION_COLOR = SELECTION_INK;
+export const SELECTION_HALO_COLOR = SELECTION_HALO;
 export const MUNICIPALITY_OUTLINE_COLOR = 'rgba(55,65,81,0.45)';
 export const MUNICIPALITY_SELECTED_COLOR = '#1f2937';
 
@@ -84,18 +88,25 @@ function clusterStyle(n: number) {
   return style;
 }
 
-const selectionStyleCache = new Map<number, Style>();
+const selectionStyleCache = new Map<number, Style[]>();
 
-function selectionStyle(n: number) {
+/** Selection ring of a mark of `n` records: 3 px dark ring, 2 px white halo outside it. */
+export function selectionRing(n: number): Style[] {
   let style = selectionStyleCache.get(n);
   if (style) return style;
 
-  style = new Style({
-    image: new Circle({
-      radius: clusterRadius(n) + 4,
-      stroke: new Stroke({ color: SELECTION_COLOR, width: 3 }),
+  const radius = clusterRadius(n) + 4;
+  style = [
+    new Style({
+      image: new Circle({
+        radius: radius + 2.5,
+        stroke: new Stroke({ color: SELECTION_HALO_COLOR, width: 2 }),
+      }),
     }),
-  });
+    new Style({
+      image: new Circle({ radius, stroke: new Stroke({ color: SELECTION_COLOR, width: 3 }) }),
+    }),
+  ];
   selectionStyleCache.set(n, style);
   return style;
 }
@@ -157,7 +168,7 @@ export function createWolvesLayers(): WolvesLayers {
   const selection = new VectorLayer({
     zIndex: 21,
     source: selectionSource,
-    style: (feature) => selectionStyle(feature.get('size') || 1),
+    style: (feature) => selectionRing(feature.get('size') || 1),
   });
   selection.set('id', WOLVES_SELECTION_LAYER_ID);
 

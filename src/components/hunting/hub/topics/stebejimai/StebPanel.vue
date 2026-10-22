@@ -154,6 +154,7 @@ const chart = computed<ChartDef | null>(() => {
       label: g.label,
       value: g.n,
       valueLabel: formatInt(g.n),
+      series: g.key, // species colour, as on the map
     })),
   };
 });

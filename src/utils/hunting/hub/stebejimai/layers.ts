@@ -16,7 +16,8 @@ import { Circle, Fill, Stroke, Style, Text } from 'ol/style';
 import { PMTilesVectorSource } from 'ol-pmtiles';
 import { boundariesHost } from '@/config';
 import { projection, projection3857 } from '@/utils/constants';
-import { clusterRadius, SELECTION_COLOR } from '@/utils/hunting/layers';
+import { clusterRadius, selectionRing } from '@/utils/hunting/layers';
+import { OTHER_SPECIES_COLOR, speciesColorOf } from '../colors';
 import { compareRecords, type StebRecord } from './model';
 
 // Layer ids (layer.set('id', …)); used by mapLayers.click / pointerCursor.
@@ -24,17 +25,19 @@ export const STEB_CLUSTER_LAYER_ID = 'huntingStebCluster';
 export const STEB_SELECTION_LAYER_ID = 'huntingStebSelection';
 export const STEB_MUNICIPALITIES_LAYER_ID = 'huntingStebMunicipalities';
 
-// Species colours by slug (white 2 px stroke); any other species is grey (§3.4).
+// Species colours by slug (white 2 px stroke), from the hub's one species colour map
+// (utils/hunting/hub/colors.ts), so a species looks the same in Žala and Vilkai; any other
+// species is grey (§3.4).
+const STEB_SPECIES = ['vilkas', 'lusis', 'rudasis-lokys', 'stumbras'];
 export const STEB_SPECIES_COLORS: Readonly<Record<string, string>> = Object.freeze(
-  Object.assign(Object.create(null) as Record<string, string>, {
-    vilkas: '#B45309',
-    lusis: '#7E22CE',
-    'rudasis-lokys': '#0F766E',
-    stumbras: '#4D7C0F',
-  }),
+  Object.assign(
+    Object.create(null) as Record<string, string>,
+    Object.fromEntries(STEB_SPECIES.map((slug) => [slug, speciesColorOf(slug)!])),
+  ),
 );
-export const STEB_OTHER_COLOR = '#4B5563';
-export const STEB_MIXED_COLOR = '#374151';
+export const STEB_OTHER_COLOR = OTHER_SPECIES_COLOR;
+// Count text of a mixed cluster (white disc in a ring of species arcs).
+export const STEB_MIXED_TEXT = '#121926';
 export const STEB_STROKE_COLOR = '#ffffff';
 export const STEB_MUNICIPALITY_COLOR = '#1f2937';
 
@@ -67,8 +70,8 @@ export function samePoint(records: StebRecord[]) {
   return records.every((r) => r.x === records[0]?.x && r.y === records[0]?.y);
 }
 
-// Styles are cached per size and colour.
-const clusterStyleCache = new Map<string, Style>();
+// Styles are cached per size and colour (single species) or per composition (mixed).
+const clusterStyleCache = new Map<string, Style | Style[]>();
 
 function clusterStyle(n: number, color: string) {
   const key = `${n}|${color}`;
@@ -94,26 +97,77 @@ function clusterStyle(n: number, color: string) {
   return style;
 }
 
-/** Fill of a cluster: the species colour when all members share one, else dark grey. */
-export function clusterColor(records: StebRecord[]) {
-  if (!records.length) return STEB_OTHER_COLOR;
-  const slug = records[0].speciesSlug;
-  return records.every((r) => r.speciesSlug === slug) ? speciesColor(slug) : STEB_MIXED_COLOR;
+export interface SpeciesShare {
+  color: string;
+  n: number;
 }
 
-const selectionStyleCache = new Map<number, Style>();
-
-function selectionStyle(n: number) {
-  let style = selectionStyleCache.get(n);
-  if (style) return style;
-  style = new Style({
-    image: new Circle({
-      radius: clusterRadius(n) + 4,
-      stroke: new Stroke({ color: SELECTION_COLOR, width: 3 }),
-    }),
+/** Species shares of a cluster, largest first (one entry per colour). */
+export function clusterShares(records: StebRecord[]): SpeciesShare[] {
+  const byColor = new Map<string, number>();
+  records.forEach((r) => {
+    const color = speciesColor(r.speciesSlug);
+    byColor.set(color, (byColor.get(color) || 0) + 1);
   });
-  selectionStyleCache.set(n, style);
+  return [...byColor.entries()].map(([color, n]) => ({ color, n })).sort((a, b) => b.n - a.n);
+}
+
+const RING = 4; // px, the species ring of a mixed cluster
+
+// A mixed cluster keeps the identity it aggregates (DATAVIZ-20): a white disc with the count,
+// in a 4 px ring split by species share (1 px white gaps), inside the 2 px white outer ring.
+function mixedClusterStyle(n: number, shares: SpeciesShare[]) {
+  const key = `${n}|${shares.map((s) => `${s.color}:${s.n}`).join(',')}`;
+  let style = clusterStyleCache.get(key);
+  if (style) return style;
+  const radius = clusterRadius(n);
+  const total = shares.reduce((sum, s) => sum + s.n, 0) || 1;
+  style = [
+    // The disc carries hit detection and the count.
+    new Style({
+      image: new Circle({
+        radius,
+        fill: new Fill({ color: '#ffffff' }),
+        stroke: new Stroke({ color: STEB_STROKE_COLOR, width: 2 }),
+      }),
+      text: new Text({
+        text: `${n}`,
+        font: '700 12px sans-serif',
+        fill: new Fill({ color: STEB_MIXED_TEXT }),
+        overflow: true,
+      }),
+    }),
+    new Style({
+      renderer(coordinates, state) {
+        const [x, y] = coordinates as number[];
+        const c = state.context;
+        const pr = state.pixelRatio;
+        const r = (radius - RING / 2) * pr;
+        const gap = shares.length > 1 ? pr / r : 0;
+        let start = -Math.PI / 2;
+        c.save();
+        c.lineWidth = RING * pr;
+        shares.forEach((s) => {
+          const sweep = (s.n / total) * Math.PI * 2;
+          c.beginPath();
+          c.strokeStyle = s.color;
+          c.arc(x, y, r, start + gap / 2, start + sweep - gap / 2);
+          c.stroke();
+          start += sweep;
+        });
+        c.restore();
+      },
+    }),
+  ];
+  clusterStyleCache.set(key, style);
   return style;
+}
+
+/** Fill of a single-species cluster: the species colour; null when the species are mixed. */
+export function clusterColor(records: StebRecord[]): string | null {
+  if (!records.length) return STEB_OTHER_COLOR;
+  const slug = records[0].speciesSlug;
+  return records.every((r) => r.speciesSlug === slug) ? speciesColor(slug) : null;
 }
 
 const municipalitySelectedStyle = new Style({
@@ -162,7 +216,10 @@ export function createStebLayers(): StebLayers {
     style: (feature) => {
       const members: Feature[] = feature.get('features') || [];
       const records = members.map((f) => f.get('record') as StebRecord).filter(Boolean);
-      return clusterStyle(members.length, clusterColor(records));
+      const color = clusterColor(records);
+      return color
+        ? clusterStyle(members.length, color)
+        : mixedClusterStyle(members.length, clusterShares(records));
     },
   });
   cluster.set('id', STEB_CLUSTER_LAYER_ID);
@@ -171,7 +228,7 @@ export function createStebLayers(): StebLayers {
   const selection = new VectorLayer({
     zIndex: 21,
     source: selectionSource,
-    style: (feature) => selectionStyle(feature.get('size') || 1),
+    style: (feature) => selectionRing(feature.get('size') || 1),
   });
   selection.set('id', STEB_SELECTION_LAYER_ID);
 

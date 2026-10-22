@@ -8,6 +8,8 @@
 //   so a total row can be larger than the sum of its published (non-null) parts.
 // - `MetaStatic` is defined here from SPEC2 §9.3 (the spec references it without a body).
 
+import type { Ramp } from './colors';
+
 export type TopicId = 'apzvalga' | 'vilkai' | 'laimikiai' | 'limitai' | 'zala' | 'stebejimai';
 export type SnapshotFile = 'meta' | 'loots' | 'limits' | 'damages' | 'wolves';
 export type SeasonState = 'vyksta' | 'preliminarus' | 'dalinis' | 'galutinis';
@@ -166,6 +168,10 @@ export interface ChartBar {
   value: number;
   valueLabel: string;
   series?: string;
+  /** The current or selected bar (accent colour). */
+  current?: boolean;
+  /** A residual "other" bar (Kitos rūšys): grey, set apart, always last. */
+  other?: boolean;
 }
 export interface ChartDef {
   kind: 'hbar' | 'columns' | 'stacked';
@@ -180,7 +186,7 @@ export interface ChoroplethDef {
   kind: 'choropleth';
   values: Map<number, number | null>;
   breaks: number[];
-  palette: 'green' | 'blue' | 'orange';
+  palette: Ramp /* utils/hunting/hub/colors.ts */;
   legendTitle: string;
   format(v: number): string;
   labels?: Map<number, string> /* per-municipality value text, when `format` cannot rebuild it */;
