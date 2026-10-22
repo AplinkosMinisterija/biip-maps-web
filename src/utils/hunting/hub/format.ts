@@ -59,7 +59,7 @@ export interface Delta {
 
 /**
  * Change from `prev` to `cur` (§3.6). Null when either value is missing or below
- * DELTA_MIN; the UI then shows '—' with S.deltaSuppressed (`deltaSuppressed()`).
+ * DELTA_MIN; the UI then shows '–' with S.deltaSuppressed (`deltaSuppressed()`).
  */
 export function delta(
   cur: number | null | undefined,
@@ -79,7 +79,7 @@ export function delta(
 }
 
 /** Text for a suppressed Δ cell or tile. */
-export const deltaSuppressed = () => ({ text: '—', tooltip: S.deltaSuppressed });
+export const deltaSuppressed = () => ({ text: '\u2013', tooltip: S.deltaSuppressed });
 
 /**
  * Sentence tail for a change: '8,5 % daugiau nei 2024/2025 sezone', '16,0 % mažiau …',
