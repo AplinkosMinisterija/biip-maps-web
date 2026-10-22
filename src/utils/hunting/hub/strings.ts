@@ -117,8 +117,13 @@ export const S = {
   deltaSuppressed: 'Per maži skaičiai procentams palyginti.',
   deltaSame: 'tiek pat',
   // Provenance (§5).
-  provenanceSnapshot: (date: string) => `Duomenys: ${date} momentinė kopija · BĮIP`,
-  provenanceLive: (time: string) => `Duomenys atnaujinti ${time} · BĮIP ir BIOMON`,
+  // One wording per kind (OVERVIEW-09); embedded, the hub sends the line to the WP header
+  // (`state.provenance.text`), which shows it once for the whole page.
+  provenanceSnapshot: (date: string) => `Duomenys ${date} būklei · BĮIP`,
+  // `at` = 'yyyy-MM-dd HH:mm' (Vilnius).
+  provenanceLive: (at: string) => `Duomenys atnaujinti ${at} · BĮIP ir BIOMON`,
+  provenanceOverview: (date: string) =>
+    `Duomenys ${date} būklei · vilkų ir stebėjimų – tiesiogiai iš BĮIP`,
   provenanceLink: 'Apie duomenis', // appended as a link after " · "
   provenanceSnapshotTitle: (date: string) =>
     `Rodoma ${date} parengta BĮIP suvestinių kopija; vėlesni įrašai į ją nepatenka.`,

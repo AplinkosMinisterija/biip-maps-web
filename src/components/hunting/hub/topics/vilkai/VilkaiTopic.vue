@@ -262,8 +262,8 @@ import { useWolvesData } from '@/composables/hunting/useWolvesData';
 import { useWolvesMap } from '@/composables/hunting/useWolvesMap';
 import { useWolvesState } from '@/composables/hunting/useWolvesState';
 import {
+  formatDateTime,
   formatInt,
-  formatTime,
   pluralLt,
   seasonInterval,
   seasonOfDay,
@@ -472,7 +472,7 @@ const legendLeft = computed(() =>
 const hasSelection = computed(() => !!ctx?.state.selection.value);
 const provenanceTime = computed(() => {
   const at = ctx?.data.fetchedAt.value;
-  return at ? formatTime(at) : '';
+  return at ? formatDateTime(at) : '';
 });
 
 function setTable(open: boolean) {
@@ -564,14 +564,23 @@ const liveControls: EmbedLiveControls = {
   ),
   // The fallback shows the wolves.json copy: report its date, so the WP provenance line
   // does not say "live" next to the hub's snapshot notice.
-  provenance: computed(() =>
-    fallback.value
-      ? {
-          kind: 'snapshot' as const,
-          asOf: fallbackView.value?.provenance.asOf || snapshot.value?.meta?.snapshotDate || null,
-        }
-      : { kind: 'live' as const, asOf: null },
-  ),
+  provenance: computed(() => {
+    if (fallback.value) {
+      const asOf =
+        fallbackView.value?.provenance.asOf || snapshot.value?.meta?.snapshotDate || null;
+      return {
+        kind: 'snapshot' as const,
+        asOf,
+        text: asOf ? S.provenanceSnapshot(asOf) : undefined,
+      };
+    }
+    const at = ctx?.data.fetchedAt.value;
+    return {
+      kind: 'live' as const,
+      asOf: null,
+      text: at ? S.provenanceLive(formatDateTime(at)) : undefined,
+    };
+  }),
 };
 
 onMounted(async () => {

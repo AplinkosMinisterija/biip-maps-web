@@ -23,7 +23,9 @@ import {
   stateBadge,
 } from './time';
 import {
+  createHeightReporter,
   EMBED_TOPICS,
+  heightMessage,
   isAllowedParent,
   PASS_KEYS,
   parseCommand,
@@ -638,6 +640,88 @@ function runEmbedChecks(check: Check, eq: Eq) {
     return eq(
       [readyMessage(), Object.keys(state), state.biipHunting.type, state.biipHunting.v],
       [{ biipHunting: { v: 1, type: 'ready' } }, ['biipHunting'], 'state', 1],
+    );
+  });
+
+  check('Įterpimas: state.provenance.text (D12a)', () => {
+    const base = {
+      tema: 'laimikiai' as const,
+      view: 'map' as const,
+      hasTable: true,
+      title: 'Laimikiai',
+      query: { tema: 'laimikiai' },
+      shareQuery: { tema: 'laimikiai', sezonas: '2025-2026' },
+    };
+    const prov = (text?: string) => ({
+      kind: 'snapshot' as const,
+      asOf: '2026-10-09',
+      environment: 'staging' as const,
+      text,
+    });
+    const msg = (text?: string) => stateMessage({ ...base, provenance: prov(text) }).biipHunting;
+    const ok = msg('Duomenys 2026-10-09 būklei · BĮIP');
+    return eq(
+      [
+        Object.keys(ok),
+        ok.provenance,
+        msg(undefined).provenance,
+        msg('  ').provenance,
+        msg('x'.repeat(161)).provenance,
+        msg(' a\n b ').provenance.text,
+        msg('x'.repeat(160)).provenance.text?.length,
+      ],
+      [
+        ['v', 'type', 'tema', 'view', 'hasTable', 'title', 'query', 'shareQuery', 'provenance'],
+        {
+          kind: 'snapshot',
+          asOf: '2026-10-09',
+          environment: 'staging',
+          text: 'Duomenys 2026-10-09 būklei · BĮIP',
+        },
+        { kind: 'snapshot', asOf: '2026-10-09', environment: 'staging' },
+        { kind: 'snapshot', asOf: '2026-10-09', environment: 'staging' },
+        { kind: 'snapshot', asOf: '2026-10-09', environment: 'staging' },
+        'a b',
+        160,
+      ],
+    );
+  });
+
+  check('Įterpimas: height žinutė ir ribojimas (D12b)', () => {
+    const frames: (() => void)[] = [];
+    const sent: number[] = [];
+    let height = 812.4;
+    let allowed = true;
+    const reporter = createHeightReporter({
+      measure: () => height,
+      send: (px) => sent.push(px),
+      allowed: () => allowed,
+      frame: (cb) => frames.push(cb),
+      cancelFrame: () => undefined,
+    });
+    const run = () => frames.splice(0).forEach((cb) => cb());
+    reporter.schedule();
+    reporter.schedule(); // same frame: one message
+    run();
+    height = 812.9; // still 813 px: nothing
+    reporter.schedule();
+    run();
+    reporter.force(); // re-send the same value once
+    run();
+    height = 1300;
+    reporter.schedule();
+    run();
+    allowed = false; // another topic: never posted
+    height = 900;
+    reporter.schedule();
+    run();
+    allowed = true;
+    reporter.stop();
+    reporter.schedule();
+    run();
+    return eq(
+      [sent, heightMessage(1300.2), heightMessage(-5).biipHunting.px],
+      [[813, 813, 1300], { biipHunting: { v: 1, type: 'height', px: 1301 } }, 0],
     );
   });
 

@@ -56,7 +56,8 @@ export const SS = {
     const text = truncatedPart(shown, total);
     return `${text.charAt(0).toUpperCase()}${text.slice(1)}.`;
   },
-  provenance: (time: string) => `Duomenys gauti ${time} tiesiogiai iš BĮIP`,
+  // `at` = 'yyyy-MM-dd HH:mm' (Vilnius); the same wording as the hub's live lines.
+  provenance: (at: string) => `Duomenys atnaujinti ${at} · BĮIP`,
   // States (§3.9).
   loading: 'Įkeliami duomenys…',
   loadError: 'Nepavyko įkelti duomenų.',

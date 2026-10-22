@@ -127,7 +127,7 @@ import { computed, inject } from 'vue';
 import BarChart from '@/components/hunting/hub/shell/BarChart.vue';
 import DebugPanel from '@/components/hunting/hub/shell/DebugPanel.vue';
 import { STEB_CTX } from '@/composables/hunting/hub/stebejimai/useStebState';
-import { formatInt, formatTime } from '@/utils/hunting/dates';
+import { formatDateTime, formatInt } from '@/utils/hunting/dates';
 import { BADGE_LABELS, BANDOMOJI_TOOLTIP, FEEDBACK_URL, S } from '@/utils/hunting/hub/strings';
 import type { ChartDef } from '@/utils/hunting/hub/types';
 import { speciesSummary } from '@/utils/hunting/hub/stebejimai/model';
@@ -177,7 +177,7 @@ const notes = computed(() => {
 
 const provenanceTime = computed(() => {
   const at = ctx.data.fetchedAt.value;
-  return at && phase.value === 'ready' ? formatTime(at) : '';
+  return at && phase.value === 'ready' ? formatDateTime(at) : '';
 });
 
 const debugRows = computed(() => {
