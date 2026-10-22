@@ -540,10 +540,13 @@ export function useChoropleth(ctx: HubContext): HubChoroplethApi {
     // The area card (360 px, top right) covers the map on desktop: keep the place clear of it.
     const padding = [...ctx.layout.mapPadding.value].map((p) => p + 16);
     if (!ctx.isMobile.value && window.innerWidth >= 1024) padding[1] += AREA_CARD_W;
+    // Phones: the selection raises the sheet to half the frame (its card); fit above it, one
+    // zoom step wider, so the neighbours stay in view (MOBILE-10).
+    if (ctx.isMobile.value) padding[2] = Math.round(window.innerHeight / 2) + 16;
     map.getView().fit(info.extent3857, {
       padding,
       duration: prefersReducedMotion() ? 0 : 400,
-      maxZoom: SELECTED_MAX_ZOOM,
+      maxZoom: ctx.isMobile.value ? SELECTED_MAX_ZOOM - 1 : SELECTED_MAX_ZOOM,
     });
   }
 
