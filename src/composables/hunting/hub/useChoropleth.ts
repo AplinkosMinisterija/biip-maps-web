@@ -32,6 +32,7 @@ import { loadMunicipalityIndex, type MunicipalityIndex } from '@/utils/hunting/m
 import { S } from '@/utils/hunting/hub/strings';
 import type { ChoroplethDef } from '@/utils/hunting/hub/types';
 import { atCountryFit } from '@/utils/hunting/hub/mapFit';
+import { HUB_GAP, hubGutter } from '@/utils/hunting/hub/layout';
 import {
   CHOROPLETH_NO_DATA_FILL,
   CHOROPLETH_OUTLINE,
@@ -65,7 +66,8 @@ export const CHOROPLETH_EMPTY_FILL = CHOROPLETH_ZERO_FILL;
 
 // Neighbouring municipalities stay in view around a selected one.
 const SELECTED_MAX_ZOOM = 9;
-const AREA_CARD_W = 360 + 16;
+const AREA_CARD_W = 360;
+const FIT_MARGIN = 16;
 
 /** Class index 0…breaks.length of `value`: classes are < b1, b1–b2, …, ≥ bn. */
 export function classOf(value: number, breaks: number[]) {
@@ -537,9 +539,16 @@ export function useChoropleth(ctx: HubContext): HubChoroplethApi {
     }
     const info = index.byCode[code];
     if (!info || !map) return;
-    // The area card (360 px, top right) covers the map on desktop: keep the place clear of it.
-    const padding = [...ctx.layout.mapPadding.value].map((p) => p + 16);
-    if (!ctx.isMobile.value && window.innerWidth >= 1024) padding[1] += AREA_CARD_W;
+    // view.fit subtracts this padding on top of the view padding (bars, panel, drawer), so
+    // only the extra margin goes here (VISUAL-05): 16 px around the place, and on desktop the
+    // area card's strip. The card sits at the top right on the gutter (railed: 8 px left of
+    // the drawer, which the view padding already covers).
+    const padding = [FIT_MARGIN, FIT_MARGIN, FIT_MARGIN, FIT_MARGIN];
+    const width = window.innerWidth;
+    if (!ctx.isMobile.value && width >= 1024) {
+      const cardRight = ctx.layout.railed.value ? HUB_GAP : hubGutter(width, ctx.embed);
+      padding[1] += cardRight + AREA_CARD_W;
+    }
     map.getView().fit(info.extent3857, {
       padding,
       duration: prefersReducedMotion() ? 0 : 400,
