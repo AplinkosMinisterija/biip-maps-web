@@ -632,10 +632,13 @@ const railLabel = computed(() =>
     : '',
 );
 
+// Embedded, the table's content ends at the site container's right edge (D3), clear of the
+// site's accessibility button: the right gutter minus the rows' own 16 px padding.
+const EMBED_DRAWER_RIGHT = 'pr-[calc(var(--hub-gutter,24px)-16px)]';
 const drawerClass = computed(() =>
   railed.value
     ? 'absolute right-0 top-[var(--hub-top)] bottom-0 w-[var(--hub-drawer-w)] z-30 bg-white shadow-lg flex flex-col'
-    : 'absolute right-0 top-[var(--hub-top)] bottom-0 left-[var(--hub-content-left)] z-30 bg-white shadow-lg flex flex-col',
+    : `absolute right-0 top-[var(--hub-top)] bottom-0 left-[var(--hub-content-left)] z-30 bg-white shadow-lg flex flex-col${embed ? ` ${EMBED_DRAWER_RIGHT}` : ''}`,
 );
 const legendLeft = computed(() =>
   railed.value ? 'left-[64px]' : 'left-[var(--hub-content-left)]',
