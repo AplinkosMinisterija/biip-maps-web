@@ -12,21 +12,23 @@
     "
     @keydown.esc="variant === 'drawer' && close()"
   >
+    <!-- Title row: what and when; standalone also "Slėpti lentelę". -->
     <div
-      class="flex items-center justify-between gap-2"
+      class="flex items-start justify-between gap-3"
       :class="variant === 'drawer' ? 'px-4 pt-4 pb-2' : 'pb-2'"
     >
       <h2
         :id="`${uid}-title`"
-        :class="variant === 'drawer' ? 'text-base font-semibold' : 'sr-only'"
+        class="font-bold text-ink"
+        :class="variant === 'drawer' ? 'text-base leading-[22px]' : 'text-[15px] leading-5'"
       >
-        Lentelė
+        {{ title }}
       </h2>
       <!-- Embedded in the WP data page, its view switch closes the table (SPEC §4); Esc stays. -->
       <button
         v-if="variant === 'drawer' && !embed"
         type="button"
-        class="inline-flex items-center gap-1 min-h-[32px] rounded px-2 text-sm font-semibold text-gray-800 hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+        :class="[BTN_TEXT, 'shrink-0 text-ink']"
         :aria-expanded="true"
         :aria-controls="DRAWER_ID"
         @click="close"
@@ -36,33 +38,34 @@
       </button>
     </div>
 
+    <!-- Pill sub-tabs left, the CSV right (clear of the site's accessibility button). -->
     <div
-      role="tablist"
-      aria-label="Lentelės"
-      class="flex gap-1 border-b border-gray-200 overflow-x-auto"
+      class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2"
       :class="variant === 'drawer' ? 'px-4' : ''"
     >
-      <button
-        v-for="tab in tabs"
-        :id="tabId(tab.id)"
-        :key="tab.id"
-        :ref="(el) => setTabRef(tab.id, el)"
-        type="button"
-        role="tab"
-        :aria-selected="activeTab === tab.id"
-        :aria-controls="panelId(tab.id)"
-        :tabindex="activeTab === tab.id ? 0 : -1"
-        class="min-h-[44px] md:min-h-[36px] whitespace-nowrap px-3 text-sm font-semibold border-b-2 -mb-px focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-        :class="
-          activeTab === tab.id
-            ? 'border-brand text-brand'
-            : 'border-transparent text-gray-600 hover:text-gray-900'
-        "
-        @click="selectTab(tab.id)"
-        @keydown="onTabKeydown"
-      >
-        {{ tab.label }}
-      </button>
+      <div role="tablist" aria-label="Lentelės" class="flex min-w-0 gap-1 overflow-x-auto p-0.5">
+        <button
+          v-for="tab in tabs"
+          :id="tabId(tab.id)"
+          :key="tab.id"
+          :ref="(el) => setTabRef(tab.id, el)"
+          type="button"
+          role="tab"
+          :aria-selected="activeTab === tab.id"
+          :aria-controls="panelId(tab.id)"
+          :tabindex="activeTab === tab.id ? 0 : -1"
+          :class="[
+            PILL_TAB,
+            'whitespace-nowrap max-md:h-11',
+            activeTab === tab.id ? PILL_TAB_ON : '',
+          ]"
+          @click="selectTab(tab.id)"
+          @keydown="onTabKeydown"
+        >
+          {{ tab.label }}
+        </button>
+      </div>
+      <HuntingWolvesCsvButton />
     </div>
 
     <div
@@ -77,7 +80,7 @@
         :aria-labelledby="tabId(tab.id)"
         :hidden="activeTab !== tab.id"
         tabindex="0"
-        class="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand rounded"
+        :class="[FOCUS_RING, 'rounded']"
       >
         <template v-if="activeTab === tab.id">
           <HuntingWolvesRecordsTable
@@ -86,19 +89,26 @@
             @show-on-map="(record: unknown) => emit('show-on-map', record)"
           />
           <HuntingWolvesSeasonMonthTable v-else-if="tab.id === 'sezonai'" />
-          <p v-else-if="!municipalitiesReady" class="text-sm text-gray-700" role="status">
+          <!-- The tab stays when the boundaries fail, so a shared link keeps its view. -->
+          <div
+            v-else-if="municipalityStatus === 'failed'"
+            role="alert"
+            :class="[CARD, 'flex flex-col items-start gap-3 p-4 text-sm text-ink']"
+          >
+            <p>
+              Savivaldybių ribų nepavyko įkelti, todėl suvestinė pagal savivaldybes šiuo metu
+              nerodoma.
+            </p>
+            <button type="button" :class="BTN_SECONDARY" @click="retryMunicipalities">
+              Bandyti dar kartą
+            </button>
+          </div>
+          <p v-else-if="!municipalitiesReady" class="text-sm text-ink-muted" role="status">
             Skaičiuojama…
           </p>
           <HuntingWolvesMunicipalityTable v-else />
         </template>
       </div>
-    </div>
-
-    <div
-      class="border-t border-gray-200 flex justify-end"
-      :class="variant === 'drawer' ? 'px-4 py-3' : 'pt-3'"
-    >
-      <HuntingWolvesCsvButton />
     </div>
   </component>
 </template>
@@ -109,6 +119,14 @@ import { WOLVES_CTX } from '@/composables/hunting/context';
 import { HUB_CTX } from '@/composables/hunting/hub/context';
 import { embedFocusAllowed } from '@/utils/hunting/hub/embed';
 import { hasMunicipalities } from '@/utils/hunting/municipalities';
+import {
+  BTN_SECONDARY,
+  BTN_TEXT,
+  CARD,
+  FOCUS_RING,
+  PILL_TAB,
+  PILL_TAB_ON,
+} from '@/components/hunting/hub/shell/controls';
 
 type TabId = 'irasai' | 'sezonai' | 'savivaldybes';
 
@@ -129,7 +147,7 @@ const emit = defineEmits(['show-on-map']);
 const DRAWER_ID = 'wolves-table-drawer';
 
 const ctx = inject(WOLVES_CTX)!;
-const { state, data } = ctx;
+const { state, data, derived } = ctx;
 // Inside the hub embedded in the WP data page (SPEC §4); false on the wolves page.
 const embed = !!inject(HUB_CTX, null)?.embed;
 
@@ -137,8 +155,8 @@ const uid = computed(() => `wolves-table-${props.variant}`);
 const tabId = (id: TabId) => `${uid.value}-tab-${id}`;
 const panelId = (id: TabId) => `${uid.value}-panel-${id}`;
 
-// P1 tab: shown from the start and hidden only if the attribution failed (§9). While the
-// polygons load it shows a placeholder. The tab list must not change under the user:
+// P1 tab: always shown (DATAVIZ-12). While the polygons load it shows a placeholder; when
+// they fail, an error card with a retry. The tab list must not change under the user:
 // switching the active tab while an async table is still mounting broke the page
 // (a `?lentele=savivaldybes` link fell back to `irasai`, then jumped back).
 const municipalityStatus = computed(
@@ -150,19 +168,42 @@ const municipalitiesReady = computed(
   () =>
     municipalityStatus.value === 'ready' && hasMunicipalities(data.dataset.value?.records || []),
 );
-const tabs = computed(() => {
-  const list: { id: TabId; label: string }[] = [
-    { id: 'irasai', label: 'Įrašai' },
-    { id: 'sezonai', label: 'Sezonai ir mėnesiai' },
-  ];
-  if (municipalityStatus.value !== 'failed') {
-    list.push({ id: 'savivaldybes', label: 'Savivaldybės' });
+const tabs: { id: TabId; label: string }[] = [
+  { id: 'irasai', label: 'Įrašai' },
+  { id: 'sezonai', label: 'Sezonai ir mėnesiai' },
+  { id: 'savivaldybes', label: 'Savivaldybės' },
+];
+
+// Retry the boundaries: the host's dataset watcher assigns the municipalities again when the
+// status is no longer 'failed' and the dataset changes identity (loadMunicipalityIndex()
+// forgets a failed load).
+function retryMunicipalities() {
+  const status = data.municipalityStatus;
+  const value = data.dataset.value;
+  if (!status || !value) return;
+  status.value = 'pending';
+  data.dataset.value = { ...value };
+}
+
+// Heading: what the active table holds, and for which period.
+const periodLabel = computed(() => {
+  const { from, to } = state.interval.value;
+  const season = derived.intervalSeason.value;
+  if (season !== null) return `${season}/${season + 1} sezonas`;
+  if (state.preset.value === 'all') return 'visi sezonai';
+  if (state.preset.value === 'last30') return `paskutinės 30 d. (${from} – ${to})`;
+  return from === to ? from : `${from} – ${to}`;
+});
+const title = computed(() => {
+  if (activeTab.value === 'sezonai') return 'Sumedžioti vilkai pagal sezonus ir mėnesius';
+  if (activeTab.value === 'savivaldybes') {
+    return `Sumedžioti vilkai pagal savivaldybes · ${periodLabel.value}`;
   }
-  return list;
+  return `Sumedžioti vilkai: įrašai · ${periodLabel.value}`;
 });
 
 const activeTab = computed<TabId>(() =>
-  tabs.value.some((t) => t.id === state.tableTab.value) ? state.tableTab.value : 'irasai',
+  tabs.some((t) => t.id === state.tableTab.value) ? state.tableTab.value : 'irasai',
 );
 
 const tabRefs: Partial<Record<TabId, HTMLElement>> = {};
@@ -177,7 +218,7 @@ function selectTab(id: TabId, focus = false) {
 }
 
 function onTabKeydown(event: KeyboardEvent) {
-  const ids = tabs.value.map((t) => t.id);
+  const ids = tabs.map((t) => t.id);
   const index = ids.indexOf(activeTab.value);
   let next: number | null = null;
   if (event.key === 'ArrowRight') next = (index + 1) % ids.length;

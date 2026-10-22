@@ -32,8 +32,11 @@ import type {
 import {
   DASH,
   NONE,
+  NOTE_NO_MPV,
+  NOTE_POOLED,
   asOfSeason,
   csvName,
+  DELTA_MIN,
   delta,
   deltaAria,
   deltaPhrase,
@@ -511,6 +514,10 @@ interface MuniRow {
 
 const intOrNone = (v: number | null) => (v === null ? DASH : formatInt(v));
 
+// "2025/2026", or "2026/2027 (iki 2026-10-09)" while the season runs.
+const seasonTitle = (c: Ctx) =>
+  c.current ? `${seasonLabel(c.season)} (iki ${c.meta.snapshotDate})` : seasonLabel(c.season);
+
 function speciesTable(c: Ctx, muni: Municipality | null): TableDef<SpeciesRow> {
   const code = muni?.code ?? null;
   const inconsistent = deadInconsistent(c.rows, c.season);
@@ -549,6 +556,7 @@ function speciesTable(c: Ctx, muni: Municipality | null): TableDef<SpeciesRow> {
       id: 'delta',
       label: `Pokytis${prevLabel}`,
       numeric: true,
+      unit: '%',
       value: (r) => (r.delta ? Math.round(r.delta.pct * 10) / 10 : null),
       display: (r) => (r.delta ? r.delta.text : DASH),
       tooltip: S.deltaSuppressed,
@@ -595,6 +603,7 @@ function speciesTable(c: Ctx, muni: Municipality | null): TableDef<SpeciesRow> {
       id: 'app',
       label: 'Iš el. žurnalo, %',
       numeric: true,
+      unit: '%',
       value: (r) => (r.appPct === null ? null : Math.round(r.appPct * 1000) / 10),
       display: (r) => (r.appPct === null ? DASH : formatPct(r.appPct)),
     },
@@ -613,10 +622,26 @@ function speciesTable(c: Ctx, muni: Municipality | null): TableDef<SpeciesRow> {
     .filter((s) => s <= c.season && deadInconsistent(c.rows, s))
     .sort((a, b) => a - b);
   footnotes.push(T.deadNote(bad));
+  // The dash, where it appears: not split by sex and age, or a change too small to compare.
+  const all = [totals, ...rows];
+  const dashes: string[] = [];
+  if (all.some((r) => r.m === null || r.f === null || r.j === null)) {
+    dashes.push(
+      'stulpeliuose „Patinai“, „Patelės“, „Jaunikliai“ – šios rūšies laimikis pagal lytį ir amžių neskirstomas',
+    );
+  }
+  if (columns.some((col) => col.id === 'delta') && all.some((r) => !r.delta)) {
+    dashes.push(
+      `stulpelyje „Pokytis“ – ${S.deltaSuppressed.charAt(0).toLowerCase()}${S.deltaSuppressed.slice(1, -1)} (mažiau nei ${DELTA_MIN})`,
+    );
+  }
+  if (dashes.length) footnotes.unshift(`${DASH} ${dashes.join('; ')}.`);
 
+  const place = muni ? muni.name : 'Lietuva';
   return {
     id: 'rusys',
     label: 'Rūšys',
+    title: `${c.current ? 'Užregistruota el. žurnale' : 'Sumedžiota'} pagal rūšis · ${place} · ${seasonTitle(c)}`,
     columns,
     rows,
     totals,
@@ -694,20 +719,31 @@ function municipalityTable(c: Ctx): TableDef<MuniRow> {
       id: 'delta',
       label: 'Pokytis, %',
       numeric: true,
+      unit: '%',
       value: (r) => (r.delta ? Math.round(r.delta.pct * 10) / 10 : null),
       display: (r) => (r.noMpv || r.pooled ? NONE : r.delta ? r.delta.text : DASH),
       tooltip: S.deltaSuppressed,
     },
   ];
   const pooled = pooledNote(c.meta);
+  const footnotes = pooled ? [ATTRIBUTION_RULE, pooled] : [ATTRIBUTION_RULE];
+  if ([totals, ...rows].some((r) => !r.noMpv && !r.pooled && !r.delta)) {
+    footnotes.unshift(
+      `${DASH} stulpelyje „Pokytis“ – ${S.deltaSuppressed.charAt(0).toLowerCase()}${S.deltaSuppressed.slice(1)}`,
+    );
+  }
   return {
     id: 'vietoves',
     label: 'Savivaldybės',
+    title: `${c.sp ? `${c.sp.name}: sumedžiota` : 'Sumedžiota'} pagal savivaldybes · ${seasonTitle(c)}`,
     columns,
     rows,
     totals,
-    footnotes: pooled ? [ATTRIBUTION_RULE, pooled] : [ATTRIBUTION_RULE],
+    footnotes,
     rowSav: (r) => (r.noMpv ? null : r.code),
+    // Pooled: MPV and their area are published, the figures are not; no MPV: nothing.
+    rowNote: (r) =>
+      r.noMpv ? { text: NOTE_NO_MPV, from: 1 } : r.pooled ? { text: NOTE_POOLED, from: 3 } : null,
     disabled: c.current ? T.currentMuniDisabled(c.season) : undefined,
     csvName: csvName('laimikiai', 'savivaldybes', c.season, null),
   };

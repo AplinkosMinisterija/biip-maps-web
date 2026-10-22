@@ -1,120 +1,133 @@
 <template>
-  <div class="flex flex-col gap-3 text-sm text-gray-900">
+  <div class="flex flex-col gap-3 text-sm text-ink">
     <div v-if="showVisibleAreaToggle" class="flex flex-col gap-1">
       <label class="inline-flex items-center gap-2 cursor-pointer min-h-[44px] md:min-h-[24px]">
-        <input
-          v-model="visibleOnly"
-          type="checkbox"
-          class="h-4 w-4 focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
-        />
+        <input v-model="visibleOnly" type="checkbox" :class="CHECK" />
         <span>Tik matomame žemėlapio plote</span>
       </label>
-      <p v-if="visibleOnly" class="text-xs text-gray-600">
+      <p v-if="visibleOnly" class="text-xs text-ink-muted">
         Šiame žemėlapio plote: {{ formatInt(rows.length) }} iš {{ formatInt(filtered.length) }}
       </p>
     </div>
 
     <div v-if="isLoading" class="flex flex-col gap-2" aria-hidden="true">
-      <div v-for="i in 5" :key="i" class="h-6 rounded bg-gray-100 animate-pulse" />
+      <div v-for="i in 5" :key="i" class="h-6 rounded bg-page animate-pulse" />
     </div>
 
-    <p v-else-if="!rows.length" class="text-sm text-gray-700">
+    <p v-else-if="!rows.length" class="text-sm text-ink-muted">
       Pasirinktu laikotarpiu sumedžiotų vilkų su žinoma vieta nėra.
     </p>
 
+    <!-- Phone cards: every value of the row; the card is the "show on map" action. -->
     <ul v-else-if="isMobile" class="flex flex-col gap-2" :aria-label="caption">
       <li v-for="row in pageRows" :key="row.id">
         <button
           type="button"
-          class="w-full min-h-[44px] text-left rounded-lg border border-gray-200 bg-white px-3 py-2 hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+          :class="[
+            'w-full min-h-[44px] rounded-lg border border-line bg-white p-3 text-left hover:bg-brand-50',
+            FOCUS_RING,
+          ]"
           :aria-label="showOnMapLabel(row)"
           @click="showOnMap(row)"
         >
-          <span class="flex flex-wrap items-center gap-x-2 font-semibold tabular-nums">
+          <span
+            class="flex flex-wrap items-center gap-x-2 text-[15px] font-semibold leading-5 text-brand tabular-nums"
+          >
             {{ row.day }}
-            <span v-if="showMunicipality" class="font-normal text-gray-700">
+            <span class="font-normal text-ink-muted">
               · {{ row.municipalityName || 'Nenustatyta' }}
             </span>
-            <span v-if="!row.inWolfWindow" :class="tagClass">ne vilkų medžioklės laikotarpiu</span>
+            <UiIcon name="chevron-right" :size="16" class="ml-auto shrink-0" aria-hidden="true" />
           </span>
-          <span class="block text-gray-800">
+          <span v-if="!row.inWolfWindow" :class="tagClass" class="mt-1">
+            ne vilkų medžioklės laikotarpiu
+          </span>
+          <span class="mt-1 block text-ink">
             {{ ageLabel(row.age) }} · {{ sexLabel(row.sex) }} · {{ methodLabel(row.method) }}
           </span>
-          <span class="block text-xs text-gray-600">{{ sourceLabel(row.source) }}</span>
+          <span class="block text-[13px] leading-[18px] text-ink-muted">
+            Gaujos narys: {{ packLabel(row.packMember, row.packAmount) }} ·
+            {{ sourceLabel(row.source) }}
+          </span>
         </button>
       </li>
     </ul>
 
     <div v-else class="overflow-x-auto">
-      <table class="w-full border-collapse text-left text-xs">
+      <table :class="TABLE">
         <caption class="sr-only">
           {{
             caption
           }}
         </caption>
         <thead>
-          <tr class="border-b border-gray-200 text-xs text-gray-600">
-            <th scope="col" class="py-2 pr-2 font-semibold" :aria-sort="ariaSort('day')">
-              <button type="button" :class="sortButtonClass" @click="toggleSort('day')">
-                Data
-                <span aria-hidden="true">{{ sortArrow('day') }}</span>
+          <tr>
+            <th scope="col" :class="[TH, 'pl-0']" :aria-sort="ariaSort('day')">
+              <button type="button" :class="SORT_BTN" @click="toggleSort('day')">
+                <span :class="sortKey === 'day' ? SORT_LABEL_ON : ''">Data</span>
+                <span
+                  aria-hidden="true"
+                  :class="[SORT_ICON, sortKey === 'day' ? SORT_ICON_ON : SORT_ICON_IDLE]"
+                  v-text="sortArrow('day')"
+                />
               </button>
             </th>
-            <th
-              v-if="showMunicipality"
-              scope="col"
-              class="py-2 pr-2 font-semibold"
-              :aria-sort="ariaSort('sav')"
-            >
-              <button type="button" :class="sortButtonClass" @click="toggleSort('sav')">
-                Savivaldybė
-                <span aria-hidden="true">{{ sortArrow('sav') }}</span>
+            <!-- Always there: "Nenustatyta" until the boundaries arrive, so the layout holds. -->
+            <th scope="col" :class="TH" :aria-sort="ariaSort('sav')">
+              <button type="button" :class="SORT_BTN" @click="toggleSort('sav')">
+                <span :class="sortKey === 'sav' ? SORT_LABEL_ON : ''">Savivaldybė</span>
+                <span
+                  aria-hidden="true"
+                  :class="[SORT_ICON, sortKey === 'sav' ? SORT_ICON_ON : SORT_ICON_IDLE]"
+                  v-text="sortArrow('sav')"
+                />
               </button>
             </th>
-            <th scope="col" class="py-2 pr-2 font-semibold">Amžius</th>
-            <th scope="col" class="py-2 pr-2 font-semibold">Lytis</th>
-            <th scope="col" class="py-2 pr-2 font-semibold">
+            <th scope="col" :class="TH">Amžius</th>
+            <th scope="col" :class="TH">Lytis</th>
+            <th scope="col" :class="TH">
               <span aria-hidden="true" title="Medžioklės būdas">Būdas</span>
               <span class="sr-only">Medžioklės būdas</span>
             </th>
             <template v-if="!compact">
-              <th scope="col" class="py-2 pr-2 font-semibold">Gaujos narys</th>
-              <th scope="col" class="py-2 pr-2 font-semibold">Šaltinis</th>
+              <th scope="col" :class="TH">Gaujos narys</th>
+              <th scope="col" :class="TH">Šaltinis</th>
             </template>
-            <th scope="col" class="py-2 pl-1 font-semibold sticky right-0 bg-white">
+            <th scope="col" :class="[TH, 'sticky right-0 z-30 w-12 px-1']">
               <span class="sr-only">Veiksmai</span>
             </th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="row in pageRows" :key="row.id" class="border-b border-gray-100 align-top">
-            <td class="py-2 pr-2 tabular-nums">
+          <tr v-for="row in pageRows" :key="row.id" :class="TR">
+            <td :class="[TD, TD_BG, 'pl-0 tabular-nums']">
               <span class="whitespace-nowrap">{{ row.day }}</span>
-              <span v-if="!row.inWolfWindow" :class="tagClass" class="block w-max mt-0.5">
+              <span v-if="!row.inWolfWindow" :class="tagClass" class="mt-0.5 w-max">
                 ne vilkų medžioklės laikotarpiu
               </span>
             </td>
-            <td v-if="showMunicipality" class="py-2 pr-2">
+            <td :class="[TD, TD_BG]">
               {{ row.municipalityName || 'Nenustatyta' }}
             </td>
-            <td class="py-2 pr-2">{{ ageLabel(row.age) }}</td>
-            <td class="py-2 pr-2">{{ sexLabel(row.sex) }}</td>
-            <td class="py-2 pr-2">{{ methodLabel(row.method) }}</td>
+            <td :class="[TD, TD_BG]">{{ ageLabel(row.age) }}</td>
+            <td :class="[TD, TD_BG]">{{ sexLabel(row.sex) }}</td>
+            <td :class="[TD, TD_BG]">{{ methodLabel(row.method) }}</td>
             <template v-if="!compact">
-              <td class="py-2 pr-2">{{ packLabel(row.packMember, row.packAmount) }}</td>
+              <td :class="[TD, TD_BG]">{{ packLabel(row.packMember, row.packAmount) }}</td>
               <!-- Short source name keeps the table inside the 520 px drawer; the card and CSV use the full one. -->
-              <td class="py-2 pr-2 whitespace-nowrap">
+              <td :class="[TD, TD_BG, 'whitespace-nowrap']">
                 <span aria-hidden="true" :title="sourceLabel(row.source)">{{
                   SHORT_SOURCE[row.source] || row.source
                 }}</span>
                 <span class="sr-only">{{ sourceLabel(row.source) }}</span>
               </td>
             </template>
-            <!-- Sticky so the action stays visible when the columns scroll in the drawer. -->
-            <td class="py-1 pl-1 sticky right-0 bg-white">
+            <!-- One 40 px icon button at the row end; sticky so it stays visible when the
+                 columns scroll in the drawer. -->
+            <td :class="[TD, TD_BG, 'sticky right-0 z-10 px-1 py-0 align-middle']">
               <button
                 type="button"
-                class="w-8 h-8 flex items-center justify-center rounded text-brand hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                :class="ROW_ICON_BTN"
                 :aria-label="showOnMapLabel(row)"
                 title="Rodyti žemėlapyje"
                 @click="showOnMap(row)"
@@ -127,22 +140,18 @@
       </table>
     </div>
 
+    <!-- No aria-live: the range is read with the buttons, a live region read it twice. -->
     <div v-if="rows.length" class="flex flex-wrap items-center justify-between gap-2">
-      <p class="text-xs text-gray-700 tabular-nums" aria-live="polite">
+      <p class="text-xs text-ink-muted tabular-nums">
         Rodoma {{ formatInt(rangeFrom) }}–{{ formatInt(rangeTo) }} iš {{ formatInt(rows.length) }}
       </p>
       <div class="flex gap-2">
-        <button
-          type="button"
-          :class="pagerButtonClass"
-          :disabled="page === 0"
-          @click="page = page - 1"
-        >
+        <button type="button" :class="PAGER_BTN" :disabled="page === 0" @click="page = page - 1">
           Ankstesnis
         </button>
         <button
           type="button"
-          :class="pagerButtonClass"
+          :class="PAGER_BTN"
           :disabled="page >= pageCount - 1"
           @click="page = page + 1"
         >
@@ -157,8 +166,22 @@
 import { computed, inject, ref, watch } from 'vue';
 import { WOLVES_CTX } from '@/composables/hunting/context';
 import { HUB_CTX } from '@/composables/hunting/hub/context';
-import { hasMunicipalities } from '@/utils/hunting/municipalities';
 import type { WolfRecord } from '@/utils/hunting/types';
+import { CHECK, FOCUS_RING } from '@/components/hunting/hub/shell/controls';
+import {
+  PAGER_BTN,
+  ROW_ICON_BTN,
+  SORT_BTN,
+  SORT_ICON,
+  SORT_ICON_IDLE,
+  SORT_ICON_ON,
+  SORT_LABEL_ON,
+  TABLE,
+  TD,
+  TD_BG,
+  TH,
+  TR,
+} from '@/components/hunting/hub/table/spec';
 
 import { formatInt } from '@/utils/hunting/dates';
 import { ageLabel, methodLabel, packLabel, sexLabel, sourceLabel } from '@/utils/hunting/labels';
@@ -185,7 +208,6 @@ const filtered = computed(() => derived.filtered.value);
 const isLoading = computed(
   () => !data.dataset.value && ['loading', 'slow'].includes(data.phase.value),
 );
-const showMunicipality = computed(() => hasMunicipalities(data.dataset.value?.records || []));
 // Embedded, the table replaces the map at every width, so there is no visible area to filter
 // by: the toggle is hidden and `visibleOnly` stays false (SPEC §4).
 const showVisibleAreaToggle = computed(() => !embed && !!state.mapExtent3346.value);
@@ -248,7 +270,7 @@ function toggleSort(key: 'day' | 'sav') {
 const ariaSort = (key: 'day' | 'sav') =>
   sortKey.value === key ? (sortDir.value === 'asc' ? 'ascending' : 'descending') : 'none';
 const sortArrow = (key: 'day' | 'sav') =>
-  sortKey.value === key ? (sortDir.value === 'asc' ? '▲' : '▼') : '';
+  sortKey.value === key ? (sortDir.value === 'asc' ? '▲' : '▼') : '↕';
 
 const showOnMapLabel = (row: WolfRecord) =>
   `Rodyti žemėlapyje: ${row.day}, ${sexLabel(row.sex)}, ${ageLabel(row.age)}`;
@@ -258,10 +280,7 @@ function showOnMap(row: WolfRecord) {
   emit('show-on-map', row);
 }
 
+// The "dalinis / preliminarūs" pill of D10.
 const tagClass =
-  'inline-block rounded bg-amber-100 px-1.5 py-0.5 text-xxs font-semibold text-amber-900 whitespace-nowrap';
-const sortButtonClass =
-  'inline-flex items-center gap-1 min-h-[24px] rounded font-semibold hover:text-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
-const pagerButtonClass =
-  'min-h-[44px] md:min-h-[24px] rounded border border-gray-300 bg-white px-3 py-1 text-xs font-semibold text-gray-800 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
+  'block w-max rounded-full bg-[#fdf1e7] px-2 py-0.5 text-xs font-semibold text-[#8a3b12] whitespace-nowrap';
 </script>

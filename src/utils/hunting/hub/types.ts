@@ -207,17 +207,34 @@ export interface ColumnDef<R> {
   numeric?: boolean;
   value(r: R): string | number | null;
   display?(r: R): string;
+  /** Sort key when `value` is not one ("<3" = 1.5, a range by its middle); default `value`. */
+  sort?(r: R): string | number | null;
+  /** '%': a percent column; the CSV head gets ", %" (J-24). */
+  unit?: '%';
   tooltip?: string;
   csv?: boolean /* default true */;
+}
+/** A row without figures of its own: one note spans the value columns from `from` on. */
+export interface RowNote {
+  text: string;
+  from: number /* index of the first spanned column (≥ 1) */;
 }
 export interface TableDef<R = any> {
   id: string;
   label: string;
+  /** Visible heading: what, where and when ("Sumedžiota pagal rūšis · 2025/2026"). */
+  title?: string;
   columns: ColumnDef<R>[];
   rows: R[];
   totals?: R;
   footnotes: string[];
   rowSav?(r: R): number | null;
+  /** Rows with a note (pooled, no MPV) are kept last, in their own order, whatever the sort. */
+  rowNote?(r: R): RowNote | null;
+  /** Phone cards: one line instead of the values ("0 pranešimų"), or null. */
+  cardSummary?(r: R): string | null;
+  /** Order until the visitor picks another one (null or absent: the rows' own order). */
+  defaultSort?: { col: string; dir: 'asc' | 'desc' };
   disabled?: string;
   csvName: string;
 }

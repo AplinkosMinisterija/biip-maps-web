@@ -23,6 +23,8 @@ import type {
 import {
   DASH,
   NONE,
+  NOTE_NO_MPV,
+  NOTE_POOLED,
   asOfSeason,
   csvName,
   emptyState,
@@ -333,6 +335,7 @@ interface MuniRow {
   code: number | null;
   name: string;
   noMpv: boolean; // no MPV, or pooled (fewer than 3 MPV): no figures of its own
+  pooled: boolean;
   a: Agg;
 }
 
@@ -355,6 +358,7 @@ function municipalityTable(meta: Meta, rows: LimitRow[], season: number): TableD
     code: m.code,
     name: m.name,
     noMpv: !m.mpvCount || isPooled(m),
+    pooled: isPooled(m),
     a: aggOf(rows, season, m.code),
   });
   const data = list.filter((m) => m.mpvCount && !isPooled(m)).map(toRow);
@@ -387,6 +391,7 @@ function municipalityTable(meta: Meta, rows: LimitRow[], season: number): TableD
         id: 'pct',
         label: 'Panaudota, %',
         numeric: true,
+        unit: '%',
         value: (r) => (r.noMpv ? null : usedPctValue(r.a)),
         display: (r) => {
           if (r.noMpv) return NONE;
@@ -404,14 +409,28 @@ function municipalityTable(meta: Meta, rows: LimitRow[], season: number): TableD
   if (!current && data.some((r) => (ratio(used(r.a), lim(r.a)) ?? 0) > 1)) {
     footnotes.unshift(`ⓘ ${T.overUse}`);
   }
+  if (!current && data.some((r) => !r.noMpv && lim(r.a) === 0)) {
+    footnotes.unshift(
+      `${DASH} stulpelyje „Panaudota“ – limitas nenustatytas, dalies apskaičiuoti negalima.`,
+    );
+  }
   return {
     id: 'savivaldybes',
     label: 'Savivaldybės',
+    title: `Briedžių limitai pagal savivaldybes · ${seasonLabel(season)}`,
     columns,
     rows: data,
-    totals: { code: null, name: S.totalsRow, noMpv: false, a: aggOf(rows, season, null) },
+    totals: {
+      code: null,
+      name: S.totalsRow,
+      noMpv: false,
+      pooled: false,
+      a: aggOf(rows, season, null),
+    },
     footnotes,
     rowSav: (r) => (r.noMpv ? null : r.code),
+    rowNote: (r) =>
+      r.pooled ? { text: NOTE_POOLED, from: 1 } : r.noMpv ? { text: NOTE_NO_MPV, from: 1 } : null,
     csvName: csvName('briedziu-limitai', 'savivaldybes', season, null),
   };
 }
@@ -456,17 +475,26 @@ function seasonTable(meta: Meta, rows: LimitRow[], muni: Municipality | null): T
       id: 'pct',
       label: 'Panaudota, %',
       numeric: true,
+      unit: '%',
       value: (r) => (r.current ? null : usedPctValue(r.a)),
       display: (r) => (r.current ? DASH : pctText(used(r.a), lim(r.a))),
     },
     closedNum('left', 'Likutis', left),
   ];
+  const dashes: string[] = [];
+  if (data.some((r) => r.current)) dashes.push('sezonas vyksta, panaudojimas dar nežinomas');
+  if (data.some((r) => r.order === null)) {
+    dashes.push(
+      muni ? 'įsakymu tvirtinama visos Lietuvos suma' : 'įsakymo suma tam sezonui nepaskelbta',
+    );
+  }
   return {
     id: 'sezonai',
     label: 'Sezonai',
+    title: `Briedžių limitai pagal sezonus · ${muni ? muni.name : 'Lietuva'}`,
     columns,
     rows: data,
-    footnotes: [],
+    footnotes: dashes.length ? [`„${DASH}“ – ${dashes.join('; ')}.`] : [],
     csvName: csvName('briedziu-limitai', 'sezonai', seasonsDesc(meta)[0], code),
   };
 }

@@ -326,11 +326,12 @@ export function vilkaiFallbackView(data: SnapshotData, sel: HubSelection): Topic
   const table: TableDef<VilkaiFallbackRow> = {
     id: 'savivaldybes',
     label: 'Savivaldybės',
+    title: `Sumedžioti vilkai pagal savivaldybes · ${label} sezonas`,
     columns: [
       { id: 'name', label: 'Savivaldybė', value: (r) => r.name },
       {
         id: 'located',
-        label: 'Sumedžiota (su vieta)',
+        label: 'Vilkai (su vieta)',
         numeric: true,
         value: (r) => r.located,
         display: (r) => formatInt(r.located),
