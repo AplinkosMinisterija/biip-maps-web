@@ -1,10 +1,8 @@
 <template>
   <div v-if="kpis.length">
-    <div
-      class="grid items-start gap-2"
-      :class="large && kpis.length >= 3 ? 'grid-cols-2' : COLS[Math.min(kpis.length, 3)]"
-    >
-      <!-- Phones (large): two columns, the first tile across both, so numbers fit. -->
+    <div class="grid items-stretch gap-2" :class="kpis.length > 1 ? 'grid-cols-2' : 'grid-cols-1'">
+      <!-- Two columns at every width; with three tiles the headline tile spans both, so the
+           secondary tiles get a readable measure and share one height (VISUAL-09). -->
       <HuntingHubShellKpiTile
         v-for="(kpi, i) in kpis"
         :key="kpi.id"
@@ -13,7 +11,7 @@
         :size="size"
         :tip-open="openTip === kpi.id"
         :tip-id="tipId(kpi.id)"
-        :class="large && kpis.length >= 3 && i === 0 ? 'col-span-2' : ''"
+        :class="kpis.length >= 3 && i === 0 ? 'col-span-2' : ''"
         @toggle-tip="openTip = openTip === kpi.id ? null : kpi.id"
         @close-tip="openTip = null"
       />
@@ -37,9 +35,7 @@
 import { computed, getCurrentInstance, ref, watch, type PropType } from 'vue';
 import type { KpiDef } from '@/utils/hunting/hub/types';
 
-// At most three tiles (§6.3); one row, except on phones (see above). Tiles keep their own
-// height (items-start): a short tile is not stretched to the tallest one.
-const COLS = ['grid-cols-1', 'grid-cols-1', 'grid-cols-2', 'grid-cols-3'];
+// At most three tiles (§6.3): the first across the row, the other two side by side.
 const props = defineProps({
   kpis: { type: Array as PropType<KpiDef[]>, default: () => [] },
   large: { type: Boolean, default: false },
@@ -54,12 +50,11 @@ watch(tipKpi, (kpi) => {
   if (!kpi) openTip.value = null;
 });
 
-// The numbers of one row share a size that fits the longest one ("129 485" in a third of
-// the panel); text values (> 9 characters) have their own smaller size.
+// The numbers of one row share a size that fits the longest one ("129 485" in half of the
+// panel); text values (> 9 characters) have their own smaller size.
 const size = computed<'lg' | 'md' | 'sm'>(() => {
   const longest = Math.max(0, ...props.kpis.map((k) => k.value.length).filter((n) => n <= 9));
-  const narrow = props.kpis.length >= 3 && !props.large;
-  if (longest <= (narrow ? 5 : 8)) return 'lg';
-  return longest <= (narrow ? 7 : 9) ? 'md' : 'sm';
+  if (longest <= 8) return 'lg';
+  return longest <= 9 ? 'md' : 'sm';
 });
 </script>
