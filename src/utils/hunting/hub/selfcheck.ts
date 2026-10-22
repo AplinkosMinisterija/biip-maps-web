@@ -43,6 +43,7 @@ import {
   TOPIC_TABS,
 } from './strings';
 import { getTopic, hasTopic, LIVE_HOSTS, TOPICS } from './topics';
+import { certainTop } from './topics/zala';
 import {
   keptQuery,
   LIVE_TABLES,
@@ -340,6 +341,36 @@ export function runHubUnitChecks(): SelfCheckResult[] {
       ],
     ),
   );
+  check('Žala: „Daugiausia“ – tik tikra eilės tvarka', () => {
+    const r = (name: string, lo: number, hi = lo) => ({ name, n: { lo, hi } });
+    const names = (list: ReturnType<typeof r>[]) => {
+      const out = certainTop(list);
+      return [out.top.map((x) => x.name), out.cut];
+    };
+    return eq(
+      [
+        // J-03: 2025/2026 kanopiniai – Kėdainių 3–17 and Alytaus 1–15 may exceed Kauno 6–13.
+        names([
+          r('Kauno', 6, 13),
+          r('Kaišiadorių', 5),
+          r('Šiaulių', 3),
+          r('Kėdainių', 3, 17),
+          r('Alytaus', 1, 15),
+        ]),
+        names([r('A', 20), r('B', 10, 12), r('C', 9), r('D', 0, 2)]),
+        names([r('A', 20), r('B', 5, 15), r('C', 12)]),
+        names([r('A', 2), r('B', 0, 2)]),
+        names([r('A', 7), r('B', 7)]),
+      ],
+      [
+        [[], true],
+        [['A', 'B', 'C'], false],
+        [['A'], true],
+        [[], false],
+        [['A', 'B'], false],
+      ],
+    );
+  });
   runEmbedChecks(check, eq);
   runLiveTopicChecks(check, eq);
   runCopyChecks(check);

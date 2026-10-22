@@ -156,6 +156,8 @@ export const T = {
     'Savivaldybių lygmens duomenys bus paskelbti suderinus su duomenų apsaugos pareigūnu.',
   legend: (season: string) => `Pranešimai apie žalą · ${season} · pagal pranešime nurodytą vietą`,
   placeNote: 'Savivaldybė nustatyta pagal pranešime nurodytą žalos vietą.',
+  topCut: 'kitų savivaldybių tikslūs skaičiai neskelbiami.',
+  rankNote: 'Rikiuojama pagal mažiausią galimą skaičių.',
 };
 
 // ---------------------------------------------------------------------------
@@ -388,22 +390,53 @@ function answer(c: Ctx, muni: number, g: Grupe, placeName: string | null, withTo
   text += '.';
   if (!placeName && withTop) {
     const top = topPlaces(c, g);
-    if (top) text += ` Daugiausia – ${top}.`;
+    if (top) text += ` ${top}`;
   }
   return placeName ? `${placeName} ${text}` : text;
 }
 
-// "Kėdainių r. sav. (92), …": the three municipalities with the most reports, so the "Kur…?"
-// heading gets places, not only a count. Ranked by the published lower bound, so a withheld
-// count known to be at least 22 is not left out; such a figure is shown as its range.
+export interface RankedPlace {
+  name: string;
+  n: Count;
+}
+
+/**
+ * The leading places whose rank is certain (J-03): ordered by the lower bound, entry i is
+ * kept only while its lower bound is at least the upper bound of every place not yet named,
+ * and at most `max`; `cut` when a further place could still belong in the list. A count with
+ * a lower bound below 3 is never named.
+ */
+export function certainTop(list: RankedPlace[], max = 3): { top: RankedPlace[]; cut: boolean } {
+  const sorted = list
+    .slice()
+    .sort((a, b) => b.n.lo - a.n.lo || a.n.hi - b.n.hi || a.name.localeCompare(b.name, 'lt'));
+  // maxHiAfter[i]: the largest upper bound among sorted[i..].
+  const maxHiAfter: number[] = new Array(sorted.length + 1).fill(0);
+  for (let i = sorted.length - 1; i >= 0; i--) {
+    maxHiAfter[i] = Math.max(sorted[i].n.hi, maxHiAfter[i + 1]);
+  }
+  const top: RankedPlace[] = [];
+  for (let i = 0; i < sorted.length && top.length < max; i++) {
+    const entry = sorted[i];
+    if (entry.n.lo < 3 || entry.n.lo < maxHiAfter[i + 1]) break;
+    top.push(entry);
+  }
+  // Cut: fewer than `max` named although another place may have 3 or more reports.
+  const cut = top.length < max && maxHiAfter[top.length] >= 3;
+  return { top, cut };
+}
+
+// "Daugiausia – Kėdainių r. sav. (92), …": the municipalities with the most reports, so the
+// "Kur…?" heading gets places, not only a count. Only places whose rank the published
+// (partly suppressed) counts prove are named; none, and the clause is left out.
 function topPlaces(c: Ctx, g: Grupe) {
   if (!ZALA_MUNICIPALITY) return null;
-  const list = c.meta.municipalities
-    .map((m) => ({ name: m.name, n: reports(c, m.code, g) }))
-    .filter((x) => x.n.lo >= 3)
-    .sort((a, b) => b.n.lo - a.n.lo || a.n.hi - b.n.hi || a.name.localeCompare(b.name, 'lt'))
-    .slice(0, 3);
-  return list.length ? list.map((x) => `${x.name} (${formatCount(x.n)})`).join(', ') : null;
+  const { top, cut } = certainTop(
+    c.meta.municipalities.map((m) => ({ name: m.name, n: reports(c, m.code, g) })),
+  );
+  if (!top.length) return null;
+  const list = top.map((x) => `${x.name} (${formatCount(x.n)})`).join(', ');
+  return cut ? `Daugiausia – ${list}; ${T.topCut}` : `Daugiausia – ${list}.`;
 }
 
 // ---------------------------------------------------------------------------
@@ -649,7 +682,7 @@ function municipalityTable(c: Ctx, g: Grupe): TableDef<MuniRow> {
   const totals = toRow(0, S.totalsRow);
   const columns: ColumnDef<MuniRow>[] = [
     { id: 'name', label: 'Savivaldybė', value: (r) => r.name },
-    countColumn('reports', 'Pranešimai', (r) => r.reports, S.suppressedReports),
+    countColumn('reports', 'Pranešimai', (r) => r.reports, `${S.suppressedReports} ${T.rankNote}`),
     {
       id: 'reporters',
       label: 'Pranešėjai',
