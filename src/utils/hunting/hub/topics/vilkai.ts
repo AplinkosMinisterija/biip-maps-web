@@ -12,6 +12,7 @@ import {
   type PluralForms,
 } from '@/utils/hunting/dates';
 import { ABOUT_LOCALE_RULE, P_HUNTED, S, TOPIC_SUBTITLES, TOPIC_TABS } from '../strings';
+import { formatPct } from './common';
 import type {
   AboutDef,
   ChoroplethDef,
@@ -38,11 +39,6 @@ const P_LOCATED: PluralForms = [
   'sumedžioti vilkai su vieta',
   'sumedžiotų vilkų su vieta',
 ];
-
-const percentFormat = new Intl.NumberFormat('lt-LT', {
-  style: 'percent',
-  maximumFractionDigits: 1,
-});
 
 // ---------------------------------------------------------------------------
 // Seasons
@@ -153,9 +149,9 @@ function vilkaiOverview(data: SnapshotData, today: string): OverviewCard {
   const lines: string[] = [];
   if (previous?.official != null && previous.limit) {
     lines.push(
-      `${seasonLabel(c - 1)} sezone – ${formatInt(previous.official)} iš ${formatInt(
+      `${seasonLabel(c - 1)} sezone sumedžiota ${formatInt(previous.official)} iš ${formatInt(
         previous.limit,
-      )} (${percentFormat.format(previous.official / previous.limit)}; oficialus AM skaičius).`,
+      )} (${formatPct(previous.official / previous.limit)}) – oficialus AM skaičius.`,
     );
   }
 
