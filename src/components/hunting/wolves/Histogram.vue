@@ -45,7 +45,10 @@
       ref="stripEl"
       class="relative overflow-x-auto overscroll-x-contain pt-1 pb-1"
       :class="compact ? '' : '-mx-1 px-1'"
-      :style="moreRight ? FADE_RIGHT : undefined"
+      :style="{
+        ...(moreRight ? FADE_RIGHT : {}),
+        paddingTop: dayLabels.maxLift ? `${4 + dayLabels.maxLift * DAY_LINE}px` : undefined,
+      }"
       @scroll.passive="measure"
     >
       <ul class="flex items-end gap-0.5 min-w-full" role="list">
@@ -58,11 +61,23 @@
             @click="drill(bin)"
           >
             <span
-              v-if="!compact"
+              v-if="!compact && bin.level !== 'day'"
               class="text-xxs leading-4 tabular-nums"
               :class="bin.count ? 'text-ink font-semibold' : 'text-ink-muted'"
             >
-              {{ showCount(bin) ? formatInt(bin.count) : '' }}
+              {{ formatInt(bin.count) }}
+            </span>
+            <!-- Days: every non-empty day has its count; a label that would touch a
+                 neighbour's label or bar moves up a line (dayLabels). -->
+            <span v-else-if="!compact" class="relative block h-4 w-full">
+              <span
+                v-if="bin.count"
+                class="absolute left-1/2 -translate-x-1/2 whitespace-nowrap font-semibold leading-3 text-ink tabular-nums"
+                :class="dayLabels.small ? 'text-xxxs' : 'text-xxs'"
+                :style="{ bottom: `${(dayLabels.lift[index] || 0) * DAY_LINE}px` }"
+              >
+                {{ formatInt(bin.count) }}
+              </span>
             </span>
             <span
               class="block w-full max-w-[40px] rounded-t-sm group-hover:opacity-80"
@@ -143,9 +158,16 @@ const FADE_RIGHT = {
   WebkitMaskImage: 'linear-gradient(to right, #000 85%, transparent)',
 };
 const moreRight = ref(false);
+// Bar width and bar-to-bar distance in px, for the day labels.
+const slot = ref({ width: 0, pitch: 0 });
 function measure() {
   const el = stripEl.value;
   moreRight.value = !!el && el.scrollLeft + el.clientWidth < el.scrollWidth - 1;
+  const items = el?.querySelectorAll('li');
+  if (!items || items.length < 2) return;
+  const width = (items[0] as HTMLElement).offsetWidth;
+  const pitch = (items[1] as HTMLElement).offsetLeft - (items[0] as HTMLElement).offsetLeft;
+  if (width !== slot.value.width || pitch !== slot.value.pitch) slot.value = { width, pitch };
 }
 watch(
   () => bins.value.map((b) => b.key).join('|'),
@@ -181,8 +203,7 @@ const minWidth = computed(() => {
   if (level.value === 'day') return props.large ? 'min-w-[24px]' : 'min-w-0';
   return props.large ? 'min-w-[44px]' : 'min-w-[24px]';
 });
-// Days: counts only on bars of 3 and more, labels on 1, 5, 10, 15, 20, 25 and the last day.
-const showCount = (bin: HistogramBin) => bin.level !== 'day' || bin.count >= 3;
+// Days: labels on 1, 5, 10, 15, 20, 25 and the last day.
 function showLabel(bin: HistogramBin, index: number) {
   if (bin.level !== 'day') return true;
   const day = Number(bin.interval.from.slice(8, 10));
@@ -194,6 +215,44 @@ const barArea = computed(() => (props.compact ? 40 : props.clipToWindow ? 68 : 9
 const maxCount = computed(() => Math.max(1, ...bins.value.map((b) => b.count)));
 const barHeight = (count: number) =>
   count ? Math.max(4, Math.round((count / maxCount.value) * barArea.value)) : 2;
+
+// Day counts: a count on every non-empty day, in a smaller font when the bars are narrow.
+// Left to right, each label sits on its bar, or as many 12 px lines higher as it takes to
+// keep clear of the labels before it and of the neighbouring bars (a label may be wider than
+// its bar). The strip gets that much more room on top.
+const DAY_LINE = 12;
+const dayLabels = computed(() => {
+  const lift: number[] = [];
+  const { width, pitch } = slot.value;
+  if (props.compact || level.value !== 'day' || !pitch) return { lift, maxLift: 0, small: false };
+  const small = pitch < 16;
+  const digitW = (small ? 9.6 : 11) * 0.62; // Noto Sans 600 tabular digits
+  const placed: { x: number; w: number; bottom: number }[] = [];
+  const list = bins.value;
+  list.forEach((bin, i) => {
+    if (!bin.count) return;
+    const x = i * pitch;
+    const w = formatInt(bin.count).length * digitW + 2;
+    const base = barHeight(bin.count);
+    let up = 0;
+    for (; up < 4; up++) {
+      const bottom = base + up * DAY_LINE;
+      const hitsBar = list.some(
+        (other, k) =>
+          k !== i &&
+          Math.abs(k - i) * pitch - width / 2 < w / 2 &&
+          bottom < barHeight(other.count) + 1,
+      );
+      const hitsLabel = placed.some(
+        (p) => Math.abs(p.x - x) < (p.w + w) / 2 && Math.abs(p.bottom - bottom) < DAY_LINE,
+      );
+      if (!hitsBar && !hitsLabel) break;
+    }
+    lift[i] = up;
+    placed.push({ x, w, bottom: base + up * DAY_LINE });
+  });
+  return { lift, maxLift: Math.max(0, ...lift.filter((v) => v !== undefined)), small };
+});
 
 // 1..12, the index into MONTH_SHORT / MONTH_NAMES.
 const monthIndex = (bin: HistogramBin) => Number(bin.interval.from.slice(5, 7));
