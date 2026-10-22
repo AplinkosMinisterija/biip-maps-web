@@ -406,19 +406,28 @@ export function useChoropleth(ctx: HubContext): HubChoroplethApi {
     map.getViewport().style.background = on ? '' : MAP_LAND;
   }
 
+  // While a snapshot topic loads, the municipality outlines alone show where data will be.
+  const loadingOutlines = computed(
+    () =>
+      ctx.topic.value.kind === 'snapshot' &&
+      (ctx.data.phase.value === 'loading' || ctx.data.phase.value === 'slow'),
+  );
+
   function refresh() {
     setBasemap(!def.value);
     styleDef = def.value;
     styleCodes = municipalityCodes.value;
     selected = active.value ? selectedSav() : null;
-    layer.setVisible(active.value);
+    layer.setVisible(active.value || loadingOutlines.value);
     selectionLayer.setVisible(active.value);
     layer.changed();
     selectionLayer.changed();
     if (!active.value) hover.value = null;
   }
 
-  watch([def, active, municipalityCodes, selectedSav], refresh, { immediate: true });
+  watch([def, active, municipalityCodes, selectedSav, loadingOutlines], refresh, {
+    immediate: true,
+  });
 
   // Pointer cursor over municipalities only while the choropleth is shown; the Vilkai map
   // sets its own list on mount and restores ours on unmount.
