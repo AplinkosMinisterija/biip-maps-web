@@ -11,7 +11,14 @@ import {
   seasonOfDay,
   type PluralForms,
 } from '@/utils/hunting/dates';
-import { ABOUT_LOCALE_RULE, P_HUNTED, S, TOPIC_SUBTITLES, TOPIC_TABS } from '../strings';
+import {
+  ABOUT_LOCALE_RULE,
+  P_HUNTED,
+  S,
+  SOURCE_BIOMON,
+  TOPIC_SUBTITLES,
+  TOPIC_TABS,
+} from '../strings';
 import { formatPct } from './common';
 import type {
   AboutDef,
@@ -478,6 +485,7 @@ export function vilkaiFallbackView(data: SnapshotData, sel: HubSelection): Topic
 // ---------------------------------------------------------------------------
 
 export const VILKAI_COMPARE =
+  'Šiame puslapyje – tik vilkai su žinoma vieta: 2025/2026 – 247, 2024/2025 – 334. ' +
   '2025/2026: AM puslapis „Sumedžioti vilkai“ – 275; MPV naudotojų ataskaitose (BĮIP) – 278. ' +
   'Skirtumas: AM puslapis skaičiuoja kiekvieną vilką pagal BIOMON registraciją, ataskaitos – ' +
   'MPV naudotojų pateiktas sumas. 2024/2025: 326 (iš jų 1 žuvęs kelyje ir 6 pagal leidimus; ' +
@@ -485,6 +493,7 @@ export const VILKAI_COMPARE =
 
 const about: AboutDef = {
   source: [
+    SOURCE_BIOMON,
     'Taškai – BIOMON duomenys (iki 2026-03-31) ir BĮIP elektroninio medžioklės žurnalo įrašai (nuo ' +
       '2025/2026 sezono). Einamojo sezono skaitiklis ir limitas – iš BĮIP.',
     'Duomenys gaunami tiesiogiai iš BĮIP ir BIOMON atidarius šią temą. Jei jų gauti nepavyksta, ' +
@@ -500,7 +509,7 @@ const about: AboutDef = {
   ],
   missing: [
     'Popieriniais lapais po sezono pateiktos suvestinės neturi vietos ir tikrosios datos, todėl ' +
-      'čia nerodomos ir neskaičiuojamos. Oficialus sezono skaičius dėl to gali būti didesnis.',
+      'čia nerodomos ir neskaičiuojamos. Oficialus sezono skaičius dėl to gali skirtis.',
   ],
   compare: [VILKAI_COMPARE],
 };
