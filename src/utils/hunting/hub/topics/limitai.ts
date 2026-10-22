@@ -206,22 +206,24 @@ function kpis(meta: Meta, a: Agg, season: number, muni: Municipality | null): Kp
     }
     // The date in the value slot instead of a lone "—" (DATAVIZ-07).
     list.push(
-      kpi('use', 'Panaudojimas paaiškės', `po ${season + 1}-05-15`, {
+      kpi('use', 'Panaudojimas paaiškės po šios datos', `${season + 1}-05-15`, {
         muted: true,
         ariaLabel: `Panaudojimas ${T.usedLater(season)}`,
       }),
     );
     return list;
   }
+  // One short value (the share), the counts in the sub-line, as Žala's share tile (CONTENT-11).
   const tile = (id: string, label: string, u: number, l: number) =>
-    kpi(id, label, usedOf(u, l), {
+    kpi(id, label, pctText(u, l), {
+      sub: `${formatInt(u)} iš ${formatInt(l)}`,
       tooltip: T.ofLimit(u, l),
       ariaLabel: `${label}: ${formatInt(u)} iš ${formatInt(l)}${l > 0 ? `, ${pctText(u, l)}` : ''}`,
     });
   return [
-    tile('used', 'Sumedžiota', used(a), lim(a)),
-    tile('usedM', 'Patinai', a.usedM, a.limM),
-    tile('usedFj', 'Patelės ir jaunikliai', a.usedFj, a.limFj),
+    tile('used', 'Panaudota limito', used(a), lim(a)),
+    tile('usedM', 'Patinų limito', a.usedM, a.limM),
+    tile('usedFj', 'Patelių ir jauniklių limito', a.usedFj, a.limFj),
   ];
 }
 
