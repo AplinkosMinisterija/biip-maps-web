@@ -48,7 +48,8 @@
           v-if="!fallback && !embed"
           role="group"
           aria-label="Rodinys"
-          class="ml-auto flex rounded-lg bg-gray-100 p-1 gap-1"
+          class="ml-auto shrink-0"
+          :class="SEG"
         >
           <button
             type="button"
@@ -349,6 +350,9 @@ import {
   BTN_TEXT,
   BTN_TOUCH,
   FOCUS_RING as focusRing,
+  SEG,
+  SEG_ITEM,
+  SEG_ITEM_ON,
 } from '@/components/hunting/hub/shell/controls';
 
 const mapLayers: any = inject('mapLayers');
@@ -365,9 +369,10 @@ const { width } = useWindowSize();
 // environment's own API, so every non-production host gets "Bandomoji aplinka" (SPEC2 §5).
 const showStagingBadge = !isProductionHost;
 
-const viewButton = `px-3 min-h-[32px] rounded-md text-sm font-semibold flex items-center gap-2 ${focusRing}`;
-const viewButtonActive = 'bg-brand text-white';
-const viewButtonIdle = 'text-gray-900 hover:bg-white';
+// Standalone "Žemėlapis | Lentelė" switch: the segmented control of the vocabulary.
+const viewButton = `${SEG_ITEM} gap-2`;
+const viewButtonActive = SEG_ITEM_ON;
+const viewButtonIdle = '';
 const linkButton = `font-semibold text-brand underline rounded ${focusRing}`;
 const badgeClass =
   'shrink-0 rounded border border-gray-400 bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-800';

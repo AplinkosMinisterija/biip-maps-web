@@ -106,6 +106,8 @@ const query = ref('');
 const active = ref(0);
 const root = ref<HTMLElement | null>(null);
 const trigger = ref<{ focus(): void } | null>(null);
+// The active option is marked only while the search field has focus (inline mode).
+const inputFocused = ref(false);
 
 const keyed = computed(() => props.items.map((i) => ({ ...i, key: foldLt(i.label) })));
 const current = computed(() => props.items.find((i) => i.value === props.modelValue));
@@ -224,8 +226,12 @@ const ComboList = defineComponent({
             class: [
               OPTION,
               large ? OPTION_TOUCH : '',
-              selected ? OPTION_SELECTED : i === active.value ? OPTION_HIGHLIGHT : '',
-              i === active.value ? 'ring-2 ring-inset ring-brand' : '',
+              selected
+                ? OPTION_SELECTED
+                : i === active.value && inputFocused.value
+                  ? OPTION_HIGHLIGHT
+                  : '',
+              i === active.value && inputFocused.value ? 'ring-2 ring-inset ring-brand' : '',
               'justify-between',
             ],
             onMousedown: (e: MouseEvent) => e.preventDefault(),
@@ -274,6 +280,8 @@ const ComboList = defineComponent({
           class: [FIELD, large ? FIELD_TOUCH : '', 'placeholder:text-ink-muted'],
           onInput: (e: Event) => (query.value = (e.target as HTMLInputElement).value),
           onKeydown,
+          onFocus: () => (inputFocused.value = true),
+          onBlur: () => (inputFocused.value = false),
         }),
         h(
           'div',
