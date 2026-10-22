@@ -12,6 +12,7 @@
     <!-- Handle: the sheet's top 44 px (at the peek it overlaps the question); a tap cycles peek → half → full, a
          drag snaps to the nearest detent. Its name says what the next tap does. -->
     <button
+      ref="handle"
       type="button"
       class="absolute inset-x-0 top-0 z-10 flex h-11 touch-none justify-center rounded-t-xl pt-1.5"
       :class="FOCUS_RING_INSET"
@@ -48,7 +49,7 @@
     <div id="hub-sheet-body" class="flex min-h-0 flex-1 flex-col">
       <!-- A selected municipality: its card replaces the sheet content (§4.3). -->
       <div v-if="showCard" class="flex-1 overflow-y-auto px-5 pb-3">
-        <component :is="areaCard" :topics="topics" />
+        <component :is="areaCard" :topics="topics" @close="onCardClose" />
       </div>
 
       <template v-else>
@@ -305,6 +306,13 @@ async function closeFilters() {
   await nextTick();
   if (filtersTrigger?.isConnected) filtersTrigger.focus({ preventScroll: true });
   filtersTrigger = null;
+}
+
+// The area card's ✕ or Esc (it clears the municipality, as on desktop): its button is gone,
+// so focus goes to the sheet handle instead of the document (MOBILE-A11Y-10).
+const handle = ref<HTMLButtonElement | null>(null);
+function onCardClose() {
+  nextTick(() => handle.value?.focus({ preventScroll: true }));
 }
 
 function openSummary() {

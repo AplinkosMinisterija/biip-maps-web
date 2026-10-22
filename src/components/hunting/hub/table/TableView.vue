@@ -138,6 +138,8 @@ import { effectiveSort, type SortState } from './sort';
 // With `variant="auto"` the component positions itself and shows only while `sel.table`
 // is set; the "Lentelė" toggle should use `aria-controls="hunting-hub-table"`.
 const HUB_TABLE_ID = 'hunting-hub-table';
+// The right gutter (--hub-gutter) minus the rows' own 16 px padding.
+const EMBED_TABLE_PAD_RIGHT = 'calc(var(--hub-gutter, 24px) - 16px)';
 
 const props = defineProps({
   variant: { type: String as PropType<'auto' | 'sheet'>, default: 'auto' },
@@ -208,6 +210,9 @@ const containerStyle = computed(() => {
   return {
     top,
     left: `var(--hub-content-left, calc(var(--hub-panel-w, 320px) + 2 * var(--hub-gap, ${HUB_GAP}px)))`,
+    // Embedded, the content ends at the site container's right edge (D3), clear of the site's
+    // accessibility button; the white area still covers the hidden map to the window edge.
+    paddingRight: ctx.embed ? EMBED_TABLE_PAD_RIGHT : undefined,
   };
 });
 

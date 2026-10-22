@@ -25,17 +25,20 @@ const props = defineProps({
   table: { type: Object as PropType<TableDef>, required: true },
   caption: { type: String, default: '' },
   sort: { type: Object as PropType<SortState | null>, default: null },
+  // A table that is not the active topic's (the Vilkai snapshot fallback): its own provenance.
+  provenance: { type: Object as PropType<Provenance | null>, default: null },
 });
 
 const ctx = inject(HUB_CTX)!;
 
 function download() {
   if (!props.table.rows.length || props.table.disabled) return;
-  const provenance: Provenance = ctx.view.value?.provenance || {
-    kind: 'live',
-    asOf: '',
-    text: S.appTitle,
-  };
+  const provenance: Provenance = props.provenance ||
+    ctx.view.value?.provenance || {
+      kind: 'live',
+      asOf: '',
+      text: S.appTitle,
+    };
   const csv = buildTableCsv(props.table, {
     provenance,
     title: props.caption,

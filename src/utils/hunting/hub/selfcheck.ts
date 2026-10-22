@@ -292,6 +292,41 @@ export function runHubUnitChecks(): SelfCheckResult[] {
       ],
     );
   });
+  check('CSV: eilutės pastaba (Neskelbiama, Nėra MPV)', () => {
+    type Row = { name: string; mpv: number; n: number | null; d: number | null };
+    const table: TableDef<Row> = {
+      id: 't',
+      label: 'Lentelė',
+      columns: [
+        { id: 'name', label: 'Savivaldybė', value: (r) => r.name },
+        { id: 'mpv', label: 'MPV', numeric: true, value: (r) => r.mpv },
+        { id: 'x', label: 'Paslėpta', value: () => 'x', csv: false },
+        { id: 'n', label: 'Sumedžiota', numeric: true, value: (r) => r.n, display: () => '–' },
+        { id: 'd', label: 'per 1 000 ha', numeric: true, value: (r) => r.d, display: () => '–' },
+      ],
+      rows: [
+        { name: 'A', mpv: 5, n: 7, d: 1.5 },
+        { name: 'B', mpv: 2, n: null, d: null },
+        { name: 'C', mpv: 0, n: null, d: null },
+      ],
+      footnotes: [],
+      rowNote: (r) =>
+        r.name === 'B'
+          ? { text: 'Neskelbiama (mažiau nei 3 MPV)', from: 2 }
+          : r.name === 'C'
+            ? { text: 'Nėra MPV', from: 1 }
+            : null,
+      csvName: 't',
+    };
+    const csv = buildTableCsv(table, {
+      provenance: { kind: 'snapshot', asOf: '2026-10-09', text: '' },
+    });
+    return eq(csv.slice(1).split('\r\n').slice(2, 5), [
+      'A;5;7;1,5',
+      'B;2;Neskelbiama (mažiau nei 3 MPV);',
+      'C;Nėra MPV;;',
+    ]);
+  });
   check('Lentelių stulpeliai (zip)', () => {
     const rows = zip<{ a: number; b: string }>(
       { columns: ['b', 'extra', 'a'], rows: [['x', 'secret', 1]] },
@@ -371,6 +406,35 @@ export function runHubUnitChecks(): SelfCheckResult[] {
         [['A'], true],
         [[], false],
         [['A', 'B'], false],
+      ],
+    );
+  });
+  check('Žala: „Daugiausia“ – lygūs skaičiai ties riba', () => {
+    const r = (name: string, lo: number, hi = lo) => ({ name, n: { lo, hi } });
+    const out = (list: ReturnType<typeof r>[]) => {
+      const x = certainTop(list);
+      return [x.top.map((y) => y.name), x.cut, x.tie];
+    };
+    const seven = ['B', 'C', 'D', 'E', 'F', 'G'].map((n) => r(n, 7));
+    return eq(
+      [
+        // the whole tie group fits (≤ 5 names): all named, the list is complete
+        out([r('A', 10), r('D', 7), r('C', 7), r('B', 7), r('E', 2)]),
+        // 6 places with 7: too many to name, stop before them
+        out([r('A', 10), ...seven, r('H', 1)]),
+        // all tied, none named
+        out(seven),
+        // a range could reach the cut-off: not provably tied, stop before the group
+        out([r('A', 10), r('B', 7), r('C', 7), r('D', 5, 7), r('E', 5, 7)]),
+        // a range below the cut-off whose rank is still certain: named
+        out([r('A', 10), r('B', 7), r('C', 7), r('D', 5, 7), r('E', 2)]),
+      ],
+      [
+        [['A', 'B', 'C', 'D'], false, null],
+        [['A'], true, { value: 7, count: 6 }],
+        [[], true, { value: 7, count: 6 }],
+        [['A'], true, null],
+        [['A', 'B', 'C', 'D'], false, null],
       ],
     );
   });

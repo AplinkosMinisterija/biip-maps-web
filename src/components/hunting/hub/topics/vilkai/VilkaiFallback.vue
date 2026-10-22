@@ -94,7 +94,12 @@
       </p>
     </div>
 
-    <p class="text-xs text-ink-muted" :title="S.provenanceSnapshotTitle(view.provenance.asOf)">
+    <!-- Embedded, the WP header line is the one place of the provenance (D9). -->
+    <p
+      v-if="!embed"
+      class="text-xs text-ink-muted"
+      :title="S.provenanceSnapshotTitle(view.provenance.asOf)"
+    >
       {{ view.provenance.text }}
     </p>
   </section>
@@ -106,6 +111,7 @@
 // The place stays the wolves state's `sav`, so the URL and the map outline keep working.
 import { computed, getCurrentInstance, inject, watch, type PropType } from 'vue';
 import { WOLVES_CTX } from '@/composables/hunting/context';
+import { HUB_CTX } from '@/composables/hunting/hub/context';
 import { seasonInterval, seasonLabel } from '@/utils/hunting/dates';
 import { S } from '@/utils/hunting/hub/strings';
 import { FOCUS_RING, KPI_VALUE } from '@/components/hunting/hub/shell/controls';
@@ -119,6 +125,7 @@ const props = defineProps({
 const emit = defineEmits(['view']);
 
 const ctx = inject(WOLVES_CTX)!;
+const embed = !!inject(HUB_CTX, null)?.embed;
 const uid = `hub-vilkai-fallback-${getCurrentInstance()?.uid ?? 0}`;
 const focusRing = FOCUS_RING;
 
