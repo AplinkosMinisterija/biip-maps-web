@@ -1,15 +1,15 @@
 <template>
-  <!-- Hub (SPEC2 §7): one line that always names its season. -->
+  <!-- Hub (SPEC2 §7): one line that always names its season, as the current one (J-05). -->
   <section
     v-if="variant === 'line'"
     :aria-label="`Šis sezonas (${model.seasonLabel})`"
     class="text-sm text-gray-800"
   >
-    <p v-if="loading" class="text-gray-600">{{ model.seasonLabel }}: įkeliama…</p>
+    <p v-if="loading" class="text-gray-600">Šis sezonas ({{ model.seasonLabel }}): įkeliama…</p>
     <p v-else class="flex items-start gap-2">
       <span class="w-2.5 h-2.5 rounded-full shrink-0 mt-1.5" :class="dotClass" aria-hidden="true" />
       <span class="flex-1">
-        <span class="font-semibold text-gray-900">{{ model.seasonLabel }}:</span>
+        <span class="font-semibold text-gray-900">Šis sezonas ({{ model.seasonLabel }}):</span>
         {{ lineText }}
         <button
           v-if="model.state === 'unavailable'"

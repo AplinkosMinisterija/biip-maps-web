@@ -1,5 +1,8 @@
 <template>
   <div v-if="ctx" class="hub-vilkai" :style="cssVars">
+    <!-- The answer, announced once per change (the panel's own lines are not live). -->
+    <p class="sr-only" aria-live="polite">{{ announced }}</p>
+
     <!-- Desktop and tablet (≥ 768 px), SPEC2 §4.1, §6.2. -->
     <template v-if="!isMobile">
       <!-- Filter bar under the shell's 56 px top bar (embedded: at the top, SPEC §4). -->
@@ -9,30 +12,38 @@
         class="absolute inset-x-0 h-12 z-40 bg-white border-b border-gray-200 px-2 flex items-center gap-2"
         :class="embed ? 'top-0' : 'top-14'"
       >
-        <HuntingHubTopicsVilkaiChipPopover
-          :label="`Laikotarpis: ${ctx.derived.periodLabel.value}`"
-          title="Laikotarpis"
-          :active="!isDefaultPeriod"
-          panel-class="w-[400px]"
+        <!-- Until the records arrive the chips wait (disabled, no period guessed from the
+             calendar): the default season depends on the data (J-05, J-17). -->
+        <fieldset
+          :disabled="loadingData"
+          class="contents"
+          :class="loadingData ? '[&>*]:opacity-60' : ''"
         >
-          <HuntingWolvesPeriodFilter :show-season-note="false" />
-        </HuntingHubTopicsVilkaiChipPopover>
-        <HuntingHubTopicsVilkaiChipPopover
-          :label="S.placeChip(placeName)"
-          title="Vieta"
-          :active="ctx.state.sav.value !== null"
-          panel-class="w-[320px]"
-        >
-          <HuntingWolvesMunicipalitySelect />
-        </HuntingHubTopicsVilkaiChipPopover>
-        <HuntingHubTopicsVilkaiChipPopover
-          :label="attrCount ? S.moreFilters(attrCount) : 'Daugiau filtrų'"
-          title="Daugiau filtrų"
-          :active="attrCount > 0"
-          panel-class="w-[440px]"
-        >
-          <HuntingWolvesMoreFilters embedded />
-        </HuntingHubTopicsVilkaiChipPopover>
+          <HuntingHubTopicsVilkaiChipPopover
+            :label="`Laikotarpis: ${loadingData ? '…' : ctx.derived.periodLabel.value}`"
+            title="Laikotarpis"
+            :active="!loadingData && !isDefaultPeriod"
+            panel-class="w-[400px]"
+          >
+            <HuntingWolvesPeriodFilter :show-season-note="false" />
+          </HuntingHubTopicsVilkaiChipPopover>
+          <HuntingHubTopicsVilkaiChipPopover
+            :label="S.placeChip(placeName)"
+            title="Vieta"
+            :active="ctx.state.sav.value !== null"
+            panel-class="w-[320px]"
+          >
+            <HuntingWolvesMunicipalitySelect />
+          </HuntingHubTopicsVilkaiChipPopover>
+          <HuntingHubTopicsVilkaiChipPopover
+            :label="attrCount ? S.moreFilters(attrCount) : 'Daugiau filtrų'"
+            title="Daugiau filtrų"
+            :active="attrCount > 0"
+            panel-class="w-[440px]"
+          >
+            <HuntingWolvesMoreFilters embedded />
+          </HuntingHubTopicsVilkaiChipPopover>
+        </fieldset>
 
         <!-- Embedded, the WP page's view switch opens and closes the table (SPEC §4). -->
         <div
@@ -92,10 +103,9 @@
               {{ BADGE_LABELS.bandomoji }}
             </span>
           </div>
-          <HuntingWolvesStatusCard variant="line" />
-
           <!-- Plain wrappers: the branches swap async components, keep their parents stable. -->
           <div v-if="fallback" class="flex flex-col gap-3">
+            <HuntingWolvesStatusCard variant="line" />
             <HuntingHubTopicsVilkaiVilkaiFallback
               v-if="fallbackSnapshot"
               :snapshot="fallbackSnapshot"
@@ -106,8 +116,13 @@
           <div v-else class="flex flex-col gap-3">
             <HuntingWolvesFilterSentence />
             <HuntingWolvesLoadState placement="panel" :show-timestamp="false" />
-            <HuntingWolvesSeasonSummary />
-            <HuntingWolvesHistogram clip-to-window />
+            <!-- One loading line (the answer) until the records arrive; then the current
+                 season's status, named as such, below the answer of the chosen period. -->
+            <div v-if="!loadingData" class="flex flex-col gap-3">
+              <HuntingWolvesStatusCard variant="line" />
+              <HuntingWolvesSeasonSummary />
+              <HuntingWolvesHistogram clip-to-window />
+            </div>
           </div>
 
           <footer class="flex flex-col gap-1 text-xs text-gray-600">
@@ -180,15 +195,27 @@
         class="absolute inset-x-0 z-30 h-[52px] bg-white shadow-md px-3 py-1 flex items-center gap-2"
         :class="embed ? 'top-0' : 'top-14'"
       >
-        <HuntingWolvesPeriodSheet />
+        <!-- Until the records arrive: a disabled chip, no period guessed from the calendar. -->
+        <div v-if="loadingData" class="contents">
+          <button
+            type="button"
+            disabled
+            class="inline-flex h-11 items-center gap-1 rounded-full border border-line-strong bg-white px-4 text-base font-medium text-ink opacity-60"
+          >
+            Laikotarpis: …
+          </button>
+        </div>
+        <div v-else class="contents"><HuntingWolvesPeriodSheet /></div>
       </div>
       <HuntingWolvesMobileSheet ref="sheet" clip-histogram>
-        <div class="flex items-start gap-2">
-          <div class="flex-1 min-w-0"><HuntingWolvesStatusCard variant="line" /></div>
-          <span v-if="showStagingBadge" :class="badgeClass" :title="BANDOMOJI_TOOLTIP">
-            {{ BADGE_LABELS.bandomoji }}
-          </span>
-        </div>
+        <template #status>
+          <div v-if="!loadingData" class="flex items-start gap-2">
+            <div class="flex-1 min-w-0"><HuntingWolvesStatusCard variant="line" /></div>
+            <span v-if="showStagingBadge" :class="badgeClass" :title="BANDOMOJI_TOOLTIP">
+              {{ BADGE_LABELS.bandomoji }}
+            </span>
+          </div>
+        </template>
         <HuntingHubTopicsVilkaiVilkaiFallback
           v-if="fallback && fallbackSnapshot"
           :snapshot="fallbackSnapshot"
@@ -217,8 +244,12 @@
       </HuntingWolvesMobileSheet>
     </template>
 
-    <!-- The loading pill and the empty-result card, below the shell's bars. -->
-    <div class="absolute inset-x-0 bottom-0 top-[var(--hub-top)] z-20 pointer-events-none">
+    <!-- The loading pill and the empty-result card, below the shell's bars (inert under the
+         expanded phone sheet, which covers them). -->
+    <div
+      class="absolute inset-x-0 bottom-0 top-[var(--hub-top)] z-20 pointer-events-none"
+      :inert="isMobile && tableOpen ? true : undefined"
+    >
       <HuntingWolvesLoadState placement="map" />
     </div>
 
@@ -251,7 +282,7 @@ import {
   watchEffect,
   type Ref,
 } from 'vue';
-import { useElementSize, useMediaQuery, useWindowSize } from '@vueuse/core';
+import { useElementSize, useMediaQuery, useWindowSize, watchDebounced } from '@vueuse/core';
 import { WOLVES_CTX, type WolvesContext } from '@/composables/hunting/context';
 import { HUB_CTX, type EmbedLiveControls } from '@/composables/hunting/hub/context';
 import { HUB_SHELL } from '@/components/hunting/hub/shell/shell';
@@ -327,6 +358,9 @@ function createContext(): WolvesContext {
 // The shell renders only the production gate on maps.biip.lt; never start requests there.
 const ctx = isProductionHost ? null : createContext();
 const tableOpen = computed(() => !!ctx?.state.tableOpen.value);
+// The records are on their way (the snapshot fallback takes over when they fail): the
+// default season is not known yet, so nothing may show a period or a count (J-05, J-17).
+const loadingData = computed(() => !!ctx && !ctx.data.dataset.value && !fallback.value);
 const railed = computed(() => !isMobile.value && isRailed(width.value, tableOpen.value, embed));
 const replacesMap = computed(
   () => !isMobile.value && tableReplacesMap(width.value, tableOpen.value, embed),
@@ -387,6 +421,16 @@ const fallback = computed(() => ctx?.data.phase.value === 'error');
 const fallbackSnapshot = computed(() => (snapshot.value?.wolves ? snapshot.value : null));
 // The fallback's map content, for the hub's choropleth (see the integration notes).
 const fallbackView = shallowRef<TopicView | null>(null);
+
+// ---- The answer, announced (debounced) in one live region: the filter sentence, or the
+// fallback's answer; nothing while the records load (the map's loading pill says so).
+const announced = ref('');
+const answerText = computed(() => {
+  if (!ctx) return '';
+  if (fallback.value) return fallbackView.value?.answer || '';
+  return ctx.data.dataset.value ? ctx.derived.sentence.value : '';
+});
+watchDebounced(answerText, (text) => (announced.value = text), { debounce: 500 });
 
 const ensure = (files: ('meta' | 'wolves')[]) => {
   hub?.data.ensure(files).catch((err) => {
