@@ -14,8 +14,10 @@ export const FOCUS_RING_INSET =
 
 // §1 Filter chip: the dropdown trigger of every filter in the bar ("Vieta: Visa Lietuva").
 // 40 px on desktop, 44 px on phones (CHIP_TOUCH). Idle / open / active (value ≠ default).
-export const CHIP = `inline-flex h-10 max-w-[22rem] items-center gap-1.5 whitespace-nowrap rounded-full border bg-white px-4 text-sm leading-none text-ink transition-colors ${FOCUS_RING}`;
-export const CHIP_TOUCH = 'h-11 text-base';
+// The line box fits the font's ascent and descent (20 px for 14 px, 24 px for 16 px text):
+// the value is truncated (overflow hidden), so a tighter box would cut g, j, p, y, ą, ę, į, ų.
+export const CHIP = `inline-flex h-10 max-w-[22rem] items-center gap-1.5 whitespace-nowrap rounded-full border bg-white px-4 text-sm leading-5 text-ink transition-colors ${FOCUS_RING}`;
+export const CHIP_TOUCH = 'h-11 text-base leading-6';
 export const CHIP_IDLE = 'border-line-strong hover:bg-brand-50';
 export const CHIP_OPEN = 'border-brand bg-brand-50';
 export const CHIP_ACTIVE = 'border-brand bg-brand-100 text-brand';
