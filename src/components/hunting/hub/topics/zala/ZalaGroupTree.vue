@@ -22,12 +22,16 @@
           :name="name"
           :value="node.value"
           :checked="node.value === modelValue"
+          :aria-labelledby="`${name}-${node.value}-label`"
           :aria-describedby="node.help ? `${name}-${node.value}-help` : undefined"
           :class="[CHECK, large ? 'h-5 w-5' : '']"
           @change="emit('update:modelValue', node.value)"
         />
         <span class="flex min-w-0 flex-col">
-          <span :class="node.child ? '' : 'font-semibold'">{{ node.label }}</span>
+          <!-- The name is the label alone; the help line is the description. -->
+          <span :id="`${name}-${node.value}-label`" :class="node.child ? '' : 'font-semibold'">
+            {{ node.label }}
+          </span>
           <span
             v-if="node.help"
             :id="`${name}-${node.value}-help`"
