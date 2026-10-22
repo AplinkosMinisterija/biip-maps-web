@@ -1,15 +1,17 @@
 <template>
-  <section aria-labelledby="wolves-summary-title" class="flex flex-col gap-2 text-sm text-gray-800">
+  <section aria-labelledby="wolves-summary-title" class="flex flex-col gap-2 text-sm text-ink">
     <h2 id="wolves-summary-title" class="sr-only">
       Suvestinė: {{ ctx.derived.periodLabel.value }}
     </h2>
 
+    <!-- The hub's tile anatomy (KpiTile): the number first, the label under it. The DOM keeps
+         dt before dd; flex-col-reverse puts the value on top. -->
     <dl
-      class="grid gap-2"
+      class="grid items-start gap-2"
       :class="season == null ? 'grid-cols-1' : remaining != null ? 'grid-cols-3' : 'grid-cols-2'"
     >
-      <div class="rounded-lg border border-gray-200 p-3">
-        <dt class="text-xs text-gray-600 flex items-center gap-1">
+      <div :class="TILE">
+        <dt :class="LABEL">
           Sumedžiota (su vieta)
           <button
             type="button"
@@ -22,14 +24,18 @@
             <span :class="tipGlyph" aria-hidden="true">i</span>
           </button>
         </dt>
-        <dd class="text-2xl font-semibold tabular-nums text-gray-900">{{ count }}</dd>
+        <dd :class="[KPI_VALUE, VALUE]">{{ count }}</dd>
       </div>
 
       <template v-if="season != null">
-        <div class="rounded-lg border border-gray-200 p-3">
-          <dt class="text-xs text-gray-600 flex items-center gap-1">
-            <!-- Names its season, so it cannot be read as the status line's limit (SPEC2 §7). -->
-            Limitas {{ seasonLabel(season) }}
+        <div :class="TILE">
+          <dt :class="LABEL">
+            <!-- Names its season, so it cannot be read as the status line's limit (SPEC2 §7),
+                 and its scope when a municipality is chosen (J-07). -->
+            <span>
+              Limitas {{ seasonLabel(season) }}
+              <template v-if="scoped">(visa Lietuva)</template>
+            </span>
             <button
               v-if="limitUnknownPast"
               type="button"
@@ -43,33 +49,32 @@
             </button>
           </dt>
           <dd
-            class="font-semibold tabular-nums text-gray-900"
-            :class="limitText.length > 6 ? 'text-sm mt-2' : 'text-2xl'"
+            :class="[KPI_VALUE, limitText.length > 6 ? 'text-base leading-6' : VALUE, scopedValue]"
           >
             {{ limitText }}
           </dd>
         </div>
-        <div v-if="remaining != null" class="rounded-lg border border-gray-200 p-3">
-          <dt class="text-xs text-gray-600">Liko</dt>
-          <dd class="text-2xl font-semibold tabular-nums text-gray-900">{{ remaining }}</dd>
+        <div v-if="remaining != null" :class="TILE">
+          <dt :class="LABEL">Liko<template v-if="scoped">&nbsp;(visa Lietuva)</template></dt>
+          <dd :class="[KPI_VALUE, VALUE, scopedValue]">{{ remaining }}</dd>
         </div>
       </template>
     </dl>
 
-    <p v-if="tips.located" id="wolves-tip-located" class="text-xs text-gray-700">
+    <p v-if="tips.located" id="wolves-tip-located" class="text-xs text-ink-muted">
       Skaičiuojami vilkai, kurių sumedžiojimo vieta ir data žinomos (BIOMON ir BIIP).
     </p>
-    <p v-if="tips.limit && limitUnknownPast" id="wolves-tip-limit" class="text-xs text-gray-700">
+    <p v-if="tips.limit && limitUnknownPast" id="wolves-tip-limit" class="text-xs text-ink-muted">
       Šio sezono limitas šiame puslapyje dar nepateikiamas.
     </p>
 
-    <p v-if="season == null" class="text-xs text-gray-600">Limitas nustatomas visam sezonui.</p>
+    <p v-if="season == null" class="text-xs text-ink-muted">Limitas nustatomas visam sezonui.</p>
 
-    <p v-if="offWindow > 0" class="text-xs text-gray-700">
+    <p v-if="offWindow > 0" class="text-xs text-ink-muted">
       Iš jų {{ formatInt(offWindow) }} ne vilkų medžioklės laikotarpiu.
     </p>
 
-    <div v-if="paperRows > 0" class="text-xs text-gray-700">
+    <div v-if="paperRows > 0" class="text-xs text-ink-muted">
       <p class="flex items-start gap-1">
         <span>
           Be vietos: {{ formatInt(paperRows) }}
@@ -94,12 +99,24 @@
       </p>
     </div>
 
+    <!-- A closed season: the official AM figure next to the located count, so the three
+         totals of the hub (Apžvalga, Vilkai, Laimikiai) are reconciled where they are read
+         (OVERVIEW-07, J-04). -->
+    <p v-if="closed && official != null" class="text-xs leading-4 text-ink">
+      Oficialus AM skaičius: {{ formatInt(official) }}.
+      <template v-if="wholeSeason && located != null">
+        Čia rodomi {{ formatInt(located) }} {{ pluralLt(located, ['vilkas', 'vilkai', 'vilkų']) }},
+        kurių sumedžiojimo vieta žinoma.
+      </template>
+      <template v-else>Jis skaičiuojamas visai Lietuvai ir visam sezonui.</template>
+    </p>
     <a
-      v-if="season != null && season < ctx.currentSeason"
+      v-if="closed"
       :href="AM_WOLVES_URL"
       target="_blank"
       rel="noopener"
-      class="self-start text-xs font-semibold text-brand underline rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+      class="self-start text-xs"
+      :class="INLINE_LINK"
     >
       Oficiali sezono suvestinė – am.lrv.lt
       <span class="sr-only">(atidaroma naujame lange)</span>
@@ -110,11 +127,20 @@
 <script setup lang="ts">
 import { computed, inject, reactive } from 'vue';
 import { WOLVES_CTX } from '@/composables/hunting/context';
+import { HUB_CTX } from '@/composables/hunting/hub/context';
+import { INLINE_LINK, KPI_VALUE } from '@/components/hunting/hub/shell/controls';
 import { formatInt, pluralLt, seasonLabel } from '@/utils/hunting/dates';
 import { AM_WOLVES_URL, WOLF_LIMITS } from '@/utils/hunting/labels';
 
 const ctx = inject(WOLVES_CTX)!;
+// The hub (optional): its snapshot meta holds the official AM count per season.
+const hub = inject(HUB_CTX, null);
 const { data, derived } = ctx;
+
+const TILE =
+  'flex min-w-0 flex-col-reverse gap-1 rounded-lg border border-line bg-white px-3 py-2.5';
+const LABEL = 'flex items-center gap-1 text-[13px] font-medium leading-[18px] text-ink-muted';
+const VALUE = 'text-[28px] leading-8';
 
 const tips = reactive({ located: false, limit: false, paper: false });
 const tipButton =
@@ -148,6 +174,22 @@ const remaining = computed(() => {
   if (!isCurrent.value || !limit.value || located.value == null) return null;
   const hunted = data.totals.value?.wolfAmount || 0;
   return formatInt(Math.max(0, limit.value - Math.max(located.value, hunted)));
+});
+
+// A municipality is chosen: the limit tiles stay national, and say so (J-07).
+const scoped = computed(() => ctx.state.sav.value != null);
+const scopedValue = computed(() => (scoped.value ? '!text-ink-muted' : ''));
+
+const closed = computed(() => season.value != null && season.value < ctx.currentSeason);
+const official = computed<number | null>(() => {
+  if (season.value == null) return null;
+  const s = hub?.data.snapshot.value?.meta?.static?.wolves?.seasons?.[String(season.value)];
+  return s?.official ?? null;
+});
+// The count on screen is the whole season's located total: all of Lithuania, no attributes.
+const wholeSeason = computed(() => {
+  const attrs = ctx.state.attrs.value;
+  return !scoped.value && !attrs.age.length && !attrs.sex.length && !attrs.method.length;
 });
 
 const offWindow = computed(() => derived.filtered.value.filter((r) => !r.inWolfWindow).length);

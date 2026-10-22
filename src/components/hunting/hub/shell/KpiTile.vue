@@ -2,23 +2,32 @@
   <div
     role="group"
     :aria-label="kpi.ariaLabel"
-    class="relative flex min-w-0 flex-col gap-0.5 rounded-md border border-gray-200 p-2"
-    :class="kpi.muted ? 'bg-gray-50 text-gray-600' : 'bg-white text-gray-900'"
+    class="relative flex min-w-0 flex-col gap-1 rounded-lg border border-line bg-white px-3 py-2.5"
   >
-    <!-- Lines break only between words: numbers keep their (no-break) group spaces. -->
-    <span aria-hidden="true" class="text-lg font-semibold leading-tight tabular-nums">
+    <!-- The site's counter: the number first, in Atkinson Hyperlegible teal (DATAVIZ-07).
+         Lines break only between words: numbers keep their (no-break) group spaces. -->
+    <span
+      aria-hidden="true"
+      :class="[
+        KPI_VALUE,
+        kpi.muted ? '!text-ink-muted' : '',
+        long ? 'text-base leading-6' : 'text-[28px] leading-8',
+      ]"
+    >
       {{ kpi.value }}
     </span>
     <!-- The ⓘ sits in the label row, so the value keeps the tile's full width. -->
     <span class="flex items-start gap-1">
-      <span aria-hidden="true" class="flex-1 text-xs leading-snug text-gray-700">{{
-        kpi.label
-      }}</span>
+      <span
+        aria-hidden="true"
+        class="flex-1 text-[13px] font-medium leading-[18px] text-ink-muted"
+        >{{ kpi.label }}</span
+      >
       <button
         v-if="kpi.tooltip"
         ref="tipButton"
         type="button"
-        class="flex shrink-0 items-center justify-center rounded-full text-gray-600 hover:text-gray-900"
+        class="flex shrink-0 items-center justify-center rounded-full text-ink-muted hover:text-ink"
         :class="[focusRing, large ? '-m-3 w-11 h-11' : 'w-4 h-4']"
         :aria-expanded="tipOpen"
         :aria-label="`Paaiškinimas: ${kpi.label}`"
@@ -33,14 +42,14 @@
         </svg>
       </button>
     </span>
-    <span v-if="kpi.sub" aria-hidden="true" class="text-xs leading-snug text-gray-700">
+    <span v-if="kpi.sub" aria-hidden="true" class="text-xs leading-4 text-ink-muted">
       {{ kpi.sub }}
     </span>
     <!-- Toggletip: the text is announced when it opens (role="status"). -->
     <span role="status" class="contents">
       <span
         v-if="tipOpen && kpi.tooltip"
-        class="absolute left-0 top-full z-20 mt-1 w-64 max-w-[80vw] rounded-md bg-gray-900 p-2 text-xs font-normal text-white shadow-lg"
+        class="absolute left-0 top-full z-20 mt-1 w-64 max-w-[80vw] rounded-md bg-ink p-2 text-xs font-normal text-white shadow-lg"
       >
         {{ kpi.tooltip }}
       </span>
@@ -49,14 +58,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, type PropType } from 'vue';
+import { computed, ref, type PropType } from 'vue';
 import type { KpiDef } from '@/utils/hunting/hub/types';
+import { KPI_VALUE } from './controls';
 import { focusRing } from './shell';
 
-defineProps({
+const props = defineProps({
   kpi: { type: Object as PropType<KpiDef>, required: true },
   large: { type: Boolean, default: false },
 });
 
 const tipOpen = ref(false);
+// A text value ("po 2027-05-15", "12 · 30 · 4") gets the smaller size, so it fits one line.
+const long = computed(() => props.kpi.value.length > 9);
 </script>
