@@ -553,6 +553,9 @@ export interface StebAnswer {
   empty: boolean;
 }
 
+// Around the dash of "stumbras – 1", so a species and its count never part on a wrap.
+const NBSP = String.fromCharCode(160);
+
 const capitalise = (s: string) => (s ? s[0].toUpperCase() + s.slice(1) : s);
 
 /** The first valid Vilnius day of the rows, or null. */
@@ -563,9 +566,9 @@ export function firstDay(records: StebRecord[]): string | null {
 }
 
 /**
- * The sentence prefix of a period: "Nuo …" (all records: since the first record, `since`
- * when given, else the first day of `records`), "Per paskutines 30 d.", "2025/2026 sezoną",
- * "Laikotarpiu … – …" or the single day.
+ * The sentence prefix of a period: "Nuo …" (all records, used for the no-record sentence:
+ * since the first record, `since` when given, else the first day of `records`), "Per
+ * paskutines 30 d.", "2025/2026 sezone", "Laikotarpiu … – …" or the single day.
  */
 export function answerPrefix(
   period: StebPeriod,
@@ -579,17 +582,20 @@ export function answerPrefix(
     return first ? `Nuo ${first}` : '';
   }
   if (period.kind === '30d') return 'Per paskutines 30 d.';
-  if (period.kind === 'season') return `${seasonLabel(period.season)} sezoną`;
+  // "sezone", as every other topic's answer (OVERVIEW-16).
+  if (period.kind === 'season') return `${seasonLabel(period.season)} sezone`;
   return interval.from === interval.to
     ? interval.from
     : `Laikotarpiu ${interval.from} – ${interval.to}`;
 }
 
 /**
- * "{prefix} užregistruota 13 stebėjimų: Vilkas – 6, Lūšis – 5, Rudasis lokys – 2." plus
- * "Pranešimuose nurodyta 17 gyvūnų." when a row has a count; for no rows
- * "{prefix} stebėjimų neužregistruota.". `records` are the filtered rows; `since` is the
- * first day of all loaded rows (the "all records" prefix).
+ * "{prefix} užregistruota 13 stebėjimų: vilkas – 6, lūšis – 5, rudasis lokys – 2." plus
+ * "Pranešimuose nurodyta 17 gyvūnų." when a row has a count; all records: "Iš viso
+ * užregistruoti 8 stebėjimai (pirmasis – 2026-09-21): …" (the date does not look like a
+ * period filter); for no rows "{prefix} stebėjimų neužregistruota.". Species are common
+ * nouns inside the sentence (lower case). `records` are the filtered rows; `since` is the
+ * first day of all loaded rows.
  */
 export function answerText(
   records: StebRecord[],
@@ -604,11 +610,18 @@ export function answerText(
     return { text: sentence, sentence, animals: null, n, empty: true };
   }
   const list = speciesSummary(records)
-    .map((g) => `${g.label} – ${formatInt(g.n)}`)
+    .map((g) => `${g.label.toLocaleLowerCase('lt')}${NBSP}–${NBSP}${formatInt(g.n)}`)
     .join(', ');
   const verb = pluralLt(n, P_REGISTERED);
-  const head = prefix ? `${prefix} ${verb}` : capitalise(verb);
-  const sentence = `${head} ${formatInt(n)} ${pluralLt(n, P_OBSERVATION)}: ${list}.`;
+  const count = `${formatInt(n)} ${pluralLt(n, P_OBSERVATION)}`;
+  let head: string;
+  if (period.kind === 'all' || !periodInterval(period, today)) {
+    const first = firstDay(records);
+    head = `Iš viso ${verb} ${count}${first ? ` (pirmasis –${NBSP}${first})` : ''}`;
+  } else {
+    head = `${prefix} ${verb} ${count}`;
+  }
+  const sentence = `${head}: ${list}.`;
   const m = animalsOf(records);
   const animals =
     m === null
@@ -632,9 +645,6 @@ export function answerText(
  * species line "Vilkas – 4, lūšis – 2, rudasis lokys – 1." and the animals sentence. The
  * records are all loaded rows; the season is the one of `today`. Null without a record in it.
  */
-// Between a species and its count, so "stumbras – 1" never breaks before the dash.
-const NBSP = String.fromCharCode(160);
-
 export function stebOverviewNumbers(
   records: StebRecord[],
   today: string,
@@ -649,7 +659,7 @@ export function stebOverviewNumbers(
   const n = rows.length;
   if (!n) return null;
   const species = speciesSummary(rows)
-    .map((g) => `${g.label.toLocaleLowerCase('lt')}${NBSP}– ${formatInt(g.n)}`)
+    .map((g) => `${g.label.toLocaleLowerCase('lt')}${NBSP}–${NBSP}${formatInt(g.n)}`)
     .join(', ');
   const lines = [`${capitalise(species)}.`];
   const m = animalsOf(rows);
