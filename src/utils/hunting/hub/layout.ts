@@ -8,14 +8,18 @@ export const MOBILE_MAX = 767; // < 768 px: mobile header + bottom sheet
 export const DESKTOP_MIN = 1024; // 768–1023 px: tablet
 export const WIDE_MIN = 1280; // ≥ 1280 px: wider panel, table as a drawer next to a rail
 
-export const HUB_TOP = 104; // 56 px top bar + 48 px filter bar
-export const HUB_TOP_EMBED = 48; // embedded in the WP page (SPEC §5.11): filter bar only
+export const HUB_TOP = 112; // 56 px top bar + 56 px filter bar
+export const HUB_TOP_EMBED = 56; // embedded in the WP page (SPEC §5.11): filter bar only
 export const HUB_PANEL_W = 360;
 export const HUB_PANEL_W_WIDE = 380; // ≥ 1280 px
 export const HUB_PANEL_W_TABLET = 320;
 export const HUB_RAIL_W = 56;
 export const HUB_DRAWER_W = 560;
 export const HUB_GAP = 8;
+// The medziokle.biip.lt content container (decision D3): 1120 px, centred, gutter ≥ 24 px.
+export const SITE_CONTAINER = 1120;
+export const SITE_GUTTER_MIN = 24;
+export const HUB_GUTTER_PHONE = 16;
 
 export const HUB_MOBILE_HEADER = 108; // topic menu row + chip row, incl. padding
 export const HUB_MOBILE_HEADER_EMBED = 60; // embedded: chip row only
@@ -32,6 +36,21 @@ export function layoutMode(width: number): HubLayoutMode {
 export const hubTop = (embed = false) => (embed ? HUB_TOP_EMBED : HUB_TOP);
 export const mobileHeader = (embed = false) =>
   embed ? HUB_MOBILE_HEADER_EMBED : HUB_MOBILE_HEADER;
+
+/**
+ * Left and right gutter of the hub's chrome (filter bar, panel, overview, table content).
+ * Embedded, it is the site's: max(24 px, (width − 1120 px) / 2), so the iframe rows line up
+ * with the WP header above (the iframe is full-bleed). Phones: 16 px. Standalone: 16 px.
+ */
+export function hubGutter(width: number, embed = false) {
+  if (layoutMode(width) === 'mobile') return HUB_GUTTER_PHONE;
+  if (!embed) return HUB_GUTTER_PHONE;
+  return Math.max(SITE_GUTTER_MIN, Math.round((width - SITE_CONTAINER) / 2));
+}
+
+// Left edge of the floating panel: the gutter embedded, 8 px off the map edge standalone.
+export const panelLeft = (width: number, embed = false) =>
+  embed ? hubGutter(width, embed) : HUB_GAP;
 
 export function panelWidth(width: number) {
   const mode = layoutMode(width);
@@ -65,12 +84,16 @@ export function hubCssVars(width: number, embed = false): Record<string, string>
     '--hub-rail-w': `${HUB_RAIL_W}px`,
     '--hub-drawer-w': `${HUB_DRAWER_W}px`,
     '--hub-gap': `${HUB_GAP}px`,
+    '--hub-gutter': `${hubGutter(width, embed)}px`,
+    '--hub-panel-left': `${panelLeft(width, embed)}px`,
+    // First free x right of the floating panel (legend, table next to the panel).
+    '--hub-content-left': `${panelLeft(width, embed) + (panelWidth(width) || HUB_PANEL_W) + HUB_GAP}px`,
   };
 }
 
 /**
  * Map area covered by the shell, as OpenLayers view padding [top, right, bottom, left] in px.
- * Rail + drawer at 1440 px: [104, 568, 0, 64], leaving 1440 − 56 − 560 = 824 px of map.
+ * Rail + drawer at 1440 px: [112, 568, 0, 64], leaving 1440 − 56 − 560 = 824 px of map.
  */
 export function mapPadding(width: number, tableOpen: boolean, embed = false): number[] {
   const mode = layoutMode(width);
@@ -80,5 +103,5 @@ export function mapPadding(width: number, tableOpen: boolean, embed = false): nu
   }
   // Floating panel on the left (desktop/tablet). When the table replaces the map the
   // padding is irrelevant; the same value keeps the view stable when the map returns.
-  return [hubTop(embed), 0, 0, HUB_GAP + panelWidth(width) + HUB_GAP];
+  return [hubTop(embed), 0, 0, panelLeft(width, embed) + panelWidth(width) + HUB_GAP];
 }

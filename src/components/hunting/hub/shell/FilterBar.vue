@@ -2,7 +2,7 @@
   <div
     role="search"
     aria-label="Filtrai"
-    class="absolute inset-x-0 z-[35] flex h-12 items-center gap-2 border-b border-gray-200 bg-white px-4"
+    class="absolute inset-x-0 z-[35] flex h-14 items-center gap-2 border-b border-line bg-white px-[var(--hub-gutter,16px)]"
     :class="ctx.embed ? 'top-0' : 'top-14'"
   >
     <div class="flex min-w-0 flex-1 items-center gap-2">
@@ -40,9 +40,11 @@ import { computed, inject } from 'vue';
 import { HUB_CTX } from '@/composables/hunting/hub/context';
 import { HUB_SLOTS, setTableOpen } from './shell';
 
-// Desktop/tablet filter bar, 48 px (§4.1): season, place, topic chips, and the
-// "Žemėlapis | Lentelė" switch at the right end. Embedded in the WP page (SPEC §4) it is the
-// top row, and the page's own view switch replaces this one.
+// Desktop/tablet filter bar, 56 px (§4.1, CONTROLS-10): season, place, topic chips (a display
+// switch such as the Briedžių limitai metric at the right end), and the standalone
+// "Žemėlapis | Lentelė" switch. Embedded in the WP page (SPEC §4) it is the top row, its
+// padding is the site gutter (--hub-gutter, decision D3), and the page's own view switch
+// replaces this one.
 const ctx = inject(HUB_CTX)!;
 const topicKind = computed(() => ctx.topic.value.kind);
 const tableOpen = computed(() => ctx.sel.value.table !== null);

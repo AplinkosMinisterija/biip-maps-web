@@ -9,7 +9,7 @@
       <div
         role="search"
         :aria-label="SS.filtersLabel"
-        class="absolute inset-x-0 z-40 flex h-12 items-center gap-2 border-b border-gray-200 bg-white px-2"
+        class="absolute inset-x-0 z-40 flex h-14 items-center gap-2 border-b border-line bg-white px-[var(--hub-gutter,16px)]"
         :class="embed ? 'top-0' : 'top-14'"
       >
         <StebFilters />
@@ -48,7 +48,7 @@
         v-if="!railed"
         id="hub-panel"
         aria-labelledby="hub-title"
-        class="absolute bottom-2 left-2 top-[calc(var(--hub-top)+8px)] z-30 w-[var(--hub-panel-w)] overflow-y-auto rounded-lg bg-white shadow-lg"
+        class="absolute bottom-2 left-[var(--hub-panel-left)] top-[calc(var(--hub-top)+8px)] z-30 w-[var(--hub-panel-w)] overflow-y-auto rounded-lg bg-white shadow-lg"
       >
         <div class="p-4">
           <StebPanel />
@@ -108,7 +108,7 @@
       <div
         role="search"
         :aria-label="SS.filtersLabel"
-        class="absolute inset-x-0 z-30 flex h-[52px] items-center gap-2 bg-white px-3 py-1 shadow-md"
+        class="absolute inset-x-0 z-30 flex h-[60px] min-w-0 items-center gap-2 bg-white px-4 py-2 shadow-md"
         :class="embed ? 'top-0' : 'top-14'"
       >
         <StebFilters mobile />
@@ -120,7 +120,7 @@
     <div
       v-if="loadingPill"
       class="pointer-events-none absolute right-0 z-20 flex justify-center"
-      :class="isMobile ? 'left-0' : 'left-[calc(var(--hub-panel-w)+16px)]'"
+      :class="isMobile ? 'left-0' : 'left-[var(--hub-content-left)]'"
       :style="{ top: `${pillTop}px` }"
     >
       <p role="status" class="rounded-full bg-white px-4 py-2 text-sm text-gray-900 shadow">
@@ -241,10 +241,10 @@ const railLabel = computed(() =>
 const drawerClass = computed(() =>
   railed.value
     ? 'absolute right-0 top-[var(--hub-top)] bottom-0 w-[var(--hub-drawer-w)] z-30 bg-white shadow-lg flex flex-col'
-    : 'absolute right-0 top-[var(--hub-top)] bottom-0 left-[calc(var(--hub-panel-w)+16px)] z-30 bg-white shadow-lg flex flex-col',
+    : 'absolute right-0 top-[var(--hub-top)] bottom-0 left-[var(--hub-content-left)] z-30 bg-white shadow-lg flex flex-col',
 );
 const legendLeft = computed(() =>
-  railed.value ? 'left-[64px]' : 'left-[calc(var(--hub-panel-w)+16px)]',
+  railed.value ? 'left-[64px]' : 'left-[var(--hub-content-left)]',
 );
 const loadingPill = computed(
   () => !!ctx && !ctx.derived.ready.value && ctx.data.phase.value !== 'error' && !replacesMap.value,
@@ -369,26 +369,16 @@ defineExpose({ openAbout, railed });
    --hub-mobile-header), right of the panel or rail, left of the drawer, above the mobile
    sheet. Same offsets as the Vilkai host's rules. */
 body.hub-steb--desktop #mapControlsRT {
-  transform: translateY(var(--hub-top, 104px));
+  transform: translateY(var(--hub-top, 112px));
 }
 body.hub-steb--desktop .bottomLeft {
-  transform: translateX(336px);
-}
-@media (min-width: 1024px) {
-  body.hub-steb--desktop .bottomLeft {
-    transform: translateX(376px);
-  }
-}
-@media (min-width: 1280px) {
-  body.hub-steb--desktop .bottomLeft {
-    transform: translateX(396px);
-  }
+  transform: translateX(calc(var(--hub-content-left, 396px) - 8px));
 }
 body.hub-steb--railed .bottomLeft {
   transform: translateX(64px);
 }
 body.hub-steb--railed #mapControlsRT {
-  transform: translate(-560px, var(--hub-top, 104px));
+  transform: translate(-560px, var(--hub-top, 112px));
 }
 body.hub-steb--railed .rightBottom {
   transform: translateX(-560px);

@@ -546,7 +546,7 @@ function runEmbedChecks(check: Check, eq: Eq) {
         tableReplacesMap(390, true, true),
         mapPadding(1440, false, true)[0],
       ],
-      [48, false, true, false, 48],
+      [56, false, true, false, 56],
     ),
   );
 
@@ -559,7 +559,7 @@ function runEmbedChecks(check: Check, eq: Eq) {
         tableReplacesMap(1440, true),
         tableReplacesMap(1100, true),
       ],
-      [[104, 568, 0, 64], 104, true, false, true],
+      [[112, 568, 0, 64], 112, true, false, true],
     ),
   );
 

@@ -399,7 +399,7 @@ onBeforeUnmount(() => {
   right: calc(var(--hub-drawer-w) + var(--hub-gap) + 8px);
 }
 .hub-legend {
-  left: calc(var(--hub-panel-w) + 2 * var(--hub-gap) + 8px);
+  left: calc(var(--hub-content-left) + 8px);
   bottom: 40px;
 }
 .hunting-hub--rail .hub-legend {
@@ -423,7 +423,7 @@ body:has(.hunting-hub) {
   transform: translateY(var(--hub-top));
 }
 .hunting-hub--desktop:not(.hunting-hub--overview) .bottomLeft {
-  transform: translateX(calc(var(--hub-panel-w) + var(--hub-gap)));
+  transform: translateX(calc(var(--hub-content-left) - var(--hub-gap)));
 }
 .hunting-hub--rail .bottomLeft {
   transform: translateX(calc(var(--hub-rail-w) + var(--hub-gap))) !important;
