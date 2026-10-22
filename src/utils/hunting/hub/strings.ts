@@ -126,6 +126,7 @@ export const S = {
   otherRowsHeading: 'Kiti šios savivaldybės rodikliai',
   loading: 'Įkeliami duomenys…',
   loadError: 'Nepavyko įkelti duomenų. Patikrinkite ryšį ir bandykite dar kartą.',
+  topicLoadError: 'Nepavyko įkelti temos.',
   retry: 'Bandyti dar kartą',
   empty: 'Pasirinktam sezonui ir vietai duomenų nėra.',
   emptyShowAll: 'Rodyti visą Lietuvą',

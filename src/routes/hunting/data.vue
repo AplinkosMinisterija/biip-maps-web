@@ -84,7 +84,11 @@
       <!-- Live topic (Vilkai, Stebėjimai; LIVE_HOSTS): the host renders its own panel, table,
            card and controls, and may teleport its chips into the shell slots (HUB_SLOTS).
            Keyed by topic, so a switch between two live topics always replaces the host. -->
-      <component :is="liveHost" v-if="topicKind === 'live' && liveHost" :key="liveHostKey" />
+      <component
+        :is="liveHostComponent"
+        v-if="topicKind === 'live' && liveHostComponent"
+        :key="liveHostKey"
+      />
       <!-- The live topic's snapshot fallback map (Vilkai without /wolfs): legend and tooltip. -->
       <template v-if="topicKind === 'live' && ctx.liveMap.value && !isMobile">
         <div v-if="T4.legend" class="hub-legend absolute z-20">
@@ -141,7 +145,10 @@ import '@fontsource/noto-sans/700.css';
 import '@fontsource/atkinson-hyperlegible/700.css';
 import {
   computed,
+  defineAsyncComponent,
+  defineComponent,
   getCurrentInstance,
+  h,
   inject,
   nextTick,
   onBeforeUnmount,
@@ -150,6 +157,7 @@ import {
   ref,
   toRaw,
   watch,
+  type Component,
 } from 'vue';
 import { useRoute } from 'vue-router';
 import { useWindowSize, watchDebounced } from '@vueuse/core';
@@ -174,6 +182,8 @@ import { useHubState } from '@/composables/hunting/hub/useHubState';
 import { LIVE_HOSTS, TOPICS } from '@/utils/hunting/hub/topics';
 import { HUB_SHELL, type HubShell } from '@/components/hunting/hub/shell/shell';
 import { FOCUS_RING } from '@/components/hunting/hub/shell/controls';
+import LoadState from '@/components/hunting/hub/shell/LoadState.vue';
+import _ from 'lodash';
 
 const mapLayers: any = inject('mapLayers');
 const route = useRoute();
@@ -293,6 +303,60 @@ const liveHost = computed(() => {
   return pick(LIVE_HOSTS[id]) || (id === 'vilkai' ? pick('HuntingHubTopicsVilkaiTopic') : null);
 });
 const liveHostKey = computed(() => ctx?.sel.value.topic ?? '');
+
+// A live host's chunk that fails (a network error, or old chunk hashes after a deploy) must end
+// in a message with a way out, not an endless spinner (JOURNEYS-10): the hosts load with a
+// timeout, one retry and an error state; a failed preload reloads the page once per session.
+const hostLoaders = import.meta.glob<Component>('@/components/hunting/hub/topics/*/*Topic.vue');
+const hostName = (path: string) =>
+  _.upperFirst(_.camelCase(path.replace(/^.*\/components\//, '').replace(/\.vue$/, '')));
+const TopicLoadFailed = defineComponent({
+  setup() {
+    return () =>
+      h(
+        'div',
+        {
+          class: isMobile.value
+            ? 'absolute inset-x-4 top-4 z-30'
+            : 'absolute left-[var(--hub-panel-left)] top-[calc(var(--hub-top)+8px)] z-30 w-[var(--hub-panel-w)] rounded-lg bg-white shadow-lg',
+        },
+        [h(LoadState, { topic: true, large: isMobile.value })],
+      );
+  },
+});
+const guardedHosts: Record<string, Component> = {};
+Object.entries(hostLoaders).forEach(([path, loader]) => {
+  guardedHosts[hostName(path)] = defineAsyncComponent({
+    // A host that loaded proves the chunks are current: a later failure may reload again.
+    loader: () => loader().then((mod) => (clearReloadMark(), mod)),
+    timeout: 15000,
+    errorComponent: TopicLoadFailed,
+    onError: (err, retry, fail, attempts) => (attempts < 2 ? retry() : fail()),
+  });
+});
+const liveHostComponent = computed(() =>
+  liveHost.value ? guardedHosts[liveHost.value] || liveHost.value : null,
+);
+const RELOAD_KEY = 'hunting-hub:chunk-reload';
+function clearReloadMark() {
+  try {
+    sessionStorage.removeItem(RELOAD_KEY);
+  } catch (err) {
+    // storage blocked
+  }
+}
+function onPreloadError(event: Event) {
+  try {
+    if (sessionStorage.getItem(RELOAD_KEY)) return;
+    sessionStorage.setItem(RELOAD_KEY, '1');
+  } catch (err) {
+    return; // storage blocked: no reload loop, the error states stay
+  }
+  event.preventDefault();
+  window.location.reload();
+}
+window.addEventListener('vite:preloadError', onPreloadError);
+onBeforeUnmount(() => window.removeEventListener('vite:preloadError', onPreloadError));
 
 // ---- Layout state.
 const topicKind = computed(() => ctx?.topic.value.kind ?? 'overview');
