@@ -182,6 +182,43 @@
 
       <!-- Table: a drawer next to the rail (≥ 1280 px) or in place of the map (768–1279 px). -->
       <HuntingWolvesTableDrawer compact :drawer-class="drawerClass" @show-on-map="onShowOnMap" />
+      <!-- Embedded, the snapshot fallback's table opens from the WP view switch, in place of
+           the map like the live table. -->
+      <section
+        v-if="fallbackTableShown && fallbackTable"
+        aria-labelledby="hub-vilkai-fallback-table-title"
+        :class="drawerClass"
+        @keydown.esc="closeFallbackTable(true)"
+      >
+        <div class="flex flex-wrap items-start justify-between gap-3 px-4 pb-2 pt-4">
+          <h2
+            id="hub-vilkai-fallback-table-title"
+            tabindex="-1"
+            class="text-base font-bold leading-[22px] text-ink focus:outline-none"
+          >
+            {{ fallbackTable.title }}
+          </h2>
+          <div class="contents">
+            <HuntingHubTableCsvButton
+              :table="fallbackTable"
+              :caption="fallbackTable.title"
+              :sort="fallbackSort"
+              :provenance="fallbackView?.provenance"
+            />
+          </div>
+        </div>
+        <div class="flex min-h-0 flex-1 flex-col px-4 py-3">
+          <HuntingHubTableDataTable
+            fill
+            :table="fallbackTable"
+            :caption="fallbackTable.title || ''"
+            :sort="fallbackSort"
+            :selected-sav="ctx.state.sav.value"
+            @update:sort="(next: SortState | null) => (fallbackSort = next)"
+            @show-on-map="onFallbackShowOnMap"
+          />
+        </div>
+      </section>
 
       <div v-if="!replacesMap && !fallback" class="absolute bottom-10 z-20" :class="legendLeft">
         <HuntingWolvesMapLegend collapsible />
@@ -270,7 +307,11 @@
           </div>
         </HuntingHubShellFullSheet>
       </div>
-      <HuntingWolvesMobileSheet ref="sheet" clip-histogram>
+      <HuntingWolvesMobileSheet
+        ref="sheet"
+        clip-histogram
+        :inert="fallbackTableShown ? true : undefined"
+      >
         <template #status>
           <div v-if="!loadingData" class="flex items-start gap-2">
             <div class="flex-1 min-w-0"><HuntingWolvesStatusCard variant="line" /></div>
@@ -308,6 +349,40 @@
           </button>
         </p>
       </HuntingWolvesMobileSheet>
+      <!-- Embedded, the snapshot fallback's table from the WP view switch: below the chip
+           row, over the map and the sheet, as cards (D7). -->
+      <section
+        v-if="fallbackTableShown && fallbackTable"
+        aria-labelledby="hub-vilkai-fallback-table-title"
+        class="absolute inset-x-0 bottom-0 top-[var(--hub-mobile-header)] z-40 flex flex-col gap-3 overflow-y-auto overscroll-contain bg-white px-4 pb-3 pt-4"
+        @keydown.esc="closeFallbackTable(true)"
+      >
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <h2
+            id="hub-vilkai-fallback-table-title"
+            tabindex="-1"
+            class="text-[15px] font-bold leading-5 text-ink focus:outline-none"
+          >
+            {{ fallbackTable.title }}
+          </h2>
+          <div class="contents">
+            <HuntingHubTableCsvButton
+              :table="fallbackTable"
+              :caption="fallbackTable.title"
+              :sort="fallbackSort"
+              :provenance="fallbackView?.provenance"
+            />
+          </div>
+        </div>
+        <HuntingHubTableCardList
+          :table="fallbackTable"
+          :caption="fallbackTable.title || ''"
+          :sort="fallbackSort"
+          :selected-sav="ctx.state.sav.value"
+          @update:sort="(next: SortState | null) => (fallbackSort = next)"
+          @show-on-map="onFallbackShowOnMap"
+        />
+      </section>
       <!-- Phone legend above the collapsed sheet (DATAVIZ-01); the fallback map uses the
            shell's choropleth legend. -->
       <div
@@ -389,7 +464,10 @@ import {
   P_HUNTED,
   S,
 } from '@/utils/hunting/hub/strings';
-import type { SnapshotData, TopicView } from '@/utils/hunting/hub/types';
+import type { SnapshotData, TableDef, TopicView } from '@/utils/hunting/hub/types';
+import type { SortState } from '@/components/hunting/hub/table/sort';
+import { embedFocusAllowed } from '@/utils/hunting/hub/embed';
+import { useMapInert } from '@/components/hunting/hub/shell/sheet';
 import { VILKAI_COMPARE, VILKAI_H1, type VilkaiCarry } from '@/utils/hunting/hub/topics/vilkai';
 import { WOLVES_TABLES } from '@/utils/hunting/hub/url';
 import { filterRecords } from '@/utils/hunting/wolves';
@@ -533,10 +611,48 @@ watch(
   { immediate: true },
 );
 watch(fallback, (failed) => {
-  if (!failed) return;
+  if (!failed) {
+    // The live data is back ("Bandyti gauti gyvus duomenis"): an open fallback table becomes
+    // the live municipality table.
+    if (fallbackTableOpen.value && ctx) {
+      fallbackTableOpen.value = false;
+      ctx.state.tableTab.value = 'savivaldybes';
+      setTable(true);
+    }
+    return;
+  }
   ensure(['meta', 'wolves']);
-  // The fallback panel shows its own table; the live drawer would have no data.
+  // The live drawer would have no data. Embedded, a table that was open (a `lentele` link,
+  // the WP view switch) becomes the fallback's table; standalone the panel shows it.
+  if (embed && tableOpen.value) fallbackTableOpen.value = true;
   setTable(false);
+});
+
+// ---- Embedded fallback table (the municipality table of the wolves.json copy), opened and
+// closed by the WP page's view switch through the bridge.
+const fallbackTable = computed<TableDef | null>(() => fallbackView.value?.tables[0] ?? null);
+const fallbackTableOpen = ref(false);
+const fallbackTableShown = computed(() => embed && fallback.value && fallbackTableOpen.value);
+const fallbackSort = ref<SortState | null>(null);
+// On phones it covers the map: the map's controls leave the Tab order (WCAG 2.4.11).
+useMapInert(computed(() => isMobile.value && fallbackTableShown.value));
+function closeFallbackTable(byKey = false) {
+  fallbackTableOpen.value = false;
+  // Esc removed the focused element: give focus to the panel heading (desktop) instead.
+  if (byKey) nextTick(() => document.getElementById('hub-vilkai-title')?.focus());
+}
+// "Rodyti žemėlapyje": the table gives way to the map with the municipality selected.
+function onFallbackShowOnMap(code: number) {
+  fallbackTableOpen.value = false;
+  if (ctx) ctx.state.sav.value = code;
+}
+// Opened: keyboard users land on its heading (embedded: only while the frame has focus,
+// without scrolling the WP page, SPEC §5.8).
+watch(fallbackTableShown, (shown) => {
+  if (!shown || !embedFocusAllowed(embed)) return;
+  nextTick(() =>
+    document.getElementById('hub-vilkai-fallback-table-title')?.focus({ preventScroll: true }),
+  );
 });
 // The fallback's municipality choropleth is drawn by the hub (its legend and tooltip too).
 watch(
@@ -720,11 +836,14 @@ let unmounted = false;
 // ---- Embedded: the WP page's view switch opens and closes the table through the bridge
 // (SPEC §5.4, §5.11); Back/Forward also name the table. Registered while this topic is
 // mounted.
+// The fallback's table id (`vilkaiFallbackView`), one of WOLVES_TABLES.
+const FALLBACK_TABLE = 'savivaldybes';
 const liveControls: EmbedLiveControls = {
   setTableOpen(open: boolean, table?: string) {
-    // The fallback shows its own table and the live drawer would be empty: a WP `set`
-    // (Back to a table entry, a pending view) keeps the map, which `hasTable` reports.
-    if (open && fallback.value) {
+    // The live drawer would be empty while the API fails: the fallback has one table (its
+    // municipalities), whichever table was asked for.
+    if (fallback.value) {
+      fallbackTableOpen.value = open;
       setTable(false);
       return;
     }
@@ -733,10 +852,13 @@ const liveControls: EmbedLiveControls = {
     }
     setTable(open);
   },
-  hasTable: computed(() => !fallback.value),
-  table: computed(() =>
-    ctx && !fallback.value && ctx.state.tableOpen.value ? ctx.state.tableTab.value : null,
-  ),
+  // While the copy loads its table is not known yet: report it, as the live topic does.
+  hasTable: computed(() => !fallback.value || !fallbackView.value || !!fallbackTable.value),
+  table: computed(() => {
+    if (!ctx) return null;
+    if (fallback.value) return fallbackTableShown.value ? FALLBACK_TABLE : null;
+    return ctx.state.tableOpen.value ? ctx.state.tableTab.value : null;
+  }),
   // The fallback shows the wolves.json copy: report its date, so the WP provenance line
   // does not say "live" next to the hub's snapshot notice.
   provenance: computed(() => {
