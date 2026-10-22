@@ -4,8 +4,6 @@
     :class="{
       'hunting-hub--mobile': isMobile,
       'hunting-hub--desktop': !isMobile && !isProductionHost,
-      'hunting-hub--rail': railed && !isMobile,
-      'hunting-hub--drawer': drawerOpen,
       'hunting-hub--overview': topicKind === 'overview',
       'hunting-hub--embed': embed,
     }"
@@ -33,8 +31,8 @@
             <HuntingHubShellTopicPanel />
           </HuntingHubShellPanelFrame>
 
-          <!-- Table: drawer ≥ 1280 px, replaces the map 768–1279 px; it positions itself and
-               shows while `lentele` is set. -->
+          <!-- Table (D14): right of the rail ≥ 1280 px, right of the panel 768–1279 px, in
+               place of the map; it positions itself and shows while `lentele` is set. -->
           <component :is="T4.tableView" v-if="T4.tableView" />
 
           <div
@@ -124,6 +122,7 @@
       :show-scale-line="true"
       :constrain-resolution="false"
       :projection="projection3857"
+      class="hub-map"
       :class="{ invisible: mapHidden }"
       :aria-hidden="topicKind === 'overview' ? 'true' : undefined"
       :inert="topicKind === 'overview' ? true : undefined"
@@ -299,7 +298,6 @@ const topicKind = computed(() => ctx?.topic.value.kind ?? 'overview');
 const tableOpen = computed(() => !!ctx && ctx.sel.value.table !== null);
 const sav = computed(() => ctx?.sel.value.sav ?? null);
 const railed = computed(() => !!ctx && topicKind.value === 'snapshot' && ctx.layout.railed.value);
-const drawerOpen = computed(() => railed.value);
 const mapHidden = computed(
   () =>
     !isMobile.value &&
@@ -550,15 +548,9 @@ onBeforeUnmount(() => {
   overflow-y: auto;
   border-radius: 0.5rem;
 }
-.hunting-hub--rail .hub-card {
-  right: calc(var(--hub-drawer-w) + var(--hub-gap) + 8px);
-}
 .hub-legend {
   left: calc(var(--hub-content-left) + 8px);
   bottom: 40px;
-}
-.hunting-hub--rail .hub-legend {
-  left: calc(var(--hub-rail-w) + 2 * var(--hub-gap) + 8px);
 }
 /* Phones: above the collapsed sheet (the sheet, z-30, covers it when raised). */
 .hub-legend-phone {
@@ -588,14 +580,11 @@ body:has(.hunting-hub) {
 .hunting-hub--desktop:not(.hunting-hub--overview) .bottomLeft {
   transform: translateX(calc(var(--hub-content-left) - var(--hub-gap)));
 }
-.hunting-hub--rail .bottomLeft {
-  transform: translateX(calc(var(--hub-rail-w) + var(--hub-gap))) !important;
-}
-.hunting-hub--drawer #mapControlsRT {
-  transform: translate(calc(-1 * (var(--hub-drawer-w) + var(--hub-gap))), var(--hub-top));
-}
-.hunting-hub--drawer .rightBottom {
-  transform: translateX(calc(-1 * (var(--hub-drawer-w) + var(--hub-gap))));
+/* A live topic's table covers the map (D14): hide the map under it, as the snapshot topics
+   do with `mapHidden`, so no strip of map shows next to the pane (VISUAL-02). */
+body.hub-vilkai--replace .hub-map,
+body.hub-steb--replace .hub-map {
+  visibility: hidden;
 }
 /* Embedded: the site's floating accessibility button owns the page's bottom-right corner;
    the zoom stack stays ≥ 72 px above the bottom (DATAVIZ-09, CONTROLS-14). */

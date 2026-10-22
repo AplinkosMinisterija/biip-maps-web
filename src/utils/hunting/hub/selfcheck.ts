@@ -812,11 +812,11 @@ function runEmbedChecks(check: Check, eq: Eq) {
         tableReplacesMap(390, true, true),
         mapPadding(1440, false, true)[0],
       ],
-      [56, false, true, false, 56],
+      [56, true, true, false, 56],
     ),
   );
 
-  check('Išdėstymas be įterpimo nepakito', () =>
+  check('Išdėstymas be įterpimo', () =>
     eq(
       [
         mapPadding(1440, true),
@@ -825,7 +825,7 @@ function runEmbedChecks(check: Check, eq: Eq) {
         tableReplacesMap(1440, true),
         tableReplacesMap(1100, true),
       ],
-      [[112, 568, 0, 64], 112, true, false, true],
+      [[112, 0, 0, 396], 112, true, true, true],
     ),
   );
 
