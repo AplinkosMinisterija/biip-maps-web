@@ -159,7 +159,7 @@ export const T = {
     'Savivaldybių lygmens duomenys bus paskelbti suderinus su duomenų apsaugos pareigūnu.',
   legend: (season: string) => `Pranešimai apie žalą · ${season} · pagal pranešime nurodytą vietą`,
   placeNote: 'Savivaldybė nustatyta pagal pranešime nurodytą žalos vietą.',
-  topCut: 'kitų savivaldybių tikslūs skaičiai neskelbiami.',
+  topCut: 'kitų savivaldybių eilės nustatyti negalima – dalis skaičių neskelbiama.',
   rankNote: 'Rikiuojama pagal mažiausią galimą skaičių.',
 };
 
