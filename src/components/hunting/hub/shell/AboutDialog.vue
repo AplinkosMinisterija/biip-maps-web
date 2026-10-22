@@ -62,6 +62,7 @@ import {
   TOPIC_TABS,
 } from '@/utils/hunting/hub/strings';
 import { focusRing, trapTab } from './shell';
+import { useModalState } from './sheet';
 
 // About dialog (§5): four fixed headings per topic, then "Bendros taisyklės" (the topic's
 // own `aboutCommon` lines when it has them, else the shell's default lines).
@@ -86,6 +87,8 @@ const LIVE_SOURCE_RULE =
   'šią temą.';
 
 const isOpen = ref(false);
+// Embedded, the WP page dims and disables its own chrome while the dialog is open (D16).
+useModalState(isOpen);
 const topicId = ref<TopicId>(ctx.sel.value.topic);
 const dialog = ref<HTMLElement | null>(null);
 const titleEl = ref<HTMLElement | null>(null);

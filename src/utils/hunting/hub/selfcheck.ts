@@ -24,8 +24,10 @@ import {
 } from './time';
 import {
   createHeightReporter,
+  createModalReporter,
   EMBED_TOPICS,
   heightMessage,
+  modalMessage,
   isAllowedParent,
   PASS_KEYS,
   parseCommand,
@@ -35,6 +37,7 @@ import {
   stateQuery,
 } from './embed';
 import { hubTop, isRailed, mapPadding, tableReplacesMap } from './layout';
+import { firstSentence, peekSecondLine } from '@/components/hunting/hub/shell/sheet';
 import {
   ABOUT_LOCALE_RULE,
   ATTRIBUTION_RULE,
@@ -800,6 +803,54 @@ function runEmbedChecks(check: Check, eq: Eq) {
     return eq(
       [sent, heightMessage(1300.2), heightMessage(-5).biipHunting.px],
       [[813, 813, 1300], { biipHunting: { v: 1, type: 'height', px: 1301 } }, 0],
+    );
+  });
+
+  check('Telefono lapo antra eilutė nekartoja pirmos (JOURNEYS-04)', () => {
+    const second = (answer: string, kpis: { value: string; label: string; sub?: string }[]) =>
+      peekSecondLine(answer, firstSentence(answer), kpis);
+    return eq(
+      [
+        second(
+          'Gauti 503 pranešimai apie žalą iš 226 pranešėjų. Daugiausia – Kėdainių r. sav. (92).',
+          [{ value: '503', label: 'Pranešimai' }],
+        ),
+        second(
+          '2026/2027 sezoną leidžiama sumedžioti 3 802 briedžius (įsakymu patvirtinta 3 935). ' +
+            '2025/2026 sezone sumedžiota 2 372 iš 4 177 (57 %).',
+          [{ value: '3 802', label: 'Leidžiama sumedžioti' }],
+        ),
+        second('Sumedžioti 129 485 gyvūnai.', [
+          { value: '129 485', label: 'Sumedžiota', sub: '+8,5 %' },
+          { value: '20,6', label: 'Per 1 000 ha', sub: 'x' },
+        ]),
+        second('Utenos r. sav. 2026/2027 sezonui limitas nenustatytas.', [
+          { value: '12', label: 'Sumedžiota', sub: '+1' },
+        ]),
+      ],
+      [
+        'Daugiausia – Kėdainių r. sav. (92).',
+        '2025/2026 sezone sumedžiota 2 372 iš 4 177 (57 %).',
+        '20,6 per 1 000 ha',
+        '12 sumedžiota · +1',
+      ],
+    );
+  });
+
+  check('Įterpimas: modal žinutė tik po ready ir tik pasikeitus (D16)', () => {
+    const sent: boolean[] = [];
+    const reporter = createModalReporter((open) => sent.push(open));
+    reporter.set(true); // before `ready`: held back
+    reporter.ready(); // reported now
+    reporter.set(true); // no change: nothing
+    reporter.set(false);
+    reporter.set(false);
+    reporter.set(true);
+    reporter.stop(); // the hub leaves with a modal open: closed
+    reporter.set(true); // after stop: nothing
+    return eq(
+      [sent, modalMessage(true), modalMessage(false).biipHunting.open],
+      [[true, false, true, false], { biipHunting: { v: 1, type: 'modal', open: true } }, false],
     );
   });
 
