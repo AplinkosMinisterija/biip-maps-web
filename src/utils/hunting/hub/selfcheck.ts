@@ -1355,6 +1355,26 @@ export function runHubDataChecks(data: SnapshotData | null | undefined): SelfChe
       return missing.length === 0 || `"${answer}"`;
     });
   };
+  // Apžvalga keeps every number it showed before the card redesign (exact for 2026-10-09).
+  const card = (id: string, expected: string[]) => {
+    const topic = TOPICS.find((t) => t.id === id);
+    if (!topic?.overview || topic.files.some((f) => f !== 'meta' && (data as any)[f] === undefined))
+      return;
+    check(`Apžvalga: ${topic.tab} kortelėje ${expected.join(', ')}`, () => {
+      const c = topic.overview!(data, HUB_SELFCHECK_DAY);
+      const text = [c.value, c.outOf, c.unit, c.answer, ...(c.lines || [])]
+        .join(' ')
+        .replace(/\u00a0|\u202f/g, ' ');
+      const missing = expected.filter((e) => text.indexOf(e) < 0);
+      return missing.length === 0 || `"${text}"`;
+    });
+  };
+  if (exactDay) {
+    card('laimikiai', ['129 485', '8,5 %', '9 381']);
+    card('limitai', ['3 802', '3 935', '2 372', '4 177', '56,8 %']);
+    card('zala', ['503', '226', '283', 'Kėdainių r. sav. (92)']);
+    card('vilkai', ['275', '307', '89,6 %']);
+  }
   headline('laimikiai', 2025, ['129 485', '8,5 %']);
   headline('limitai', 2025, ['2 372', '4 177', '57 %']);
   headline('limitai', 2026, ['3 802', '3 935']);

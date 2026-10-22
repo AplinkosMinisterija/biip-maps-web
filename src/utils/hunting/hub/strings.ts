@@ -109,7 +109,7 @@ export const S = {
   legendChip: (legendTitle: string) => `Legenda: ${legendTitle}`,
   legendNoMpv: 'Nėra MPV',
   legendNoData: 'Duomenų nėra',
-  legendPooled: 'Neskelbiama (< 3 MPV)',
+  legendPooled: 'Neskelbiama (mažiau nei 3 MPV)', // the same wording as `pooledShort`
   legendFixedClasses: 'Klasės vienodos visiems sezonams.',
   otherRowsHeading: 'Kiti rodikliai čia',
   loading: 'Įkeliami duomenys…',
