@@ -702,12 +702,6 @@ const grupeTitle = (g: Grupe) =>
     ? ''
     : ` (${(g in PRESETS ? PRESET_LABELS[g as Preset] : GROUP_LABELS[g as DamageGroup]).toLowerCase()})`;
 
-// The share of escalated reports is shown only while its possible range is at most 30
-// percentage points wide ("0–100 %" says nothing).
-const ESCALATION_MAX_SPREAD = 0.3;
-const escalationShown = (r: MuniRow) =>
-  r.escalation && r.escalation.hi - r.escalation.lo <= ESCALATION_MAX_SPREAD ? r.escalation : null;
-
 const RANGE = /^\d[\d\s]*–\d|^≥/;
 const PCT_RANGE = /^\d+–\d+/;
 
@@ -777,13 +771,13 @@ function municipalityTable(c: Ctx, g: Grupe): TableDef<MuniRow> {
       unit: '%',
       // Exact shares as a number (1 decimal), ranges as their text ("33–57").
       value: (r) => {
-        const e = escalationShown(r);
+        const e = r.escalation;
         if (!e) return null;
         return e.lo === e.hi ? Math.round(e.lo * 1000) / 10 : e.pct.replace(/\s*%$/, '');
       },
-      display: (r) => escalationShown(r)?.pct ?? DASH,
+      display: (r) => r.escalation?.pct ?? DASH,
       sort: (r) => {
-        const e = escalationShown(r);
+        const e = r.escalation;
         return e ? (e.lo + e.hi) / 2 : null;
       },
       tooltip: `Tik kanopinių ir bebrų pranešimai. ${T.escalationTooltip}`,
@@ -791,15 +785,15 @@ function municipalityTable(c: Ctx, g: Grupe): TableDef<MuniRow> {
   ];
   const all = [totals, ...rows];
   const footnotes = glyphNotes(columns, all);
-  const pctRange = all.map((r) => escalationShown(r)?.pct).find((t) => t && PCT_RANGE.test(t));
+  const pctRange = all.map((r) => r.escalation?.pct).find((t) => t && PCT_RANGE.test(t));
   if (pctRange) {
     footnotes.push(
-      `${pctRange} – dalis apskaičiuota iš galimų ribų, nes kai kurie skaičiai mažesni nei 3.`,
+      `${pctRange} – tiksli dalis neskelbiama, nes kai kurie skaičiai mažesni nei 3; rodomos galimos dalies ribos, todėl intervalas gali būti platus.`,
     );
   }
-  if (all.some((r) => !escalationShown(r))) {
+  if (all.some((r) => !r.escalation)) {
     footnotes.push(
-      `${DASH} stulpelyje „Perduota seniūnijai“ – nėra kanopinių ir bebrų pranešimų, iš kurių skaičiuojama dalis, jų mažiau nei 3 arba dalį galima nurodyti tik plačiau nei 30 procentinių punktų intervalu.`,
+      `${DASH} stulpelyje „Perduota seniūnijai“ – nėra kanopinių ir bebrų pranešimų, iš kurių skaičiuojama dalis, jų mažiau nei 3 arba dalis neskelbiama.`,
     );
   }
   if (g !== 'visos')
