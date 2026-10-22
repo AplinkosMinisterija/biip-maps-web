@@ -72,13 +72,25 @@ export const S = {
   topic: 'Tema', // tablet <select> label
   topicsNav: 'Temos', // nav aria-label
   season: 'Sezonas', // popover title
-  seasonChip: (season: string) => `Sezonas ${season}`,
+  // Filter chips: "Name: value", the value lower-case unless it is a proper noun (§OVERVIEW-20).
+  seasonChip: (season: string) => `Sezonas: ${season}`,
+  place: 'Vieta',
   placeChip: (name: string) => `Vieta: ${name}`,
   placeAll: 'Visa Lietuva',
+  placeAllLower: 'visa Lietuva',
   placeSearch: 'Ieškoti savivaldybės',
   placeNone: 'Nerasta',
-  filtersChip: (n: number) => `Filtrai (${n})`,
-  moreFilters: (n: number) => `Daugiau filtrų (${n})`,
+  filters: 'Filtrai',
+  filtersChip: (n: number) => (n ? `Filtrai (${n})` : 'Filtrai'),
+  moreFilters: (n: number) => (n ? `Daugiau filtrų (${n})` : 'Daugiau filtrų'),
+  // Reset: "Atstatyti filtrus" in the bar, "Atstatyti" in sheet footers and popovers.
+  resetFilters: 'Atstatyti filtrus',
+  reset: 'Atstatyti',
+  species: 'Rūšis',
+  speciesAll: 'visos',
+  speciesSearch: 'Ieškoti rūšies',
+  animals: 'Gyvūnai',
+  metricSwitch: 'Žemėlapyje rodoma',
   viewMap: 'Žemėlapis',
   viewTable: 'Lentelė',
   railExpand: 'Išskleisti skydelį',
@@ -133,6 +145,11 @@ export const S = {
   noticeSeasonMissing: (topic: string, season: string, fallback: string) =>
     `${topic} duomenų už ${season} nėra – rodomas ${fallback} sezonas.`,
 } as const;
+
+// A chip value after "Name: " starts lower-case ("Rūšis: briedis"); proper nouns (places)
+// are passed as they are.
+export const chipValue = (label: string) =>
+  label.charAt(0).toLocaleLowerCase('lt') + label.slice(1);
 
 // Plural forms (§12), for `pluralLt` from `utils/hunting/dates.ts`.
 export const P_HUNTED: PluralForms = ['sumedžiotas', 'sumedžioti', 'sumedžiota'];

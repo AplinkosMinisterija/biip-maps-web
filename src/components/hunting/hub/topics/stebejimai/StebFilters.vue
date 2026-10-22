@@ -1,12 +1,14 @@
 <template>
-  <!-- Desktop and tablet: one chip with a popover per filter (STEB-SPEC §3.1). The chips
-       shrink (truncated) when the row is short, so the bar never scrolls sideways and
-       "Atstatyti filtrus" never slides under the standalone view switch. -->
+  <!-- Desktop and tablet: one chip with a popover per filter (STEB-SPEC §3.1), the same chips
+       as the other topics. The chips shrink (truncated) when the row is short, so the bar
+       never scrolls sideways and "Atstatyti filtrus" never slides under the standalone view
+       switch. -->
   <div v-if="!mobile" class="flex min-w-0 items-center gap-2">
     <ChipPopover
-      :label="chipText.period"
+      :name="chipText.period.name"
+      :value="chipText.period.value"
       shrinkable
-      :style="shrinkStyle(chipText.period)"
+      :style="shrinkStyle(chipText.period.value)"
       :sr-label="compact ? fullText.period : ''"
       :title="SS.period"
       :active="ctx.state.period.value.kind !== 'all'"
@@ -15,218 +17,221 @@
       <StebPeriod />
     </ChipPopover>
     <ChipPopover
-      :label="chipText.species"
+      :name="chipText.species.name"
+      :value="chipText.species.value"
       shrinkable
-      :style="shrinkStyle(chipText.species)"
+      :style="shrinkStyle(chipText.species.value)"
       :sr-label="compact ? fullText.species : ''"
       :title="SS.species"
       :active="ctx.state.gyvunas.value !== null"
+      :padded="false"
+      initial-focus="input:checked"
       panel-class="w-[320px]"
     >
-      <fieldset class="min-w-0">
-        <legend class="sr-only">{{ SS.species }}</legend>
-        <div class="flex flex-col gap-1">
-          <label :class="rowClass">
+      <template #default="{ close }">
+        <fieldset class="min-w-0" @change="closeOnPointer(close)" @pointerdown="byPointer = true">
+          <legend class="sr-only">{{ SS.species }}</legend>
+          <label :class="row(ctx.state.gyvunas.value === null)">
             <input
               type="radio"
               :name="`${uid}-species`"
               :checked="ctx.state.gyvunas.value === null"
-              :class="radioClass"
+              :class="CHECK"
               @change="ctx.state.setSpecies(null)"
             />
             <span>{{ SS.allSpecies }}</span>
           </label>
-          <label v-for="o in ctx.derived.speciesOptions.value" :key="o.key" :class="rowClass">
+          <label
+            v-for="o in ctx.derived.speciesOptions.value"
+            :key="o.key"
+            :class="row(ctx.state.gyvunas.value === o.key)"
+          >
             <input
               type="radio"
               :name="`${uid}-species`"
               :checked="ctx.state.gyvunas.value === o.key"
-              :class="radioClass"
+              :class="CHECK"
               @change="ctx.state.setSpecies(o.key)"
             />
             <span>{{ SS.optionCount(o.label, o.n) }}</span>
           </label>
-        </div>
-      </fieldset>
+        </fieldset>
+      </template>
     </ChipPopover>
     <ChipPopover
-      :label="chipText.fact"
+      :name="chipText.fact.name"
+      :value="chipText.fact.value"
       shrinkable
-      :style="shrinkStyle(chipText.fact)"
+      :style="shrinkStyle(chipText.fact.value)"
       :sr-label="compact ? fullText.fact : ''"
       :title="SS.fact"
       :active="ctx.state.faktas.value !== null"
+      :padded="false"
+      initial-focus="input:checked"
       panel-class="w-[360px]"
     >
-      <fieldset class="min-w-0">
-        <legend class="sr-only">{{ SS.fact }}</legend>
-        <div class="flex flex-col gap-1">
-          <label :class="rowClass">
+      <template #default="{ close }">
+        <fieldset class="min-w-0" @change="closeOnPointer(close)" @pointerdown="byPointer = true">
+          <legend class="sr-only">{{ SS.fact }}</legend>
+          <label :class="row(ctx.state.faktas.value === null)">
             <input
               type="radio"
               :name="`${uid}-fact`"
               :checked="ctx.state.faktas.value === null"
-              :class="radioClass"
+              :class="CHECK"
               @change="ctx.state.setFact(null)"
             />
             <span>{{ SS.allFacts }}</span>
           </label>
-          <label v-for="o in ctx.derived.factOptions.value" :key="o.key" :class="rowClass">
+          <label
+            v-for="o in ctx.derived.factOptions.value"
+            :key="o.key"
+            :class="row(ctx.state.faktas.value === o.key)"
+          >
             <input
               type="radio"
               :name="`${uid}-fact`"
               :checked="ctx.state.faktas.value === o.key"
-              :class="radioClass"
+              :class="CHECK"
               @change="ctx.state.setFact(o.key)"
             />
             <span>{{ SS.optionCount(o.label, o.n) }}</span>
           </label>
-        </div>
-      </fieldset>
+        </fieldset>
+      </template>
     </ChipPopover>
-    <ChipPopover
+    <!-- The hub's place picker (search over the municipalities, CONTROLS-05). -->
+    <HuntingHubShellPlacePicker
       v-if="placeAvailable"
-      :label="chipText.place"
-      shrinkable
-      :style="shrinkStyle(chipText.place)"
-      :sr-label="compact ? fullText.place : ''"
-      :title="SS.place"
-      :active="ctx.state.sav.value !== null"
-      panel-class="w-[320px]"
-    >
-      <label :for="`${uid}-place`" class="mb-1 block text-sm font-semibold text-gray-900">
-        {{ SS.place }}
-      </label>
-      <select
-        :id="`${uid}-place`"
-        :value="placeValue"
-        :class="selectClass"
-        @change="onPlace(($event.target as HTMLSelectElement).value)"
-      >
-        <option value="">{{ SS.allPlaces }}</option>
-        <option v-for="p in ctx.derived.placeOptions.value" :key="p.code" :value="String(p.code)">
-          {{ p.name }}
-        </option>
-      </select>
-    </ChipPopover>
+      :style="shrinkStyle(placeText)"
+      :model-value="ctx.state.sav.value"
+      :items="ctx.derived.placeOptions.value"
+      @update:model-value="ctx.state.setPlace"
+    />
     <button
       v-if="!ctx.derived.isDefault.value"
       type="button"
-      class="shrink-0 whitespace-nowrap rounded px-1 text-sm font-semibold text-brand underline"
-      :class="focusRing"
+      :class="[BTN_TEXT, 'shrink-0 whitespace-nowrap']"
       @click="ctx.state.reset()"
     >
       {{ SS.resetFilters }}
     </button>
   </div>
 
-  <!-- Phones: two chips, each opening a full-screen sheet (STEB-SPEC §3.1). The period chip
-       shows the value only (as Vilkai's does) and is the one that shrinks; its name keeps
-       "Laikotarpis: …". -->
-  <div v-else class="flex min-w-0 items-center gap-2">
-    <button
+  <!-- Phones: [Laikotarpis] [Vieta] [Filtrai (n)], as the other topics (CONTROLS-07). The
+       period chip shows the value of a set period, its name otherwise ("Laikotarpis", not
+       "Visas laikotarpis", so the row fits); its accessible name keeps "Laikotarpis: …". -->
+  <div v-else class="flex min-w-0 flex-1 items-center gap-2">
+    <HuntingHubShellFilterChip
       ref="periodTrigger"
-      type="button"
+      class="min-w-0 max-w-[45%] shrink"
+      touch
+      :value="ctx.state.period.value.kind === 'all' ? SS.period : periodChip"
+      :open="periodOpen"
+      :active="ctx.state.period.value.kind !== 'all'"
+      :sr-label="SS.periodChip(periodChip)"
       aria-haspopup="dialog"
-      :aria-label="SS.periodChip(periodChip)"
-      :class="[mobileChip, 'min-w-0 max-w-full shrink']"
       @click="periodOpen = true"
-    >
-      <span class="truncate">{{ periodChip }}</span>
-      <span aria-hidden="true" class="text-sm">▾</span>
-    </button>
-    <button
+    />
+    <HuntingHubShellPlacePicker
+      v-if="placeAvailable"
+      mobile
+      :model-value="ctx.state.sav.value"
+      :items="ctx.derived.placeOptions.value"
+      @update:model-value="ctx.state.setPlace"
+    />
+    <HuntingHubShellFilterChip
       ref="filtersTrigger"
-      type="button"
+      class="ml-auto shrink-0"
+      touch
+      :value="S.filters"
+      :badge="sheetCount"
+      :active="sheetCount > 0"
+      :chevron="false"
+      :sr-label="SS.filtersChip(sheetCount)"
       aria-haspopup="dialog"
-      :class="[mobileChip, 'shrink-0 whitespace-nowrap']"
-      @click="filtersOpen = true"
-    >
-      <UiIcon name="filter" :size="18" aria-hidden="true" />
-      <span>{{ SS.filtersChip(ctx.derived.activeCount.value) }}</span>
-    </button>
+      @click="openFilters"
+    />
 
     <FullSheet :open="periodOpen" :title="SS.period" @close="closeSheet('period')">
       <StebPeriod large />
     </FullSheet>
-    <FullSheet :open="filtersOpen" :title="SS.filtersChip(0)" @close="closeSheet('filters')">
-      <div class="flex flex-col gap-5">
+    <FullSheet :open="filtersOpen" :title="S.filters" @close="closeSheet('filters')">
+      <div class="flex min-h-full flex-col gap-5">
         <fieldset class="min-w-0">
-          <legend class="mb-1 text-base font-semibold text-gray-900">{{ SS.species }}</legend>
-          <label :class="rowClassLarge">
+          <legend class="mb-1 text-base font-semibold text-ink">{{ SS.species }}</legend>
+          <label :class="row(draft.gyvunas === null, true)">
             <input
               type="radio"
               :name="`${uid}-m-species`"
-              :checked="ctx.state.gyvunas.value === null"
-              :class="radioClass"
-              @change="ctx.state.setSpecies(null)"
+              :checked="draft.gyvunas === null"
+              :class="[CHECK, 'h-5 w-5']"
+              @change="draft = { ...draft, gyvunas: null }"
             />
             <span>{{ SS.allSpecies }}</span>
           </label>
-          <label v-for="o in ctx.derived.speciesOptions.value" :key="o.key" :class="rowClassLarge">
+          <label
+            v-for="o in ctx.derived.speciesOptions.value"
+            :key="o.key"
+            :class="row(draft.gyvunas === o.key, true)"
+          >
             <input
               type="radio"
               :name="`${uid}-m-species`"
-              :checked="ctx.state.gyvunas.value === o.key"
-              :class="radioClass"
-              @change="ctx.state.setSpecies(o.key)"
+              :checked="draft.gyvunas === o.key"
+              :class="[CHECK, 'h-5 w-5']"
+              @change="draft = { ...draft, gyvunas: o.key }"
             />
             <span>{{ SS.optionCount(o.label, o.n) }}</span>
           </label>
         </fieldset>
         <fieldset class="min-w-0">
-          <legend class="mb-1 text-base font-semibold text-gray-900">{{ SS.fact }}</legend>
-          <label :class="rowClassLarge">
+          <legend class="mb-1 text-base font-semibold text-ink">{{ SS.fact }}</legend>
+          <label :class="row(draft.faktas === null, true)">
             <input
               type="radio"
               :name="`${uid}-m-fact`"
-              :checked="ctx.state.faktas.value === null"
-              :class="radioClass"
-              @change="ctx.state.setFact(null)"
+              :checked="draft.faktas === null"
+              :class="[CHECK, 'h-5 w-5']"
+              @change="draft = { ...draft, faktas: null }"
             />
             <span>{{ SS.allFacts }}</span>
           </label>
-          <label v-for="o in ctx.derived.factOptions.value" :key="o.key" :class="rowClassLarge">
+          <label
+            v-for="o in ctx.derived.factOptions.value"
+            :key="o.key"
+            :class="row(draft.faktas === o.key, true)"
+          >
             <input
               type="radio"
               :name="`${uid}-m-fact`"
-              :checked="ctx.state.faktas.value === o.key"
-              :class="radioClass"
-              @change="ctx.state.setFact(o.key)"
+              :checked="draft.faktas === o.key"
+              :class="[CHECK, 'h-5 w-5']"
+              @change="draft = { ...draft, faktas: o.key }"
             />
             <span>{{ SS.optionCount(o.label, o.n) }}</span>
           </label>
         </fieldset>
-        <div v-if="placeAvailable">
-          <label :for="`${uid}-m-place`" class="mb-1 block text-base font-semibold text-gray-900">
-            {{ SS.place }}
-          </label>
-          <select
-            :id="`${uid}-m-place`"
-            :value="placeValue"
-            :class="[selectClass, 'h-12 text-base']"
-            @change="onPlace(($event.target as HTMLSelectElement).value)"
-          >
-            <option value="">{{ SS.allPlaces }}</option>
-            <option
-              v-for="p in ctx.derived.placeOptions.value"
-              :key="p.code"
-              :value="String(p.code)"
-            >
-              {{ p.name }}
-            </option>
-          </select>
-        </div>
-        <!-- Only this sheet's filters: the period has its own sheet and chip. -->
-        <button
-          v-if="ctx.derived.activeCount.value > 0"
-          type="button"
-          class="min-h-[44px] self-start rounded text-base font-semibold text-brand underline"
-          :class="focusRing"
-          @click="ctx.state.clearFilters()"
+        <!-- Staged: the map redraws only with "Rodyti N stebėjimų" (CONTROLS-17). -->
+        <div
+          class="sticky bottom-0 -mx-4 -mb-3 mt-auto flex gap-3 border-t border-line bg-white px-4 pt-3"
+          style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom))"
         >
-          {{ SS.resetFilters }}
-        </button>
+          <button
+            type="button"
+            :class="[BTN_SECONDARY, BTN_TOUCH, 'text-base']"
+            @click="draft = { gyvunas: null, faktas: null }"
+          >
+            {{ S.reset }}
+          </button>
+          <button
+            type="button"
+            :class="[BTN_PRIMARY, BTN_TOUCH, 'flex-1 text-base']"
+            @click="applyFilters"
+          >
+            {{ draftLabel }}
+          </button>
+        </div>
       </div>
     </FullSheet>
   </div>
@@ -234,16 +239,29 @@
 
 <script setup lang="ts">
 // Filters of the Stebėjimai topic (STEB-SPEC §3.3): Laikotarpis, Rūšis, Faktas, Vieta.
-// Desktop: chips with popovers (the hub's generic ChipPopover); phones: "Laikotarpis" and
-// "Filtrai (n)" chips opening full-screen sheets. Every change applies at once.
+// Desktop: chips with popovers (the hub's generic ChipPopover and PlacePicker); phones:
+// "Laikotarpis", "Vieta" and "Filtrai (n)" chips opening full-screen sheets. Single choices
+// apply at once; the phone Filtrai sheet (two fields) is staged until its footer button.
 import { computed, getCurrentInstance, inject, nextTick, ref } from 'vue';
 import { useWindowSize } from '@vueuse/core';
 import ChipPopover from '@/components/hunting/hub/topics/vilkai/ChipPopover.vue';
 import FullSheet from '@/components/hunting/hub/shell/FullSheet.vue';
+import {
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT,
+  BTN_TOUCH,
+  CHECK,
+  OPTION,
+  OPTION_SELECTED,
+  OPTION_TOUCH,
+} from '@/components/hunting/hub/shell/controls';
 import { STEB_CTX } from '@/composables/hunting/hub/stebejimai/useStebState';
+import { formatInt, pluralLt } from '@/utils/hunting/dates';
 import { DESKTOP_MIN, WIDE_MIN } from '@/utils/hunting/hub/layout';
-import { periodChipLabel } from '@/utils/hunting/hub/stebejimai/model';
-import { SS } from '@/utils/hunting/hub/stebejimai/strings';
+import { chipValue, S } from '@/utils/hunting/hub/strings';
+import { filterRecords, periodChipLabel } from '@/utils/hunting/hub/stebejimai/model';
+import { P_OBSERVATION_ACC, SS } from '@/utils/hunting/hub/stebejimai/strings';
 import StebPeriod from './StebPeriod.vue';
 
 defineProps({
@@ -257,45 +275,67 @@ const { width } = useWindowSize();
 // chip texts, so four chips fit; the chips also shrink as a last resort.
 const compact = computed(() => width.value < (ctx.embed ? DESKTOP_MIN : WIDE_MIN));
 
-const focusRing =
-  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
-const rowClass = 'flex min-h-[32px] cursor-pointer items-center gap-3 text-sm text-gray-900';
-const rowClassLarge = 'flex min-h-[44px] cursor-pointer items-center gap-3 text-base text-gray-900';
-const radioClass = `h-4 w-4 shrink-0 accent-brand ${focusRing}`;
-const selectClass = `block h-9 w-full rounded-md border border-gray-400 bg-white px-2 text-sm text-gray-900 ${focusRing}`;
-const mobileChip = `inline-flex h-11 items-center gap-1 rounded-full border border-line-strong bg-white px-4 text-base font-medium text-gray-900 ${focusRing}`;
+const row = (selected: boolean, large = false) => [
+  OPTION,
+  large ? OPTION_TOUCH : '',
+  selected ? OPTION_SELECTED : '',
+];
 
 const periodChip = computed(() => periodChipLabel(ctx.state.period.value, ctx.today));
-const optionLabel = (list: { key: string; label: string }[], key: string | null, all: string) =>
-  key === null ? all : list.find((o) => o.key === key)?.label || key;
-const speciesChip = computed(() =>
-  optionLabel(ctx.derived.speciesOptions.value, ctx.state.gyvunas.value, SS.allSpecies),
-);
-const factChip = computed(() =>
-  optionLabel(ctx.derived.factOptions.value, ctx.state.faktas.value, SS.allFacts),
-);
-const placeChip = computed(() => {
+const optionLabel = (list: { key: string; label: string }[], key: string | null) =>
+  list.find((o) => o.key === key)?.label || key || '';
+// Chip values after the name, lower-case ("Rūšis: visos", "Faktas: stebėtas gyvas").
+const values = computed(() => {
+  const { period, gyvunas, faktas } = ctx.state;
+  return {
+    period: period.value.kind === 'all' ? SS.allPeriodChip : chipValue(periodChip.value),
+    species:
+      gyvunas.value === null
+        ? SS.allSpeciesChip
+        : chipValue(optionLabel(ctx.derived.speciesOptions.value, gyvunas.value)),
+    fact:
+      faktas.value === null
+        ? SS.allFactsChip
+        : chipValue(optionLabel(ctx.derived.factOptions.value, faktas.value)),
+  };
+});
+const fullText = computed(() => ({
+  period: SS.periodChip(values.value.period),
+  species: SS.speciesChip(values.value.species),
+  fact: SS.factChip(values.value.fact),
+}));
+// Wide: "Rūšis: stumbras". Compact: the value of a set filter, the name of an unset one
+// ("Rūšis", not "visos"), and the period's value; the full text stays the chip's accessible
+// name, so a screen reader still hears "Rūšis: stumbras".
+const chipText = computed(() => {
+  const v = values.value;
+  if (!compact.value) {
+    return {
+      period: { name: SS.period, value: v.period },
+      species: { name: SS.species, value: v.species },
+      fact: { name: SS.fact, value: v.fact },
+    };
+  }
+  const { gyvunas, faktas } = ctx.state;
+  return {
+    period: { name: '', value: periodChip.value },
+    species: {
+      name: '',
+      value:
+        gyvunas.value !== null
+          ? optionLabel(ctx.derived.speciesOptions.value, gyvunas.value)
+          : SS.species,
+    },
+    fact: {
+      name: '',
+      value:
+        faktas.value !== null ? optionLabel(ctx.derived.factOptions.value, faktas.value) : SS.fact,
+    },
+  };
+});
+const placeText = computed(() => {
   const sav = ctx.state.sav.value;
   return sav === null ? SS.allPlaces : ctx.meta.nameOf(sav) || `${sav}`;
-});
-// Chip texts. Wide: "Rūšis: Stumbras". Compact: the value of a set filter, the name of an
-// unset one ("Rūšis", not "Visos rūšys"), and the period's value; the full text stays the
-// chip's accessible name, so a screen reader still hears "Rūšis: Stumbras".
-const fullText = computed(() => ({
-  period: SS.periodChip(periodChip.value),
-  species: SS.speciesChip(speciesChip.value),
-  fact: SS.factChip(factChip.value),
-  place: SS.placeChip(placeChip.value),
-}));
-const chipText = computed(() => {
-  if (!compact.value) return fullText.value;
-  const { gyvunas, faktas, sav } = ctx.state;
-  return {
-    period: periodChip.value,
-    species: gyvunas.value !== null ? speciesChip.value : SS.species,
-    fact: faktas.value !== null ? factChip.value : SS.fact,
-    place: sav.value !== null ? placeChip.value : SS.place,
-  };
 });
 // When the row is short, long chip texts give way first, down to 5rem; short ones ("Rūšis",
 // "Stumbras") shrink only after that, so they stay readable in the usual cases. Flex
@@ -305,22 +345,52 @@ const shrinkStyle = (text: string) =>
   text.length > LONG_CHIP ? { flexShrink: 100000, minWidth: '5rem' } : { flexShrink: 1 };
 // The place filter needs the municipality list of the hub meta.
 const placeAvailable = computed(() => ctx.meta.status.value === 'ready');
-const placeValue = computed(() =>
-  ctx.state.sav.value === null ? '' : String(ctx.state.sav.value),
-);
 
-function onPlace(value: string) {
-  ctx.state.setPlace(value && /^\d+$/.test(value) ? Number(value) : null);
+// A click on an option closes its popover; arrow keys move through the options and keep it
+// open (Esc closes).
+const byPointer = ref(false);
+function closeOnPointer(close: () => void) {
+  if (byPointer.value) close();
+  byPointer.value = false;
 }
 
 // ---- Phone sheets: focus goes back to the chip that opened them.
 const periodOpen = ref(false);
 const filtersOpen = ref(false);
-const periodTrigger = ref<HTMLButtonElement | null>(null);
-const filtersTrigger = ref<HTMLButtonElement | null>(null);
+const periodTrigger = ref<{ focus(): void } | null>(null);
+const filtersTrigger = ref<{ focus(): void } | null>(null);
 function closeSheet(which: 'period' | 'filters') {
   if (which === 'period') periodOpen.value = false;
   else filtersOpen.value = false;
   nextTick(() => (which === 'period' ? periodTrigger : filtersTrigger).value?.focus());
 }
+
+// The Filtrai sheet holds Rūšis and Faktas (Vieta has its own chip): staged.
+const sheetCount = computed(
+  () => Number(ctx.state.gyvunas.value !== null) + Number(ctx.state.faktas.value !== null),
+);
+const draft = ref<{ gyvunas: string | null; faktas: string | null }>({
+  gyvunas: null,
+  faktas: null,
+});
+function openFilters() {
+  draft.value = { gyvunas: ctx.state.gyvunas.value, faktas: ctx.state.faktas.value };
+  filtersOpen.value = true;
+}
+function applyFilters() {
+  const { gyvunas, faktas } = draft.value;
+  if (gyvunas !== ctx.state.gyvunas.value) ctx.state.setSpecies(gyvunas);
+  if (faktas !== ctx.state.faktas.value) ctx.state.setFact(faktas);
+  closeSheet('filters');
+}
+// "Rodyti 8 stebėjimus": the rows the draft would show, under the period and place.
+const draftLabel = computed(() => {
+  const n = filterRecords(
+    ctx.derived.records.value,
+    { period: ctx.state.period.value, sav: ctx.state.sav.value, ...draft.value },
+    ctx.today,
+    ctx.meta.codeOf,
+  ).length;
+  return SS.showObservations(`${formatInt(n)} ${pluralLt(n, P_OBSERVATION_ACC)}`);
+});
 </script>

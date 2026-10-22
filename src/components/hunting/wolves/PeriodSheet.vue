@@ -1,17 +1,16 @@
 <template>
   <div class="min-w-0">
-    <button
+    <HuntingHubShellFilterChip
       ref="triggerEl"
-      type="button"
+      touch
+      :value="compact ? shortLabel : periodLabel"
+      :open="isOpen"
+      :active="!isDefault"
+      :sr-label="`Laikotarpis: ${periodLabel}`"
       aria-haspopup="dialog"
       :aria-expanded="isOpen ? 'true' : 'false'"
-      :aria-label="`Laikotarpis: ${periodLabel}`"
-      class="inline-flex max-w-full items-center gap-1 rounded-full border border-line-strong bg-white px-4 h-11 text-base font-medium text-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
       @click="open"
-    >
-      <span class="truncate">{{ periodLabel }}</span>
-      <span aria-hidden="true" class="text-sm">▾</span>
-    </button>
+    />
 
     <Teleport to="body">
       <div
@@ -24,19 +23,19 @@
         @keydown="onKeydown"
       >
         <div
-          class="flex items-center justify-between gap-2 border-b border-gray-200 px-4 h-14 shrink-0"
+          class="flex items-center justify-between gap-2 border-b border-line px-4 h-14 shrink-0"
         >
           <h2
             :id="`${uid}-title`"
             ref="titleEl"
             tabindex="-1"
-            class="text-lg font-semibold text-gray-900 focus:outline-none"
+            class="text-lg font-semibold text-ink focus:outline-none"
           >
             Laikotarpis
           </h2>
           <button
             type="button"
-            class="inline-flex items-center gap-1 rounded-md px-3 min-h-[44px] text-base font-medium text-gray-900 hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            :class="[BTN_TEXT, BTN_TEXT_TOUCH, 'px-3 text-base text-ink']"
             @click="close"
           >
             <span aria-hidden="true">✕</span> Uždaryti
@@ -48,19 +47,15 @@
         </div>
 
         <div
-          class="sticky bottom-0 flex shrink-0 gap-3 border-t border-gray-200 bg-white px-4 py-3"
+          class="sticky bottom-0 flex shrink-0 gap-3 border-t border-line bg-white px-4 py-3"
           style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom))"
         >
-          <button
-            type="button"
-            class="min-h-[48px] rounded-md border border-gray-400 bg-white px-4 text-base font-medium text-gray-900 hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-            @click="clear"
-          >
-            Valyti
+          <button type="button" :class="[BTN_SECONDARY, BTN_TOUCH, 'text-base']" @click="clear">
+            Atstatyti
           </button>
           <button
             type="button"
-            class="flex-1 min-h-[48px] rounded-md bg-brand px-4 text-base font-semibold text-white hover:bg-brand-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            :class="[BTN_PRIMARY, BTN_TOUCH, 'flex-1 text-base']"
             @click="applyAndClose"
           >
             {{ applyLabel }}
@@ -80,17 +75,30 @@ import { WOLVES_CTX } from '@/composables/hunting/context';
 import type { Interval, PresetId } from '@/utils/hunting/types';
 import { formatInt, pluralLt, WOLVES_ACC } from '@/utils/hunting/dates';
 import { filterRecords } from '@/utils/hunting/wolves';
+import {
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TEXT,
+  BTN_TEXT_TOUCH,
+  BTN_TOUCH,
+} from '@/components/hunting/hub/shell/controls';
 
 interface Draft {
   interval: Interval;
   preset: PresetId;
 }
 
+defineProps({
+  // The hub's phone header: the chip shows "2025/2026" for a season (the full label stays
+  // its accessible name), so the place and Filtrai chips fit in the same row.
+  compact: { type: Boolean, default: false },
+});
+
 const ctx = inject(WOLVES_CTX)!;
 const uid = `wolves-period-sheet-${getCurrentInstance()?.uid ?? 0}`;
 
 const isOpen = ref(false);
-const triggerEl = ref<HTMLButtonElement | null>(null);
+const triggerEl = ref<{ focus(): void } | null>(null);
 const dialogEl = ref<HTMLElement | null>(null);
 const titleEl = ref<HTMLElement | null>(null);
 const draft = ref<Draft>({ interval: ctx.state.interval.value, preset: ctx.state.preset.value });
@@ -108,6 +116,18 @@ const periodLabel = computed(() => {
   if (preset === 'all') return 'Visi sezonai';
   return interval.from === interval.to ? interval.from : `${interval.from} – ${interval.to}`;
 });
+
+const shortLabel = computed(() => {
+  const preset = ctx.state.preset.value;
+  if (preset.startsWith('season:')) {
+    const s = Number(preset.slice(7));
+    return `${s}/${s + 1}`;
+  }
+  return periodLabel.value;
+});
+const isDefault = computed(
+  () => ctx.state.preset.value === `season:${ctx.derived.defaultSeason.value}`,
+);
 
 // The same filter as derived.filtered, but for the staged interval.
 const draftCount = computed<number | null>(() => {
