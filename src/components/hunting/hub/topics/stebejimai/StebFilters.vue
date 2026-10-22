@@ -119,14 +119,15 @@
   </div>
 
   <!-- Phones: [Laikotarpis] [Vieta] [Filtrai (n)], as the other topics (CONTROLS-07). The
-       period chip shows the value of a set period, its name otherwise ("Laikotarpis", not
-       "Visas laikotarpis", so the row fits); its accessible name keeps "Laikotarpis: …". -->
+       period chip shows its value ("Visas laikotarpis", truncated when the row is short) as
+       the other topics' season chips do; its accessible name keeps "Laikotarpis: …"
+       (MOBILE-15). -->
   <div v-else class="flex min-w-0 flex-1 items-center gap-2">
     <HuntingHubShellFilterChip
       ref="periodTrigger"
-      class="min-w-0 max-w-[45%] shrink"
+      class="min-w-0 max-w-[38%] shrink"
       touch
-      :value="ctx.state.period.value.kind === 'all' ? SS.period : periodChip"
+      :value="periodChip"
       :open="periodOpen"
       :active="ctx.state.period.value.kind !== 'all'"
       :sr-label="SS.periodChip(periodChip)"
@@ -157,7 +158,7 @@
       <StebPeriod large />
     </FullSheet>
     <FullSheet :open="filtersOpen" :title="S.filters" @close="closeSheet('filters')">
-      <div class="flex min-h-full flex-col gap-5">
+      <div class="flex flex-col gap-5">
         <fieldset class="min-w-0">
           <legend class="mb-1 text-base font-semibold text-ink">{{ SS.species }}</legend>
           <label :class="row(draft.gyvunas === null, true)">
@@ -212,27 +213,25 @@
             <span>{{ SS.optionCount(o.label, o.n) }}</span>
           </label>
         </fieldset>
-        <!-- Staged: the map redraws only with "Rodyti N stebėjimų" (CONTROLS-17). -->
-        <div
-          class="sticky bottom-0 -mx-4 -mb-3 mt-auto flex gap-3 border-t border-line bg-white px-4 pt-3"
-          style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom))"
-        >
-          <button
-            type="button"
-            :class="[BTN_SECONDARY, BTN_TOUCH, 'text-base']"
-            @click="draft = { gyvunas: null, faktas: null }"
-          >
-            {{ S.reset }}
-          </button>
-          <button
-            type="button"
-            :class="[BTN_PRIMARY, BTN_TOUCH, 'flex-1 text-base']"
-            @click="applyFilters"
-          >
-            {{ draftLabel }}
-          </button>
-        </div>
       </div>
+      <!-- Staged: the map redraws only with "Rodyti N stebėjimų" (CONTROLS-17); the actions
+           are pinned below the list (MOBILE-09). -->
+      <template #footer>
+        <button
+          type="button"
+          :class="[BTN_SECONDARY, BTN_TOUCH, 'text-base']"
+          @click="draft = { gyvunas: null, faktas: null }"
+        >
+          {{ S.reset }}
+        </button>
+        <button
+          type="button"
+          :class="[BTN_PRIMARY, BTN_TOUCH, 'flex-1 text-base']"
+          @click="applyFilters"
+        >
+          {{ draftLabel }}
+        </button>
+      </template>
     </FullSheet>
   </div>
 </template>
