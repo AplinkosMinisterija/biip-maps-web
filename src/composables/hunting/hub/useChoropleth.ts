@@ -1,24 +1,37 @@
 // Municipality choropleth of the hunting data hub (SPEC2 §8.5).
-// One vector tile layer over the public municipalities PMTiles archive, styled from the
-// current TopicView's ChoroplethDef with fixed classes. The source is built once; a data or
-// selection change only calls `layer.changed()`. The layer is hidden (not removed) while a
-// topic without a choropleth (Vilkai, Apžvalga) is active, and removed on unmount.
+// One vector layer of the 60 municipality polygons of the public municipalities PMTiles
+// archive, styled from the current TopicView's ChoroplethDef with fixed classes. The source is
+// built once; a data or selection change only calls `layer.changed()`. The layer is hidden (not
+// removed) while a topic without a choropleth (Vilkai, Apžvalga) is active, and removed on
+// unmount.
+//
+// Not a vector tile layer: OpenLayers clips the fills of every tile to the tile's extent, and
+// at the hub's fractional zoom the tile edges fall between pixels, so the anti-aliased clip
+// edges let the background through as thin light lines across the fills. The polygons are
+// merged per municipality from the z7 tiles instead (the tiles loadMunicipalityIndex reads
+// anyway) and drawn untiled. The tiled layer only covers the moment until they are ready, or
+// stays if the merge fails.
 import { computed, inject, onBeforeUnmount, onMounted, provide, ref, toRaw, watch } from 'vue';
 import type { ComputedRef, InjectionKey, Ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { Feature } from 'ol';
 import type { Map, MapBrowserEvent } from 'ol';
 import type { FeatureLike } from 'ol/Feature';
-import { MVT } from 'ol/format';
+import { GeoJSON, MVT } from 'ol/format';
+import type { Geometry } from 'ol/geom';
+import VectorLayer from 'ol/layer/Vector';
 import VectorTileLayer from 'ol/layer/VectorTile';
+import VectorSource from 'ol/source/Vector';
 import { Fill, Stroke, Style } from 'ol/style';
 // @ts-expect-error ol-pmtiles has no types
 import { PMTilesVectorSource } from 'ol-pmtiles';
+import { feature as turfFeature, featureCollection, union } from '@turf/turf';
 import { boundariesHost } from '@/config';
 import { projection3857 } from '@/utils/constants';
-import { loadMunicipalityIndex } from '@/utils/hunting/municipalities';
+import { loadMunicipalityIndex, type MunicipalityIndex } from '@/utils/hunting/municipalities';
 import { S } from '@/utils/hunting/hub/strings';
 import type { ChoroplethDef } from '@/utils/hunting/hub/types';
+import { atCountryFit } from '@/utils/hunting/hub/mapFit';
 import {
   CHOROPLETH_NO_DATA_FILL,
   CHOROPLETH_OUTLINE,
@@ -279,6 +292,51 @@ const selectedStyle = [
 // in the land colour without an outline, so it does not compete with the data.
 const landStyle = new Style({ fill: new Fill({ color: MAP_LAND }) });
 
+interface MergedMunicipality {
+  code: number;
+  name: string;
+  geometry: Geometry;
+}
+
+// One polygon per municipality from its tile pieces (the pieces overlap in the tile buffers).
+async function mergeMunicipalities(index: MunicipalityIndex): Promise<MergedMunicipality[]> {
+  const pieces = new globalThis.Map<number, any[]>();
+  Object.values(index.tiles).forEach((list) =>
+    list.forEach((piece) => {
+      const parts = pieces.get(piece.code) || [];
+      parts.push(turfFeature(piece.geometry));
+      pieces.set(piece.code, parts);
+    }),
+  );
+  const geoJson = new GeoJSON();
+  const out: MergedMunicipality[] = [];
+  let done = 0;
+  for (const [code, parts] of pieces) {
+    // about 250 ms for all 60: yield now and then, so the merge is no long task
+    if (++done % 8 === 0) await new Promise((resolve) => setTimeout(resolve));
+    const merged = parts.length === 1 ? parts[0] : union(featureCollection(parts));
+    if (!merged) continue;
+    const name = index.byCode[code]?.name || '';
+    out.push({ code, name, geometry: geoJson.readGeometry(merged.geometry) as Geometry });
+  }
+  if (!out.length) throw new Error('No municipality polygons merged');
+  return out;
+}
+
+// Memoised per page load, like the index; a failed attempt can be retried.
+let mergedPromise: Promise<MergedMunicipality[]> | null = null;
+function loadMergedMunicipalities() {
+  if (!mergedPromise) {
+    mergedPromise = loadMunicipalityIndex()
+      .then(mergeMunicipalities)
+      .catch((err) => {
+        mergedPromise = null;
+        throw err;
+      });
+  }
+  return mergedPromise;
+}
+
 export interface ChoroplethHover {
   code: number;
   name: string;
@@ -360,37 +418,57 @@ export function useChoropleth(ctx: HubContext): HubChoroplethApi {
 
   const featureCode = (feature: FeatureLike) => Number(feature.getId() ?? feature.get('code'));
 
-  const source = new PMTilesVectorSource({
+  const fill = (feature: FeatureLike) => {
+    const code = featureCode(feature);
+    // the territorial sea and anything else that is not one of the 60 municipalities
+    if (!styleCodes.has(code)) return styleDef ? landStyle : undefined;
+    return fillStyle(styleDef, code);
+  };
+  const outlineSelected = (feature: FeatureLike) =>
+    selected !== null && featureCode(feature) === selected ? selectedStyle : undefined;
+
+  const tileSource = new PMTilesVectorSource({
     url: `${boundariesHost}/tiles/municipalities.pmtiles`,
     overlaps: false,
     projection: projection3857,
     format: new MVT({ featureClass: Feature as any, idProperty: 'code' }),
   });
+  const mergedSource = new VectorSource<Feature>();
 
-  const layer = new VectorTileLayer({
-    renderMode: 'vector',
-    zIndex: 10,
-    visible: false,
-    source,
-    style: (feature) => {
-      const code = featureCode(feature);
-      // the territorial sea and anything else that is not one of the 60 municipalities
-      if (!styleCodes.has(code)) return styleDef ? landStyle : undefined;
-      return fillStyle(styleDef, code);
-    },
-  });
-  layer.set('id', HUB_CHOROPLETH_LAYER_ID);
-
-  // Separate layer for the selection, so neighbouring fills never paint over its outline.
-  const selectionLayer = new VectorTileLayer({
-    renderMode: 'vector',
-    zIndex: 11,
-    visible: false,
-    source,
-    style: (feature) =>
-      selected !== null && featureCode(feature) === selected ? selectedStyle : undefined,
-  });
-  selectionLayer.set('id', HUB_CHOROPLETH_SELECTION_LAYER_ID);
+  // The merged layers once their polygons are there, the tiled ones until then.
+  const tiled = {
+    fill: new VectorTileLayer({
+      renderMode: 'vector',
+      zIndex: 10,
+      visible: false,
+      source: tileSource,
+      style: fill,
+    }),
+    // Separate layer for the selection, so neighbouring fills never paint over its outline.
+    selection: new VectorTileLayer({
+      renderMode: 'vector',
+      zIndex: 11,
+      visible: false,
+      source: tileSource,
+      style: outlineSelected,
+    }),
+  };
+  const merged = {
+    fill: new VectorLayer({ zIndex: 10, visible: false, source: mergedSource, style: fill }),
+    selection: new VectorLayer({
+      zIndex: 11,
+      visible: false,
+      source: mergedSource,
+      style: outlineSelected,
+    }),
+  };
+  let mergedReady = false;
+  const fillLayers = [tiled.fill, merged.fill];
+  fillLayers.forEach((l) => l.set('id', HUB_CHOROPLETH_LAYER_ID));
+  [tiled.selection, merged.selection].forEach((l) =>
+    l.set('id', HUB_CHOROPLETH_SELECTION_LAYER_ID),
+  );
+  const allLayers = [tiled.fill, tiled.selection, merged.fill, merged.selection];
 
   let map: Map | null = null;
   let mounted = false;
@@ -418,10 +496,12 @@ export function useChoropleth(ctx: HubContext): HubChoroplethApi {
     styleDef = def.value;
     styleCodes = municipalityCodes.value;
     selected = active.value ? selectedSav() : null;
-    layer.setVisible(active.value || loadingOutlines.value);
-    selectionLayer.setVisible(active.value);
-    layer.changed();
-    selectionLayer.changed();
+    const shown = active.value || loadingOutlines.value;
+    tiled.fill.setVisible(shown && !mergedReady);
+    tiled.selection.setVisible(active.value && !mergedReady);
+    merged.fill.setVisible(shown && mergedReady);
+    merged.selection.setVisible(active.value && mergedReady);
+    allLayers.forEach((l) => l.changed());
     if (!active.value) hover.value = null;
   }
 
@@ -436,12 +516,15 @@ export function useChoropleth(ctx: HubContext): HubChoroplethApi {
   });
 
   // The live topic keeps its own view padding and zoom (useWolvesMap).
+  // Untouched since the country fit, the country is fitted again into the new free area.
   function applyPadding() {
     if (!map || !active.value || live.value) return;
     const view = map.getView();
+    const refit = atCountryFit(view);
     const center = view.getCenter();
     view.padding = [...ctx.layout.mapPadding.value];
-    if (center) view.setCenter(center);
+    if (refit) mapLayers.centerMap();
+    else if (center) view.setCenter(center);
   }
   watch([() => ctx.layout.mapPadding.value.join(','), active], applyPadding);
 
@@ -502,7 +585,7 @@ export function useChoropleth(ctx: HubContext): HubChoroplethApi {
         const c = featureCode(f);
         return styleCodes.has(c) ? c : undefined;
       },
-      { layerFilter: (l) => l === layer, hitTolerance: 0 },
+      { layerFilter: (l) => fillLayers.includes(l as any), hitTolerance: 0 },
     );
     // The selected municipality's card already shows its value.
     if (code === undefined || code === selectedSav()) {
@@ -528,9 +611,24 @@ export function useChoropleth(ctx: HubContext): HubChoroplethApi {
     await mapLayers.waitForLoaded;
     if (!mounted || !mapLayers.map) return;
     map = toRaw(mapLayers.map) as Map;
-    map.addLayer(layer);
-    map.addLayer(selectionLayer);
+    allLayers.forEach((l) => map!.addLayer(l));
     setBasemap(!def.value);
+    loadMergedMunicipalities()
+      .then((list) => {
+        if (!mounted) return;
+        mergedSource.addFeatures(
+          list.map(({ code, name, geometry }) => {
+            const feature = new Feature({ geometry, code, name });
+            feature.setId(code);
+            return feature;
+          }),
+        );
+        mergedReady = true;
+        refresh();
+      })
+      .catch(() => {
+        // the tiled layer stays (with its seams at fractional zooms)
+      });
 
     mapLayers.click(onClick, { layers: [HUB_CHOROPLETH_LAYER_ID] });
     const callbacks: any[] = (mapLayers as any)._clickCallbacks || [];
@@ -550,8 +648,7 @@ export function useChoropleth(ctx: HubContext): HubChoroplethApi {
   onBeforeUnmount(() => {
     mounted = false;
     if (!map) return;
-    map.removeLayer(layer);
-    map.removeLayer(selectionLayer);
+    allLayers.forEach((l) => map!.removeLayer(l));
     // MapLayers has no API to remove a click callback; drop ours so it does not outlive the route
     const callbacks: any[] = (mapLayers as any)._clickCallbacks;
     if (clickEntry && Array.isArray(callbacks)) {

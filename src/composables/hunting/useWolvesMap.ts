@@ -9,6 +9,7 @@ import { boundingExtent } from 'ol/extent';
 import { transform, transformExtent } from 'ol/proj';
 import { projection, projection3857, vectorPositron } from '@/utils';
 import type { WolfRecord } from '@/utils/hunting/types';
+import { atCountryFit, markCountryFit } from '@/utils/hunting/hub/mapFit';
 import {
   WOLVES_CLUSTER_LAYER_ID,
   clusterRecords,
@@ -166,6 +167,13 @@ export function useWolvesMap(ctx: WolvesContext, options: WolvesMapOptions = {})
     mapLayers.zoomToExtent(extent, { padding: 64, animate, maxZoom: CLUSTER_FIT_MAX_ZOOM });
   }
 
+  // Lithuania into the free map area (the hub's fit, or MapLayers' own on the wolves page).
+  function fitCountry() {
+    if (!map) return;
+    mapLayers.centerMap();
+    markCountryFit(map.getView());
+  }
+
   function focusMap() {
     const el = map?.getTargetElement() as HTMLElement | undefined;
     if (!el) return;
@@ -270,16 +278,20 @@ export function useWolvesMap(ctx: WolvesContext, options: WolvesMapOptions = {})
   );
 
   // The desktop drawer covers the right of the map: keep the view centred in what is left.
+  // Untouched since the country fit (the phone sheet measured itself only after it), the
+  // country is fitted again, so all of it stays between the chip row and the sheet.
   watch(
     () => (options.padding ? options.padding().join(',') : ctx.state.tableOpen.value),
     () => {
       if (!map) return;
+      const view = map.getView();
+      const refit = atCountryFit(view);
       // OL keeps the picture still when the padding changes; re-apply the centre so the
       // content moves into the uncovered area.
-      const view = map.getView();
       const center = view.getCenter();
       view.padding = currentPadding();
-      if (center) view.setCenter(center);
+      if (refit) fitCountry();
+      else if (center) view.setCenter(center);
     },
   );
 
@@ -314,7 +326,7 @@ export function useWolvesMap(ctx: WolvesContext, options: WolvesMapOptions = {})
     // uncovered area. The URL's x/y/z (App.vue) still wins.
     previousPadding = view.padding;
     view.padding = currentPadding();
-    if (!route.query.x || !route.query.y) mapLayers.centerMap();
+    if (!route.query.x || !route.query.y) fitCountry();
 
     layers.clusterSource.on('change', onClusterChange);
     map.on('rendercomplete', onRenderComplete);
