@@ -213,6 +213,19 @@ export interface EmbedProvenance {
   kind: 'snapshot' | 'live';
   asOf: string | null; // 'yyyy-MM-dd'
   environment: 'production' | 'staging' | 'other';
+  // D12a (additive): the exact provenance line of the current topic, plain text of at most
+  // PROVENANCE_TEXT_MAX characters. WP shows it instead of its own fallback (and still
+  // appends " · Bandomoji aplinka" off production); an older WP page ignores it.
+  text?: string;
+}
+
+export const PROVENANCE_TEXT_MAX = 160;
+
+/** The provenance line as sent: a trimmed one-line string of 1–160 characters, else undefined. */
+export function provenanceText(text: unknown): string | undefined {
+  if (typeof text !== 'string') return undefined;
+  const line = text.replace(/\s+/g, ' ').trim();
+  return line && line.length <= PROVENANCE_TEXT_MAX ? line : undefined;
 }
 
 // Payload of the `state` message the hub posts to the parent page (§5.4).
@@ -237,23 +250,84 @@ export const aboutClosedMessage = () => ({
 });
 
 // Plain copies of the nested objects, so a reactive proxy never reaches postMessage.
-export const stateMessage = (s: EmbedState) => ({
-  biipHunting: {
-    v: EMBED_VERSION,
-    type: 'state' as const,
-    tema: s.tema,
-    view: s.view,
-    hasTable: s.hasTable,
-    title: s.title,
-    query: { ...s.query },
-    shareQuery: { ...s.shareQuery },
-    provenance: {
-      kind: s.provenance.kind,
-      asOf: s.provenance.asOf,
-      environment: s.provenance.environment,
+// `provenance.text` only when it is a valid line (D12a), so an empty one is never sent.
+export const stateMessage = (s: EmbedState) => {
+  const provenance: EmbedProvenance = {
+    kind: s.provenance.kind,
+    asOf: s.provenance.asOf,
+    environment: s.provenance.environment,
+  };
+  const text = provenanceText(s.provenance.text);
+  if (text) provenance.text = text;
+  return {
+    biipHunting: {
+      v: EMBED_VERSION,
+      type: 'state' as const,
+      tema: s.tema,
+      view: s.view,
+      hasTable: s.hasTable,
+      title: s.title,
+      query: { ...s.query },
+      shareQuery: { ...s.shareQuery },
+      provenance,
     },
-  },
+  };
+};
+
+// D12b (additive): the overview's content height in CSS px, posted only in embed mode while
+// the topic is Apžvalga. WP accepts it from the hub origin while its tema is 'apzvalga' and
+// sets the iframe's height to max(px, 320) px, so the page scrolls once.
+export const heightMessage = (px: number) => ({
+  biipHunting: { v: EMBED_VERSION, type: 'height' as const, px: Math.max(0, Math.ceil(px)) },
 });
+
+/**
+ * Throttles height reports to one per animation frame and drops changes under 1 px.
+ * `measure` reads the current height, `send` posts it, `allowed` is checked at send time (the
+ * topic must still be Apžvalga). `force` re-sends the last value (after a `state` message,
+ * so a WP page that took the topic later still gets it). Pure, so ?debug=1 can test it.
+ */
+export function createHeightReporter(opts: {
+  measure: () => number | null;
+  send: (px: number) => void;
+  allowed: () => boolean;
+  frame?: (cb: () => void) => number;
+  cancelFrame?: (id: number) => void;
+}) {
+  const frame = opts.frame || ((cb: () => void) => requestAnimationFrame(cb));
+  const cancelFrame = opts.cancelFrame || ((id: number) => cancelAnimationFrame(id));
+  let last: number | null = null;
+  let pending: number | null = null;
+  let forced = false;
+  let stopped = false;
+  function flush() {
+    pending = null;
+    if (stopped || !opts.allowed()) return;
+    const value = opts.measure();
+    if (value === null || !Number.isFinite(value)) return;
+    const px = Math.max(0, Math.ceil(value));
+    if (!forced && last !== null && Math.abs(px - last) < 1) return;
+    forced = false;
+    last = px;
+    opts.send(px);
+  }
+  const schedule = () => {
+    if (stopped || pending !== null) return;
+    pending = frame(flush);
+  };
+  return {
+    schedule,
+    force() {
+      forced = true;
+      schedule();
+    },
+    stop() {
+      stopped = true;
+      if (pending !== null) cancelFrame(pending);
+      pending = null;
+    },
+  };
+}
 
 /** In embed, the hub moves focus only while its own document has focus (§5.8). */
 export const embedFocusAllowed = (embed: boolean) => !embed || document.hasFocus();

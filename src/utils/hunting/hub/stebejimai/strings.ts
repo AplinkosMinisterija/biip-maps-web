@@ -56,14 +56,15 @@ export const SS = {
   // Filter sentence (§3.2).
   // A place such as "Biržų r. sav." already ends the sentence with its period.
   sentence: (period: string, species: string, fact: string, place: string) =>
-    `Rodoma: ${period}; ${species}; ${fact}; ${place}${place.endsWith('.') ? '' : '.'}`,
+    `Rodoma: ${period} · ${species} · ${fact} · ${place}${place.endsWith('.') ? '' : '.'}`,
   chartTitle: 'Stebėjimai pagal rūšį',
   noPoint: (k: number) => `${formatInt(k)} ${pluralLt(k, P_NO_POINT)}.`,
   truncated: (shown: number, total: number) => {
     const text = truncatedPart(shown, total);
     return `${text.charAt(0).toUpperCase()}${text.slice(1)}.`;
   },
-  provenance: (time: string) => `Duomenys gauti ${time} tiesiogiai iš BĮIP`,
+  // `at` = 'yyyy-MM-dd HH:mm' (Vilnius); the same wording as the hub's live lines.
+  provenance: (at: string) => `Duomenys atnaujinti ${at} · BĮIP`,
   // States (§3.9).
   loading: 'Įkeliami duomenys…',
   loadError: 'Nepavyko įkelti duomenų.',

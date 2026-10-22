@@ -385,9 +385,17 @@ export function useHubState(opts: HubStateOptions = {}): HubContext {
   function setTopic(id: TopicId, opts: { openTable?: boolean; table?: string } = {}) {
     const target = hasTopic(id) ? id : DEFAULT_TOPIC;
     if (target === topicId.value) return;
-    const carry = carryFromCurrent();
+    let carry = carryFromCurrent();
     const carriedSav = isOverview() ? null : sav.value;
+    // The season the user was looking at (none on Apžvalga or a live topic).
+    const fromSeason = isOverview() || isLive() ? null : season.value;
     const targetDef = getTopic(target);
+    // J-06: a season travels only when the target's figures for it are complete or still
+    // running; a partial or preliminary season gives way to the target's default.
+    if (carry && meta.value && targetDef.kind === 'snapshot') {
+      const state = targetDef.seasonState(carry.season, meta.value);
+      if (state === 'dalinis' || state === 'preliminarus') carry = null;
+    }
     topicId.value = target;
     dimPicks.value = {};
     tablePick.value = null;
@@ -423,6 +431,17 @@ export function useHubState(opts: HubStateOptions = {}): HubContext {
     tablePick.value =
       opts.openTable && !overview ? opts.table || targetDef.defaultTable || null : null;
     validateSeason();
+    // The season changed with the topic: say which one is shown and why (J-06).
+    if (!notice.value && fromSeason !== null && meta.value && targetDef.kind === 'snapshot') {
+      const shown = season.value;
+      if (shown !== fromSeason) {
+        notice.value = S.noticeSeasonDefault(
+          targetDef.tab,
+          seasonLabel(shown),
+          targetDef.seasonState(shown, meta.value),
+        );
+      }
+    }
     pushNow();
   }
 

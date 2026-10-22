@@ -3,7 +3,7 @@
 // hand-maintained official figures (`meta.static.wolves`) and the real Vilnius day: staging's
 // live wolves never mix with production numbers (§0.10).
 import { seasonOfDay } from '../../dates';
-import { ATTRIBUTION_RULE, TOPIC_SUBTITLES, TOPIC_TABS } from '../strings';
+import { ABOUT_LOCALE_RULE, TOPIC_SUBTITLES, TOPIC_TABS } from '../strings';
 import type { TopicDef } from '../types';
 import { seasonsDesc } from './common';
 
@@ -11,17 +11,29 @@ import { seasonsDesc } from './common';
 // The cards themselves come from each topic's `overview()` (Vilkai: topics/vilkai.ts).
 export const overviewSeason = (today: string) => seasonOfDay(today);
 
+// About (OVERVIEW-27): what the cards show now – the snapshot, the live wolf counter and
+// the live observations; each figure names its season.
 export const about = {
   source: [
-    'Kortelės rodo tuos pačius skaičius kaip temų skiltys: BĮIP duomenų momentinę kopiją ir oficialius AM skaičius apie vilkus.',
+    'Kortelės rodo tuos pačius skaičius kaip temų skiltys: BĮIP duomenų kopiją (jos data ' +
+      'nurodyta eilutėje „Duomenys … būklei“), tiesioginį vilkų skaitiklį, oficialius AM ' +
+      'skaičius apie vilkus ir stebėjimus iš BĮIP.',
   ],
   meaning: [
-    'Kiekviena kortelė atsako į vieną klausimą apie einamąjį sezoną; ankstesni sezonai – temų skiltyse.',
-    ATTRIBUTION_RULE,
+    'Kiekviena kortelė atsako į vieną klausimą. Prie kiekvieno skaičiaus nurodyta, kurio sezono ' +
+      'jis; vykstančio sezono skaičiai dar keisis.',
+    'Laimikių ir briedžių limitų savivaldybės skaičiai – jai priskirtų MPV suma; žalos ir ' +
+      'stebėjimų – pagal pranešime nurodytą vietą.',
   ],
-  missing: ['Asmens duomenų, MPV lygmens duomenų, tikslių vietų ir datų.'],
+  missing: ['Asmens duomenų ir MPV lygmens laimikių, limitų ar žalos duomenų.'],
   compare: ['Žr. kiekvienos temos „Apie duomenis“.'],
 };
+
+const aboutCommon = [
+  ABOUT_LOCALE_RULE,
+  'Asmens duomenys neskelbiami. Stebėjimai rodomi su pranešime nurodyta vieta; kitų temų ' +
+    'skaičiai – savivaldybių ir Lietuvos sumos.',
+];
 
 export const apzvalga: TopicDef = {
   id: 'apzvalga',
@@ -37,6 +49,7 @@ export const apzvalga: TopicDef = {
   dims: [],
   defaultTable: '',
   about,
+  aboutCommon,
 };
 
 export default apzvalga;

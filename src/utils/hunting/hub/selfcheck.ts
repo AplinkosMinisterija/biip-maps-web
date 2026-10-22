@@ -23,7 +23,9 @@ import {
   stateBadge,
 } from './time';
 import {
+  createHeightReporter,
   EMBED_TOPICS,
+  heightMessage,
   isAllowedParent,
   PASS_KEYS,
   parseCommand,
@@ -33,8 +35,18 @@ import {
   stateQuery,
 } from './embed';
 import { hubTop, isRailed, mapPadding, tableReplacesMap } from './layout';
-import { ABOUT_LOCALE_RULE, TOPIC_ORDER } from './strings';
+import {
+  ABOUT_LOCALE_RULE,
+  ATTRIBUTION_RULE,
+  BADGE_LABELS,
+  BANDOMOJI_TOOLTIP,
+  S,
+  TOPIC_ORDER,
+  TOPIC_SUBTITLES,
+  TOPIC_TABS,
+} from './strings';
 import { getTopic, hasTopic, LIVE_HOSTS, TOPICS } from './topics';
+import { certainTop } from './topics/zala';
 import {
   keptQuery,
   LIVE_TABLES,
@@ -57,11 +69,17 @@ type StebModelModule = {
   STEB_FAKTAS_RE?: RegExp;
 };
 type StebSelfCheckModule = { runStebejimaiChecks?: () => SelfCheckResult[] };
+type StebStringsModule = { SS?: Record<string, unknown> };
 const stebModel: StebModelModule | undefined = Object.values(
   import.meta.glob<StebModelModule>('@/utils/hunting/hub/stebejimai/model.ts', { eager: true }),
 )[0];
 const stebSelfCheck: StebSelfCheckModule | undefined = Object.values(
   import.meta.glob<StebSelfCheckModule>('@/utils/hunting/hub/stebejimai/selfcheck.ts', {
+    eager: true,
+  }),
+)[0];
+const stebStrings: StebStringsModule | undefined = Object.values(
+  import.meta.glob<StebStringsModule>('@/utils/hunting/hub/stebejimai/strings.ts', {
     eager: true,
   }),
 )[0];
@@ -326,10 +344,112 @@ export function runHubUnitChecks(): SelfCheckResult[] {
       ],
     ),
   );
+  check('Žala: „Daugiausia“ – tik tikra eilės tvarka', () => {
+    const r = (name: string, lo: number, hi = lo) => ({ name, n: { lo, hi } });
+    const names = (list: ReturnType<typeof r>[]) => {
+      const out = certainTop(list);
+      return [out.top.map((x) => x.name), out.cut];
+    };
+    return eq(
+      [
+        // J-03: 2025/2026 kanopiniai – Kėdainių 3–17 and Alytaus 1–15 may exceed Kauno 6–13.
+        names([
+          r('Kauno', 6, 13),
+          r('Kaišiadorių', 5),
+          r('Šiaulių', 3),
+          r('Kėdainių', 3, 17),
+          r('Alytaus', 1, 15),
+        ]),
+        names([r('A', 20), r('B', 10, 12), r('C', 9), r('D', 0, 2)]),
+        names([r('A', 20), r('B', 5, 15), r('C', 12)]),
+        names([r('A', 2), r('B', 0, 2)]),
+        names([r('A', 7), r('B', 7)]),
+      ],
+      [
+        [[], true],
+        [['A', 'B', 'C'], false],
+        [['A'], true],
+        [[], false],
+        [['A', 'B'], false],
+      ],
+    );
+  });
   runEmbedChecks(check, eq);
   runLiveTopicChecks(check, eq);
+  runCopyChecks(check);
   results.push(...stebejimaiModuleChecks());
   return results;
+}
+
+// ---------------------------------------------------------------------------
+// UI copy: forbidden words (strings.ts header) in every shared text
+// ---------------------------------------------------------------------------
+
+// Every text of a strings table: plain strings, and functions called with sample arguments.
+function textsOf(table: Record<string, unknown> | undefined): string[] {
+  if (!table) return [];
+  return Object.values(table).flatMap((value) => {
+    if (typeof value === 'string') return [value];
+    if (typeof value !== 'function') return [];
+    try {
+      return [String((value as (...args: unknown[]) => unknown)('2026-10-09', 3, 'x', 'y'))];
+    } catch (err) {
+      return [];
+    }
+  });
+}
+
+/** The shared UI texts: hub strings, Stebėjimai strings, badges and every topic's About. */
+export function uiTexts(): string[] {
+  return [
+    ...textsOf(S as unknown as Record<string, unknown>),
+    ...textsOf(stebStrings?.SS),
+    ...Object.values(BADGE_LABELS),
+    BANDOMOJI_TOOLTIP,
+    ...Object.values(TOPIC_TABS),
+    ...Object.values(TOPIC_SUBTITLES),
+    ...TOPICS.flatMap((t) => [
+      t.tab,
+      t.menuSubtitle,
+      ...t.about.source,
+      ...t.about.meaning,
+      ...t.about.missing,
+      ...t.about.compare,
+      ...(t.aboutCommon || []),
+    ]),
+  ];
+}
+
+// Words that must never render: "būrelis" (official: MPV naudotojas), and the prototype /
+// test-version wording, which would reach production when the gate is lifted (D9).
+export const FORBIDDEN_UI_WORDS: readonly RegExp[] = [/būrel/i, /prototip/i, /bandomoji versija/i];
+
+export function forbiddenWordsIn(texts: string[]): string[] {
+  const text = texts.join(' ');
+  return FORBIDDEN_UI_WORDS.filter((re) => re.test(text)).map((re) => re.source);
+}
+
+function runCopyChecks(check: Check) {
+  // J-09: a topic counted by the reported place must not also claim the MPV-sum rule.
+  check('Apie duomenis: savivaldybės priskyrimas (MPV / vieta)', () => {
+    const problems: string[] = TOPICS.filter(
+      (t) =>
+        t.attribution === 'place' &&
+        [...t.about.meaning, ...(t.aboutCommon || [])].includes(ATTRIBUTION_RULE),
+    ).map((t) => t.id);
+    const place = TOPICS.filter((t) => t.attribution === 'place').map((t) => t.id);
+    if (JSON.stringify(place) !== JSON.stringify(['vilkai', 'zala', 'stebejimai'])) {
+      problems.push(`place = ${place.join(', ')}`);
+    }
+    return problems.length === 0 || problems.join('; ');
+  });
+  check('Tekstai: be „būrel…“, „prototip…“, „Bandomoji versija“', () => {
+    const found = forbiddenWordsIn(uiTexts());
+    // The check itself must catch a planted word.
+    const planted = forbiddenWordsIn(['Prototipas rodo kopiją', 'Bandomoji versija']);
+    if (planted.length !== 2) return `planted words not caught: ${planted.join(', ')}`;
+    return found.length === 0 || `found ${found.join(', ')}`;
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -537,6 +657,88 @@ function runEmbedChecks(check: Check, eq: Eq) {
     );
   });
 
+  check('Įterpimas: state.provenance.text (D12a)', () => {
+    const base = {
+      tema: 'laimikiai' as const,
+      view: 'map' as const,
+      hasTable: true,
+      title: 'Laimikiai',
+      query: { tema: 'laimikiai' },
+      shareQuery: { tema: 'laimikiai', sezonas: '2025-2026' },
+    };
+    const prov = (text?: string) => ({
+      kind: 'snapshot' as const,
+      asOf: '2026-10-09',
+      environment: 'staging' as const,
+      text,
+    });
+    const msg = (text?: string) => stateMessage({ ...base, provenance: prov(text) }).biipHunting;
+    const ok = msg('Duomenys 2026-10-09 būklei · BĮIP');
+    return eq(
+      [
+        Object.keys(ok),
+        ok.provenance,
+        msg(undefined).provenance,
+        msg('  ').provenance,
+        msg('x'.repeat(161)).provenance,
+        msg(' a\n b ').provenance.text,
+        msg('x'.repeat(160)).provenance.text?.length,
+      ],
+      [
+        ['v', 'type', 'tema', 'view', 'hasTable', 'title', 'query', 'shareQuery', 'provenance'],
+        {
+          kind: 'snapshot',
+          asOf: '2026-10-09',
+          environment: 'staging',
+          text: 'Duomenys 2026-10-09 būklei · BĮIP',
+        },
+        { kind: 'snapshot', asOf: '2026-10-09', environment: 'staging' },
+        { kind: 'snapshot', asOf: '2026-10-09', environment: 'staging' },
+        { kind: 'snapshot', asOf: '2026-10-09', environment: 'staging' },
+        'a b',
+        160,
+      ],
+    );
+  });
+
+  check('Įterpimas: height žinutė ir ribojimas (D12b)', () => {
+    const frames: (() => void)[] = [];
+    const sent: number[] = [];
+    let height = 812.4;
+    let allowed = true;
+    const reporter = createHeightReporter({
+      measure: () => height,
+      send: (px) => sent.push(px),
+      allowed: () => allowed,
+      frame: (cb) => frames.push(cb),
+      cancelFrame: () => undefined,
+    });
+    const run = () => frames.splice(0).forEach((cb) => cb());
+    reporter.schedule();
+    reporter.schedule(); // same frame: one message
+    run();
+    height = 812.9; // still 813 px: nothing
+    reporter.schedule();
+    run();
+    reporter.force(); // re-send the same value once
+    run();
+    height = 1300;
+    reporter.schedule();
+    run();
+    allowed = false; // another topic: never posted
+    height = 900;
+    reporter.schedule();
+    run();
+    allowed = true;
+    reporter.stop();
+    reporter.schedule();
+    run();
+    return eq(
+      [sent, heightMessage(1300.2), heightMessage(-5).biipHunting.px],
+      [[813, 813, 1300], { biipHunting: { v: 1, type: 'height', px: 1301 } }, 0],
+    );
+  });
+
   check('Įterpimas: išdėstymas', () =>
     eq(
       [
@@ -636,9 +838,10 @@ function runLiveTopicChecks(check: Check, eq: Eq) {
         topic.defaultTable,
         topic.dims.length,
         typeof topic.view,
+        // The Apžvalga card (OVERVIEW-05): descriptive without the live records.
         typeof topic.overview,
       ],
-      ['stebejimai', true, 'stebejimai', 'live', 'irasai', 0, 'undefined', 'undefined'],
+      ['stebejimai', true, 'stebejimai', 'live', 'irasai', 0, 'undefined', 'function'],
     );
   });
 
@@ -797,12 +1000,15 @@ function runLiveTopicChecks(check: Check, eq: Eq) {
     if (!common.length) problems.push('no aboutCommon');
     if (common.join(' ').indexOf('tikslių vietų') >= 0) problems.push('"tikslių vietų"');
     if (common.indexOf(ABOUT_LOCALE_RULE) < 0) problems.push('no ABOUT_LOCALE_RULE');
-    if (/būrel/i.test(texts)) problems.push('"būrelis"');
+    forbiddenWordsIn([texts]).forEach((word) => problems.push(`"${word}"`));
     const counts = [about.source, about.meaning, about.missing, about.compare].map((l) => l.length);
     if (JSON.stringify(counts) !== JSON.stringify([2, 4, 2, 2])) {
       problems.push(`sections ${counts.join('/')}`);
     }
-    const others = TOPICS.filter((t) => t.id !== 'stebejimai' && t.aboutCommon).map((t) => t.id);
+    // Apžvalga states its own rules too (OVERVIEW-27: the Stebėjimai card shows exact places).
+    const others = TOPICS.filter(
+      (t) => t.id !== 'stebejimai' && t.id !== 'apzvalga' && t.aboutCommon,
+    ).map((t) => t.id);
     if (others.length) problems.push(`aboutCommon on ${others.join(', ')}`);
     return problems.length === 0 || problems.join('; ');
   });
@@ -1149,6 +1355,26 @@ export function runHubDataChecks(data: SnapshotData | null | undefined): SelfChe
       return missing.length === 0 || `"${answer}"`;
     });
   };
+  // Apžvalga keeps every number it showed before the card redesign (exact for 2026-10-09).
+  const card = (id: string, expected: string[]) => {
+    const topic = TOPICS.find((t) => t.id === id);
+    if (!topic?.overview || topic.files.some((f) => f !== 'meta' && (data as any)[f] === undefined))
+      return;
+    check(`Apžvalga: ${topic.tab} kortelėje ${expected.join(', ')}`, () => {
+      const c = topic.overview!(data, HUB_SELFCHECK_DAY);
+      const text = [c.value, c.outOf, c.unit, c.answer, ...(c.lines || [])]
+        .join(' ')
+        .replace(/\u00a0|\u202f/g, ' ');
+      const missing = expected.filter((e) => text.indexOf(e) < 0);
+      return missing.length === 0 || `"${text}"`;
+    });
+  };
+  if (exactDay) {
+    card('laimikiai', ['129 485', '8,5 %', '9 381']);
+    card('limitai', ['3 802', '3 935', '2 372', '4 177', '56,8 %']);
+    card('zala', ['503', '226', '283', 'Kėdainių r. sav. (92)']);
+    card('vilkai', ['275', '307', '89,6 %']);
+  }
   headline('laimikiai', 2025, ['129 485', '8,5 %']);
   headline('limitai', 2025, ['2 372', '4 177', '57 %']);
   headline('limitai', 2026, ['3 802', '3 935']);

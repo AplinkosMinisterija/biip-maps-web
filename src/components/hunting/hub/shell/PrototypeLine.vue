@@ -1,5 +1,5 @@
 <template>
-  <p v-if="!dismissed" class="flex items-center gap-1 text-xs text-gray-700">
+  <p v-if="shown && !dismissed" class="flex items-center gap-1 text-xs text-ink-muted">
     <span>
       {{ S.prototypeLine
       }}<template v-if="FEEDBACK_URL">
@@ -18,9 +18,9 @@
     <button
       v-if="dismissible"
       type="button"
-      class="ml-auto shrink-0 w-11 h-11 flex items-center justify-center rounded text-gray-700 hover:bg-gray-100"
+      class="ml-auto shrink-0 w-11 h-11 flex items-center justify-center rounded text-ink-muted hover:bg-brand-50"
       :class="focusRing"
-      aria-label="Uždaryti pranešimą apie prototipą"
+      :aria-label="S.prototypeClose"
       @click="dismiss"
     >
       <UiIcon name="close" :size="16" aria-hidden="true" />
@@ -29,15 +29,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { inject, ref } from 'vue';
+import { HUB_CTX } from '@/composables/hunting/hub/context';
 import { FEEDBACK_URL, S } from '@/utils/hunting/hub/strings';
 import { focusRing } from './shell';
 
-// "Bandomoji versija · Pastabos apie prototipą" (§5). On mobile it appears once in the sheet
-// and can be dismissed; the dismissal is remembered in localStorage (§4.3).
+// "Bandomoji aplinka · Pastabos apie puslapį" (§5). On mobile it appears once in the sheet
+// and can be dismissed; the dismissal is remembered in localStorage (§4.3). Only in the
+// standalone app off production: embedded, the WP header line carries the staging marker
+// (and nothing of it may reach a production host).
 const props = defineProps({
   dismissible: { type: Boolean, default: false },
 });
+
+const ctx = inject(HUB_CTX, null);
+const shown = !!ctx && !ctx.isProductionHost && !ctx.embed;
 
 const STORAGE_KEY = 'hunting-hub:prototype-dismissed';
 

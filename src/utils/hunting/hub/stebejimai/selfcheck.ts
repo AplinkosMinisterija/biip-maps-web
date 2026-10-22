@@ -441,7 +441,8 @@ export function runStebejimaiChecks(): SelfCheckResult[] {
     );
   });
 
-  // ---- Answer (§3.2).
+  // ---- Answer (§3.2). No-break spaces keep "vilkas – 4" together; compared as spaces.
+  const sp = (text: string) => text.replace(/\u00a0/g, ' ');
   const many = (n: number, species = 'Vilkas') =>
     Array.from(
       { length: n },
@@ -449,15 +450,15 @@ export function runStebejimaiChecks(): SelfCheckResult[] {
     );
   check('Stebėjimai: atsakymo derinimas (0, 1, 2, 10, 11, 21, 22)', () =>
     eq(
-      [0, 1, 2, 10, 11, 21, 22].map((n) => answerText(many(n), { kind: '30d' }, T).text),
+      [0, 1, 2, 10, 11, 21, 22].map((n) => sp(answerText(many(n), { kind: '30d' }, T).text)),
       [
         'Per paskutines 30 d. stebėjimų neužregistruota.',
-        'Per paskutines 30 d. užregistruotas 1 stebėjimas: Vilkas – 1.',
-        'Per paskutines 30 d. užregistruoti 2 stebėjimai: Vilkas – 2.',
-        'Per paskutines 30 d. užregistruota 10 stebėjimų: Vilkas – 10.',
-        'Per paskutines 30 d. užregistruota 11 stebėjimų: Vilkas – 11.',
-        'Per paskutines 30 d. užregistruotas 21 stebėjimas: Vilkas – 21.',
-        'Per paskutines 30 d. užregistruoti 22 stebėjimai: Vilkas – 22.',
+        'Per paskutines 30 d. užregistruotas 1 stebėjimas: vilkas – 1.',
+        'Per paskutines 30 d. užregistruoti 2 stebėjimai: vilkas – 2.',
+        'Per paskutines 30 d. užregistruota 10 stebėjimų: vilkas – 10.',
+        'Per paskutines 30 d. užregistruota 11 stebėjimų: vilkas – 11.',
+        'Per paskutines 30 d. užregistruotas 21 stebėjimas: vilkas – 21.',
+        'Per paskutines 30 d. užregistruoti 22 stebėjimai: vilkas – 22.',
       ],
     ),
   );
@@ -481,18 +482,18 @@ export function runStebejimaiChecks(): SelfCheckResult[] {
         answerText(rows.slice(1, 2), { kind: 'all' }, T, '2024-05-02').sentence,
         answerText(rows.slice(0, 1), { kind: 'range', from: '2026-10-01', to: '2026-10-20' }, T)
           .text,
-      ],
+      ].map(sp),
       [
-        'Nuo 2024-05-02 užregistruoti 8 stebėjimai: Vilkas – 3, Lūšis – 2, Rudasis lokys – 1, ' +
-          'Stumbras – 1, Nenurodyta – 1. Pranešimuose nurodyta 18 gyvūnų.',
-        '2026/2027 sezoną užregistruoti 8 stebėjimai: Vilkas – 2, Lūšis – 2, Stumbras – 2, ' +
-          'Briedis – 2.',
+        'Iš viso užregistruoti 8 stebėjimai (pirmasis – 2024-05-02): vilkas – 3, lūšis – 2, ' +
+          'rudasis lokys – 1, stumbras – 1, nenurodyta – 1. Pranešimuose nurodyta 18 gyvūnų.',
+        '2026/2027 sezone užregistruoti 8 stebėjimai: vilkas – 2, lūšis – 2, stumbras – 2, ' +
+          'briedis – 2.',
         'Stebėjimų neužregistruota.',
-        '2026-04-01 užregistruotas 1 stebėjimas: Vilkas – 1.',
-        'Užregistruotas 1 stebėjimas: Nenurodyta – 1.',
+        '2026-04-01 užregistruotas 1 stebėjimas: vilkas – 1.',
+        'Iš viso užregistruotas 1 stebėjimas: nenurodyta – 1.',
         'Nuo 2024-05-02 stebėjimų neužregistruota.',
-        'Nuo 2024-05-02 užregistruotas 1 stebėjimas: Lūšis – 1.',
-        'Laikotarpiu 2026-10-01 – 2026-10-20 užregistruotas 1 stebėjimas: Vilkas – 1. ' +
+        'Iš viso užregistruotas 1 stebėjimas (pirmasis – 2026-10-01): lūšis – 1.',
+        'Laikotarpiu 2026-10-01 – 2026-10-20 užregistruotas 1 stebėjimas: vilkas – 1. ' +
           'Pranešimuose nurodytas 1 gyvūnas.',
       ],
     );

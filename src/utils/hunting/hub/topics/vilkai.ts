@@ -118,6 +118,9 @@ export function vilkaiCarryFromQuery(query: Record<string, unknown>, today: stri
 // Apžvalga card (SPEC2 §6.1)
 // ---------------------------------------------------------------------------
 
+// The snapshot part of the card: the season of the real Vilnius day, a sentence instead of a
+// number (the snapshot predates the running hunt) and the official result of the previous
+// season. The shell fills the live counter in with `vilkaiOverviewLive` when it is there.
 function vilkaiOverview(data: SnapshotData, today: string): OverviewCard {
   const meta = data.meta;
   const c = seasonOfDay(today);
@@ -141,26 +144,64 @@ function vilkaiOverview(data: SnapshotData, today: string): OverviewCard {
         (draft ? ` (projekte – ${formatInt(draft.total)}, ${draft.date}).` : '.');
     }
   } else if (today <= end) {
-    // No number: the snapshot predates the running hunt.
     answer = 'Vilkų medžioklė vyksta – naujausi skaičiai skiltyje „Vilkai“.';
   } else {
     answer = `${label} sezono vilkų medžioklė baigėsi – skaičiai skiltyje „Vilkai“.`;
   }
 
   const previous = staticSeason(meta, c - 1);
-  let secondary: string | undefined;
+  const lines: string[] = [];
   if (previous?.official != null && previous.limit) {
-    secondary = `Praėjusį sezoną sumedžiota ${formatInt(previous.official)} iš ${formatInt(
-      previous.limit,
-    )} (${percentFormat.format(previous.official / previous.limit)}).`;
+    lines.push(
+      `${seasonLabel(c - 1)} sezone – ${formatInt(previous.official)} iš ${formatInt(
+        previous.limit,
+      )} (${percentFormat.format(previous.official / previous.limit)}; oficialus AM skaičius).`,
+    );
   }
 
   return {
     topic: 'vilkai',
     title: TOPIC_TABS.vilkai,
     question: VILKAI_H1,
+    season: c,
+    state: today >= start && today <= end ? 'vyksta' : undefined,
     answer,
-    secondary,
+    lines,
+  };
+}
+
+/** The live counter the Vilkai tab's status line shows (wolves `statusModel`). */
+export interface VilkaiLiveStatus {
+  state: 'unavailable' | 'notApproved' | 'beforeStart' | 'ongoing' | 'littleLeft' | 'exhausted';
+  seasonStart: number;
+  limit: number | null;
+  hunted: number | null;
+  remaining: number | null;
+}
+
+/**
+ * The card with the live counter (OVERVIEW-06): "19 iš 222 · sumedžiota pagal vilkų limitą ·
+ * liko 203". Unavailable, not approved or before the start: the snapshot card as it is.
+ */
+export function vilkaiOverviewLive(card: OverviewCard, status: VilkaiLiveStatus): OverviewCard {
+  const { state, limit, hunted, remaining } = status;
+  if (limit === null || hunted === null || status.seasonStart !== card.season) return card;
+  if (state !== 'ongoing' && state !== 'littleLeft' && state !== 'exhausted') return card;
+  const left = remaining ?? Math.max(0, limit - hunted);
+  const unit =
+    state === 'exhausted'
+      ? 'limitas išnaudotas – medžioklė baigta'
+      : `sumedžiota pagal vilkų limitą · liko ${state === 'littleLeft' ? 'tik ' : ''}${formatInt(left)}`;
+  return {
+    ...card,
+    state: state === 'exhausted' ? undefined : 'vyksta',
+    value: formatInt(state === 'exhausted' ? Math.max(hunted, limit) : hunted),
+    outOf: `iš ${formatInt(limit)}`,
+    unit,
+    answer:
+      state === 'exhausted'
+        ? `${seasonLabel(status.seasonStart)} sezone vilkų limitas (${formatInt(limit)}) išnaudotas – medžioklė baigta.`
+        : `${seasonLabel(status.seasonStart)} sezone sumedžiota ${formatInt(hunted)} iš ${formatInt(limit)} vilkų, liko ${formatInt(left)}.`,
   };
 }
 
@@ -345,9 +386,10 @@ export const VILKAI_COMPARE =
 
 const about: AboutDef = {
   source: [
-    'Taškai – BIOMON duomenys (iki 2026-03-31) ir BIIP elektroninio medžioklės lapo įrašai (nuo ' +
-      '2025/2026 sezono). Einamojo sezono skaitiklis ir limitas – iš BIIP.',
-    'Duomenys gaunami atidarius puslapį. Jei jų gauti nepavyksta, rodoma momentinė kopija: ' +
+    'Taškai – BIOMON duomenys (iki 2026-03-31) ir BĮIP elektroninio medžioklės žurnalo įrašai (nuo ' +
+      '2025/2026 sezono). Einamojo sezono skaitiklis ir limitas – iš BĮIP.',
+    'Duomenys gaunami tiesiogiai iš BĮIP ir BIOMON atidarius šią temą. Jei jų gauti nepavyksta, ' +
+      'rodoma BĮIP duomenų kopija: ' +
       'užbaigti sezonai, savivaldybių lygiu.',
   ],
   meaning: [
@@ -377,6 +419,7 @@ export const vilkai: TopicDef = {
   defaultSeason: vilkaiDefaultSeason,
   dims: [],
   defaultTable: 'irasai',
+  attribution: 'place',
   overview: vilkaiOverview,
   otherRow: vilkaiOtherRow,
   // The live tab needs only `meta`; its "Kiti rodikliai" row reads the wolves snapshot.

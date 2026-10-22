@@ -109,7 +109,8 @@ async function fetchAllWolves(signal: AbortSignal) {
   return { rows, total };
 }
 
-async function fetchTotals(signal: AbortSignal): Promise<WolfTotals> {
+// Also read by the hub's Apžvalga card, so its counter is the Vilkai tab's.
+export async function fetchTotals(signal: AbortSignal): Promise<WolfTotals> {
   const body = await getJson<any>(
     `${medziokleApiHost}/statistics/totals`,
     SMALL_TIMEOUT_MS,

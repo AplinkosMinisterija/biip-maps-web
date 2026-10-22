@@ -158,7 +158,7 @@ import {
   useStebState,
   type StebContext,
 } from '@/composables/hunting/hub/stebejimai/useStebState';
-import { formatInt, todayVilnius } from '@/utils/hunting/dates';
+import { formatDateTime, formatInt, todayVilnius } from '@/utils/hunting/dates';
 import {
   hubCssVars,
   hubTop,
@@ -321,7 +321,15 @@ const liveControls: EmbedLiveControls = {
   table: computed(() =>
     ctx && hasTable.value && ctx.state.tableOpen.value ? ctx.state.table.value : null,
   ),
-  provenance: computed(() => ({ kind: 'live' as const, asOf: null })),
+  provenance: computed(() => {
+    const at = ctx?.data.fetchedAt.value;
+    const ready = ctx?.data.phase.value === 'ready';
+    return {
+      kind: 'live' as const,
+      asOf: null,
+      text: at && ready ? SS.provenance(formatDateTime(at)) : undefined,
+    };
+  }),
 };
 
 onMounted(() => {

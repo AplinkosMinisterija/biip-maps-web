@@ -21,7 +21,8 @@
            Embedded in the WP page, the page renders the title, topics and view switch. -->
       <template v-if="!isMobile">
         <HuntingHubShellTopBar v-if="!embed" />
-        <HuntingHubShellFilterBar />
+        <!-- Apžvalga has no filters (D8): no bar with a dead season pill. -->
+        <HuntingHubShellFilterBar v-if="topicKind !== 'overview'" />
 
         <template v-if="topicKind === 'snapshot'">
           <HuntingHubShellPanelFrame
@@ -52,11 +53,12 @@
       </template>
 
       <!-- Mobile (< 768 px): header ≤ 108 px and a bottom sheet (§4.3). Embedded, the header
-           keeps only the chip row, and the live topics (Vilkai, Stebėjimai) need none of it.
-           The header's "Filtrai" opens the sheet's full-screen filters. -->
+           keeps only the chip row, and the live topics (Vilkai, Stebėjimai) and Apžvalga (no
+           filters, D8) need none of it. The header's "Filtrai" opens the sheet's full-screen
+           filters. -->
       <template v-else>
         <HuntingHubShellMobileHeader
-          v-if="!(embed && topicKind === 'live')"
+          v-if="!(embed && (topicKind === 'live' || topicKind === 'overview'))"
           @filters="sheet?.openFilters()"
         />
         <template v-if="topicKind === 'snapshot'">
@@ -128,6 +130,7 @@ import { projection3857, vectorPositron } from '@/utils';
 import { HUB_CTX, type AboutOpenOptions, type HubContext } from '@/composables/hunting/hub/context';
 import type { TopicDef, TopicId } from '@/utils/hunting/hub/types';
 import {
+  HUB_TOP_EMBED,
   hubCssVars,
   hubTop,
   MOBILE_MAX,
@@ -277,9 +280,15 @@ const isMapMessage = computed(() => ctx?.view.value?.map.kind === 'message');
 const railTitle = computed(() => (ctx ? TOPIC_TABS[ctx.sel.value.topic] : ''));
 const railValue = computed(() => ctx?.view.value?.kpis[0]?.value || '');
 
+// Apžvalga starts right under what is above it: nothing when embedded (the WP bar is outside
+// the frame), the top bar (desktop) or the mobile header standalone. No filter bar (D8).
+const overviewTop = () => {
+  if (embed) return 0;
+  return isMobile.value ? mobileHeader(false) : hubTop(false) - HUB_TOP_EMBED;
+};
 const cssVars = computed(() => ({
   ...hubCssVars(width.value, embed),
-  '--hub-overview-top': `${isMobile.value ? mobileHeader(embed) : hubTop(embed)}px`,
+  '--hub-overview-top': `${overviewTop()}px`,
 }));
 
 // ---- Focus: a topic switch moves focus to the panel H1 (desktop; §10). On phones focus

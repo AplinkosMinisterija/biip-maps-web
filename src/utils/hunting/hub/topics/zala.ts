@@ -112,10 +112,10 @@ const GROUP_SHORT: Record<DamageGroup, string> = { ...GROUP_LABELS, lokiai: 'Lok
 
 const H1: Record<Grupe, string> = {
   visos: 'Kur laukiniai gyvūnai daro žalą?',
-  plesrunai: 'Kur plėšrūnai puola gyvulius ir bitynus?',
+  plesrunai: 'Kur plėšrūnai puola ūkinius gyvūnus ir bitynus?',
   augalai: 'Kur žvėrys daro žalą pasėliams, miškui ir melioracijai?',
-  vilkai: 'Kur vilkai puola gyvulius?',
-  lusys: 'Kur lūšys puola gyvulius?',
+  vilkai: 'Kur vilkai puola ūkinius gyvūnus?',
+  lusys: 'Kur lūšys puola ūkinius gyvūnus?',
   lokiai: 'Kur rudieji lokiai daro žalą?',
   kanopiniai: 'Kur kanopiniai žvėrys daro žalą?',
   stumbrai: 'Kur stumbrai daro žalą?',
@@ -143,11 +143,11 @@ const SEASON_MONTHS = [4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3];
 
 export const T = {
   fixedNote: 'Tai gyventojų pranešimai, o ne įvertinta žala. Kompensacijos čia neskelbiamos.',
-  fixedNoteShort: 'Tai pranešimai, o ne įvertinta žala.',
+  fixedNoteCard: 'Tai gyventojų pranešimai, o ne įvertinta žala.',
   partialNotice:
     'Pranešimai apie žalą BĮIP renkami nuo 2026 m. sausio – 2025/2026 sezono duomenys daliniai.',
-  escalationLabel: 'Kanopinių ir bebrų žala perduota seniūnijai',
-  escalationLabelShort: 'Perduota seniūnijai',
+  escalationLabel: 'Kanopinių ir bebrų pranešimai, perduoti seniūnijai',
+  escalationLabelShort: 'Perduoti seniūnijai',
   escalationTooltip:
     'Ūkininkas pažymėjo, kad su medžiotojais nepavyko susitarti, ir pranešimas perduotas seniūnijai. Tai ne patikrintas faktas.',
   livestockNote: 'Pranešime nurodytas skaičius; neatskiriama, ar gyvūnas žuvo, ar sužeistas.',
@@ -157,6 +157,8 @@ export const T = {
     'Savivaldybių lygmens duomenys bus paskelbti suderinus su duomenų apsaugos pareigūnu.',
   legend: (season: string) => `Pranešimai apie žalą · ${season} · pagal pranešime nurodytą vietą`,
   placeNote: 'Savivaldybė nustatyta pagal pranešime nurodytą žalos vietą.',
+  topCut: 'kitų savivaldybių tikslūs skaičiai neskelbiami.',
+  rankNote: 'Rikiuojama pagal mažiausią galimą skaičių.',
 };
 
 // ---------------------------------------------------------------------------
@@ -389,22 +391,53 @@ function answer(c: Ctx, muni: number, g: Grupe, placeName: string | null, withTo
   text += '.';
   if (!placeName && withTop) {
     const top = topPlaces(c, g);
-    if (top) text += ` Daugiausia – ${top}.`;
+    if (top) text += ` ${top}`;
   }
   return placeName ? `${placeName} ${text}` : text;
 }
 
-// "Kėdainių r. sav. (92), …": the three municipalities with the most reports, so the "Kur…?"
-// heading gets places, not only a count. Ranked by the published lower bound, so a withheld
-// count known to be at least 22 is not left out; such a figure is shown as its range.
+export interface RankedPlace {
+  name: string;
+  n: Count;
+}
+
+/**
+ * The leading places whose rank is certain (J-03): ordered by the lower bound, entry i is
+ * kept only while its lower bound is at least the upper bound of every place not yet named,
+ * and at most `max`; `cut` when a further place could still belong in the list. A count with
+ * a lower bound below 3 is never named.
+ */
+export function certainTop(list: RankedPlace[], max = 3): { top: RankedPlace[]; cut: boolean } {
+  const sorted = list
+    .slice()
+    .sort((a, b) => b.n.lo - a.n.lo || a.n.hi - b.n.hi || a.name.localeCompare(b.name, 'lt'));
+  // maxHiAfter[i]: the largest upper bound among sorted[i..].
+  const maxHiAfter: number[] = new Array(sorted.length + 1).fill(0);
+  for (let i = sorted.length - 1; i >= 0; i--) {
+    maxHiAfter[i] = Math.max(sorted[i].n.hi, maxHiAfter[i + 1]);
+  }
+  const top: RankedPlace[] = [];
+  for (let i = 0; i < sorted.length && top.length < max; i++) {
+    const entry = sorted[i];
+    if (entry.n.lo < 3 || entry.n.lo < maxHiAfter[i + 1]) break;
+    top.push(entry);
+  }
+  // Cut: fewer than `max` named although another place may have 3 or more reports.
+  const cut = top.length < max && maxHiAfter[top.length] >= 3;
+  return { top, cut };
+}
+
+// "Daugiausia – Kėdainių r. sav. (92), …": the municipalities with the most reports, so the
+// "Kur…?" heading gets places, not only a count. Only places whose rank the published
+// (partly suppressed) counts prove are named; none, and the clause is left out.
 function topPlaces(c: Ctx, g: Grupe) {
   if (!ZALA_MUNICIPALITY) return null;
-  const list = c.meta.municipalities
-    .map((m) => ({ name: m.name, n: reports(c, m.code, g) }))
-    .filter((x) => x.n.lo >= 3)
-    .sort((a, b) => b.n.lo - a.n.lo || a.n.hi - b.n.hi || a.name.localeCompare(b.name, 'lt'))
-    .slice(0, 3);
-  return list.length ? list.map((x) => `${x.name} (${formatCount(x.n)})`).join(', ') : null;
+  const { top, cut } = certainTop(
+    c.meta.municipalities.map((m) => ({ name: m.name, n: reports(c, m.code, g) })),
+  );
+  if (!top.length) return null;
+  const list = top.map((x) => `${x.name} (${formatCount(x.n)})`).join(', ');
+  return cut ? `Daugiausia – ${list}; ${T.topCut}` : `Daugiausia – ${list}.`;
 }
 
 // ---------------------------------------------------------------------------
@@ -650,7 +683,7 @@ function municipalityTable(c: Ctx, g: Grupe): TableDef<MuniRow> {
   const totals = toRow(0, S.totalsRow);
   const columns: ColumnDef<MuniRow>[] = [
     { id: 'name', label: 'Savivaldybė', value: (r) => r.name },
-    countColumn('reports', 'Pranešimai', (r) => r.reports, S.suppressedReports),
+    countColumn('reports', 'Pranešimai', (r) => r.reports, `${S.suppressedReports} ${T.rankNote}`),
     {
       id: 'reporters',
       label: 'Pranešėjai',
@@ -831,22 +864,45 @@ export function overview(data: SnapshotData): OverviewCard {
   const meta = data.meta;
   const season = defaultSeason(meta);
   const c = makeCtx(data, season);
+  const state = seasonState(season, meta);
+  const r = reports(c, 0, 'visos');
+  const rep = reporters(c, 0, 'visos');
+  const unknown = r.withheld || r.hi === Infinity;
   const result: OverviewCard = {
     topic: 'zala',
     title: TOPIC_TABS.zala,
     question: H1.visos,
-    answer: answer(c, 0, 'visos', null, false),
-    badge: stateBadge(seasonState(season, meta)),
-    fixedNote: T.fixedNoteShort,
+    season,
+    state,
+    answer: answer(c, 0, 'visos', null),
+    fixedNote: T.fixedNoteCard,
   };
+  if (!unknown) {
+    const by =
+      rep === null && r.hi > 0
+        ? ' iš mažiau nei 3 pranešėjų'
+        : typeof rep === 'number' && rep > 0
+          ? ` iš ${formatInt(rep)} ${plural(rep, P_REPORTER_GEN)}`
+          : '';
+    result.value = formatCount(r);
+    result.unit =
+      `${isExact(r) ? plural(r.lo, P_REPORT) : P_REPORT[2]} apie žalą${by}` +
+      (state === 'vyksta' ? ` (iki ${meta.snapshotDate})` : '');
+  }
+  // The card answers its "Kur…?" question with places (OVERVIEW-19), then the wolves line.
+  const lines: string[] = [];
+  const top = topPlaces(c, 'visos');
+  if (top) lines.push(top);
   const wolves = attackedOf(c, ['vilkai']);
   if (wolves.hi > 0) {
     const n = isExact(wolves) ? wolves.lo : null;
-    result.secondary =
+    lines.push(
       n === null
         ? `Pranešimuose apie vilkų išpuolius nurodyta ${countPhrase(wolves, ['užpulto ūkinio gyvūno', 'užpultų ūkinių gyvūnų', 'užpultų ūkinių gyvūnų'])}.`
-        : `Pranešimuose apie vilkų išpuolius ${plural(n, P_SPECIFIED)} ${formatInt(n)} ${plural(n, P_ATTACKED_LIVESTOCK)}.`;
+        : `Pranešimuose apie vilkų išpuolius ${plural(n, P_SPECIFIED)} ${formatInt(n)} ${plural(n, P_ATTACKED_LIVESTOCK)}.`,
+    );
   }
+  if (lines.length) result.lines = lines;
   return result;
 }
 
@@ -887,7 +943,7 @@ export const groupDim: DimDef = {
 export const about = {
   source: [
     'Gyventojų pranešimai apie laukinių gyvūnų padarytą žalą (BĮIP, medziokle.biip.lt forma).',
-    'Duomenys – momentinė kopija (data nurodyta apačioje). Data – pranešime nurodyta žalos pastebėjimo data (Lietuvos laiku).',
+    'Duomenys – BĮIP duomenų kopija; jos data nurodyta eilutėje „Duomenys … būklei“. Data – pranešime nurodyta žalos pastebėjimo data (Lietuvos laiku).',
   ],
   meaning: [
     'Skaičiuojami pranešimai, o ne įvertinta žala. Kanopinių žvėrių ir bebrų žalą pirmiausia sprendžia MPV naudotojas; vilkų, lūšių, lokių ir stumbrų – seniūnija ir savivaldybės komisija.',
@@ -913,6 +969,7 @@ export const zala: TopicDef = {
   defaultSeason: (meta) => defaultSeason(meta),
   dims: [groupDim],
   defaultTable: 'savivaldybes',
+  attribution: 'place',
   view,
   overview: (data) => overview(data),
   otherRow,

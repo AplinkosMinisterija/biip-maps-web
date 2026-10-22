@@ -163,7 +163,7 @@ const metricOf = (sel: HubSelection, meta: Meta) =>
 // Answer and KPIs (§6.4)
 // ---------------------------------------------------------------------------
 
-function answer(meta: Meta, a: Agg, season: number, muni: Municipality | null) {
+function answer(meta: Meta, a: Agg, season: number, muni: Municipality | null, rows?: LimitRow[]) {
   const label = seasonLabel(season);
   if (muni && !muni.mpvCount) return `${muni.name}: ${S.noMpv}`;
   if (isPooled(muni)) return `${muni!.name}: ${S.pooled}`;
@@ -174,7 +174,13 @@ function answer(meta: Meta, a: Agg, season: number, muni: Municipality | null) {
     const order = orderOf(meta, season);
     const tail = !muni && order !== null ? ` (įsakymu patvirtinta ${formatInt(order)})` : '';
     const body = `${label} sezonui MPV naudotojams paskirstytas limitas – ${formatInt(lim(a))} ${plural(lim(a), P_MOOSE)}${tail}.`;
-    return muni ? `${muni.name} ${body}` : body;
+    if (muni) return `${muni.name} ${body}`;
+    // J-15: last season's use, so the running season's panel answers without a switch.
+    const closed = closedSeason(meta);
+    const c = closed === null || !rows ? null : aggOf(rows, closed, null);
+    return c && lim(c) > 0
+      ? `${body} ${seasonLabel(closed!)} sezone sumedžiota ${formatInt(used(c))} iš ${formatInt(lim(c))} (${pctText(used(c), lim(c))}).`
+      : body;
   }
   const body = `${label} sezone sumedžiota ${formatInt(used(a))} iš ${formatInt(lim(a))} paskirstyto limito (${pctText(used(a), lim(a))}).`;
   return muni ? `${muni.name} ${body}` : body;
@@ -184,9 +190,11 @@ function kpis(meta: Meta, a: Agg, season: number, muni: Municipality | null): Kp
   if ((muni && !muni.mpvCount) || isPooled(muni)) return [];
   if (isCurrent(season, meta)) {
     const list = [
-      kpi('allocated', 'Paskirstyta', formatInt(lim(a)), {
+      // J-15: the tile answers the question; the tooltip says what the number is.
+      kpi('allocated', 'Leidžiama sumedžioti', formatInt(lim(a)), {
         sub: `patinai ${formatInt(a.limM)} · patelės ir jaunikliai ${formatInt(a.limFj)}`,
-        ariaLabel: `Paskirstyta ${formatInt(lim(a))}: patinai ${formatInt(a.limM)}, patelės ir jaunikliai ${formatInt(a.limFj)}`,
+        tooltip: 'Limitas, paskirstytas medžioklės plotų naudotojams (MPV naudotojams).',
+        ariaLabel: `Leidžiama sumedžioti (paskirstyta MPV naudotojams) ${formatInt(lim(a))}: patinai ${formatInt(a.limM)}, patelės ir jaunikliai ${formatInt(a.limFj)}`,
       }),
     ];
     const order = orderOf(meta, season);
@@ -493,7 +501,7 @@ export function view(data: SnapshotData, sel: HubSelection): TopicView {
   const a = aggOf(rows, season, muni?.code ?? null);
   const result: TopicView = {
     h1: H1,
-    answer: answer(meta, a, season, muni),
+    answer: answer(meta, a, season, muni, rows),
     badge: stateBadge(seasonState(season, meta)),
     kpis: kpis(meta, a, season, muni),
     chart: (muni && !muni.mpvCount) || isPooled(muni) ? undefined : chart(meta, rows, muni),
@@ -520,18 +528,36 @@ export function overview(data: SnapshotData): OverviewCard {
   const meta = data.meta;
   const rows = data.limits ?? [];
   const season = defaultSeason(meta);
+  const a = aggOf(rows, season, null);
   const result: OverviewCard = {
     topic: 'limitai',
     title: TOPIC_TABS.limitai,
     question: H1,
-    answer: answer(meta, aggOf(rows, season, null), season, null),
-    // The allocation is not a running figure: no "Vyksta" badge on the card (§6.1 wireframe).
-    badge: isCurrent(season, meta) ? undefined : stateBadge(seasonState(season, meta)),
+    season,
+    // The same state as the panel ("vyksta" for the running allocation season).
+    state: seasonState(season, meta),
+    answer: answer(meta, a, season, null),
   };
+  if (isCurrent(season, meta)) {
+    const order = orderOf(meta, season);
+    result.value = formatInt(lim(a));
+    // Full form: the overview is often the first place a visitor meets the term (OVERVIEW-21).
+    result.unit =
+      'briedžių limitas medžioklės plotų naudotojams' +
+      (order !== null ? ` (įsakymu patvirtinta ${formatInt(order)})` : '');
+  } else {
+    result.value = formatInt(used(a));
+    result.outOf = `iš ${formatInt(lim(a))}`;
+    result.unit = `briedžių sumedžiota pagal paskirstytą limitą (${pctText(used(a), lim(a))})`;
+  }
   const closed = closedSeason(meta);
   if (closed !== null && closed !== season) {
-    const a = aggOf(rows, closed, null);
-    result.secondary = `${seasonLabel(closed)} sezone sumedžiota ${formatInt(used(a))} iš ${formatInt(lim(a))} (${pctText(used(a), lim(a))}).`;
+    const c = aggOf(rows, closed, null);
+    // One decimal, like the wolves share on the next card (OVERVIEW-25); panels keep theirs.
+    const r = ratio(used(c), lim(c));
+    result.lines = [
+      `${seasonLabel(closed)} sezone sumedžiota ${formatInt(used(c))} iš ${formatInt(lim(c))} paskirstyto limito (${r === null ? DASH : formatPct(r, 1)}).`,
+    ];
   }
   return result;
 }

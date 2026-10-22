@@ -815,18 +815,27 @@ export function overview(data: SnapshotData): OverviewCard {
   const season = defaultSeason(meta);
   const sel: HubSelection = { topic: 'laimikiai', season, sav: null, dims: {}, table: null };
   const c = makeCtx(data, sel);
+  const n = cellOf(c.idx, null, null).n;
+  const d = placeDelta(c, null);
   const card: OverviewCard = {
     topic: 'laimikiai',
     title: TOPIC_TABS.laimikiai,
     question: H1,
+    season,
+    state: seasonState(season, meta),
+    value: formatInt(n),
+    unit:
+      `${plural(n, P_HUNTED)} ${plural(n, P_ANIMAL)}` +
+      (d && c.prev !== null ? ` – ${deltaPhrase(d, c.prev)}` : ''),
     answer: answer(c, null),
-    badge: stateBadge(seasonState(season, meta)),
   };
+  // The running season is a context line that names itself (OVERVIEW-03).
   const running = asOfSeason(meta);
   if (running !== season && seasonState(running, meta) === 'vyksta') {
-    const n = cellOf(seasonIndex(c.rows, running), null, null).n;
-    card.secondary = `Šio sezono el. žurnale iki ${meta.snapshotDate}: ${formatInt(n)}`;
-    card.badge = 'vyksta';
+    const r = cellOf(seasonIndex(c.rows, running), null, null).n;
+    card.lines = [
+      `${seasonLabel(running)} sezonas vyksta: el. žurnale iki ${meta.snapshotDate} užregistruota ${formatInt(r)} (dauguma laimikių pateikiama po sezono).`,
+    ];
   }
   return card;
 }
@@ -881,7 +890,7 @@ export const speciesDim: DimDef = {
 export const about = {
   source: [
     'BĮIP medžioklės žurnalas: MPV naudotojų sezono ataskaitos ir elektroninis medžioklės žurnalas.',
-    'Duomenys – momentinė kopija (data nurodyta apačioje); ištrinti įrašai neįtraukti.',
+    'Duomenys – BĮIP duomenų kopija; jos data nurodyta eilutėje „Duomenys … būklei“. Ištrinti įrašai neįtraukti.',
   ],
   meaning: [
     'Sumedžiota – visi MPV naudotojų ataskaitose ir el. žurnale nurodyti sumedžioti gyvūnai, įskaitant sumedžiotus sužeistus ar sergančius gyvūnus. Rasti kritę gyvūnai skaičiuojami atskirai. Tankis – sumedžiota per 1 000 ha medžioklės plotų vienetų ploto.',

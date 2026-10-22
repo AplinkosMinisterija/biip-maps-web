@@ -11,7 +11,7 @@
         {{ SS.h1 }}
       </component>
       <span
-        v-if="!ctx.isProductionHost"
+        v-if="showStaging"
         class="mt-1 shrink-0 rounded border border-gray-400 bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-800"
         :title="BANDOMOJI_TOOLTIP"
         :aria-label="`${BADGE_LABELS.bandomoji}. ${BANDOMOJI_TOOLTIP}`"
@@ -79,7 +79,11 @@
       </ul>
     </template>
 
-    <footer class="flex flex-col gap-1 border-t border-gray-200 pt-2 text-xs text-gray-600">
+    <!-- Embedded, the WP header line has the provenance and the staging marker (once). -->
+    <footer
+      v-if="!embed"
+      class="flex flex-col gap-1 border-t border-line-soft pt-2 text-xs text-ink-muted"
+    >
       <p v-if="provenanceTime">
         {{ SS.provenance(provenanceTime) }}
         <template v-if="ctx.hub">
@@ -89,7 +93,7 @@
           </button>
         </template>
       </p>
-      <p>
+      <p v-if="showStaging">
         {{ S.prototypeLine }}
         <template v-if="FEEDBACK_URL">
           ·
@@ -123,7 +127,7 @@ import { computed, inject } from 'vue';
 import BarChart from '@/components/hunting/hub/shell/BarChart.vue';
 import DebugPanel from '@/components/hunting/hub/shell/DebugPanel.vue';
 import { STEB_CTX } from '@/composables/hunting/hub/stebejimai/useStebState';
-import { formatInt, formatTime } from '@/utils/hunting/dates';
+import { formatDateTime, formatInt } from '@/utils/hunting/dates';
 import { BADGE_LABELS, BANDOMOJI_TOOLTIP, FEEDBACK_URL, S } from '@/utils/hunting/hub/strings';
 import type { ChartDef } from '@/utils/hunting/hub/types';
 import { speciesSummary } from '@/utils/hunting/hub/stebejimai/model';
@@ -135,6 +139,9 @@ defineProps({
 });
 
 const ctx = inject(STEB_CTX)!;
+// The staging marker: the standalone app off production only.
+const embed = !!ctx.hub?.embed;
+const showStaging = !ctx.isProductionHost && !embed;
 
 const focusRing =
   'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
@@ -170,7 +177,7 @@ const notes = computed(() => {
 
 const provenanceTime = computed(() => {
   const at = ctx.data.fetchedAt.value;
-  return at && phase.value === 'ready' ? formatTime(at) : '';
+  return at && phase.value === 'ready' ? formatDateTime(at) : '';
 });
 
 const debugRows = computed(() => {
