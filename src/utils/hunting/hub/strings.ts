@@ -3,7 +3,7 @@
 // "būrelis" (use "medžioklės plotų naudotojas" / "MPV naudotojas"), "ūkiai"/"ūkių" for
 // reporters, "viršyta", "pažeidimas", "populiacija".
 import type { PluralForms } from '@/utils/hunting/dates';
-import type { Badge, TopicId } from './types';
+import type { Badge, SeasonState, TopicId } from './types';
 
 // Link of the staging line "Pastabos apie puslapį"; the link is hidden while empty.
 export const FEEDBACK_URL = '';
@@ -153,6 +153,13 @@ export const S = {
   // Coercion notices shared by the hub state (§3.4); topic-specific ones live in topics/*.ts.
   noticeSeasonOnly: (season: string) =>
     `Šie duomenys skelbiami tik sezonais – rodomas ${season} sezonas.`,
+  // A topic switch landed on another season (J-06): the target's default one.
+  noticeSeasonDefault: (topic: string, season: string, state: SeasonState) =>
+    state === 'galutinis'
+      ? `${topic}: rodomas ${season} sezonas – naujausias, kurio duomenys pilni.`
+      : state === 'vyksta'
+        ? `${topic}: rodomas ${season} sezonas – jis dar vyksta, skaičiai keisis.`
+        : `${topic}: rodomas ${season} sezonas (${BADGE_LABELS_AFTER_SEASON[state]}).`,
   noticeSeasonMissing: (topic: string, season: string, fallback: string) =>
     `${topic} duomenų už ${season} nėra – rodomas ${fallback} sezonas.`,
 } as const;
