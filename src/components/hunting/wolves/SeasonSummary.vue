@@ -62,7 +62,7 @@
     </dl>
 
     <p v-if="tips.located" id="wolves-tip-located" class="text-xs text-ink-muted">
-      Skaičiuojami vilkai, kurių sumedžiojimo vieta ir data žinomos (BIOMON ir BIIP).
+      Skaičiuojami vilkai, kurių sumedžiojimo vieta ir data žinomos (BIOMON ir BĮIP).
     </p>
     <p v-if="tips.limit && limitUnknownPast" id="wolves-tip-limit" class="text-xs text-ink-muted">
       Šio sezono limitas šiame puslapyje dar nepateikiamas.
@@ -105,8 +105,8 @@
     <p v-if="closed && official != null" class="text-xs leading-4 text-ink">
       Oficialus AM skaičius: {{ formatInt(official) }}.
       <template v-if="wholeSeason && located != null">
-        Čia rodomi {{ formatInt(located) }} {{ pluralLt(located, ['vilkas', 'vilkai', 'vilkų']) }},
-        kurių sumedžiojimo vieta žinoma.
+        Čia – {{ formatInt(located) }} {{ pluralLt(located, ['vilkas', 'vilkai', 'vilkų']) }} su
+        žinoma vieta; skaičiai skiriasi, nes skaičiuojama kitaip (žr. „Apie duomenis“).
       </template>
       <template v-else>Jis skaičiuojamas visai Lietuvai ir visam sezonui.</template>
     </p>
