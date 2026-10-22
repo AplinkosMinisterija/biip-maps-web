@@ -658,9 +658,9 @@ export function runStebejimaiChecks(): SelfCheckResult[] {
   check('Stebėjimai: rūšių spalvos', () =>
     eq(['vilkas', 'lusis', 'rudasis-lokys', 'stumbras', 'briedis', '__proto__'].map(speciesColor), [
       '#B45309',
-      '#8B5CF6',
-      '#0891B2',
-      '#65A30D',
+      '#7C7CCB',
+      '#1DA09F',
+      '#638353',
       STEB_OTHER_COLOR,
       STEB_OTHER_COLOR,
     ]),
