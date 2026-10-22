@@ -17,6 +17,7 @@ import type { WolfRecord } from './types';
 
 // Layer ids (set with layer.set('id', ...)); used by mapLayers.click / pointerCursor.
 export const WOLVES_MUNICIPALITIES_LAYER_ID = 'huntingWolvesMunicipalities';
+export const WOLVES_MUNICIPALITY_OUTLINE_LAYER_ID = 'huntingWolvesMunicipalityOutline';
 export const WOLVES_CLUSTER_LAYER_ID = 'huntingWolvesCluster';
 export const WOLVES_SELECTION_LAYER_ID = 'huntingWolvesSelection';
 
@@ -130,6 +131,8 @@ export interface WolvesLayers {
   wolvesSource: VectorSource;
   clusterSource: Cluster<Feature>;
   selectionSource: VectorSource;
+  /** The selected municipality's outline, on its own layer over `municipalities`. */
+  selectedOutline: VectorTileLayer<any>;
   /** P1: highlight one municipality outline (null = none). */
   setSelectedMunicipality(code: number | null): void;
   all(): (VectorTileLayer<any> | VectorLayer<any>)[];
@@ -139,21 +142,35 @@ export interface WolvesLayers {
 export function createWolvesLayers(): WolvesLayers {
   let selectedMunicipality: number | null = null;
 
+  const municipalitySource = new PMTilesVectorSource({
+    url: `${boundariesHost}/tiles/municipalities.pmtiles`,
+    overlaps: false,
+    projection: projection3857,
+    format: new MVT({ featureClass: Feature as any, idProperty: 'code' }),
+  });
   const municipalities = new VectorTileLayer({
     renderMode: 'vector',
     zIndex: 10,
-    source: new PMTilesVectorSource({
-      url: `${boundariesHost}/tiles/municipalities.pmtiles`,
-      overlaps: false,
-      projection: projection3857,
-      format: new MVT({ featureClass: Feature as any, idProperty: 'code' }),
-    }),
-    style: (feature) =>
-      selectedMunicipality !== null && Number(feature.getId()) === selectedMunicipality
-        ? municipalitySelectedStyle
-        : municipalityStyle,
+    source: municipalitySource,
+    style: municipalityStyle,
   });
   municipalities.set('id', WOLVES_MUNICIPALITIES_LAYER_ID);
+
+  // The selection on a layer of its own: with `overlaps: false` OpenLayers strokes the
+  // consecutive polygons of a tile as one path with the last feature's stroke, so a selected
+  // style among the plain ones also outlined the polygon before it in the tile (Utenos r.
+  // sav. outlined Šiaulių m. sav., JOURNEYS-03). Here every other feature has no style.
+  const isSelected = (feature: FeatureLike) =>
+    selectedMunicipality !== null &&
+    Number(feature.getId()) === selectedMunicipality &&
+    feature.getGeometry()?.getType() !== 'Point';
+  const selectedOutline = new VectorTileLayer({
+    renderMode: 'vector',
+    zIndex: 11,
+    source: municipalitySource,
+    style: (feature) => (isSelected(feature) ? municipalitySelectedStyle : undefined),
+  });
+  selectedOutline.set('id', WOLVES_MUNICIPALITY_OUTLINE_LAYER_ID);
 
   const wolvesSource = new VectorSource();
   const clusterSource = new Cluster({ distance: 40, minDistance: 16, source: wolvesSource });
@@ -174,6 +191,7 @@ export function createWolvesLayers(): WolvesLayers {
 
   return {
     municipalities,
+    selectedOutline,
     cluster,
     selection,
     wolvesSource,
@@ -182,8 +200,8 @@ export function createWolvesLayers(): WolvesLayers {
     setSelectedMunicipality(code) {
       if (selectedMunicipality === code) return;
       selectedMunicipality = code;
-      municipalities.changed();
+      selectedOutline.changed();
     },
-    all: () => [municipalities, cluster, selection],
+    all: () => [municipalities, selectedOutline, cluster, selection],
   };
 }

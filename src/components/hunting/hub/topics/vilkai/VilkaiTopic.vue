@@ -282,35 +282,32 @@
           />
         </fieldset>
         <HuntingHubShellFullSheet :open="filtersOpen" :title="S.filters" @close="closeFilters">
-          <div class="flex min-h-full flex-col">
-            <HuntingWolvesMoreFilters v-model:draft="attrsDraft" large embedded staged />
-            <!-- Staged: the map redraws only with "Rodyti N vilkų" (CONTROLS-17). -->
-            <div
-              class="sticky bottom-0 -mx-4 -mb-3 mt-auto flex gap-3 border-t border-line bg-white px-4 pt-3"
-              style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom))"
+          <HuntingWolvesMoreFilters v-model:draft="attrsDraft" large embedded staged />
+          <!-- Staged: the map redraws only with "Rodyti N vilkų" (CONTROLS-17); the actions
+               are pinned below the list (MOBILE-09). -->
+          <template #footer>
+            <button
+              type="button"
+              :class="[BTN_SECONDARY, BTN_TOUCH, 'text-base']"
+              @click="attrsDraft = { age: [], sex: [], method: [] }"
             >
-              <button
-                type="button"
-                :class="[BTN_SECONDARY, BTN_TOUCH, 'text-base']"
-                @click="attrsDraft = { age: [], sex: [], method: [] }"
-              >
-                {{ S.reset }}
-              </button>
-              <button
-                type="button"
-                :class="[BTN_PRIMARY, BTN_TOUCH, 'flex-1 text-base']"
-                @click="applyFilters"
-              >
-                {{ draftLabel }}
-              </button>
-            </div>
-          </div>
+              {{ S.reset }}
+            </button>
+            <button
+              type="button"
+              :class="[BTN_PRIMARY, BTN_TOUCH, 'flex-1 text-base']"
+              @click="applyFilters"
+            >
+              {{ draftLabel }}
+            </button>
+          </template>
         </HuntingHubShellFullSheet>
       </div>
       <HuntingWolvesMobileSheet
         ref="sheet"
         clip-histogram
         :inert="fallbackTableShown ? true : undefined"
+        @detent="(detent: SheetDetent) => (sheetDetent = detent)"
       >
         <template #status>
           <div v-if="!loadingData" class="flex items-start gap-2">
@@ -384,9 +381,9 @@
         />
       </section>
       <!-- Phone legend above the collapsed sheet (DATAVIZ-01); the fallback map uses the
-           shell's choropleth legend. -->
+           shell's choropleth legend. Not under a sheet that covers the map (MOBILE-02). -->
       <div
-        v-if="!fallback && !tableOpen"
+        v-if="!fallback && !tableOpen && !mapCovered"
         class="absolute left-3 z-20 bottom-[calc(var(--hub-vilkai-sheet,176px)+8px)]"
       >
         <HuntingWolvesMapLegend phone />
@@ -397,7 +394,7 @@
          expanded phone sheet, which covers them). -->
     <div
       class="absolute inset-x-0 bottom-0 top-[var(--hub-top)] z-20 pointer-events-none"
-      :inert="isMobile && tableOpen ? true : undefined"
+      :inert="isMobile && mapCovered ? true : undefined"
     >
       <HuntingWolvesLoadState placement="map" />
     </div>
@@ -427,6 +424,7 @@ import {
   provide,
   ref,
   shallowRef,
+  toRaw,
   watch,
   watchEffect,
   type Ref,
@@ -438,6 +436,7 @@ import { HUB_SHELL } from '@/components/hunting/hub/shell/shell';
 import { useWolvesData } from '@/composables/hunting/useWolvesData';
 import { useWolvesMap } from '@/composables/hunting/useWolvesMap';
 import { useWolvesState } from '@/composables/hunting/useWolvesState';
+import { WOLVES_MUNICIPALITY_OUTLINE_LAYER_ID } from '@/utils/hunting/layers';
 import {
   formatDateTime,
   formatInt,
@@ -467,7 +466,7 @@ import {
 import type { SnapshotData, TableDef, TopicView } from '@/utils/hunting/hub/types';
 import type { SortState } from '@/components/hunting/hub/table/sort';
 import { embedFocusAllowed } from '@/utils/hunting/hub/embed';
-import { useMapInert } from '@/components/hunting/hub/shell/sheet';
+import { mapCovered, useMapInert, type SheetDetent } from '@/components/hunting/hub/shell/sheet';
 import { VILKAI_COMPARE, VILKAI_H1, type VilkaiCarry } from '@/utils/hunting/hub/topics/vilkai';
 import { WOLVES_TABLES } from '@/utils/hunting/hub/url';
 import { filterRecords } from '@/utils/hunting/wolves';
@@ -531,15 +530,18 @@ const replacesMap = computed(
 );
 const cssVars = computed(() => hubCssVars(width.value, embed));
 
-// The wolves sheet is taller than the hub's 96 px peek (status line, histogram): on phones
-// the map keeps Lithuania above the collapsed sheet. While the sheet is expanded (table)
-// the padding stays put, so the map does not jump behind it.
+// On phones the map keeps Lithuania above the sheet (the wolves sheet measures itself: the
+// peek, the half detent or a wolf's card). While the sheet covers the map (the table, the
+// full detent) the padding stays put, so the map does not jump behind it.
 const sheet = ref<any>(null);
+const sheetDetent = ref<SheetDetent>('peek');
 const { height: sheetHeight } = useElementSize(sheet, undefined, { box: 'border-box' });
 let collapsedSheet = HUB_MOBILE_PEEK;
 function viewPadding(open: boolean): number[] {
   if (!isMobile.value) return mapPadding(width.value, open, embed);
-  if (!open && sheetHeight.value) collapsedSheet = Math.max(HUB_MOBILE_PEEK, sheetHeight.value);
+  if (!open && sheetDetent.value !== 'full' && sheetHeight.value) {
+    collapsedSheet = Math.max(HUB_MOBILE_PEEK, sheetHeight.value);
+  }
   return [mobileHeader(embed), 0, collapsedSheet, 0];
 }
 
@@ -693,15 +695,58 @@ const placeIndex = shallowRef<Awaited<ReturnType<typeof loadMunicipalityIndex>> 
 const municipalityList = computed(() =>
   (placeIndex.value?.list || []).map((m) => ({ code: m.code, name: m.name })),
 );
-// As the wolves page's municipality select: zoom to the municipality, or back to Lithuania.
+// The place picker sets the municipality; the watch below moves the map.
 function onPlace(code: number | null) {
-  if (!ctx) return;
-  ctx.state.sav.value = code;
-  const info = code !== null ? placeIndex.value?.byCode[code] : null;
-  if (!mapLayers) return;
-  const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-  if (info) mapLayers.zoomToExtent(info.extent3857, { animate: !reduceMotion, maxZoom: 12 });
-  else if (code === null) mapLayers.centerMap();
+  if (ctx) ctx.state.sav.value = code;
+}
+// Every municipality change zooms to it, or back to Lithuania (JOURNEYS-03): the picker, a
+// deep link (?sav=82), the table's "Rodyti žemėlapyje", Back/Forward. After the map has
+// loaded and the DOM settled (on phones the full-screen picker has closed), so the view has
+// its real size and padding.
+if (ctx) {
+  watch(
+    () => [ctx.state.sav.value, placeIndex.value] as const,
+    async ([code, index], previous) => {
+      if (!mapLayers || !index) return;
+      const [oldCode, oldIndex] = previous || [undefined, null];
+      if (oldIndex && code === oldCode) return;
+      await mapLayers.waitForLoaded;
+      await nextTick();
+      if (unmounted || ctx.state.sav.value !== code) return;
+      const info = code != null ? index.byCode[code] : null;
+      const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+      if (info) {
+        mapLayers.zoomToExtent(info.extent3857, { animate: !reduceMotion, maxZoom: 12 });
+        if (ctx.debug) checkOutline(info.name);
+      } else if (code == null && oldIndex && oldCode != null) mapLayers.centerMap();
+    },
+    { immediate: true },
+  );
+}
+// ?debug=1: once the map has drawn the place, exactly one municipality is outlined, and it
+// is the chosen one (JOURNEYS-03).
+function checkOutline(name: string) {
+  const map = mapLayers?.map ? toRaw(mapLayers.map) : null;
+  const layer = map
+    ?.getLayers()
+    .getArray()
+    .find((l: any) => l.get('id') === WOLVES_MUNICIPALITY_OUTLINE_LAYER_ID);
+  if (!map || !layer) return;
+  map.once('rendercomplete', () => {
+    const extent = map.getView().calculateExtent(map.getSize());
+    const names = [
+      ...new Set(
+        (layer.getSource().getFeaturesInExtent(extent) as any[])
+          .filter((f) => f.getGeometry()?.getType() !== 'Point' && layer.getStyleFunction()(f, 1))
+          .map((f) => `${f.get('name') || ''}`),
+      ),
+    ];
+    const ok = names.length === 1 && names[0] === name;
+    // eslint-disable-next-line no-console
+    (ok ? console.info : console.error)(
+      `[hunting/hub] savitikra: pažymėta savivaldybė ${ok ? 'OK' : 'KLAIDA'} (${names.join(', ') || '–'})`,
+    );
+  });
 }
 
 // ---- Phone Filtrai sheet: the attribute filters, staged until "Rodyti N vilkų".
