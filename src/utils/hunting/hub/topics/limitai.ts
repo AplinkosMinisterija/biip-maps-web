@@ -163,7 +163,7 @@ const metricOf = (sel: HubSelection, meta: Meta) =>
 // Answer and KPIs (§6.4)
 // ---------------------------------------------------------------------------
 
-function answer(meta: Meta, a: Agg, season: number, muni: Municipality | null) {
+function answer(meta: Meta, a: Agg, season: number, muni: Municipality | null, rows?: LimitRow[]) {
   const label = seasonLabel(season);
   if (muni && !muni.mpvCount) return `${muni.name}: ${S.noMpv}`;
   if (isPooled(muni)) return `${muni!.name}: ${S.pooled}`;
@@ -174,7 +174,13 @@ function answer(meta: Meta, a: Agg, season: number, muni: Municipality | null) {
     const order = orderOf(meta, season);
     const tail = !muni && order !== null ? ` (įsakymu patvirtinta ${formatInt(order)})` : '';
     const body = `${label} sezonui MPV naudotojams paskirstytas limitas – ${formatInt(lim(a))} ${plural(lim(a), P_MOOSE)}${tail}.`;
-    return muni ? `${muni.name} ${body}` : body;
+    if (muni) return `${muni.name} ${body}`;
+    // J-15: last season's use, so the running season's panel answers without a switch.
+    const closed = closedSeason(meta);
+    const c = closed === null || !rows ? null : aggOf(rows, closed, null);
+    return c && lim(c) > 0
+      ? `${body} ${seasonLabel(closed!)} sezone sumedžiota ${formatInt(used(c))} iš ${formatInt(lim(c))} (${pctText(used(c), lim(c))}).`
+      : body;
   }
   const body = `${label} sezone sumedžiota ${formatInt(used(a))} iš ${formatInt(lim(a))} paskirstyto limito (${pctText(used(a), lim(a))}).`;
   return muni ? `${muni.name} ${body}` : body;
@@ -184,9 +190,11 @@ function kpis(meta: Meta, a: Agg, season: number, muni: Municipality | null): Kp
   if ((muni && !muni.mpvCount) || isPooled(muni)) return [];
   if (isCurrent(season, meta)) {
     const list = [
-      kpi('allocated', 'Paskirstyta', formatInt(lim(a)), {
+      // J-15: the tile answers the question; the tooltip says what the number is.
+      kpi('allocated', 'Leidžiama sumedžioti', formatInt(lim(a)), {
         sub: `patinai ${formatInt(a.limM)} · patelės ir jaunikliai ${formatInt(a.limFj)}`,
-        ariaLabel: `Paskirstyta ${formatInt(lim(a))}: patinai ${formatInt(a.limM)}, patelės ir jaunikliai ${formatInt(a.limFj)}`,
+        tooltip: 'Limitas, paskirstytas medžioklės plotų naudotojams (MPV naudotojams).',
+        ariaLabel: `Leidžiama sumedžioti (paskirstyta MPV naudotojams) ${formatInt(lim(a))}: patinai ${formatInt(a.limM)}, patelės ir jaunikliai ${formatInt(a.limFj)}`,
       }),
     ];
     const order = orderOf(meta, season);
@@ -493,7 +501,7 @@ export function view(data: SnapshotData, sel: HubSelection): TopicView {
   const a = aggOf(rows, season, muni?.code ?? null);
   const result: TopicView = {
     h1: H1,
-    answer: answer(meta, a, season, muni),
+    answer: answer(meta, a, season, muni, rows),
     badge: stateBadge(seasonState(season, meta)),
     kpis: kpis(meta, a, season, muni),
     chart: (muni && !muni.mpvCount) || isPooled(muni) ? undefined : chart(meta, rows, muni),
