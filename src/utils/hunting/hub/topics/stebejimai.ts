@@ -76,6 +76,7 @@ export const stebejimai: TopicDef = {
   defaultSeason: (_meta, today) => seasonOfDay(today),
   dims: [],
   defaultTable: 'irasai',
+  attribution: 'place',
   overview: stebejimaiOverview,
   about,
   aboutCommon,

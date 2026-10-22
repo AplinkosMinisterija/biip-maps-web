@@ -386,9 +386,10 @@ export const VILKAI_COMPARE =
 
 const about: AboutDef = {
   source: [
-    'Taškai – BIOMON duomenys (iki 2026-03-31) ir BIIP elektroninio medžioklės lapo įrašai (nuo ' +
-      '2025/2026 sezono). Einamojo sezono skaitiklis ir limitas – iš BIIP.',
-    'Duomenys gaunami atidarius puslapį. Jei jų gauti nepavyksta, rodoma momentinė kopija: ' +
+    'Taškai – BIOMON duomenys (iki 2026-03-31) ir BĮIP elektroninio medžioklės žurnalo įrašai (nuo ' +
+      '2025/2026 sezono). Einamojo sezono skaitiklis ir limitas – iš BĮIP.',
+    'Duomenys gaunami tiesiogiai iš BĮIP ir BIOMON atidarius šią temą. Jei jų gauti nepavyksta, ' +
+      'rodoma BĮIP duomenų kopija: ' +
       'užbaigti sezonai, savivaldybių lygiu.',
   ],
   meaning: [
@@ -418,6 +419,7 @@ export const vilkai: TopicDef = {
   defaultSeason: vilkaiDefaultSeason,
   dims: [],
   defaultTable: 'irasai',
+  attribution: 'place',
   overview: vilkaiOverview,
   otherRow: vilkaiOtherRow,
   // The live tab needs only `meta`; its "Kiti rodikliai" row reads the wolves snapshot.

@@ -37,6 +37,7 @@ import {
 import { hubTop, isRailed, mapPadding, tableReplacesMap } from './layout';
 import {
   ABOUT_LOCALE_RULE,
+  ATTRIBUTION_RULE,
   BADGE_LABELS,
   BANDOMOJI_TOOLTIP,
   S,
@@ -429,6 +430,19 @@ export function forbiddenWordsIn(texts: string[]): string[] {
 }
 
 function runCopyChecks(check: Check) {
+  // J-09: a topic counted by the reported place must not also claim the MPV-sum rule.
+  check('Apie duomenis: savivaldybės priskyrimas (MPV / vieta)', () => {
+    const problems: string[] = TOPICS.filter(
+      (t) =>
+        t.attribution === 'place' &&
+        [...t.about.meaning, ...(t.aboutCommon || [])].includes(ATTRIBUTION_RULE),
+    ).map((t) => t.id);
+    const place = TOPICS.filter((t) => t.attribution === 'place').map((t) => t.id);
+    if (JSON.stringify(place) !== JSON.stringify(['vilkai', 'zala', 'stebejimai'])) {
+      problems.push(`place = ${place.join(', ')}`);
+    }
+    return problems.length === 0 || problems.join('; ');
+  });
   check('Tekstai: be „būrel…“, „prototip…“, „Bandomoji versija“', () => {
     const found = forbiddenWordsIn(uiTexts());
     // The check itself must catch a planted word.
@@ -991,7 +1005,10 @@ function runLiveTopicChecks(check: Check, eq: Eq) {
     if (JSON.stringify(counts) !== JSON.stringify([2, 4, 2, 2])) {
       problems.push(`sections ${counts.join('/')}`);
     }
-    const others = TOPICS.filter((t) => t.id !== 'stebejimai' && t.aboutCommon).map((t) => t.id);
+    // Apžvalga states its own rules too (OVERVIEW-27: the Stebėjimai card shows exact places).
+    const others = TOPICS.filter(
+      (t) => t.id !== 'stebejimai' && t.id !== 'apzvalga' && t.aboutCommon,
+    ).map((t) => t.id);
     if (others.length) problems.push(`aboutCommon on ${others.join(', ')}`);
     return problems.length === 0 || problems.join('; ');
   });

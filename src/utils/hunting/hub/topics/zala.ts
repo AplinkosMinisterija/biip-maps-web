@@ -111,10 +111,10 @@ const GROUP_SHORT: Record<DamageGroup, string> = { ...GROUP_LABELS, lokiai: 'Lok
 
 const H1: Record<Grupe, string> = {
   visos: 'Kur laukiniai gyvūnai daro žalą?',
-  plesrunai: 'Kur plėšrūnai puola gyvulius ir bitynus?',
+  plesrunai: 'Kur plėšrūnai puola ūkinius gyvūnus ir bitynus?',
   augalai: 'Kur žvėrys daro žalą pasėliams, miškui ir melioracijai?',
-  vilkai: 'Kur vilkai puola gyvulius?',
-  lusys: 'Kur lūšys puola gyvulius?',
+  vilkai: 'Kur vilkai puola ūkinius gyvūnus?',
+  lusys: 'Kur lūšys puola ūkinius gyvūnus?',
   lokiai: 'Kur rudieji lokiai daro žalą?',
   kanopiniai: 'Kur kanopiniai žvėrys daro žalą?',
   stumbrai: 'Kur stumbrai daro žalą?',
@@ -145,8 +145,8 @@ export const T = {
   fixedNoteCard: 'Tai gyventojų pranešimai, o ne įvertinta žala.',
   partialNotice:
     'Pranešimai apie žalą BĮIP renkami nuo 2026 m. sausio – 2025/2026 sezono duomenys daliniai.',
-  escalationLabel: 'Kanopinių ir bebrų žala perduota seniūnijai',
-  escalationLabelShort: 'Perduota seniūnijai',
+  escalationLabel: 'Kanopinių ir bebrų pranešimai, perduoti seniūnijai',
+  escalationLabelShort: 'Perduoti seniūnijai',
   escalationTooltip:
     'Ūkininkas pažymėjo, kad su medžiotojais nepavyko susitarti, ir pranešimas perduotas seniūnijai. Tai ne patikrintas faktas.',
   livestockNote: 'Pranešime nurodytas skaičius; neatskiriama, ar gyvūnas žuvo, ar sužeistas.',
@@ -942,7 +942,7 @@ export const groupDim: DimDef = {
 export const about = {
   source: [
     'Gyventojų pranešimai apie laukinių gyvūnų padarytą žalą (BĮIP, medziokle.biip.lt forma).',
-    'Duomenys – momentinė kopija (data nurodyta apačioje). Data – pranešime nurodyta žalos pastebėjimo data (Lietuvos laiku).',
+    'Duomenys – BĮIP duomenų kopija; jos data nurodyta eilutėje „Duomenys … būklei“. Data – pranešime nurodyta žalos pastebėjimo data (Lietuvos laiku).',
   ],
   meaning: [
     'Skaičiuojami pranešimai, o ne įvertinta žala. Kanopinių žvėrių ir bebrų žalą pirmiausia sprendžia MPV naudotojas; vilkų, lūšių, lokių ir stumbrų – seniūnija ir savivaldybės komisija.',
@@ -968,6 +968,7 @@ export const zala: TopicDef = {
   defaultSeason: (meta) => defaultSeason(meta),
   dims: [groupDim],
   defaultTable: 'savivaldybes',
+  attribution: 'place',
   view,
   overview: (data) => overview(data),
   otherRow,

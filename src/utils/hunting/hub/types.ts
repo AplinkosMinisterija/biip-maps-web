@@ -289,6 +289,9 @@ export interface TopicDef {
   otherRow?(data: SnapshotData, sav: number): OtherRow | null; // "Kiti rodikliai čia"
   otherRowFiles?: SnapshotFile[]; // files `otherRow` reads, when they differ from `files`
   about: AboutDef;
+  // How a municipality gets its figures (J-09): 'mpv' = the sum of its assigned MPV (the
+  // default, with ATTRIBUTION_RULE in About), 'place' = the place named in the record.
+  attribution?: 'mpv' | 'place';
   // Lines of the About dialog's "Bendros taisyklės" block; when set, they replace the
   // shell's default lines (which speak of municipality sums, without MPV or exact places).
   aboutCommon?: string[];

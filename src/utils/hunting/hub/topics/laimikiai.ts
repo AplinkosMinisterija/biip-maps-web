@@ -890,7 +890,7 @@ export const speciesDim: DimDef = {
 export const about = {
   source: [
     'BĮIP medžioklės žurnalas: MPV naudotojų sezono ataskaitos ir elektroninis medžioklės žurnalas.',
-    'Duomenys – momentinė kopija (data nurodyta apačioje); ištrinti įrašai neįtraukti.',
+    'Duomenys – BĮIP duomenų kopija; jos data nurodyta eilutėje „Duomenys … būklei“. Ištrinti įrašai neįtraukti.',
   ],
   meaning: [
     'Sumedžiota – visi MPV naudotojų ataskaitose ir el. žurnale nurodyti sumedžioti gyvūnai, įskaitant sumedžiotus sužeistus ar sergančius gyvūnus. Rasti kritę gyvūnai skaičiuojami atskirai. Tankis – sumedžiota per 1 000 ha medžioklės plotų vienetų ploto.',

@@ -81,6 +81,10 @@ const PRIVACY_RULE =
 // below the visible part of the page; open it at the top of the frame instead.
 const tallFrame = computed(() => ctx.embed && ctx.topic.value.kind === 'overview');
 
+const LIVE_SOURCE_RULE =
+  'Duomenys gaunami tiesiogiai iš BĮIP (vilkų taškai – ir iš BIOMON) kiekvieną kartą atidarius ' +
+  'šią temą.';
+
 const isOpen = ref(false);
 const topicId = ref<TopicId>(ctx.sel.value.topic);
 const dialog = ref<HTMLElement | null>(null);
@@ -126,11 +130,22 @@ const common = computed(() => {
   // A topic whose rules differ (Stebėjimai: live records at their exact points) states its own.
   if (topic?.aboutCommon) return topic.aboutCommon.filter(Boolean);
   const asOf = ctx.data.snapshot.value?.meta.snapshotDate;
-  // The attribution rule is stated once: topics usually include it in "Ką reiškia skaičiai".
+  // The attribution rule is stated once (topics usually include it in "Ką reiškia skaičiai"),
+  // and only for topics whose municipalities are MPV sums (J-09).
   const meaning = topic?.about?.meaning || [];
+  const mpv = (topic?.attribution ?? 'mpv') === 'mpv';
+  // The snapshot line only for snapshot topics; a live topic says where its data comes from.
+  const source =
+    topic?.kind === 'snapshot'
+      ? asOf
+        ? S.provenanceSnapshotTitle(asOf)
+        : ''
+      : topic?.kind === 'live'
+        ? LIVE_SOURCE_RULE
+        : '';
   return [
-    meaning.includes(ATTRIBUTION_RULE) ? '' : ATTRIBUTION_RULE,
-    asOf ? S.provenanceSnapshotTitle(asOf) : '',
+    mpv && !meaning.includes(ATTRIBUTION_RULE) ? ATTRIBUTION_RULE : '',
+    source,
     ABOUT_LOCALE_RULE,
     PRIVACY_RULE,
   ].filter(Boolean);
