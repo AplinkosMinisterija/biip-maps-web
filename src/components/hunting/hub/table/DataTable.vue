@@ -2,7 +2,7 @@
   <div class="flex flex-col gap-3 text-sm text-ink" :class="fill ? 'h-full min-h-0' : ''">
     <div class="relative max-w-full overflow-auto" :class="fill ? 'flex-1 min-h-0' : ''">
       <!-- At most 960 px while the columns fit, so the numbers stay near their names. -->
-      <table :class="[TABLE, 'max-w-[960px]']">
+      <table :class="TABLE">
         <caption class="sr-only">
           {{
             caption

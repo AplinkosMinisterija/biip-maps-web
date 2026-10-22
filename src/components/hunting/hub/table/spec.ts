@@ -6,7 +6,8 @@
 // Tables use `border-separate border-spacing-0`, so the rules stay on sticky cells.
 import { FOCUS_RING } from '../shell/controls';
 
-export const TABLE = 'w-full border-separate border-spacing-0 text-left text-sm leading-5 text-ink';
+export const TABLE =
+  'w-full max-w-[960px] border-separate border-spacing-0 text-left text-sm leading-5 text-ink';
 
 // Header cells (sticky inside the table's own scroller).
 export const TH =

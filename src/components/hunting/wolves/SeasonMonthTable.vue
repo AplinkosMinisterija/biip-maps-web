@@ -1,44 +1,48 @@
 <template>
-  <div class="flex flex-col gap-3 text-sm text-gray-900">
+  <div class="flex flex-col gap-3 text-sm text-ink">
     <div v-if="isLoading" class="flex flex-col gap-2" aria-hidden="true">
-      <div v-for="i in 5" :key="i" class="h-6 rounded bg-gray-100 animate-pulse" />
+      <div v-for="i in 5" :key="i" class="h-6 rounded bg-page animate-pulse" />
     </div>
 
     <div v-else class="overflow-x-auto max-w-full">
-      <table class="min-w-full border-collapse text-left text-xs">
+      <table :class="TABLE">
         <caption class="sr-only">
           Sumedžioti vilkai pagal sezonus ir mėnesius (visi sezonai, naujausi pirmi)
         </caption>
         <thead>
-          <tr class="border-b border-gray-200 text-xs text-gray-600">
-            <th scope="col" :class="[stickyClass, 'py-2 pr-2 font-semibold']">Sezonas</th>
+          <tr>
+            <th scope="col" :class="[TH, STICKY_FIRST, 'z-30 pl-0']">Sezonas</th>
             <th
               v-for="month in MONTH_COLUMNS"
               :key="month.value"
               scope="col"
-              class="py-2 px-0.5 font-semibold text-right"
+              :class="[TH, NUM_COMPACT]"
             >
               <abbr :title="month.full" class="no-underline">{{ month.short }}</abbr>
             </th>
-            <th scope="col" class="py-2 px-1 font-semibold text-right">Kiti mėn.</th>
+            <th scope="col" :class="[TH, NUM_COMPACT]">Kiti mėn.</th>
             <!-- Short visible headers so the table fits the 520 px drawer; full names for screen readers. -->
-            <th scope="col" class="py-2 px-1 font-semibold text-right whitespace-nowrap">
+            <th scope="col" :class="[TH, NUM_COMPACT]">
               <span aria-hidden="true" title="Iš viso (su vieta)">Iš viso</span>
               <span class="sr-only">Iš viso (su vieta)</span>
             </th>
-            <th scope="col" class="py-2 px-1 font-semibold text-right">Limitas</th>
-            <th v-if="showPaperRows" scope="col" class="py-2 pl-1 font-semibold text-right">
+            <th scope="col" :class="[TH, NUM_COMPACT]">Limitas</th>
+            <th v-if="showPaperRows" scope="col" :class="[TH, NUM_COMPACT, 'pr-0']">
               <span aria-hidden="true" title="Be vietos (įrašai)">Be vietos</span>
               <span class="sr-only">Be vietos (įrašai)</span>
             </th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="row in rows" :key="row.season" class="border-b border-gray-100">
-            <th scope="row" :class="[stickyClass, 'py-1 pr-2 font-semibold whitespace-nowrap']">
+          <tr v-for="row in rows" :key="row.season" :class="TR">
+            <!-- The season is the row's action; the month counts are plain numbers. -->
+            <th
+              scope="row"
+              :class="[TD, TD_BG, STICKY_FIRST, 'pl-0 font-normal whitespace-nowrap']"
+            >
               <button
                 type="button"
-                :class="cellButtonClass"
+                :class="ROW_ACTION"
                 :aria-label="`${row.label} sezonas: ${wolves(row.total)}. Rodyti šį sezoną.`"
                 @click="selectSeason(row.season)"
               >
@@ -48,31 +52,26 @@
             <td
               v-for="month in MONTH_COLUMNS"
               :key="month.value"
-              class="py-1 px-0.5 text-right tabular-nums"
+              :class="[TD, TD_BG, NUM_COMPACT, row.months[month.value] ? '' : 'text-ink-muted']"
             >
-              <button
-                v-if="row.months[month.value]"
-                type="button"
-                :class="cellButtonClass"
-                :aria-label="`${monthYear(row.season, month.value)} m. ${month.full.toLowerCase()}: ${wolves(row.months[month.value])}. Rodyti šį mėnesį.`"
-                @click="selectMonth(row.season, month.value)"
-              >
-                {{ formatInt(row.months[month.value]) }}
-              </button>
-              <span v-else class="text-gray-500">0</span>
+              {{ formatInt(row.months[month.value]) }}
             </td>
-            <td class="py-1 px-1 text-right tabular-nums">{{ formatInt(row.other) }}</td>
-            <td class="py-1 px-1 text-right tabular-nums font-semibold">
+            <td :class="[TD, TD_BG, NUM_COMPACT]">{{ formatInt(row.other) }}</td>
+            <td :class="[TD, TD_BG, NUM_COMPACT, 'font-semibold']">
               {{ formatInt(row.total) }}
             </td>
-            <td class="py-1 px-1 text-right tabular-nums whitespace-nowrap">
+            <td :class="[TD, TD_BG, NUM_COMPACT]">
               <template v-if="row.limit === NOT_APPROVED">
                 <span aria-hidden="true" title="Nepatvirtintas">Nepatv.</span>
                 <span class="sr-only">Nepatvirtintas</span>
               </template>
+              <template v-else-if="row.limit === DASH">
+                <span aria-hidden="true">{{ DASH }}</span>
+                <span class="sr-only">nepaskelbtas</span>
+              </template>
               <template v-else>{{ row.limit }}</template>
             </td>
-            <td v-if="showPaperRows" class="py-1 pl-1 text-right tabular-nums">
+            <td v-if="showPaperRows" :class="[TD, TD_BG, NUM_COMPACT, 'pr-0']">
               {{ formatInt(row.paperRows) }}
             </td>
           </tr>
@@ -80,13 +79,16 @@
       </table>
     </div>
 
-    <p class="text-xs text-gray-600">
-      „Kiti mėn.“ – įrašai, kurių data balandžio–rugsėjo mėn.
-      <template v-if="showPaperRows">
+    <ul :class="FOOTNOTES">
+      <li>„Kiti mėn.“ – įrašai, kurių data balandžio–rugsėjo mėn.</li>
+      <li v-if="showPaperRows">
         „Be vietos“ – popieriniais lapais pateiktos suvestinės: viena eilutė gali reikšti kelis
         vilkus, todėl į sumas jos neįtraukiamos.
-      </template>
-    </p>
+      </li>
+      <li v-if="rows.some((r) => r.limit === DASH)">
+        {{ DASH }} – limitas tam sezonui nepaskelbtas.
+      </li>
+    </ul>
   </div>
 </template>
 
@@ -97,6 +99,17 @@ import type { Interval, WolfRecord } from '@/utils/hunting/types';
 
 import { formatInt, pluralLt, WOLVES } from '@/utils/hunting/dates';
 import { WOLF_LIMITS } from '@/utils/hunting/labels';
+import { DASH } from '@/utils/hunting/hub/topics/common';
+import {
+  FOOTNOTES,
+  ROW_ACTION,
+  STICKY_FIRST,
+  TABLE,
+  TD,
+  TD_BG,
+  TH,
+  TR,
+} from '@/components/hunting/hub/table/spec';
 
 // Wolf hunting months in season order; April–September go to "Kiti mėn.".
 const MONTH_COLUMNS = [
@@ -118,7 +131,6 @@ interface PivotRow {
   paperRows: number;
 }
 
-const pad = (n: number) => `${n}`.padStart(2, '0');
 const NOT_APPROVED = 'Nepatvirtintas';
 const wolves = (n: number) => `${formatInt(n)} ${pluralLt(n, WOLVES)}`;
 
@@ -128,16 +140,19 @@ const { state, data } = ctx;
 const isLoading = computed(
   () => !data.dataset.value && ['loading', 'slow'].includes(data.phase.value),
 );
-// E3 failed → the paper rows cannot be attributed to seasons: hide the column (§10).
-const showPaperRows = computed(() => data.seasons.value.length > 0);
+// E3 failed → the paper rows cannot be attributed to seasons: hide the column (§10). Hidden
+// too while every season has 0 such rows, so the column does not suggest missing wolves (J-04).
+const showPaperRows = computed(
+  () => data.seasons.value.length > 0 && rows.value.some((r) => r.paperRows > 0),
+);
 
 function limitLabel(season: number): string {
   if (season === ctx.currentSeason) {
     const limit = data.totals.value?.wolfLimit;
-    if (limit === undefined || limit === null) return '—';
+    if (limit === undefined || limit === null) return DASH;
     return limit === 0 ? NOT_APPROVED : formatInt(limit);
   }
-  return WOLF_LIMITS[season] ? formatInt(WOLF_LIMITS[season]) : '—';
+  return WOLF_LIMITS[season] ? formatInt(WOLF_LIMITS[season]) : DASH;
 }
 
 // Over ALL records (ignores the interval), newest season first.
@@ -178,24 +193,11 @@ const rows = computed<PivotRow[]>(() => {
   return result;
 });
 
-const monthYear = (season: number, month: number) => (month >= 4 ? season : season + 1);
-
 function selectSeason(season: number) {
   const interval: Interval = { from: `${season}-04-01`, to: `${season + 1}-03-31` };
   state.setInterval(interval, `season:${season}`, true);
 }
 
-function selectMonth(season: number, month: number) {
-  const year = monthYear(season, month);
-  const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
-  const interval: Interval = {
-    from: `${year}-${pad(month)}-01`,
-    to: `${year}-${pad(month)}-${pad(lastDay)}`,
-  };
-  state.setInterval(interval, 'custom', true);
-}
-
-const stickyClass = 'sticky left-0 z-10 bg-white';
-const cellButtonClass =
-  'min-h-[24px] min-w-[24px] max-md:min-h-[44px] max-md:min-w-[44px] rounded px-1 font-semibold text-brand underline decoration-dotted underline-offset-2 hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
+// Twelve narrow numeric columns must fit the 520 px drawer: less padding than NUM.
+const NUM_COMPACT = 'w-[1%] whitespace-nowrap px-1.5 text-right tabular-nums';
 </script>
