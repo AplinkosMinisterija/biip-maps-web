@@ -67,7 +67,13 @@ export const INLINE_LINK = `font-semibold text-brand underline decoration-1 unde
 export const ICON_BTN = `inline-flex h-10 w-10 items-center justify-center rounded-full text-ink hover:bg-brand-50 ${FOCUS_RING}`;
 export const ICON_BTN_TOUCH = 'h-11 w-11';
 // Form field (select, input) inside a popover or sheet.
-export const FIELD = `block h-10 w-full rounded border border-line-strong bg-white px-3 text-base text-ink hover:border-brand focus-visible:border-brand ${FOCUS_RING}`;
+const FIELD_BASE =
+  'block h-10 w-full rounded border border-line-strong bg-white px-3 text-base text-ink hover:border-brand focus-visible:border-brand';
+export const FIELD = `${FIELD_BASE} ${FOCUS_RING}`;
+// The search field of a combobox whose list sits right under it (popover, sheet): focus is
+// the teal border thickened to 2 px, so the field and the list's active option are never
+// framed twice (the active option is shown by its tint and a 3 px bar on the left).
+export const FIELD_FOCUS_INSET = `${FIELD_BASE} focus-visible:outline-none focus-visible:shadow-[0_0_0_1px_#004650]`;
 export const FIELD_TOUCH = 'h-12';
 
 // §6 Surfaces. Cards in the page flow are bordered without a shadow (the site's form card);
