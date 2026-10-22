@@ -11,7 +11,7 @@ import {
   seasonOfDay,
   type PluralForms,
 } from '@/utils/hunting/dates';
-import { P_HUNTED, S, TOPIC_SUBTITLES, TOPIC_TABS } from '../strings';
+import { ABOUT_LOCALE_RULE, P_HUNTED, S, TOPIC_SUBTITLES, TOPIC_TABS } from '../strings';
 import type {
   AboutDef,
   ChoroplethDef,
@@ -408,6 +408,14 @@ const about: AboutDef = {
   compare: [VILKAI_COMPARE],
 };
 
+// Replaces the default "Bendros taisyklės" lines, which promise sums only (snapshot topics)
+// and repeat the live source line: this topic shows every located wolf as a point and a row.
+const aboutCommon = [
+  ABOUT_LOCALE_RULE,
+  'Asmens duomenys neskelbiami: kiekvienas vilkas rodomas atskirai, bet vieta – tik apytiksliai ' +
+    '(1 km tinklelio langelio centre); medžiotojai nenurodomi.',
+];
+
 export const vilkai: TopicDef = {
   id: 'vilkai',
   tab: TOPIC_TABS.vilkai,
@@ -427,6 +435,7 @@ export const vilkai: TopicDef = {
   // The live tab needs only `meta`; its "Kiti rodikliai" row reads the wolves snapshot.
   otherRowFiles: ['meta', 'wolves'],
   about,
+  aboutCommon,
 };
 
 export default vilkai;
