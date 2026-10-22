@@ -16,6 +16,7 @@
 
 <script setup lang="ts">
 import { computed, inject, type PropType } from 'vue';
+import { useMediaQuery } from '@vueuse/core';
 import { HUB_CTX } from '@/composables/hunting/hub/context';
 import { S } from '@/utils/hunting/hub/strings';
 
@@ -53,9 +54,11 @@ const current = computed<number | null>(() =>
   controlled.value ? (props.modelValue ?? null) : (ctx?.sel.value.sav ?? null),
 );
 // "Vieta: visa Lietuva" (lower-case after the colon); a municipality is a proper noun. On
-// phones the chip shows the value alone: "Visa Lietuva".
+// phones and tablets (< 1024 px, where the name is hidden) the chip shows the value alone:
+// "Visa Lietuva".
+const named = useMediaQuery('(min-width: 1024px)');
 const valueText = computed(() => {
-  if (current.value === null) return props.mobile ? S.placeAll : S.placeAllLower;
+  if (current.value === null) return props.mobile || !named.value ? S.placeAll : S.placeAllLower;
   return list.value.find((i) => i.value === current.value)?.label || `${current.value}`;
 });
 
