@@ -156,6 +156,7 @@ import { formatInt } from '@/utils/hunting/dates';
 import { countByMunicipality, filterRecords, type MunicipalityCount } from '@/utils/hunting/wolves';
 import { HUB_CTX } from '@/composables/hunting/hub/context';
 import { S } from '@/utils/hunting/hub/strings';
+import { csvName } from '@/utils/hunting/hub/topics/common';
 import { vilkaiReconcile } from '@/utils/hunting/hub/topics/vilkai';
 import { BTN_TEXT, BTN_TEXT_TOUCH } from '@/components/hunting/hub/shell/controls';
 import {
@@ -324,10 +325,13 @@ const caption = computed(() => `Sumedžioti vilkai pagal savivaldybes: ${periodL
 // The one model of the table (REGRESS-03): the desktop table, the phone cards and the CSV
 // show the same rows, totals first, the official AM figure as its own row (kept last, with
 // its note), the same notes. Sort keys: the unassigned row stays last in either direction.
-const fileSuffix = computed(() => {
+// The table lists every municipality, so the file name has no place in it (as in the hub).
+const fileName = computed(() => {
   const season = derived.intervalSeason.value;
   const { from, to } = state.interval.value;
-  return season !== null ? `${season}-${season + 1}` : `${from}_${to}`;
+  return season !== null
+    ? csvName('vilkai', 'savivaldybes', season)
+    : csvName('vilkai', 'savivaldybes', null, `${from}-${to}`);
 });
 const VALUE_COLUMNS: { id: (typeof VALUE_KEYS)[number]; label: string }[] = [
   { id: 'count', label: 'Vilkai' },
@@ -370,7 +374,7 @@ const table = computed<TableDef<Row>>(() => ({
     'Savivaldybė nustatyta pagal sumedžiojimo vietą; prie ribų galimas nedidelis netikslumas.',
   ],
   rowSav: (r) => r.code,
-  csvName: `vilkai-savivaldybes-${fileSuffix.value}`,
+  csvName: fileName.value,
 }));
 defineExpose({ table });
 
