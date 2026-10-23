@@ -101,6 +101,7 @@ export const S = {
   placeChip: (name: string) => `Vieta: ${name}`,
   placeAll: 'Visa Lietuva',
   placeAllLower: 'visa Lietuva',
+  placeAllShort: 'Lietuva', // phone chip value, so it never truncates
   placeSearch: 'Ieškoti savivaldybės',
   placeNone: 'Nerasta',
   filters: 'Filtrai',

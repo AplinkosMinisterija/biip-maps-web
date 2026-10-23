@@ -1,7 +1,8 @@
 <template>
-  <!-- Phones: the chip shrinks (truncated) so the header row never scrolls sideways. -->
+  <!-- Phones: a municipality's name shrinks (truncated) so the header row never scrolls
+       sideways; the default "Lietuva" is short enough to stay whole. -->
   <HuntingHubShellComboPopover
-    :class="mobile ? 'min-w-0 flex-1' : 'max-w-[22rem]'"
+    :class="mobile ? (current === null ? 'shrink-0' : 'min-w-0 flex-1') : 'max-w-[22rem]'"
     :mode="mobile ? 'sheet' : 'popover'"
     :name="S.place"
     name-class="sr-only lg:not-sr-only"
@@ -54,11 +55,14 @@ const current = computed<number | null>(() =>
   controlled.value ? (props.modelValue ?? null) : (ctx?.sel.value.sav ?? null),
 );
 // "Vieta: visa Lietuva" (lower-case after the colon); a municipality is a proper noun. On
-// phones and tablets (< 1024 px, where the name is hidden) the chip shows the value alone:
-// "Visa Lietuva".
+// tablets (< 1024 px, where the name is hidden) the chip shows the value alone: "Visa
+// Lietuva"; on phones "Lietuva", so the row's three chips fit at 360 px.
 const named = useMediaQuery('(min-width: 1024px)');
 const valueText = computed(() => {
-  if (current.value === null) return props.mobile || !named.value ? S.placeAll : S.placeAllLower;
+  if (current.value === null) {
+    if (props.mobile) return S.placeAllShort;
+    return named.value ? S.placeAllLower : S.placeAll;
+  }
   return list.value.find((i) => i.value === current.value)?.label || `${current.value}`;
 });
 

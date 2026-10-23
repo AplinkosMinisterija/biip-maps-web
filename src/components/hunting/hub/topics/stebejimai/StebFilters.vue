@@ -119,15 +119,15 @@
   </div>
 
   <!-- Phones: [Laikotarpis] [Vieta] [Filtrai (n)], as the other topics (CONTROLS-07). The
-       period chip shows its value ("Visas laikotarpis", truncated when the row is short) as
-       the other topics' season chips do; its accessible name keeps "Laikotarpis: …"
-       (MOBILE-15). -->
+       period chip shows its value ("Visas" – the value of "Laikotarpis: visas" – or
+       "Paskutinės 30 d.", truncated when the row is short) as the other topics' season chips
+       do; its accessible name keeps "Laikotarpis: …" (MOBILE-15). -->
   <div v-else class="flex min-w-0 flex-1 items-center gap-2">
     <HuntingHubShellFilterChip
       ref="periodTrigger"
       class="min-w-0 max-w-[38%] shrink"
       touch
-      :value="periodChip"
+      :value="periodChipPhone"
       :open="periodOpen"
       :active="ctx.state.period.value.kind !== 'all'"
       :sr-label="SS.periodChip(periodChip)"
@@ -259,6 +259,7 @@ import { STEB_CTX } from '@/composables/hunting/hub/stebejimai/useStebState';
 import { formatInt, pluralLt } from '@/utils/hunting/dates';
 import { DESKTOP_MIN, WIDE_MIN } from '@/utils/hunting/hub/layout';
 import { chipValue, S } from '@/utils/hunting/hub/strings';
+import { upperFirst } from '@/utils/hunting/hub/topics/common';
 import { filterRecords, periodChipLabel } from '@/utils/hunting/hub/stebejimai/model';
 import { P_OBSERVATION_ACC, SS } from '@/utils/hunting/hub/stebejimai/strings';
 import StebPeriod from './StebPeriod.vue';
@@ -281,6 +282,10 @@ const row = (selected: boolean, large = false) => [
 ];
 
 const periodChip = computed(() => periodChipLabel(ctx.state.period.value, ctx.today));
+// "Visas laikotarpis" left the place chip "Vis…" at 360 px.
+const periodChipPhone = computed(() =>
+  ctx.state.period.value.kind === 'all' ? upperFirst(SS.allPeriodChip) : periodChip.value,
+);
 const optionLabel = (list: { key: string; label: string }[], key: string | null) =>
   list.find((o) => o.key === key)?.label || key || '';
 // Chip values after the name, lower-case ("Rūšis: visos", "Faktas: stebėtas gyvas").
