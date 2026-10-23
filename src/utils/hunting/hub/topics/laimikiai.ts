@@ -42,6 +42,7 @@ import {
   deltaPhrase,
   emptyState,
   formatDec,
+  formatDec1,
   formatInt,
   formatPct,
   hasSeason,
@@ -139,13 +140,42 @@ const emptyAgg = (): Agg => ({
 const addNullable = (a: number | null, b: number | null) =>
   a === null && b === null ? null : (a ?? 0) + (b ?? 0);
 
-function addRow(agg: Agg, r: LootRow) {
+type SexKey = 'm' | 'f' | 'j';
+const SEX_KEYS: SexKey[] = ['m', 'f', 'j'];
+
+// The snapshot's sex/age counts are `sum() FILTER (…)`: NULL both for a category without kills
+// and for one the species does not record (Šernas: no "Jaunikliai" anywhere). The categories a
+// species records somewhere in the file, so a row split by sex and age shows 0 in the others.
+function sexCategories(rows: LootRow[]) {
+  const bySp = new Map<number, Set<SexKey>>();
+  for (const r of rows) {
+    for (const k of SEX_KEYS) {
+      if (r[k] === null) continue;
+      let keys = bySp.get(r.sp);
+      if (!keys) {
+        keys = new Set();
+        bySp.set(r.sp, keys);
+      }
+      keys.add(k);
+    }
+  }
+  return bySp;
+}
+
+// In a row split by sex and age (any of m, f, j given) a NULL category the species records is
+// 0; "–" (not split) stays for rows without any of the three and for unrecorded categories.
+function sexPart(r: LootRow, k: SexKey, recorded: Set<SexKey> | undefined) {
+  const split = r.m !== null || r.f !== null || r.j !== null;
+  return r[k] ?? (split && recorded?.has(k) ? 0 : null);
+}
+
+function addRow(agg: Agg, r: LootRow, recorded: Set<SexKey> | undefined) {
   agg.n += r.n;
   agg.paper += r.paper;
   agg.app += r.app;
-  agg.m = addNullable(agg.m, r.m);
-  agg.f = addNullable(agg.f, r.f);
-  agg.j = addNullable(agg.j, r.j);
+  agg.m = addNullable(agg.m, sexPart(r, 'm', recorded));
+  agg.f = addNullable(agg.f, sexPart(r, 'f', recorded));
+  agg.j = addNullable(agg.j, sexPart(r, 'j', recorded));
   agg.dead += r.dead;
   agg.road += r.road;
 }
@@ -162,6 +192,7 @@ function seasonIndex(rows: LootRow[], season: number): SeasonIndex {
   let bySeason = indexCache.get(rows);
   if (!bySeason) {
     bySeason = new Map();
+    const recorded = sexCategories(rows);
     for (const r of rows) {
       let idx = bySeason.get(r.season);
       if (!idx) {
@@ -174,7 +205,7 @@ function seasonIndex(rows: LootRow[], season: number): SeasonIndex {
           agg = emptyAgg();
           idx.cells.set(key, agg);
         }
-        addRow(agg, r);
+        addRow(agg, r, recorded.get(r.sp));
       }
       idx.species.add(r.sp);
     }
@@ -624,7 +655,10 @@ function speciesTable(c: Ctx, muni: Municipality | null): TableDef<SpeciesRow> {
   );
 
   const footnotes: string[] = [];
-  // The "Kita" note sits in the panel next to the table (CONTENT-25); the totals row names it.
+  // The totals row names "Kita": its note (the panel's, CONTENT-25) also under the table, as
+  // the table view collapses the panel.
+  const kita = c.kita.find((k) => k.season === c.season);
+  if (!muni && kita && kita.n > 0) footnotes.push(T.kita(kita.n));
   const wolf = c.meta.species.find((s) => s.slug === 'vilkas');
   const official = c.meta.static.wolves.seasons[`${c.season}`]?.official;
   if (wolf && !muni && typeof official === 'number' && !c.current) {
@@ -656,7 +690,7 @@ function speciesTable(c: Ctx, muni: Municipality | null): TableDef<SpeciesRow> {
     rows,
     totals,
     footnotes,
-    csvName: csvName('laimikiai', 'rusys', c.season, code),
+    csvName: csvName('laimikiai', 'rusys', c.season, muni?.name),
   };
 }
 
@@ -722,8 +756,10 @@ function municipalityTable(c: Ctx): TableDef<MuniRow> {
       id: 'density',
       label: `per ${formatInt(c.unit)} ha`,
       numeric: true,
-      value: (r) => (r.density === null ? null : Math.round(r.density * 10) / 10),
-      display: (r) => (r.density === null ? NONE : formatDec(r.density)),
+      // One decimal in the whole column, on screen and in the CSV ("4,0", not "4").
+      value: (r) => (r.density === null ? null : formatDec1(r.density)),
+      sort: (r) => r.density,
+      display: (r) => (r.density === null ? NONE : formatDec1(r.density)),
     },
     {
       id: 'delta',
@@ -755,7 +791,7 @@ function municipalityTable(c: Ctx): TableDef<MuniRow> {
     rowNote: (r) =>
       r.noMpv ? { text: NOTE_NO_MPV, from: 1 } : r.pooled ? { text: NOTE_POOLED, from: 3 } : null,
     disabled: c.current ? T.currentMuniDisabled(c.season) : undefined,
-    csvName: csvName('laimikiai', 'savivaldybes', c.season, null),
+    csvName: csvName('laimikiai', 'savivaldybes', c.season, c.sp?.name),
   };
 }
 

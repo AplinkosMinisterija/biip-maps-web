@@ -441,7 +441,7 @@ function municipalityTable(meta: Meta, rows: LimitRow[], season: number): TableD
     rowSav: (r) => (r.noMpv ? null : r.code),
     rowNote: (r) =>
       r.pooled ? { text: NOTE_POOLED, from: 1 } : r.noMpv ? { text: NOTE_NO_MPV, from: 1 } : null,
-    csvName: csvName('briedziu-limitai', 'savivaldybes', season, null),
+    csvName: csvName('briedziu-limitai', 'savivaldybes', season),
   };
 }
 
@@ -507,7 +507,7 @@ function seasonTable(meta: Meta, rows: LimitRow[], muni: Municipality | null): T
     columns,
     rows: data,
     footnotes: dashes.length ? [`${DASH} – ${dashes.join('; ')}.`] : [],
-    csvName: csvName('briedziu-limitai', 'sezonai', seasonsDesc(meta)[0], code),
+    csvName: csvName('briedziu-limitai', 'sezonai', null, muni?.name),
   };
 }
 

@@ -342,13 +342,21 @@ export function runSelfChecks(): SelfCheckResult[] {
     if (/biomon_|biip_|500500|6100500|500123/.test(csv)) return 'id or coordinate leaked';
     if (!lines.some((l) => l.indexOf('"SU;""X"""') >= 0)) return 'quoting';
     return eq(
-      [lines[0].split('; parengta ')[0], lines[1], lines[2], lines.length, csvFileName(all)],
+      [
+        lines[0].split('; parengta ')[0],
+        lines[1],
+        lines[2],
+        lines.length,
+        csvFileName(all),
+        csvFileName({ from: '2025-10-01', to: '2026-03-31' }, 'Kauno r. sav.'),
+      ],
       [
         '# Sumedžioti vilkai; 2017-04-01–2026-10-09; visa Lietuva',
         'data;sezonas;amzius;lytis;medziokles_budas;gaujos_narys;saltinis;ne_medziokles_laikotarpiu',
         '2026-04-01;2026/2027;Suaugęs;Patinas;Varomoji;Ne;BIIP elektroninis medžioklės lapas;taip',
         ds.records.length + 3,
-        'vilkai_2017-04-01_2026-10-09.csv',
+        'vilkai-irasai-2017-04-01-2026-10-09.csv',
+        'vilkai-irasai-2025-10-01-2026-03-31-kauno-r-sav.csv',
       ],
     );
   });

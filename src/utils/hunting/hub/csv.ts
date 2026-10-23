@@ -42,7 +42,8 @@ const WITHHELD_NOTE = new RegExp(`^${WITHHELD_MARK} \\(„neskelbiama“\\) – 
 export const csvNote = (note: string) =>
   note
     .replace(WITHHELD_NOTE, '„neskelbiama“ – ')
-    .replace(/^[–—-] stulpel/, 'Tuščias langelis stulpel');
+    .replace(/^[–—-] stulpel/, 'Tuščias langelis stulpel')
+    .replace(/^[–—-] – /, 'Tuščias langelis – ');
 
 export interface TableCsvOptions<R = any> {
   provenance: Provenance;

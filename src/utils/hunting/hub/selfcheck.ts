@@ -43,7 +43,6 @@ import {
   ABOUT_LOCALE_RULE,
   ATTRIBUTION_RULE,
   BADGE_LABELS,
-  BANDOMOJI_TOOLTIP,
   S,
   TOPIC_ORDER,
   TOPIC_SUBTITLES,
@@ -51,6 +50,7 @@ import {
 } from './strings';
 import { getTopic, hasTopic, LIVE_HOSTS, TOPICS } from './topics';
 import { certainTop } from './topics/zala';
+import { csvName, slugLt } from './topics/common';
 import {
   keptQuery,
   LIVE_TABLES,
@@ -365,6 +365,55 @@ export function runHubUnitChecks(): SelfCheckResult[] {
       'C;;;',
     ]);
   });
+  check('CSV: failų vardai (slugLt, csvName)', () =>
+    eq(
+      [
+        slugLt('Kauno r. sav.'),
+        slugLt('Ąžuolų Čęėįšųūž  sav.'),
+        csvName('laimikiai', 'rusys', 2025, 'Kauno r. sav.'),
+        csvName('laimikiai', 'savivaldybes', 2025, null, 'Taurusis elnias'),
+        csvName('briedziu-limitai', 'sezonai', null),
+        csvName('vilkai', 'savivaldybes', 2024),
+      ],
+      [
+        'kauno-r-sav',
+        'azuolu-ceeisuuz-sav',
+        'laimikiai-rusys-2025-2026-kauno-r-sav',
+        'laimikiai-savivaldybes-2025-2026-taurusis-elnias',
+        'briedziu-limitai-sezonai',
+        'vilkai-savivaldybes-2024-2025',
+      ],
+    ),
+  );
+  check('CSV: „–“ – tuščias langelis, išnaša tai sako', () => {
+    type Row = { name: string; n: number | null };
+    const table: TableDef<Row> = {
+      id: 't',
+      label: 'Lentelė',
+      columns: [
+        { id: 'name', label: 'Sezonas', value: (r) => r.name },
+        {
+          id: 'n',
+          label: 'Sumedžiota',
+          numeric: true,
+          value: (r) => r.n,
+          display: (r) => (r.n === null ? '–' : formatInt(r.n)),
+        },
+      ],
+      rows: [
+        { name: 'A', n: null },
+        { name: 'B', n: 3 },
+      ],
+      footnotes: ['– – sezonas vyksta.'],
+      csvName: 't',
+    };
+    const lines = (t: TableDef<Row>) =>
+      buildTableCsv(t, { provenance: { kind: 'snapshot', asOf: '2026-10-09', text: '' } })
+        .slice(1)
+        .split('\r\n')
+        .slice(2, 5);
+    return eq(lines(table), ['A;', 'B;3', '# Tuščias langelis – sezonas vyksta.']);
+  });
   check('Lentelių stulpeliai (zip)', () => {
     const rows = zip<{ a: number; b: string }>(
       { columns: ['b', 'extra', 'a'], rows: [['x', 'secret', 1]] },
@@ -507,7 +556,6 @@ export function uiTexts(): string[] {
     ...textsOf(S as unknown as Record<string, unknown>),
     ...textsOf(stebStrings?.SS),
     ...Object.values(BADGE_LABELS),
-    BANDOMOJI_TOOLTIP,
     ...Object.values(TOPIC_TABS),
     ...Object.values(TOPIC_SUBTITLES),
     ...TOPICS.flatMap((t) => [
@@ -523,8 +571,13 @@ export function uiTexts(): string[] {
 }
 
 // Words that must never render: "būrelis" (official: MPV naudotojas), and the prototype /
-// test-version wording, which would reach production when the gate is lifted (D9).
-export const FORBIDDEN_UI_WORDS: readonly RegExp[] = [/būrel/i, /prototip/i, /bandomoji versija/i];
+// test-version / staging wording: staging shows what production will (D9).
+export const FORBIDDEN_UI_WORDS: readonly RegExp[] = [
+  /būrel/i,
+  /prototip/i,
+  /bandomoji versija/i,
+  /bandom\S* aplink/i,
+];
 
 export function forbiddenWordsIn(texts: string[]): string[] {
   const text = texts.join(' ');
@@ -545,11 +598,15 @@ function runCopyChecks(check: Check) {
     }
     return problems.length === 0 || problems.join('; ');
   });
-  check('Tekstai: be „būrel…“, „prototip…“, „Bandomoji versija“', () => {
+  check('Tekstai: be „būrel…“, „prototip…“, „Bandomoji versija / aplinka“', () => {
     const found = forbiddenWordsIn(uiTexts());
     // The check itself must catch a planted word.
-    const planted = forbiddenWordsIn(['Prototipas rodo kopiją', 'Bandomoji versija']);
-    if (planted.length !== 2) return `planted words not caught: ${planted.join(', ')}`;
+    const planted = forbiddenWordsIn([
+      'Prototipas rodo kopiją',
+      'Bandomoji versija',
+      'Bandomojoje aplinkoje įrašų nėra',
+    ]);
+    if (planted.length !== 3) return `planted words not caught: ${planted.join(', ')}`;
     return found.length === 0 || `found ${found.join(', ')}`;
   });
 }
@@ -1313,6 +1370,84 @@ export function runHubDataChecks(data: SnapshotData | null | undefined): SelfChe
         ],
         [2372, 790, 572, 1010, 2825],
       );
+    });
+    // A row split by sex and age shows 0 in its other sex columns; "–" stays only for a
+    // category the species records nowhere (Šernas: "Jaunikliai"). The density column has
+    // one decimal in every row, on screen and in the table's CSV.
+    check('Laimikiai: lyties 0 vietoj „–“, tankis vieno skaitmens', () => {
+      const topic = getTopic('laimikiai');
+      if (!topic?.view) return 'no view';
+      const recorded = (name: string, key: 'm' | 'f' | 'j') => {
+        const sp = meta.species.find((x) => x.name === name);
+        return !!sp && loots.rows.some((r) => r.sp === sp.id && r[key] !== null);
+      };
+      if (recorded('Šernas', 'j')) return 'Šernas records „Jaunikliai“';
+      const ONE_DECIMAL = /^\d[\d\s]*,\d$/;
+      const moose = meta.species.find((x) => x.name === 'Briedis');
+      if (!moose?.slug) return 'no Briedis in the snapshot';
+      const bad: string[] = [];
+      for (const sav of [null, 53]) {
+        const view = topic.view(data, selectionFor(topic, meta, 2025, sav));
+        const table = (id: string) => view.tables.find((t) => t.id === id);
+        const species = table('rusys');
+        const sex = species?.columns.filter((c) => ['m', 'f', 'j'].indexOf(c.id) >= 0) || [];
+        species?.rows.forEach((r) => {
+          const texts = sex.map((c) => c.display!(r));
+          const split = texts.some((t) => t !== '–');
+          if (
+            split &&
+            sex.some((c, i) => texts[i] === '–' && recorded(r.name, c.id as 'm' | 'f' | 'j'))
+          )
+            bad.push(`${r.name}: ${texts.join(' | ')}`);
+        });
+        // The never-recorded category: "–" in Šernas's row, never a 0.
+        const boar = species?.rows.find((r) => r.name === 'Šernas');
+        const boarJ = sex.find((c) => c.id === 'j');
+        if (!boar || !boarJ) bad.push(`${sav}: no Šernas row or „Jaunikliai“ column`);
+        else if (boarJ.display!(boar) !== '–')
+          bad.push(`Šernas „Jaunikliai“ ${sav}: ${boarJ.display!(boar)}`);
+      }
+      // The municipality table (all species and one species): the screen's density text and
+      // the CSV cell of the same row, both with one decimal.
+      for (const rusis of [undefined, moose.slug]) {
+        const sel = selectionFor(topic, meta, 2025);
+        if (rusis) sel.dims.rusis = rusis;
+        const muni = topic.view(data, sel).tables.find((t) => t.id === 'vietoves');
+        if (!muni) {
+          bad.push(`${rusis || 'visos'}: no vietoves table`);
+          continue;
+        }
+        const col = muni.columns.findIndex((c) => c.id === 'density');
+        const dens = muni.columns[col];
+        const csv = buildTableCsv(muni, {
+          provenance: { kind: 'snapshot', asOf: '2026-10-09', text: '' },
+        });
+        const lines = csv.slice(1).split('\r\n');
+        const header = lines[1].split(';');
+        const at = header.indexOf(dens.label);
+        if (at < 0) {
+          bad.push(`${rusis || 'visos'}: no density column in the CSV`);
+          continue;
+        }
+        const rows = [...(muni.totals ? [muni.totals] : []), ...muni.rows];
+        let numbers = 0;
+        rows.forEach((r, i) => {
+          const note = muni.rowNote?.(r);
+          if (note && note.from <= col) return;
+          const screen = dens.display!(r);
+          const cell = lines[2 + i].split(';')[at];
+          if (screen === '–') {
+            if (cell !== '') bad.push(`CSV ${r.name}: „${cell}“ for „–“`);
+            return;
+          }
+          numbers++;
+          if (!ONE_DECIMAL.test(screen)) bad.push(`${r.name}: ${screen}`);
+          if (!ONE_DECIMAL.test(cell) || cell !== screen)
+            bad.push(`CSV ${r.name}: „${cell}“, screen „${screen}“`);
+        });
+        if (!numbers) bad.push(`${rusis || 'visos'}: no density figures`);
+      }
+      return bad.length === 0 || bad.slice(0, 5).join('; ');
     });
     check('Kėdainių r. laimikiai 2024 / 2025', () =>
       eq(

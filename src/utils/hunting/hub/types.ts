@@ -148,7 +148,7 @@ export interface HubSelection {
   table: string | null;
 }
 
-export type Badge = 'vyksta' | 'preliminarus' | 'dalinis' | 'bandomoji';
+export type Badge = 'vyksta' | 'preliminarus' | 'dalinis';
 export interface Provenance {
   kind: 'snapshot' | 'live';
   asOf: string;

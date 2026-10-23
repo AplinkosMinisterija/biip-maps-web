@@ -530,13 +530,18 @@ export function useChoropleth(ctx: HubContext): HubChoroplethApi {
   }
   watch([() => ctx.layout.mapPadding.value.join(','), active], applyPadding);
 
+  // Only the latest fit request may move the view: a fit still waiting for the polygons is
+  // dropped when another place, the whole country or another topic came in meanwhile.
+  let fitGen = 0;
   async function fitTo(code: number) {
+    const gen = ++fitGen;
     let index;
     try {
       index = await loadMunicipalityIndex();
     } catch (err) {
       return; // the polygons are optional for fitting; the selection still applies
     }
+    if (gen !== fitGen || !active.value || live.value || ctx.sel.value.sav !== code) return;
     const info = index.byCode[code];
     if (!info || !map) return;
     // view.fit subtracts this padding on top of the view padding (bars, panel), so only the
@@ -560,15 +565,24 @@ export function useChoropleth(ctx: HubContext): HubChoroplethApi {
     });
   }
 
+  // Back to all of Lithuania (the card's "Uždaryti" or Esc, "Visa Lietuva"): the country fit
+  // of a fresh load, also when the fit to the place is still animating.
   watch(
     () => ctx.sel.value.sav,
     (code, old) => {
-      if (code !== null && code !== old && active.value && !live.value) fitTo(code);
+      if (!active.value || live.value) return;
+      if (code !== null && code !== old) fitTo(code);
+      else if (code === null && old !== null) {
+        fitGen++;
+        map?.getView().cancelAnimations();
+        mapLayers.centerMap();
+      }
     },
   );
   // The map follows the place filter also when it arrives before the data, and when the
   // view has a map message instead of classes (J-23).
   watch(active, (on, was) => {
+    if (!on) fitGen++;
     const code = ctx.sel.value.sav;
     if (on && !was && code !== null && !live.value && (!route.query.x || !route.query.y))
       fitTo(code);

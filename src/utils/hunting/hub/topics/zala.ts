@@ -734,10 +734,9 @@ const countColumn = <R>(
 // Table titles: what, where and when (DATAVIZ-19).
 const seasonTitle = (c: Ctx) =>
   seasonWithAsOf(c.season, seasonState(c.season, c.meta), c.meta.snapshotDate);
-const grupeTitle = (g: Grupe) =>
-  g === 'visos'
-    ? ''
-    : ` (${(g in PRESETS ? PRESET_LABELS[g as Preset] : GROUP_LABELS[g as DamageGroup]).toLowerCase()})`;
+const grupeLabel = (g: Grupe) =>
+  g in PRESETS ? PRESET_LABELS[g as Preset] : GROUP_LABELS[g as DamageGroup];
+const grupeTitle = (g: Grupe) => (g === 'visos' ? '' : ` (${grupeLabel(g).toLowerCase()})`);
 
 const RANGE = /^\d[\d\s]*–\d|^≥|^iki /;
 const OPEN_RANGE = /^≥/;
@@ -863,7 +862,7 @@ function municipalityTable(c: Ctx, g: Grupe): TableDef<MuniRow> {
         ? `0 ${plural(0, P_REPORT)}`
         : null,
     disabled: ZALA_MUNICIPALITY ? undefined : T.municipalityPending,
-    csvName: csvName('zala', 'savivaldybes', c.season, null),
+    csvName: csvName('zala', 'savivaldybes', c.season, g === 'visos' ? null : grupeLabel(g)),
   };
 }
 
@@ -902,7 +901,7 @@ function monthTable(c: Ctx): TableDef<MonthRow> {
       'Tik Lietuvos mastu: mėnesių duomenys savivaldybėms neskelbiami.',
       ...glyphNotes(columns, [totals, ...rows]),
     ],
-    csvName: csvName('zala', 'menesiai', c.season, null),
+    csvName: csvName('zala', 'menesiai', c.season),
   };
 }
 
@@ -944,7 +943,7 @@ function livestockTable(c: Ctx): TableDef<LivestockRow> {
     rows,
     totals,
     footnotes,
-    csvName: csvName('zala', 'gyvuliai', c.season, null),
+    csvName: csvName('zala', 'gyvuliai', c.season),
   };
 }
 
@@ -1103,7 +1102,7 @@ export const about = {
     `Skaičiai, mažesni nei 3 (0, 1 arba 2), neskelbiami ir rodomi kaip „${S.suppressed}“; jei savivaldybėje per sezoną pranešimų visai nėra, rodomas 0. Kai kurie skaičiai gali būti „${S.withheld}“ – kad mažų skaičių nebūtų galima apskaičiuoti iš sumų. Sumos („Iš viso“) skaičiuojamos iš visų pranešimų, todėl gali būti didesnės už paskelbtų dalių sumą.`,
   ],
   missing: [
-    'Žalos dydžio ir kompensacijų, tikslių vietų, datų, pranešėjų duomenų. Smulkesnio nei savivaldybė ir sezonas suskirstymo – kad nebūtų galima atpažinti pranešėjo.',
+    'Žalos dydžio ir kompensacijų, tikslių vietų, datų, pranešėjų duomenų. Savivaldybių skaičiai skelbiami tik viso sezono, mėnesių – tik visos Lietuvos, kad nebūtų galima atpažinti pranešėjo.',
   ],
   compare: [
     'Oficialios žalos įvertinimo ir kompensacijų suvestinės skelbia savivaldybės; BĮIP jų neturi.',

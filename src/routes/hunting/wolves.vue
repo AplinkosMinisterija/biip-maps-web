@@ -18,7 +18,6 @@
         class="absolute left-2 top-2 bottom-2 w-[360px] lg:w-[400px] z-30 bg-white rounded-lg shadow-lg overflow-y-auto"
       >
         <div class="p-4 flex flex-col gap-4">
-          <HuntingWolvesPrototypeBanner />
           <header class="flex flex-wrap items-center justify-between gap-2">
             <h1 id="wolves-title" class="text-xl font-semibold text-gray-900">Sumedžioti vilkai</h1>
             <div class="flex gap-2 shrink-0">
@@ -122,7 +121,6 @@
           </div>
           <HuntingWolvesPeriodSheet />
           <HuntingWolvesStatusCard />
-          <HuntingWolvesPrototypeBanner dismissible />
         </header>
         <HuntingWolvesMobileSheet ref="sheet" />
       </template>

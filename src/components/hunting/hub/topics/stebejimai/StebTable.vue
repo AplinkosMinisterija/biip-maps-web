@@ -639,7 +639,13 @@ function downloadCurrent() {
       : null,
     linkOf: ctx.state.linkOf,
   });
-  downloadCsv(csv, stebCsvFileName(table, ctx.state.period.value, ctx.today));
+  downloadCsv(
+    csv,
+    stebCsvFileName(table, ctx.state.period.value, ctx.today, {
+      place: ctx.state.sav.value === null ? null : ctx.derived.placeLabel.value,
+      species: ctx.state.gyvunas.value === null ? null : ctx.derived.speciesLabel.value,
+    }),
+  );
 }
 
 function close() {

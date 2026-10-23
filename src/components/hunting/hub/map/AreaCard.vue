@@ -3,7 +3,6 @@
     v-if="card && sav !== null"
     :aria-labelledby="titleId"
     class="bg-white rounded-lg shadow-lg w-[360px] max-w-full p-4 text-sm text-ink flex flex-col gap-3"
-    @keydown.esc.stop="close"
   >
     <div class="flex items-start justify-between gap-2">
       <h2
@@ -51,7 +50,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, nextTick, ref, watch, type PropType } from 'vue';
+import {
+  computed,
+  inject,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+  type PropType,
+} from 'vue';
 import { HUB_CTX } from '@/composables/hunting/hub/context';
 import { S } from '@/utils/hunting/hub/strings';
 import { BTN_SECONDARY, BTN_TEXT, FOCUS_RING } from '@/components/hunting/hub/shell/controls';
@@ -96,6 +104,19 @@ function close() {
   ctx.setSav(null);
   emit('close');
 }
+
+// Esc closes the card, with focus in it or outside it (on the map, say), unless something else
+// took the key: a handled event, or an open popover, sheet, dialog or menu, which closes first.
+// This is the card's only Esc path, so the same guards apply everywhere.
+const OPEN_LAYER = '[role="dialog"], [role="listbox"]';
+function onKeydown(e: KeyboardEvent) {
+  if (e.key !== 'Escape' || e.defaultPrevented || !card.value) return;
+  if (document.querySelector(OPEN_LAYER)) return;
+  e.preventDefault();
+  close();
+}
+onMounted(() => document.addEventListener('keydown', onKeydown));
+onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown));
 
 function showInTable() {
   const tables = ctx.view.value?.tables || [];

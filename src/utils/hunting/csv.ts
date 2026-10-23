@@ -4,6 +4,7 @@
 import type { Interval, WolfRecord } from './types';
 import { formatDateTime, seasonLabel } from './dates';
 import { ageLabel, methodLabel, packLabel, sexLabel, sourceLabel } from './labels';
+import { csvName } from './hub/topics/common';
 
 export const CSV_BOM = '﻿';
 export const CSV_SEPARATOR = ';';
@@ -74,4 +75,7 @@ export function buildCsv(records: WolfRecord[], options: CsvOptions) {
   return CSV_BOM + lines.join(CSV_EOL) + CSV_EOL;
 }
 
-export const csvFileName = (interval: Interval) => `vilkai_${interval.from}_${interval.to}.csv`;
+// The hub's file name scheme (csvName): vilkai-irasai-2025-10-01-2026-03-31-kauno-r-sav.csv,
+// the municipality only when the records are filtered by one.
+export const csvFileName = (interval: Interval, place?: string | null) =>
+  `${csvName('vilkai', 'irasai', null, `${interval.from}-${interval.to}`, place)}.csv`;

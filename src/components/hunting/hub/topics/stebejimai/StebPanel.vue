@@ -1,24 +1,14 @@
 <template>
   <div class="flex flex-col gap-3">
-    <div class="flex items-start justify-between gap-2">
-      <component
-        :is="mobile ? 'h2' : 'h1'"
-        id="hub-title"
-        tabindex="-1"
-        class="font-semibold text-gray-900 focus:outline-none"
-        :class="mobile ? 'text-lg' : 'text-xl'"
-      >
-        {{ SS.h1 }}
-      </component>
-      <span
-        v-if="showStaging"
-        class="mt-1 shrink-0 rounded border border-gray-400 bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-800"
-        :title="BANDOMOJI_TOOLTIP"
-        :aria-label="`${BADGE_LABELS.bandomoji}. ${BANDOMOJI_TOOLTIP}`"
-      >
-        {{ BADGE_LABELS.bandomoji }}
-      </span>
-    </div>
+    <component
+      :is="mobile ? 'h2' : 'h1'"
+      id="hub-title"
+      tabindex="-1"
+      class="font-semibold text-gray-900 focus:outline-none"
+      :class="mobile ? 'text-lg' : 'text-xl'"
+    >
+      {{ SS.h1 }}
+    </component>
 
     <!-- Error: no numbers from a partial read (STEB-SPEC §3.9). -->
     <div v-if="phase === 'error'" class="flex flex-col items-start gap-2">
@@ -31,7 +21,7 @@
     </p>
 
     <p v-else-if="!ctx.derived.records.value.length" class="text-sm text-gray-900">
-      {{ ctx.isProductionHost ? SS.noRecordsProd : SS.noRecordsTest }}
+      {{ SS.noRecordsProd }}
     </p>
 
     <template v-else>
@@ -80,28 +70,18 @@
       </ul>
     </template>
 
-    <!-- Embedded, the WP header line has the provenance and the staging marker (once). -->
+    <!-- Embedded, the WP header line has the provenance (once), with no staging marker. -->
     <footer
-      v-if="!embed"
+      v-if="!embed && provenanceTime"
       class="flex flex-col gap-1 border-t border-line-soft pt-2 text-xs text-ink-muted"
     >
-      <p v-if="provenanceTime">
+      <p>
         {{ SS.provenance(provenanceTime) }}
         <template v-if="ctx.hub">
           ·
           <button type="button" :class="linkButton" @click="ctx.hub.openAbout()">
             {{ S.provenanceLink }}
           </button>
-        </template>
-      </p>
-      <p v-if="showStaging">
-        {{ S.prototypeLine }}
-        <template v-if="FEEDBACK_URL">
-          ·
-          <a :href="FEEDBACK_URL" target="_blank" rel="noopener" :class="linkButton">
-            {{ S.prototypeFeedback }}
-            <span class="sr-only">{{ SS.newWindow }}</span>
-          </a>
         </template>
       </p>
     </footer>
@@ -122,7 +102,7 @@
 
 <script setup lang="ts">
 // Panel of the Stebėjimai topic (STEB-SPEC §3.2): the question, the answer, the filter
-// sentence, the species chart, notes, provenance and the prototype line; ?debug=1 adds the
+// sentence, the species chart, notes and provenance; ?debug=1 adds the
 // hub's self-check panel (which appends this topic's checks).
 import { computed, inject } from 'vue';
 import BarChart from '@/components/hunting/hub/shell/BarChart.vue';
@@ -130,7 +110,7 @@ import DebugPanel from '@/components/hunting/hub/shell/DebugPanel.vue';
 import NowrapText from '@/components/hunting/hub/shell/NowrapText.vue';
 import { STEB_CTX } from '@/composables/hunting/hub/stebejimai/useStebState';
 import { formatDateTime, formatInt } from '@/utils/hunting/dates';
-import { BADGE_LABELS, BANDOMOJI_TOOLTIP, FEEDBACK_URL, S } from '@/utils/hunting/hub/strings';
+import { S } from '@/utils/hunting/hub/strings';
 import type { ChartDef } from '@/utils/hunting/hub/types';
 import { speciesSummary } from '@/utils/hunting/hub/stebejimai/model';
 import { SS } from '@/utils/hunting/hub/stebejimai/strings';
@@ -141,9 +121,8 @@ defineProps({
 });
 
 const ctx = inject(STEB_CTX)!;
-// The staging marker: the standalone app off production only.
+// Embedded, the WP header line has the provenance.
 const embed = !!ctx.hub?.embed;
-const showStaging = !ctx.isProductionHost && !embed;
 
 const focusRing =
   'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';

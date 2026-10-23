@@ -20,6 +20,7 @@ import type { Interval } from '@/utils/hunting/types';
 import { P_ANIMAL, P_SPECIFIED } from '@/utils/hunting/hub/strings';
 import { truncatedPart } from './strings';
 import { mpvName } from '@/components/hunting/hub/table/text';
+import { csvName, seasonSlug } from '@/utils/hunting/hub/topics/common';
 
 // ---------------------------------------------------------------------------
 // Contract constants (§4.2; S2 keeps the contract copies, ?debug=1 checks they agree)
@@ -838,11 +839,21 @@ export function buildStebCsv(options: StebCsvOptions): string {
   return CSV_BOM + lines.join(CSV_EOL) + CSV_EOL;
 }
 
-/** ASCII file name of the CSV (§3.6). */
-export function stebCsvFileName(table: StebTableId, period: StebPeriod, today: string): string {
-  const base = `stebejimai_${table}`;
-  if (period.kind === 'season') return `${base}_${period.season}-${period.season + 1}.csv`;
-  if (period.kind === '30d') return `${base}_30d_${today}.csv`;
-  if (period.kind === 'range') return `${base}_${period.from}_${period.to}.csv`;
-  return `${base}_visi.csv`;
+/** ASCII file name of the CSV (§3.6), in the hub's `csvName` pattern: the period, then the
+ *  selected municipality and species by name (null: not selected). */
+export function stebCsvFileName(
+  table: StebTableId,
+  period: StebPeriod,
+  today: string,
+  names: { place?: string | null; species?: string | null } = {},
+): string {
+  const when =
+    period.kind === 'season'
+      ? seasonSlug(period.season)
+      : period.kind === '30d'
+        ? `30d-${today}`
+        : period.kind === 'range'
+          ? `${period.from}-${period.to}`
+          : 'visi';
+  return `${csvName('stebejimai', table, null, when, names.place, names.species)}.csv`;
 }

@@ -207,9 +207,7 @@ const handleLabel = computed(() => {
 });
 
 const peekText = computed(() => {
-  if (!ctx.derived.records.value.length) {
-    return ctx.isProductionHost ? SS.noRecordsProd : SS.noRecordsTest;
-  }
+  if (!ctx.derived.records.value.length) return SS.noRecordsProd;
   // The first sentence when there are more: no clamp ellipsis after a full stop.
   return firstSentence(ctx.derived.answer.value.text);
 });

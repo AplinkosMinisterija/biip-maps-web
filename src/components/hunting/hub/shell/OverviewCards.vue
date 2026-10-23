@@ -171,14 +171,12 @@
           </div>
         </section>
 
-        <!-- Embedded, the WP header line has the provenance and the staging marker (D9). -->
-        <div v-if="!ctx.embed" class="flex flex-col gap-0.5 border-t border-line-soft pt-2">
-          <HuntingHubShellProvenanceLine
-            v-if="provenance"
-            :provenance="provenance"
-            :large="large"
-          />
-          <HuntingHubShellPrototypeLine :dismissible="large" />
+        <!-- Embedded, the WP header line has the provenance (D9), with no staging marker. -->
+        <div
+          v-if="!ctx.embed && provenance"
+          class="flex flex-col gap-0.5 border-t border-line-soft pt-2"
+        >
+          <HuntingHubShellProvenanceLine :provenance="provenance" :large="large" />
         </div>
       </template>
       <HuntingHubShellDebugPanel v-if="ctx.debug" />
