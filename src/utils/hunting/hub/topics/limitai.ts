@@ -22,6 +22,7 @@ import type {
 } from '../types';
 import {
   DASH,
+  NBSP,
   NONE,
   NOTE_NO_MPV,
   NOTE_POOLED,
@@ -54,6 +55,9 @@ export const CLASSES = {
   tankis: [3.5, 5, 7, 10], // limit per 10 000 ha of MPV area
 };
 
+// AM's own share (a whole number in meta.static), with the locale's NBSP and decimal comma.
+const amPctText = (pct: number) => `${String(pct).replace('.', ',')}${NBSP}%`;
+
 const T = {
   metricUsed: 'Panaudota, %',
   metricDensity: 'Limitas / 10 000 ha',
@@ -73,7 +77,7 @@ const T = {
   registered: (asOf: string, n: number) =>
     `El. žurnale iki ${asOf} užregistruota sumedžiotų briedžių: ${formatInt(n)} (preliminarus skaičius).`,
   amPct: (pct: number, order: number) =>
-    `AM skelbia ${pct} %, nes skaičiuoja nuo įsakymu patvirtinto limito (${formatInt(order)}).`,
+    `AM skelbia ${amPctText(pct)}, nes skaičiuoja nuo įsakymu patvirtinto limito (${formatInt(order)}).`,
   left: (n: number) =>
     `Nepanaudotas likutis – ${formatInt(n)}: kiekvieno MPV nepanaudoto limito suma (MPV, kuriuose sumedžiota daugiau, nei leido limitas, neįtraukti).`,
   ofLimit: (used: number, lim: number) =>
@@ -592,7 +596,8 @@ export function overview(data: SnapshotData): OverviewCard {
     const c = aggOf(rows, closed, null);
     // Whole percent, as the panel, the table and the map show the same share (CONTENT-05).
     const amPct = meta.static.moose.amUsePct[`${closed}`];
-    const am = typeof amPct === 'number' ? ` – AM skaičiuoja nuo įsakymo sumos: ${amPct} %` : '';
+    const am =
+      typeof amPct === 'number' ? ` – AM skaičiuoja nuo įsakymo sumos: ${amPctText(amPct)}` : '';
     lines.push(
       `${seasonLabel(closed)} sezone sumedžiota ${formatInt(used(c))} iš ${formatInt(lim(c))} (${pctText(used(c), lim(c))})${am}.`,
     );
