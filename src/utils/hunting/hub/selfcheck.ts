@@ -1066,7 +1066,7 @@ function runLiveTopicChecks(check: Check, eq: Eq) {
     if (common.indexOf(ABOUT_LOCALE_RULE) < 0) problems.push('no ABOUT_LOCALE_RULE');
     forbiddenWordsIn([texts]).forEach((word) => problems.push(`"${word}"`));
     const counts = [about.source, about.meaning, about.missing, about.compare].map((l) => l.length);
-    if (JSON.stringify(counts) !== JSON.stringify([2, 4, 2, 2])) {
+    if (JSON.stringify(counts) !== JSON.stringify([2, 4, 2, 1])) {
       problems.push(`sections ${counts.join('/')}`);
     }
     // Apžvalga states its own rules too (OVERVIEW-27: the Stebėjimai card shows exact places),

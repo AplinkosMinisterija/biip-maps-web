@@ -36,7 +36,7 @@
 
     <template v-else>
       <p class="text-base leading-snug text-gray-900" data-testid="steb-answer">
-        {{ answer.text }}
+        <NowrapText :text="answer.text" />
       </p>
       <div v-if="answer.empty" class="flex flex-wrap gap-2">
         <button
@@ -72,7 +72,8 @@
           {{ SS.showAllPlaces }}
         </button>
       </div>
-      <p class="text-xs text-gray-700">{{ ctx.derived.sentence.value }}</p>
+      <!-- The chips above show the same four values; kept for screen readers (CONTENT-17). -->
+      <p class="sr-only">{{ ctx.derived.sentence.value }}</p>
       <BarChart v-if="chart" :chart="chart" />
       <ul v-if="notes.length" class="flex flex-col gap-1 text-xs text-gray-700">
         <li v-for="note in notes" :key="note">{{ note }}</li>
@@ -126,6 +127,7 @@
 import { computed, inject } from 'vue';
 import BarChart from '@/components/hunting/hub/shell/BarChart.vue';
 import DebugPanel from '@/components/hunting/hub/shell/DebugPanel.vue';
+import NowrapText from '@/components/hunting/hub/shell/NowrapText.vue';
 import { STEB_CTX } from '@/composables/hunting/hub/stebejimai/useStebState';
 import { formatDateTime, formatInt } from '@/utils/hunting/dates';
 import { BADGE_LABELS, BANDOMOJI_TOOLTIP, FEEDBACK_URL, S } from '@/utils/hunting/hub/strings';

@@ -26,6 +26,7 @@ import {
   NOT_SET_LABEL,
   NOT_SET_SLUG,
   parsePeriod,
+  plainFact,
   periodLabel as labelOfPeriod,
   periodQuery,
   recordPageUrl,
@@ -256,7 +257,9 @@ export function useStebState(opts: {
     records.value.forEach((r) => {
       const key = r[field];
       if (seen.has(key)) return;
-      const text = key === NOT_SET_SLUG ? NOT_SET_LABEL : r[label] || NOT_SET_LABEL;
+      const raw = key === NOT_SET_SLUG ? NOT_SET_LABEL : r[label] || NOT_SET_LABEL;
+      // Display: no form notation "(-ai)" in the fact options (CONTENT-16).
+      const text = label === 'fact' ? plainFact(raw) : raw;
       seen.set(key, { key, label: text, n: 0 });
     });
     return Array.from(seen.values()).map((o) => ({ ...o, n: counts.get(o.key) || 0 }));

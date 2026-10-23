@@ -171,10 +171,12 @@
                   </td>
                   <td :class="[TD, TD_BG]">{{ r.species || NOT_SET_LABEL }}</td>
                   <td :class="[TD, TD_BG, 'tabular-nums']">{{ countText(r) }}</td>
-                  <td :class="[TD, TD_BG]">{{ factText(r) }}</td>
+                  <td :class="[TD, TD_BG, '[overflow-wrap:normal]']">{{ factText(r) }}</td>
                   <td :class="[TD, TD_BG]">{{ r.municipality || NOT_SET_LABEL }}</td>
                   <td :class="[TD, TD_BG]">{{ r.eldership || NOT_SET_LABEL }}</td>
-                  <td :class="[TD, TD_BG]">{{ mpvName(r.huntingArea) || NOT_SET_LABEL }}</td>
+                  <td :class="[TD, TD_BG]">
+                    {{ mpvName(r.huntingArea, { suffix: false }) || NOT_SET_LABEL }}
+                  </td>
                   <!-- One 40 px icon button at the row end; the record page link is in the
                        card the button opens. -->
                   <td :class="[TD, TD_BG, 'sticky right-0 z-10 px-1 py-0 align-middle']">
@@ -405,13 +407,13 @@ function onTabKeydown(event: KeyboardEvent) {
 const loading = computed(() => !ctx.derived.ready.value);
 const placeCaption = computed(() => {
   const sav = ctx.state.sav.value;
-  return sav === null ? SS.allPlaces : ctx.meta.nameOf(sav) || `${sav}`;
+  return sav === null ? SS.allPlacesLower : ctx.meta.nameOf(sav) || `${sav}`;
 });
+// Heading and caption: the table's own title, then the period and place.
 const caption = computed(() =>
-  SS.caption(TABLE_LABELS[active.value], ctx.derived.periodLabel.value, placeCaption.value),
+  SS.caption(SS.tableTitles[active.value], ctx.derived.periodLabel.value, placeCaption.value),
 );
-// Heading: the topic, then the table, period and place.
-const title = computed(() => `Stebėjimai: ${caption.value}`);
+const title = caption;
 
 // Every public field of a record for its phone card (the title has date and species).
 const cardFields = (r: StebRecord) => [

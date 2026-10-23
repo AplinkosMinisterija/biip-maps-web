@@ -79,7 +79,9 @@
           aria-expanded="false"
           @click="cycle"
         >
-          <span class="line-clamp-2 text-sm leading-5 text-ink">{{ peekText }}</span>
+          <span class="line-clamp-2 text-sm leading-5 text-ink">
+            <NowrapText :text="peekText" />
+          </span>
         </button>
       </div>
 
@@ -154,6 +156,7 @@ import {
   useMapInert,
   type SheetDetent,
 } from '@/components/hunting/hub/shell/sheet';
+import NowrapText from '@/components/hunting/hub/shell/NowrapText.vue';
 import StebCard from './StebCard.vue';
 import StebPanel from './StebPanel.vue';
 import StebTable from './StebTable.vue';
