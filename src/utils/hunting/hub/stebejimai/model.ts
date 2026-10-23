@@ -768,6 +768,9 @@ export interface StebCsvOptions {
   table: StebTableId;
   /** Filtered rows in the order the table shows them (irasai). */
   records: StebRecord[];
+  /** Rūšys / Savivaldybės: the groups in the order the table shows them (default: the
+   *  summary's own order). */
+  groups?: SummaryRow[];
   /** When the data was read. */
   fetchedAt: Date | null;
   /** Texts of the selection (§3.6 line 2). */
@@ -825,7 +828,9 @@ export function buildStebCsv(options: StebCsvOptions): string {
       );
     });
   } else {
-    const rows = table === 'rusys' ? speciesSummary(records) : municipalitySummary(records);
+    const rows =
+      options.groups ||
+      (table === 'rusys' ? speciesSummary(records) : municipalitySummary(records));
     lines.push(line([table === 'rusys' ? 'Rūšis' : 'Savivaldybė', 'Stebėjimų', 'Gyvūnų']));
     lines.push(line(['Iš viso', records.length, animalsOf(records)]));
     rows.forEach((g) => lines.push(line([g.label, g.n, g.animals])));

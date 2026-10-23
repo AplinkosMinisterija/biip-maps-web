@@ -563,7 +563,7 @@ function showRecord(r: StebRecord) {
 }
 
 // ---- Rūšys / Savivaldybės: sortable by name, observations and animals (VISUAL-13); until the
-// visitor sorts, the summary's own order (which the CSV keeps).
+// visitor sorts, the summary's own order. The CSV follows the order shown.
 type GroupKey = 'name' | 'n' | 'animals';
 const groups = computed<SummaryRow[]>(() =>
   active.value === 'rusys' ? speciesSummary(rows.value) : municipalitySummary(rows.value),
@@ -620,12 +620,13 @@ function showGroup(g: SummaryRow) {
   emit('show-on-map');
 }
 
-// ---- CSV of the active table: all filtered rows in the shown order (§3.6).
+// ---- CSV of the active table: all filtered rows, or the groups, in the shown order (§3.6).
 function downloadCurrent() {
   const table = active.value;
   const csv = buildStebCsv({
     table,
     records: rows.value,
+    groups: table === 'irasai' ? undefined : sortedGroups.value,
     fetchedAt: ctx.data.fetchedAt.value,
     labels: {
       period: ctx.derived.periodLabel.value,
