@@ -32,10 +32,13 @@ export const CHIP_CHEVRON = 'shrink-0 transition-transform motion-reduce:transit
 // §2 Popover and option list.
 export const POPOVER =
   'absolute left-0 top-full z-50 mt-2 w-80 min-w-full max-h-[min(70vh,560px)] overflow-y-auto rounded-lg border border-line bg-white p-2 shadow-[0_8px_24px_rgba(18,25,38,0.12)]';
+// The hover tint only where the pointer can hover: on touch screens the last tapped row
+// would keep it and look selected too.
 export const OPTION =
-  'flex min-h-[40px] w-full cursor-pointer items-center gap-3 rounded-md px-3 text-left text-[15px] text-ink hover:bg-brand-50';
+  'flex min-h-[40px] w-full cursor-pointer items-center gap-3 rounded-md px-3 text-left text-[15px] text-ink [@media(hover:hover)]:hover:bg-brand-50';
 export const OPTION_TOUCH = 'min-h-[48px] text-base';
-export const OPTION_SELECTED = 'bg-brand-100 font-semibold text-brand';
+export const OPTION_SELECTED =
+  'bg-brand-100 font-semibold text-brand shadow-[inset_3px_0_0_theme(colors.brand.DEFAULT)]';
 export const OPTION_HIGHLIGHT = 'bg-brand-50';
 export const GROUP_LABEL = 'px-3 pb-1 pt-3 text-[13px] font-semibold text-ink-muted';
 export const HELP = 'text-[13px] leading-snug text-ink-muted';
