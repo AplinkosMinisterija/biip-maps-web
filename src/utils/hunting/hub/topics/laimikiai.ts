@@ -151,8 +151,12 @@ function sexCategories(rows: LootRow[]) {
   for (const r of rows) {
     for (const k of SEX_KEYS) {
       if (r[k] === null) continue;
-      if (!bySp.has(r.sp)) bySp.set(r.sp, new Set());
-      bySp.get(r.sp)!.add(k);
+      let keys = bySp.get(r.sp);
+      if (!keys) {
+        keys = new Set();
+        bySp.set(r.sp, keys);
+      }
+      keys.add(k);
     }
   }
   return bySp;
