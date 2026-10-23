@@ -186,9 +186,12 @@ const columns = computed<Column[]>(() => {
   return cols;
 });
 
+// A "<3" bar stands at 1.5; with nothing bigger beside it, it would fill the chart. When the
+// chart shows one, the scale runs to at least 10, so "<3" stays a short bar.
 const max = computed(() => {
-  if (props.chart.kind === 'stacked') return Math.max(1, ...columns.value.map((c) => c.total));
-  return Math.max(1, ...props.chart.bars.map((b) => b.value));
+  const floor = props.chart.bars.some((b) => /</.test(b.valueLabel ?? '')) ? 10 : 1;
+  if (props.chart.kind === 'stacked') return Math.max(floor, ...columns.value.map((c) => c.total));
+  return Math.max(floor, ...props.chart.bars.map((b) => b.value));
 });
 
 const pct = (v: number) => `${Math.max(0, Math.min(100, (v / max.value) * 100))}%`;
