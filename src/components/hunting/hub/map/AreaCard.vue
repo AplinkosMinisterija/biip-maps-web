@@ -3,7 +3,6 @@
     v-if="card && sav !== null"
     :aria-labelledby="titleId"
     class="bg-white rounded-lg shadow-lg w-[360px] max-w-full p-4 text-sm text-ink flex flex-col gap-3"
-    @keydown.esc.stop="close"
   >
     <div class="flex items-start justify-between gap-2">
       <h2
@@ -106,8 +105,9 @@ function close() {
   emit('close');
 }
 
-// Esc with focus outside the card (on the map, say) closes it too, unless something else took
-// the key: a handled event, or an open popover, sheet, dialog or menu, which closes first.
+// Esc closes the card, with focus in it or outside it (on the map, say), unless something else
+// took the key: a handled event, or an open popover, sheet, dialog or menu, which closes first.
+// This is the card's only Esc path, so the same guards apply everywhere.
 const OPEN_LAYER = '[role="dialog"], [role="listbox"]';
 function onKeydown(e: KeyboardEvent) {
   if (e.key !== 'Escape' || e.defaultPrevented || !card.value) return;
