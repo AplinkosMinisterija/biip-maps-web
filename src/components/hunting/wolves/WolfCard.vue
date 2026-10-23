@@ -98,8 +98,7 @@ import { BTN_TEXT, FOCUS_RING } from '@/components/hunting/hub/shell/controls';
 import { pluralLt as plural } from '@/utils/hunting/dates';
 import { ageLabel, methodLabel, packLabel, sexLabel, sourceLabel } from '@/utils/hunting/labels';
 
-const pagerClass =
-  `min-h-[24px] max-md:min-h-[44px] px-2 py-1 rounded border border-line-strong text-ink hover:bg-brand-50 disabled:opacity-50 disabled:cursor-not-allowed ${FOCUS_RING}`;
+const pagerClass = `min-h-[24px] max-md:min-h-[44px] px-2 py-1 rounded border border-line-strong text-ink hover:bg-brand-50 disabled:opacity-50 disabled:cursor-not-allowed ${FOCUS_RING}`;
 
 const ctx = inject(WOLVES_CTX)!;
 const mapApi = inject(WOLVES_MAP_CTX, null);
