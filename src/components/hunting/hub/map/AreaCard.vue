@@ -51,7 +51,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, nextTick, ref, watch, type PropType } from 'vue';
+import {
+  computed,
+  inject,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+  type PropType,
+} from 'vue';
 import { HUB_CTX } from '@/composables/hunting/hub/context';
 import { S } from '@/utils/hunting/hub/strings';
 import { BTN_SECONDARY, BTN_TEXT, FOCUS_RING } from '@/components/hunting/hub/shell/controls';
@@ -96,6 +105,18 @@ function close() {
   ctx.setSav(null);
   emit('close');
 }
+
+// Esc with focus outside the card (on the map, say) closes it too, unless something else took
+// the key: a handled event, or an open popover, sheet, dialog or menu, which closes first.
+const OPEN_LAYER = '[role="dialog"], [role="listbox"]';
+function onKeydown(e: KeyboardEvent) {
+  if (e.key !== 'Escape' || e.defaultPrevented || !card.value) return;
+  if (document.querySelector(OPEN_LAYER)) return;
+  e.preventDefault();
+  close();
+}
+onMounted(() => document.addEventListener('keydown', onKeydown));
+onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown));
 
 function showInTable() {
   const tables = ctx.view.value?.tables || [];

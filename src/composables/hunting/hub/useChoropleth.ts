@@ -560,10 +560,17 @@ export function useChoropleth(ctx: HubContext): HubChoroplethApi {
     });
   }
 
+  // Back to all of Lithuania (the card's "Uždaryti" or Esc, "Visa Lietuva"): the country fit
+  // of a fresh load, also when the fit to the place is still animating.
   watch(
     () => ctx.sel.value.sav,
     (code, old) => {
-      if (code !== null && code !== old && active.value && !live.value) fitTo(code);
+      if (!active.value || live.value) return;
+      if (code !== null && code !== old) fitTo(code);
+      else if (code === null && old !== null) {
+        map?.getView().cancelAnimations();
+        mapLayers.centerMap();
+      }
     },
   );
   // The map follows the place filter also when it arrives before the data, and when the
