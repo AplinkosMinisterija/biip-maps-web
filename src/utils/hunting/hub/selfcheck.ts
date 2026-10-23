@@ -51,6 +51,7 @@ import {
 } from './strings';
 import { getTopic, hasTopic, LIVE_HOSTS, TOPICS } from './topics';
 import { certainTop } from './topics/zala';
+import { csvName, slugLt } from './topics/common';
 import {
   keptQuery,
   LIVE_TABLES,
@@ -365,6 +366,26 @@ export function runHubUnitChecks(): SelfCheckResult[] {
       'C;;;',
     ]);
   });
+  check('CSV: failų vardai (slugLt, csvName)', () =>
+    eq(
+      [
+        slugLt('Kauno r. sav.'),
+        slugLt('Ąžuolų Čęėįšųūž  sav.'),
+        csvName('laimikiai', 'rusys', 2025, 'Kauno r. sav.'),
+        csvName('laimikiai', 'savivaldybes', 2025, null, 'Taurusis elnias'),
+        csvName('briedziu-limitai', 'sezonai', null),
+        csvName('vilkai', 'savivaldybes', 2024),
+      ],
+      [
+        'kauno-r-sav',
+        'azuolu-ceeisuuz-sav',
+        'laimikiai-rusys-2025-2026-kauno-r-sav',
+        'laimikiai-savivaldybes-2025-2026-taurusis-elnias',
+        'briedziu-limitai-sezonai',
+        'vilkai-savivaldybes-2024-2025',
+      ],
+    ),
+  );
   check('CSV: „–“ kaip ekrane (csvDash)', () => {
     type Row = { name: string; n: number | null };
     const table: TableDef<Row> = {

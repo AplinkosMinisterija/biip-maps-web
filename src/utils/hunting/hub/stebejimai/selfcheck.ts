@@ -617,12 +617,17 @@ export function runStebejimaiChecks(): SelfCheckResult[] {
         stebCsvFileName('rusys', { kind: 'season', season: 2025 }, T),
         stebCsvFileName('savivaldybes', { kind: '30d' }, T),
         stebCsvFileName('irasai', { kind: 'range', from: '2026-01-01', to: '2026-03-31' }, T),
+        stebCsvFileName('irasai', { kind: 'season', season: 2025 }, T, {
+          place: 'Kauno r. sav.',
+          species: 'Paprastoji lūšis',
+        }),
       ],
       [
-        'stebejimai_irasai_visi.csv',
-        'stebejimai_rusys_2025-2026.csv',
-        'stebejimai_savivaldybes_30d_2026-10-20.csv',
-        'stebejimai_irasai_2026-01-01_2026-03-31.csv',
+        'stebejimai-irasai-visi.csv',
+        'stebejimai-rusys-2025-2026.csv',
+        'stebejimai-savivaldybes-30d-2026-10-20.csv',
+        'stebejimai-irasai-2026-01-01-2026-03-31.csv',
+        'stebejimai-irasai-2025-2026-kauno-r-sav-paprastoji-lusis.csv',
       ],
     ),
   );

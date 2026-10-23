@@ -244,9 +244,29 @@ export const provenance = (data: SnapshotData): Provenance => ({
 
 export const seasonSlug = (season: number) => `${season}-${season + 1}`;
 
-// A table over all seasons passes `season` null: its name names none.
-export function csvName(topic: string, table: string, season: number | null, sav: number | null) {
-  return `${topic}-${table}${season === null ? '' : `-${seasonSlug(season)}`}${sav === null ? '' : `-sav-${sav}`}`;
+// ASCII slug of a name for a file name: Lithuanian letters folded (ą → a, ž → z), lowercase,
+// every run of other characters (spaces, dots) one hyphen: "Kauno r. sav." → "kauno-r-sav".
+export const slugLt = (text: string) =>
+  text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+// "{topic}-{table}-{season}-{part}…", e.g. laimikiai-rusys-2025-2026-kauno-r-sav. A table over
+// all seasons passes `season` null; `parts` are the selection the table shows (a municipality's
+// or a species' name), slugged, null when not selected.
+export function csvName(
+  topic: string,
+  table: string,
+  season: number | null,
+  ...parts: (string | null | undefined)[]
+) {
+  const names = parts.filter((p): p is string => !!p).map(slugLt);
+  return [topic, table, season === null ? '' : seasonSlug(season), ...names]
+    .filter(Boolean)
+    .join('-');
 }
 
 export function emptyState(defaultSeason: number) {

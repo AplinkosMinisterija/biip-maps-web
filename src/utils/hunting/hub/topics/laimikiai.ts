@@ -656,7 +656,7 @@ function speciesTable(c: Ctx, muni: Municipality | null): TableDef<SpeciesRow> {
     rows,
     totals,
     footnotes,
-    csvName: csvName('laimikiai', 'rusys', c.season, code),
+    csvName: csvName('laimikiai', 'rusys', c.season, muni?.name),
   };
 }
 
@@ -755,7 +755,7 @@ function municipalityTable(c: Ctx): TableDef<MuniRow> {
     rowNote: (r) =>
       r.noMpv ? { text: NOTE_NO_MPV, from: 1 } : r.pooled ? { text: NOTE_POOLED, from: 3 } : null,
     disabled: c.current ? T.currentMuniDisabled(c.season) : undefined,
-    csvName: csvName('laimikiai', 'savivaldybes', c.season, null),
+    csvName: csvName('laimikiai', 'savivaldybes', c.season, c.sp?.name),
   };
 }
 

@@ -19,7 +19,7 @@ import {
   TOPIC_SUBTITLES,
   TOPIC_TABS,
 } from '../strings';
-import { formatPct } from './common';
+import { csvName, formatPct } from './common';
 import type {
   AboutDef,
   ChoroplethDef,
@@ -460,7 +460,7 @@ export function vilkaiFallbackView(data: SnapshotData, sel: HubSelection): Topic
       ? [`Vietos, kurios nepavyko priskirti savivaldybei: ${formatInt(unattributed)}.`]
       : [],
     rowSav: (r) => r.code,
-    csvName: `vilkai_savivaldybes_${season}-${season + 1}`,
+    csvName: csvName('vilkai', 'savivaldybes', season),
   };
 
   return {
