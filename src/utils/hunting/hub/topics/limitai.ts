@@ -1,6 +1,6 @@
 // Briedžių limitai: moose limits allocated to MPV users and their use (SPEC2 §6.4), from the
 // `limits.json` snapshot. Pure: view(), overview() and otherRow() read only their arguments.
-import { seasonLabel, type PluralForms } from '../../dates';
+import { seasonLabel } from '../../dates';
 import { ATTRIBUTION_RULE, P_MOOSE, S, TOPIC_SUBTITLES, TOPIC_TABS } from '../strings';
 import { CHOROPLETH_UNSET_FILL } from '../colors';
 import type {
@@ -107,8 +107,6 @@ const emptyAgg = (): Agg => ({
   leftM: 0,
   leftFj: 0,
 });
-
-// "leidžiama sumedžioti 3 802 briedžius" (accusative).
 
 const lim = (a: Agg) => a.limM + a.limFj;
 const used = (a: Agg) => a.usedM + a.usedFj;
