@@ -274,16 +274,20 @@ export function vilkaiAnswer({ count, preset, interval, place, attrs }: VilkaiAn
 
 // ---------------------------------------------------------------------------
 // Reconciliation with the official AM figure (J-02): the located total of a closed season
-// next to the official one, where the located total is read (table, CSV, panel).
+// next to the official one, where the located total is read (table, CSV, panel). The two
+// are independent figures: they are counted differently (2025/2026: 247 located, 275
+// official; 2024/2025: 334 located, 326 official), so their difference means nothing and
+// is never shown.
 // ---------------------------------------------------------------------------
 
 export interface VilkaiReconcile {
   located: number;
   official: number;
-  // official − located when the official figure is the larger one; otherwise null (the two
-  // are counted differently, e.g. 2024/2025: 334 located, 326 official).
-  unknown: number | null;
 }
+
+/** The one neutral sentence next to the two figures. */
+export const VILKAI_COUNTED_DIFFERENTLY =
+  'Oficialus AM skaičius skaičiuojamas kitaip nei vilkai su žinoma vieta.';
 
 /**
  * Only for a whole closed season of all Lithuania without attribute filters (the official
@@ -298,15 +302,14 @@ export function vilkaiReconcile(
   if (!meta || season === null || season >= currentSeason) return null;
   const official = staticSeason(meta, season)?.official;
   if (official == null) return null;
-  return { located, official, unknown: official >= located ? official - located : null };
+  return { located, official };
 }
 
-// Two lines for the records CSV (as `#` comments, so the columns stay the records').
+// Lines for the records CSV (as `#` comments, so the columns stay the records').
 export const vilkaiReconcileCsv = (r: VilkaiReconcile) => [
   `Iš viso su žinoma vieta: ${formatInt(r.located)}`,
-  r.unknown === null
-    ? `Oficialus AM skaičius – ${formatInt(r.official)} (skaičiuojama kitaip)`
-    : `Vieta nežinoma: ${formatInt(r.unknown)} (oficialus AM skaičius – ${formatInt(r.official)})`,
+  `Oficialus AM skaičius: ${formatInt(r.official)}`,
+  VILKAI_COUNTED_DIFFERENTLY,
 ];
 
 // ---------------------------------------------------------------------------

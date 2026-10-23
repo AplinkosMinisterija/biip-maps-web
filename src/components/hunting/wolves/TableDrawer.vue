@@ -76,6 +76,7 @@
         <HuntingHubTableCsvButton
           :table="summaryTable || EMPTY_TABLE"
           :caption="title"
+          :sort="activeTab === 'savivaldybes' ? municipalitySort : null"
           :provenance="provenance"
         />
       </div>
@@ -119,7 +120,12 @@
           <p v-else-if="!municipalitiesReady" class="text-sm text-ink-muted" role="status">
             Skaičiuojama…
           </p>
-          <HuntingWolvesMunicipalityTable v-else :ref="setSummary" />
+          <HuntingWolvesMunicipalityTable
+            v-else
+            :ref="setSummary"
+            v-model:sort="municipalitySort"
+            @show-on-map="(code: number) => emit('show-on-map', code)"
+          />
         </template>
       </div>
     </div>
@@ -135,6 +141,7 @@ import { hasMunicipalities } from '@/utils/hunting/municipalities';
 import { formatDateTime } from '@/utils/hunting/dates';
 import { S } from '@/utils/hunting/hub/strings';
 import type { Provenance, TableDef } from '@/utils/hunting/hub/types';
+import type { SortState } from '@/components/hunting/hub/table/sort';
 import {
   BTN_SECONDARY,
   BTN_TEXT,
@@ -155,7 +162,8 @@ const props = defineProps({
   drawerClass: { type: String, default: '' },
   compact: { type: Boolean, default: false },
 });
-// 'show-on-map' (record: WolfRecord): the parent may collapse the mobile sheet.
+// 'show-on-map' (record: WolfRecord, or code: number from the municipality table): the parent
+// closes the table where it covers the map, or collapses the mobile sheet.
 const emit = defineEmits(['show-on-map']);
 
 // The map toggle button ("Lentelė" / "Slėpti lentelę") should use
@@ -273,6 +281,8 @@ const setSummary = (el: unknown) => (summaryRef.value = (el as { table: TableDef
 const summaryTable = computed(() =>
   activeTab.value === 'irasai' ? null : summaryRef.value?.table,
 );
+// The municipality table's sort, here so the CSV follows the table and the phone cards.
+const municipalitySort = ref<SortState | null>(null);
 const EMPTY_TABLE: TableDef = {
   id: '',
   label: '',
