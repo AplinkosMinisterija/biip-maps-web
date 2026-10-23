@@ -442,7 +442,8 @@ export function vilkaiFallbackView(data: SnapshotData, sel: HubSelection): Topic
       },
     ],
     rows: tableRows,
-    totals: { code: null, name: S.totalsRow, located: national },
+    // The same totals label as the live municipality table (J-02).
+    totals: { code: null, name: 'Iš viso su žinoma vieta', located: national },
     footnotes: unattributed
       ? [`Vietos, kurios nepavyko priskirti savivaldybei: ${formatInt(unattributed)}.`]
       : [],
