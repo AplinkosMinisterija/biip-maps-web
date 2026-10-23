@@ -101,7 +101,7 @@ const T = {
   deadNote: (inconsistent: number[]) =>
     'Rasta kritusių – į sumedžiotų skaičių neįtraukta.' +
     (inconsistent.length
-      ? ` ${inconsistent.map(seasonLabel).join(', ')} sezono duomenys nenuoseklūs.`
+      ? ` ${inconsistent.map(seasonLabel).join(', ')} sezono kritusių gyvūnų duomenys nenuoseklūs.`
       : ''),
   deadInconsistent: (season: number) =>
     `${seasonLabel(season)} duomenys nenuoseklūs – neskelbiami.`,

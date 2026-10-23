@@ -19,6 +19,7 @@ import { CSV_BOM, CSV_EOL, CSV_SEPARATOR, csvField, csvSafe } from '@/utils/hunt
 import type { Interval } from '@/utils/hunting/types';
 import { P_ANIMAL, P_SPECIFIED } from '@/utils/hunting/hub/strings';
 import { truncatedPart } from './strings';
+import { mpvName } from '@/components/hunting/hub/table/text';
 
 // ---------------------------------------------------------------------------
 // Contract constants (§4.2; S2 keeps the contract copies, ?debug=1 checks they agree)
@@ -799,7 +800,8 @@ export function buildStebCsv(options: StebCsvOptions): string {
           r.factOther,
           r.municipality,
           r.eldership,
-          r.huntingArea,
+          // The MPV name as the table shows it (REGRESS-08).
+          mpvName(r.huntingArea),
           r.x === null ? null : Math.round(r.x),
           r.y === null ? null : Math.round(r.y),
           options.linkOf(r),

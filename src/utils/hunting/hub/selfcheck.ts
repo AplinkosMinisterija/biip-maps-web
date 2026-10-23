@@ -280,7 +280,7 @@ export function runHubUnitChecks(): SelfCheckResult[] {
       [csv.slice(1).split('\r\n'), tableCsvFileName(table)],
       [
         [
-          '# Duomenys: 2026-10-09 momentinė kopija; BĮIP',
+          '# Duomenys 2026-10-09 būklei; BĮIP',
           'Savivaldybė;Pranešimai;per 1 000 ha',
           'Iš viso;14;1,5',
           "'=SUM(A1);<3;20,6",
@@ -324,7 +324,7 @@ export function runHubUnitChecks(): SelfCheckResult[] {
     return eq(csv.slice(1).split('\r\n').slice(2, 5), [
       'A;5;7;1,5',
       'B;2;Neskelbiama (mažiau nei 3 MPV);',
-      'C;Nėra MPV;;',
+      'C;;;',
     ]);
   });
   check('Lentelių stulpeliai (zip)', () => {

@@ -50,7 +50,7 @@ export function buildCsv(records: WolfRecord[], options: CsvOptions) {
   const lines: string[] = [
     `# Sumedžioti vilkai; ${interval.from}–${interval.to}; ` +
       `${csvSafe((placeLabel || 'visa Lietuva').replace(/[;\r\n]/g, ' '))}; ` +
-      `parengta ${formatDateTime(now)}; šaltinis: BIIP ir BIOMON (medziokle.biip.lt); ` +
+      `parengta ${formatDateTime(now)}; šaltinis: BĮIP ir BIOMON (medziokle.biip.lt); ` +
       'vietos koordinatės ir identifikatoriai neįtraukti',
     [...HEADER, ...(withMunicipality ? ['savivaldybe'] : [])].join(CSV_SEPARATOR),
   ];

@@ -3,7 +3,7 @@
 // footnotes as '#' lines. Cells go through `csvField` (formula neutralisation, quoting).
 import { CSV_BOM, CSV_EOL, CSV_MIME, CSV_SEPARATOR, csvField, csvSafe } from '@/utils/hunting/csv';
 import { S } from './strings';
-import { FOOTNOTE_PCT_DIGITS } from './topics/common';
+import { FOOTNOTE_PCT_DIGITS, NOTE_NO_MPV, WITHHELD_MARK } from './topics/common';
 import type { ColumnDef, Provenance, TableDef } from './types';
 
 // "Not applicable" glyphs of the tables: an empty cell in the CSV (J-24).
@@ -29,11 +29,20 @@ export function csvCell<R>(column: ColumnDef<R>, row: R): string {
   return value;
 }
 
-/** First line: the provenance (§5). */
+/** First line: the provenance (§5), in the words of the screen's line (REGRESS-08). */
 export function csvProvenanceLine(provenance: Provenance) {
-  if (provenance.kind === 'snapshot') return S.provenanceCsv(provenance.asOf);
-  return `# ${provenance.text.replace(/ · /g, '; ')}`;
+  const text =
+    provenance.kind === 'snapshot' ? S.provenanceSnapshot(provenance.asOf) : provenance.text;
+  return `# ${text.replace(/ · /g, '; ')}`;
 }
+
+// The table's footnotes, as they read for the file (REGRESS-07): the CSV writes withheld
+// cells as "neskelbiama" (not the screen's "x") and a dash as an empty cell.
+const WITHHELD_NOTE = new RegExp(`^${WITHHELD_MARK} \\(„neskelbiama“\\) – `);
+export const csvNote = (note: string) =>
+  note
+    .replace(WITHHELD_NOTE, '„neskelbiama“ – ')
+    .replace(/^[–—-] stulpel/, 'Tuščias langelis stulpel');
 
 export interface TableCsvOptions<R = any> {
   provenance: Provenance;
@@ -54,11 +63,15 @@ export function buildTableCsv<R>(table: TableDef<R>, options: TableCsvOptions<R>
   const head = (c: ColumnDef<R>) =>
     c.unit === '%' && c.label.indexOf('%') < 0 ? `${c.label}, %` : c.label;
   lines.push(columns.map((c) => csvField(head(c))).join(CSV_SEPARATOR));
-  // A noted row (pooled, no MPV): the published cells before the note as they are, the note
-  // text in the first spanned column, the other spanned cells empty (as the table shows it).
+  // A noted row (pooled): the published cells before the note as they are, the note text in
+  // the first spanned column, the other spanned cells empty (as the table shows it). A row
+  // without MPV has no figures at all: its cells stay empty, so numeric columns hold only
+  // numbers, and one footnote names those rows (JOURNEYS-18).
+  const noMpv: string[] = [];
   const row = (r: R) => {
     const note = table.rowNote?.(r) ?? null;
-    let noteDone = false;
+    if (note?.text === NOTE_NO_MPV) noMpv.push(csvCell(table.columns[0], r));
+    let noteDone = note?.text === NOTE_NO_MPV;
     return exported
       .map(({ c, i }) => {
         if (!note || i < note.from) return csvField(csvCell(c, r));
@@ -77,7 +90,13 @@ export function buildTableCsv<R>(table: TableDef<R>, options: TableCsvOptions<R>
     lines.push(cells.map(csvField).join(CSV_SEPARATOR));
   }
   (options.rows || table.rows).forEach((r) => lines.push(row(r)));
-  table.footnotes.forEach((note) => lines.push(comment(note)));
+  table.footnotes.forEach((note) => lines.push(comment(csvNote(note))));
+  if (noMpv.length)
+    lines.push(
+      comment(
+        `${noMpv.join(', ')}: ${NOTE_NO_MPV.charAt(0).toLowerCase()}${NOTE_NO_MPV.slice(1)}.`,
+      ),
+    );
   if (columns.some((c) => c.unit === '%')) lines.push(comment(FOOTNOTE_PCT_DIGITS));
   return CSV_BOM + lines.join(CSV_EOL) + CSV_EOL;
 }
