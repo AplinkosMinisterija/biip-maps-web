@@ -64,6 +64,31 @@ export function trapTab(event: KeyboardEvent, root: HTMLElement | null) {
 // Diacritic-insensitive search key: "kedainiu" finds "Kėdainių r. sav." (§4.3).
 export const foldLt = (text: string) => text.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
+/**
+ * Search hits for a folded query (foldLt), best first (JOURNEYS-01): items where a word starts
+ * with the query ("ute" → "Utenos r. sav.") before items that contain it inside a word
+ * ("Šilutės r. sav."), so Enter on the first option picks what was meant. Otherwise the list
+ * order stays; grouped lists keep each group together, the group with the best hit first.
+ */
+export function rankByQuery<T extends { key: string; group?: string }>(items: T[], q: string): T[] {
+  if (!q) return items;
+  const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const wordStart = new RegExp(`(^|[^a-z0-9])${escaped}`);
+  const hits = items
+    .filter((item) => item.key.includes(q))
+    .map((item, index) => ({ item, index, score: wordStart.test(item.key) ? 0 : 1 }));
+  // A group's place: its best hit (word-start hits before inner ones, then list order).
+  const groupScore = new Map<string, number>();
+  hits.forEach(({ item, index, score }) => {
+    const g = item.group || '';
+    groupScore.set(g, Math.min(groupScore.get(g) ?? Infinity, score * items.length + index));
+  });
+  const groupOf = (h: (typeof hits)[0]) => groupScore.get(h.item.group || '')!;
+  return hits
+    .sort((a, b) => groupOf(a) - groupOf(b) || a.score - b.score || a.index - b.index)
+    .map((h) => h.item);
+}
+
 export const seasonParam = (s: number) => `${s}-${s + 1}`;
 
 export function parseSeasonParam(value: unknown): number | null {

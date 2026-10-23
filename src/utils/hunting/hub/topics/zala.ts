@@ -151,7 +151,7 @@ export const T = {
   escalationLabel: 'Kanopinių ir bebrų pranešimai, perduoti seniūnijai',
   escalationLabelShort: 'Perduoti seniūnijai',
   escalationTooltip:
-    'Ūkininkas pažymėjo, kad su medžiotojais nepavyko susitarti, ir pranešimas perduotas seniūnijai. Tai ne patikrintas faktas.',
+    'Pranešėjas pažymėjo, kad su medžiotojais susitarti nepavyko, todėl pranešimas perduotas seniūnijai. Tai pranešėjo nurodymas, jis netikrintas.',
   livestockNote: 'Pranešime nurodytas skaičius; neatskiriama, ar gyvūnas žuvo, ar sužeistas.',
   reportersGroupOnly: 'Pranešėjų skaičius skelbiamas tik visoms grupėms kartu.',
   monthNote: 'Pranešimai pradėti teikti per BĮIP 2026 m. sausį; pavieniai ankstesni pranešimai.',
@@ -542,7 +542,8 @@ function kpis(c: Ctx, muni: number, g: Grupe): KpiDef[] {
       .map((x) => `${GROUP_SHORT[x.grp].toLowerCase()} ${formatCount(x.n)}`)
       .join(', ');
     list.push(
-      countKpi('attacked', 'Pranešimuose nurodyta užpultų ūkinių gyvūnų', total, {
+      // The same measure has one short label (CONTENT-15).
+      countKpi('attacked', 'Užpulti ūkiniai gyvūnai', total, {
         sub: parts || undefined,
         tooltip: T.livestockNote,
       }),
@@ -567,7 +568,7 @@ function kpis(c: Ctx, muni: number, g: Grupe): KpiDef[] {
     const t = escalationText(e);
     // Short label; the sub-line names what is counted, so the tile does not wrap (DATAVIZ-07).
     const label = T.escalationLabelShort;
-    const ofWhat = g === 'visos' || g === 'augalai' ? ` kanopinių ir bebrų ${P_REPORT[2]}` : '';
+    const ofWhat = g === 'visos' || g === 'augalai' ? ' kanopinių ir bebrų' : '';
     list.push(
       kpi('escalated', label, t ? t.pct : DASH, {
         sub: t ? `${t.of}${ofWhat}` : undefined,
@@ -958,7 +959,7 @@ function card(c: Ctx, code: number, g: Grupe): CardDef | null {
   if (split && groupsOf(g).length > 1) lines.push(split);
   const e = escalation(c, code, g);
   const t = e && escalationText(e);
-  if (t) lines.push(`Perduota seniūnijai (kanop. ir bebr.): ${t.pct} (${t.of})`);
+  if (t) lines.push(`Kanopinių ir bebrų pranešimų perduota seniūnijai: ${t.pct} (${t.of})`);
   return { title: muni.name, lines, other: true };
 }
 

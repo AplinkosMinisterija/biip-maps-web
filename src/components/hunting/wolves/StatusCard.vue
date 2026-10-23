@@ -3,24 +3,22 @@
   <section
     v-if="variant === 'line'"
     :aria-label="`Šis sezonas (${model.seasonLabel})`"
-    class="text-sm text-ink"
+    class="text-sm text-ink-muted"
   >
-    <p v-if="loading" class="text-ink-muted">Šis sezonas ({{ model.seasonLabel }}): įkeliama…</p>
-    <p v-else class="flex items-start gap-2">
-      <span class="w-2.5 h-2.5 rounded-full shrink-0 mt-1.5" :class="dotClass" aria-hidden="true" />
-      <span class="flex-1">
-        <span class="font-semibold text-ink">Šis sezonas ({{ model.seasonLabel }}):</span>
-        {{ lineText }}
-        <button
-          v-if="model.state === 'unavailable'"
-          type="button"
-          class="ml-1 font-semibold text-brand underline rounded min-h-[44px] md:min-h-[24px]"
-          :class="focusRing"
-          @click="ctx.data.reloadTotals()"
-        >
-          Bandyti dar kartą
-        </button>
-      </span>
+    <!-- A context line under the answer, as the other topics' notices: no status dot. -->
+    <p v-if="loading">Šis sezonas ({{ model.seasonLabel }}): įkeliama…</p>
+    <p v-else>
+      <span class="font-semibold text-ink">Šis sezonas ({{ model.seasonLabel }}):</span>
+      {{ lineText }}
+      <button
+        v-if="model.state === 'unavailable'"
+        type="button"
+        class="ml-1 font-semibold text-brand underline rounded min-h-[44px] md:min-h-[24px]"
+        :class="focusRing"
+        @click="ctx.data.reloadTotals()"
+      >
+        Bandyti dar kartą
+      </button>
     </p>
   </section>
 
@@ -130,6 +128,7 @@ import { computed, inject, ref, watch, type PropType } from 'vue';
 import { WOLVES_CTX } from '@/composables/hunting/context';
 import { formatDateTime, formatInt } from '@/utils/hunting/dates';
 import type { StatusState } from '@/utils/hunting/types';
+import { FOCUS_RING } from '@/components/hunting/hub/shell/controls';
 
 defineProps({
   // 'card' (default): the wolves page's status card. 'line': the hub's one-line status.
@@ -156,12 +155,12 @@ watch(
 );
 
 const DOTS: Record<StatusState, string> = {
-  unavailable: 'bg-gray-400',
-  notApproved: 'bg-gray-400',
+  unavailable: 'bg-line-strong',
+  notApproved: 'bg-line-strong',
   beforeStart: 'bg-brand-secondary',
   exhausted: 'bg-red-600',
   littleLeft: 'bg-amber-500',
-  ongoing: 'bg-green-600',
+  ongoing: 'bg-brand',
 };
 const dotClass = computed(() => DOTS[model.value.state]);
 
@@ -239,8 +238,7 @@ const showProgress = computed(() =>
   ['exhausted', 'littleLeft', 'ongoing'].includes(model.value.state),
 );
 
-const focusRing =
-  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
+const focusRing = FOCUS_RING;
 
 const details = computed(() => {
   const m = model.value;

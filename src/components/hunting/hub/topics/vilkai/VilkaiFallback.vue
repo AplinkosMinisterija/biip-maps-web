@@ -1,7 +1,8 @@
 <template>
   <section aria-label="Momentinė kopija" class="flex flex-col gap-3 text-sm text-ink">
     <!-- Announced by the Vilkai tab's live region (one voice per change). -->
-    <p class="font-semibold text-ink">{{ view.answer }}</p>
+    <!-- The season is chosen with the filter bar's chip (JOURNEYS-11). -->
+    <p class="text-base leading-snug text-ink">{{ view.answer }}</p>
     <p v-if="view.notice" class="text-xs text-ink-muted">{{ view.notice }}</p>
 
     <button
@@ -13,30 +14,7 @@
       Bandyti gauti gyvus duomenis
     </button>
 
-    <div class="flex flex-col gap-1">
-      <label :for="`${uid}-season`" class="text-xs font-semibold text-ink">{{ S.season }}</label>
-      <select
-        :id="`${uid}-season`"
-        :value="String(season)"
-        class="block w-full rounded-md border border-line-strong bg-white px-2 text-sm text-ink cursor-pointer h-11 md:h-9"
-        :class="focusRing"
-        @change="season = Number(($event.target as HTMLSelectElement).value)"
-      >
-        <option v-for="s in seasons" :key="s" :value="String(s)">{{ seasonLabel(s) }}</option>
-      </select>
-    </div>
-
-    <dl class="grid gap-2" :class="view.kpis.length > 1 ? 'grid-cols-2' : 'grid-cols-1'">
-      <div
-        v-for="kpi in view.kpis"
-        :key="kpi.id"
-        class="rounded-lg border border-line p-3"
-        :aria-label="kpi.ariaLabel"
-      >
-        <dt class="text-xs text-ink-muted">{{ kpi.label }}</dt>
-        <dd class="text-2xl tabular-nums" :class="KPI_VALUE">{{ kpi.value }}</dd>
-      </div>
-    </dl>
+    <HuntingHubShellKpiStrip :kpis="view.kpis" :large="ctx.isMobile.value" />
 
     <p v-for="note in view.notes" :key="note" class="text-xs text-ink-muted">{{ note }}</p>
     <p v-if="view.empty" class="text-ink-muted">{{ view.empty.text }}</p>
@@ -109,12 +87,12 @@
 // Vilkai fallback (SPEC2 §6.2, P0b): when `/wolfs` fails after its retry, the panel shows the
 // committed `wolves.json` copy instead: closed seasons, located wolves per municipality.
 // The place stays the wolves state's `sav`, so the URL and the map outline keep working.
-import { computed, getCurrentInstance, inject, watch, type PropType } from 'vue';
+import { computed, inject, watch, type PropType } from 'vue';
 import { WOLVES_CTX } from '@/composables/hunting/context';
 import { HUB_CTX } from '@/composables/hunting/hub/context';
-import { seasonInterval, seasonLabel } from '@/utils/hunting/dates';
+import { seasonLabel } from '@/utils/hunting/dates';
 import { S } from '@/utils/hunting/hub/strings';
-import { FOCUS_RING, KPI_VALUE } from '@/components/hunting/hub/shell/controls';
+import { FOCUS_RING } from '@/components/hunting/hub/shell/controls';
 import type { ColumnDef, SnapshotData } from '@/utils/hunting/hub/types';
 import { vilkaiFallbackSeasons, vilkaiFallbackView } from '@/utils/hunting/hub/topics/vilkai';
 
@@ -126,22 +104,16 @@ const emit = defineEmits(['view']);
 
 const ctx = inject(WOLVES_CTX)!;
 const embed = !!inject(HUB_CTX, null)?.embed;
-const uid = `hub-vilkai-fallback-${getCurrentInstance()?.uid ?? 0}`;
 const focusRing = FOCUS_RING;
 
 const seasons = computed(() => vilkaiFallbackSeasons(props.snapshot));
-// The wolves period when it is a closed season of the copy, else the newest one. A choice
-// sets the wolves period, so the season is in the URL (reload, "Dalintis") like the place.
-const season = computed<number>({
-  get() {
-    const current = ctx.derived.intervalSeason.value;
-    return current !== null && seasons.value.includes(current)
-      ? current
-      : (seasons.value[0] ?? current ?? 0);
-  },
-  set(value) {
-    ctx.state.setInterval(seasonInterval(value), `season:${value}`);
-  },
+// The wolves period when it is a closed season of the copy, else the newest one; the filter
+// bar's period chip shows and sets it (VilkaiTopic).
+const season = computed<number>(() => {
+  const current = ctx.derived.intervalSeason.value;
+  return current !== null && seasons.value.includes(current)
+    ? current
+    : (seasons.value[0] ?? current ?? 0);
 });
 
 const view = computed(() =>

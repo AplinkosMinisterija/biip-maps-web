@@ -8,6 +8,7 @@
 // Expected values are those verified on prod for the 2026-10-09 snapshot; values marked
 // "exact for a 2026-10-09 run" are only checked when meta.snapshotDate is that day.
 import { WOLF_LIMITS } from '@/utils/hunting/labels';
+import { foldLt, rankByQuery } from '@/components/hunting/hub/shell/shell';
 import type { SelfCheckResult } from '@/utils/hunting/selfcheck';
 import { classIndex, classLabels } from './classes';
 import { buildTableCsv, tableCsvFileName } from './csv';
@@ -228,6 +229,40 @@ export function runHubUnitChecks(): SelfCheckResult[] {
         null,
         null,
         '8,5\u00a0% daugiau nei 2024/2025 sezone',
+      ],
+    );
+  });
+  check('Paieška: žodžio pradžia pirmiau (Vieta, Rūšis)', () => {
+    const keyed = (labels: string[], group?: string) =>
+      labels.map((label) => ({ label, group, key: foldLt(label) }));
+    const places = keyed([
+      'Visa Lietuva',
+      'Kaišiadorių r. sav.',
+      'Kauno m. sav.',
+      'Kauno r. sav.',
+      'Šilutės r. sav.',
+      'Utenos r. sav.',
+    ]);
+    const labels = (q: string) => rankByQuery(places, foldLt(q)).map((i) => i.label);
+    // Grouped (Rūšis): a group stays together, the group with the best hit first.
+    const grouped = (a: string[], b: string[]) =>
+      rankByQuery([...keyed(a, 'A'), ...keyed(b, 'B')], 'bbb').map((i) => i.label);
+    return eq(
+      [
+        labels('ute')[0],
+        labels('Kau'),
+        labels('kaisiadoriu'),
+        labels(''),
+        grouped(['Aaa bbb', 'Xbbb'], ['Bbb c']),
+        grouped(['Xbbb'], ['Bbb c']),
+      ],
+      [
+        'Utenos r. sav.',
+        ['Kauno m. sav.', 'Kauno r. sav.'],
+        ['Kaišiadorių r. sav.'],
+        places.map((i) => i.label),
+        ['Aaa bbb', 'Xbbb', 'Bbb c'],
+        ['Bbb c', 'Xbbb'],
       ],
     );
   });

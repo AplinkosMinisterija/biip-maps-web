@@ -4,7 +4,7 @@
       <span
         v-for="i in 3"
         :key="i"
-        class="h-16 rounded-md bg-gray-100 animate-pulse motion-reduce:animate-none"
+        class="h-16 rounded-md bg-line-soft animate-pulse motion-reduce:animate-none"
       />
     </div>
     <p class="text-sm text-ink-muted">{{ S.loading }}</p>
@@ -15,9 +15,10 @@
     role="alert"
     class="flex flex-col items-start gap-3 rounded-lg border border-[#B42318] bg-[#FEF3F2] p-3"
   >
-    <p class="text-sm font-semibold text-[#7A271A]">{{ S.loadError }}</p>
-    <!-- The site's primary button ("Prisijungti"). -->
-    <button type="button" :class="[BTN_PRIMARY, large ? BTN_TOUCH : '']" @click="ctx.data.reload()">
+    <p class="text-sm font-semibold text-[#7A271A]">{{ topic ? S.topicLoadError : S.loadError }}</p>
+    <!-- The site's primary button ("Prisijungti"). A topic's code that did not load comes
+         back only with a fresh page (the browser keeps a failed module import). -->
+    <button type="button" :class="[BTN_PRIMARY, large ? BTN_TOUCH : '']" @click="retry">
       {{ S.retry }}
     </button>
   </div>
@@ -35,8 +36,11 @@ const props = defineProps({
   large: { type: Boolean, default: false },
   // Data arrived but the view could not be built: shown like a load error.
   failed: { type: Boolean, default: false },
+  // The topic's own code did not load (JOURNEYS-10): "Nepavyko įkelti temos.", reload.
+  topic: { type: Boolean, default: false },
 });
 
 const ctx = inject(HUB_CTX)!;
-const phase = computed(() => (props.failed ? 'error' : ctx.data.phase.value));
+const phase = computed(() => (props.failed || props.topic ? 'error' : ctx.data.phase.value));
+const retry = () => (props.topic ? window.location.reload() : ctx.data.reload());
 </script>

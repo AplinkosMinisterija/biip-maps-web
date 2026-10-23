@@ -10,17 +10,19 @@
         :id="titleId"
         ref="titleEl"
         tabindex="-1"
-        class="text-base font-semibold leading-6 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand rounded"
+        class="rounded text-base font-semibold leading-6 outline-none"
+        :class="FOCUS_RING"
       >
         {{ card.title }}
       </h2>
       <button
         type="button"
-        class="shrink-0 min-h-[24px] min-w-[24px] max-md:min-h-[44px] max-md:min-w-[44px] px-2 rounded text-ink-muted hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+        :class="[BTN_TEXT, 'shrink-0 text-sm max-md:min-h-[44px]']"
         :aria-label="`${S.close}: ${card.title}`"
         @click="close"
       >
-        <span aria-hidden="true">✕</span>
+        <UiIcon name="close" :size="16" aria-hidden="true" />
+        {{ S.close }}
       </button>
     </div>
 
@@ -38,7 +40,7 @@
     <div v-if="hasTables" class="flex justify-end">
       <button
         type="button"
-        class="inline-flex items-center gap-1 min-h-[32px] max-md:min-h-[44px] rounded-lg border border-line-strong bg-white px-3 text-sm font-semibold text-ink hover:bg-page focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+        :class="[BTN_SECONDARY, 'h-9 px-3 text-sm max-md:h-11']"
         @click="showInTable"
       >
         <UiIcon name="document" :size="16" aria-hidden="true" />
@@ -52,12 +54,13 @@
 import { computed, inject, nextTick, ref, watch, type PropType } from 'vue';
 import { HUB_CTX } from '@/composables/hunting/hub/context';
 import { S } from '@/utils/hunting/hub/strings';
+import { BTN_SECONDARY, BTN_TEXT, FOCUS_RING } from '@/components/hunting/hub/shell/controls';
 import type { CardDef, TopicDef } from '@/utils/hunting/hub/types';
 
 // Municipality card of a snapshot topic (SPEC2 §6.3–6.6): the topic's `view.card(sav)` lines,
 // "Kiti šios savivaldybės rodikliai", "Rodyti lentelėje" and ✕ or Esc (clears `sav`; the
 // shell returns focus on `close`). The shell positions it:
-// bottom right on desktop, in place of the sheet content on phones.
+// top right on the gutter on desktop, in place of the sheet content on phones.
 const props = defineProps({
   // Topic registry, passed through to "Kiti rodikliai čia".
   topics: { type: Array as PropType<TopicDef[]>, default: () => [] },

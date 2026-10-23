@@ -80,6 +80,7 @@ export const CLASSES: Record<string, { breaks: number[]; unit: 1000 | 10000 }> =
 // Species group labels in display order (meta.static.speciesGroups, §6.3).
 const GROUP_ORDER = ['Kanopiniai', 'Plėšrūnai', 'Kiti žinduoliai', 'Paukščiai'];
 const SEXED_FORMS = ['HORNED', 'EXTENDED'];
+const upperFirst = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
 const T = {
   noMap:
@@ -92,7 +93,7 @@ const T = {
     `Einamojo sezono savivaldybių palyginimas bus po ${season + 1}-05-15.`,
   legend: (unit: number, season: number) =>
     `Sumedžiota per ${formatInt(unit)} ha MPV ploto · ${seasonLabel(season)}`,
-  perUnit: (unit: number) => `per ${formatInt(unit)} ha MPV ploto`,
+  perUnit: (unit: number) => `per ${formatInt(unit)} ha medžioklės plotų`,
   perUnitShort: (unit: number) => `/ ${formatInt(unit)} ha`,
   kita: (n: number) =>
     `Be to, ataskaitose ${formatInt(n)} ${plural(n, P_ANIMAL_GEN)} rūšis nenurodyta („Kita“) – į sumas neįtraukta.`,
@@ -359,7 +360,8 @@ function kpis(c: Ctx, muni: Municipality | null): KpiDef[] {
   const ltDens = density(cellOf(c.idx, null, sp).n, c.ltHa, c.unit);
   if (dens !== null) {
     list.push(
-      kpi('density', T.perUnit(c.unit), formatDec(dens), {
+      // A tile label starts with a capital: "Per 1 000 ha medžioklės plotų" (CONTENT-20).
+      kpi('density', upperFirst(T.perUnit(c.unit)), formatDec(dens), {
         sub: muni && ltDens !== null ? `Lietuvoje ${formatDec(ltDens)}` : undefined,
         ariaLabel: `${formatDec(dens)} sumedžiota ${T.perUnit(c.unit)}`,
       }),
@@ -384,7 +386,8 @@ function kpis(c: Ctx, muni: Municipality | null): KpiDef[] {
   } else {
     list.push(
       kpi('dead', 'Rasta kritusių', formatInt(agg.dead), {
-        sub: `${formatInt(agg.road)} iš jų – prie kelių`,
+        // Stands alone in any layout (no "iš jų" that loses its referent, CONTENT-20).
+        sub: `prie kelių – ${formatInt(agg.road)}`,
         ariaLabel: `Rasta kritusių ${formatInt(agg.dead)}, iš jų prie kelių ${formatInt(agg.road)}`,
       }),
     );
@@ -594,7 +597,7 @@ function speciesTable(c: Ctx, muni: Municipality | null): TableDef<SpeciesRow> {
     },
     {
       id: 'road',
-      label: 'iš jų prie kelių',
+      label: 'Rasta prie kelių',
       numeric: true,
       value: (r) => r.road,
       display: (r) => intOrNone(r.road),

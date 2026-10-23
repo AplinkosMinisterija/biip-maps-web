@@ -283,12 +283,21 @@ export function vilkaiFallbackView(data: SnapshotData, sel: HubSelection): Topic
   const kpis: KpiDef[] = [
     {
       id: 'located',
-      label: pluralLt(total, P_LOCATED),
+      label: 'Sumedžiota, vieta žinoma',
       value: formatInt(total),
       ariaLabel: `${label} sezonas, ${place}: ${located(total)}`,
     },
   ];
-  if (official?.limit) {
+  // As the live tab (JOURNEYS-15): next to a municipality's count the national count, not
+  // the national limit (the two are not comparable).
+  if (sav !== null) {
+    kpis.push({
+      id: 'national',
+      label: 'Lietuvoje, vieta žinoma',
+      value: formatInt(national),
+      ariaLabel: `${label} sezonas, ${S.placeAll}: ${located(national)}`,
+    });
+  } else if (official?.limit) {
     kpis.push({
       id: 'limit',
       label: `Limitas ${label}`,

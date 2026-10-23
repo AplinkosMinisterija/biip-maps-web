@@ -4,14 +4,21 @@
   <div v-else-if="ctx.data.dataset.value" class="flex items-start justify-between gap-2">
     <!-- In the hub the Vilkai tab announces the sentence once, debounced; the wolves page
          has only this live region. -->
-    <p :aria-live="inHub ? undefined : 'polite'" class="text-sm text-ink font-semibold">
+    <!-- The hub's answer sentence (AnswerBlock): 16 px regular. -->
+    <p
+      :aria-live="inHub ? undefined : 'polite'"
+      :class="
+        inHub ? 'text-base font-normal leading-snug text-ink' : 'text-sm font-semibold text-ink'
+      "
+    >
       <template v-for="(part, i) in parts" :key="i">
         <span class="whitespace-nowrap">{{ part }}</span>
         <template v-if="i < parts.length - 1"> · </template>
       </template>
     </p>
+    <!-- The hub's desktop filter bar has its own "Atstatyti filtrus": one reset control. -->
     <button
-      v-if="!ctx.derived.isDefaultView.value"
+      v-if="!ctx.derived.isDefaultView.value && !(inHub && !ctx.isMobile.value)"
       type="button"
       aria-label="Atstatyti numatytąjį vaizdą"
       class="shrink-0 px-3 py-1 min-h-[44px] md:min-h-[24px] rounded-full border border-line-strong text-xs font-semibold text-ink hover:bg-brand-50"

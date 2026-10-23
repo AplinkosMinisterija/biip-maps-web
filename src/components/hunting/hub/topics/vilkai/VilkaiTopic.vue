@@ -20,16 +20,27 @@
           class="contents"
           :class="loadingData ? '[&>*]:opacity-60' : ''"
         >
-          <HuntingHubTopicsVilkaiChipPopover
-            name="Laikotarpis"
-            :value="loadingData ? '…' : ctx.derived.periodLabel.value"
-            title="Laikotarpis"
-            :active="!loadingData && !isDefaultPeriod"
-            shrinkable
-            panel-class="w-[400px]"
-          >
-            <HuntingWolvesPeriodFilter :show-season-note="false" />
-          </HuntingHubTopicsVilkaiChipPopover>
+          <!-- The snapshot fallback: the chip shows and picks the copy's season, so there is
+               one season control (JOURNEYS-11). Element-rooted branches (async components). -->
+          <div v-if="fallback" class="contents">
+            <HuntingHubTopicsVilkaiFallbackSeasonChip
+              :seasons="fallbackSeasons"
+              :model-value="fallbackSeason"
+              @update:model-value="setFallbackSeason"
+            />
+          </div>
+          <div v-else class="contents">
+            <HuntingHubTopicsVilkaiChipPopover
+              name="Laikotarpis"
+              :value="loadingData ? '…' : ctx.derived.periodLabel.value"
+              title="Laikotarpis"
+              :active="!loadingData && !isDefaultPeriod"
+              shrinkable
+              panel-class="w-[400px]"
+            >
+              <HuntingWolvesPeriodFilter :show-season-note="false" />
+            </HuntingHubTopicsVilkaiChipPopover>
+          </div>
           <HuntingHubShellPlacePicker
             :model-value="ctx.state.sav.value"
             :items="municipalityList"
@@ -40,6 +51,8 @@
             :value="S.moreFilters(attrCount)"
             title="Daugiau filtrų"
             :active="attrCount > 0"
+            :disabled="fallback"
+            :disabled-hint="S_LIVE_ONLY"
             panel-class="w-[440px]"
           >
             <HuntingWolvesMoreFilters embedded />
@@ -99,7 +112,7 @@
             <h1
               id="hub-vilkai-title"
               tabindex="-1"
-              class="text-xl font-semibold text-gray-900 focus:outline-none"
+              class="text-xl font-semibold text-ink focus:outline-none"
             >
               {{ VILKAI_H1 }}
             </h1>
@@ -124,7 +137,11 @@
             <p v-else role="status" class="text-sm text-gray-700">{{ S.loading }}</p>
           </div>
           <div v-else class="flex flex-col gap-3">
-            <HuntingWolvesFilterSentence />
+            <!-- The other topics' anatomy (AnswerBlock): badge, then the answer (VISUAL-19). -->
+            <div class="flex flex-col gap-1">
+              <p v-if="seasonBadge"><HuntingHubShellStateBadge :badge="seasonBadge" /></p>
+              <HuntingWolvesFilterSentence />
+            </div>
             <HuntingWolvesLoadState placement="panel" :show-timestamp="false" />
             <!-- One loading line (the answer) until the records arrive; then the current
                  season's status, named as such, below the answer of the chosen period. -->
@@ -224,10 +241,11 @@
         <HuntingWolvesMapLegend collapsible />
       </div>
 
+      <!-- Top right on the container edge, as the other topics' cards (VISUAL-10). -->
       <div
         v-if="hasSelection && !replacesMap"
-        class="absolute bottom-10 z-30"
-        :class="railed ? 'right-[576px]' : 'right-12'"
+        class="absolute top-[calc(var(--hub-top)+8px)] z-30"
+        :class="railed ? 'right-[576px]' : 'right-[var(--hub-gutter,16px)]'"
       >
         <div class="w-[360px] max-w-[calc(100vw-32px)]">
           <HuntingWolvesWolfCard />
@@ -261,6 +279,14 @@
               Laikotarpis: …
             </button>
           </div>
+          <div v-else-if="fallback" class="contents">
+            <HuntingHubTopicsVilkaiFallbackSeasonChip
+              mobile
+              :seasons="fallbackSeasons"
+              :model-value="fallbackSeason"
+              @update:model-value="setFallbackSeason"
+            />
+          </div>
           <div v-else class="contents"><HuntingWolvesPeriodSheet compact class="shrink-0" /></div>
           <HuntingHubShellPlacePicker
             mobile
@@ -276,6 +302,8 @@
             :badge="attrCount"
             :active="attrCount > 0"
             :chevron="false"
+            :disabled="fallback"
+            :title="fallback ? S_LIVE_ONLY : undefined"
             :sr-label="S.filtersChip(attrCount)"
             aria-haspopup="dialog"
             @click="openFilters"
@@ -468,7 +496,12 @@ import type { SnapshotData, TableDef, TopicView } from '@/utils/hunting/hub/type
 import type { SortState } from '@/components/hunting/hub/table/sort';
 import { embedFocusAllowed } from '@/utils/hunting/hub/embed';
 import { useMapInert } from '@/components/hunting/hub/shell/sheet';
-import { VILKAI_COMPARE, VILKAI_H1, type VilkaiCarry } from '@/utils/hunting/hub/topics/vilkai';
+import {
+  VILKAI_COMPARE,
+  VILKAI_H1,
+  vilkaiFallbackSeasons,
+  type VilkaiCarry,
+} from '@/utils/hunting/hub/topics/vilkai';
 import { WOLVES_TABLES } from '@/utils/hunting/hub/url';
 import { filterRecords } from '@/utils/hunting/wolves';
 import {
@@ -628,6 +661,23 @@ watch(fallback, (failed) => {
   setTable(false);
 });
 
+// The fallback's season: the wolves period when it is a closed season of the copy, else the
+// newest one (as VilkaiFallback); a pick sets the wolves period, so the URL keeps it.
+const fallbackSeasons = computed(() =>
+  fallbackSnapshot.value ? vilkaiFallbackSeasons(fallbackSnapshot.value) : [],
+);
+const fallbackSeason = computed<number | null>(() => {
+  const current = ctx?.derived.intervalSeason.value ?? null;
+  return current !== null && fallbackSeasons.value.includes(current)
+    ? current
+    : (fallbackSeasons.value[0] ?? null);
+});
+function setFallbackSeason(season: number) {
+  ctx?.state.setInterval(seasonInterval(season), `season:${season}`);
+}
+// The attribute filters need the live records.
+const S_LIVE_ONLY = 'Galima tik su gyvais duomenimis';
+
 // ---- Embedded fallback table (the municipality table of the wolves.json copy), opened and
 // closed by the WP page's view switch through the bridge.
 const fallbackTable = computed<TableDef | null>(() => fallbackView.value?.tables[0] ?? null);
@@ -672,6 +722,14 @@ watch(
         : null;
   },
   { immediate: true },
+);
+
+// "Sezonas vyksta" while the shown period is the current season (the live data is never
+// preliminary); none for a past season or a custom date range.
+const seasonBadge = computed(() =>
+  ctx && !loadingData.value && ctx.derived.intervalSeason.value === ctx.currentSeason
+    ? ('vyksta' as const)
+    : undefined,
 );
 
 // ---- Filter bar labels.
