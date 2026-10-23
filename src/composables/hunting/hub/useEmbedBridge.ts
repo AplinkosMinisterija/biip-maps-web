@@ -216,7 +216,8 @@ export function useEmbedBridge(ctx: HubContext, shell: HubShell | null): void {
 
   // ---- Modal state (D16): after `ready`, on every change of "a modal is open".
   const modal = createModalReporter((open) => post(modalMessage(open)));
-  watch(modalOpen, (open) => modal.set(open), { immediate: true });
+  // Synchronous (see useModalState): `modal: false` goes out before `aboutClosed`.
+  watch(modalOpen, (open) => modal.set(open), { immediate: true, flush: 'sync' });
   // Leaving the hub with a dialog open: the page must not stay dimmed.
   onScopeDispose(() => modal.stop());
 

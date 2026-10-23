@@ -195,7 +195,9 @@ const modalCount = ref(0);
 /** One of the hub's modal dialogs or full-screen sheets is open. */
 export const modalOpen = computed(() => modalCount.value > 0);
 
-/** Counts the dialog as open while `open` is true (and never after unmount). */
+/** Counts the dialog as open while `open` is true (and never after unmount). Synchronous,
+ *  so the `modal` message of a close goes out before what the closing code posts next
+ *  (`aboutClosed`: WP then moves focus to its own, no longer inert, button). */
 export function useModalState(open: Ref<boolean>) {
   let counted = false;
   const count = (on: boolean) => {
@@ -203,6 +205,6 @@ export function useModalState(open: Ref<boolean>) {
     counted = on;
     modalCount.value += on ? 1 : -1;
   };
-  watch(open, (on) => count(!!on), { immediate: true });
+  watch(open, (on) => count(!!on), { immediate: true, flush: 'sync' });
   onBeforeUnmount(() => count(false));
 }
