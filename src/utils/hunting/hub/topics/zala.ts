@@ -767,8 +767,9 @@ function glyphNotes<R>(columns: ColumnDef<R>[], rows: R[]) {
 function municipalityTable(c: Ctx, g: Grupe): TableDef<MuniRow> {
   // Escalation column: kanopiniai + bebrai only (for the others the letter is automatic).
   const toRow = (code: number, name: string): MuniRow => {
-    const groups = {} as Record<DamageGroup, Count>;
-    GROUPS.forEach((grp) => (groups[grp] = countAt(c, code, grp, 'reports')));
+    // Narrowed by the total, as the Pranešimai column is: one row never shows 0 and "<3"
+    // for the same group.
+    const groups = groupReports(c, code);
     const e = escalation(c, code, 'visos');
     return {
       code: code || null,
