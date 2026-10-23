@@ -60,11 +60,16 @@ export function panelWidth(width: number) {
   return 0;
 }
 
-// The panel collapses to the rail only when the table drawer is open at ≥ 1280 px. Between
-// 768 and 1279 px the table replaces the map instead; below 768 px it lives in the sheet.
-// Embedded, there is no rail: the table replaces the map at every width from 768 px.
-export const isRailed = (width: number, tableOpen: boolean, embed = false) =>
-  !embed && tableOpen && layoutMode(width) === 'wide';
+// The panel collapses to the rail when the table drawer is open at ≥ 1280 px. Between 768
+// and 1279 px the table replaces the map instead; below 768 px it lives in the sheet.
+// Embedded, there is no drawer: the table replaces the map at every width from 768 px.
+// `short` (a frame under SHORT_MAX_H px from 768 px wide, e.g. a phone held sideways): the
+// snapshot panel starts as the rail on the map, so the map keeps the frame (MOBILE-05); the
+// table view keeps the panel next to the table.
+export const SHORT_MAX_H = 500;
+export const isRailed = (width: number, tableOpen: boolean, embed = false, short = false) =>
+  (short && !tableOpen && layoutMode(width) !== 'mobile') ||
+  (!embed && tableOpen && layoutMode(width) === 'wide');
 
 // The table hides the map (visibility: hidden, not unmounted) between 768 and 1279 px
 // (embedded: from 768 px).
@@ -98,12 +103,19 @@ export function hubCssVars(width: number, embed = false): Record<string, string>
  * Map area covered by the shell, as OpenLayers view padding [top, right, bottom, left] in px.
  * Rail + drawer at 1440 px: [112, 568, 0, 64], leaving 1440 − 56 − 560 = 824 px of map.
  */
-export function mapPadding(width: number, tableOpen: boolean, embed = false): number[] {
+export function mapPadding(
+  width: number,
+  tableOpen: boolean,
+  embed = false,
+  short = false,
+): number[] {
   const mode = layoutMode(width);
   if (mode === 'mobile') return [mobileHeader(embed), 0, HUB_MOBILE_PEEK, 0];
   if (isRailed(width, tableOpen, embed)) {
     return [hubTop(embed), HUB_DRAWER_W + HUB_GAP, 0, HUB_RAIL_W + HUB_GAP];
   }
+  // A short frame: the rail alone (no drawer).
+  if (isRailed(width, tableOpen, embed, short)) return [hubTop(embed), 0, 0, HUB_RAIL_W + HUB_GAP];
   // Floating panel on the left (desktop/tablet). When the table replaces the map the
   // padding is irrelevant; the same value keeps the view stable when the map returns.
   return [hubTop(embed), 0, 0, panelLeft(width, embed) + panelWidth(width) + HUB_GAP];

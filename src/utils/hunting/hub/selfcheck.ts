@@ -867,6 +867,19 @@ function runEmbedChecks(check: Check, eq: Eq) {
     ),
   );
 
+  check('Žemas rėmelis: skydelis – juostelė ant žemėlapio (MOBILE-05)', () =>
+    eq(
+      [
+        isRailed(844, false, true, true),
+        isRailed(844, true, true, true),
+        isRailed(390, false, true, true),
+        isRailed(844, false, true),
+        mapPadding(844, false, true, true),
+      ],
+      [true, false, false, false, [56, 0, 0, 64]],
+    ),
+  );
+
   check('Išdėstymas be įterpimo nepakito', () =>
     eq(
       [

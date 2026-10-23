@@ -171,8 +171,10 @@ import {
   HUB_TOP_EMBED,
   hubCssVars,
   hubTop,
+  isRailed,
   MOBILE_MAX,
   mobileHeader,
+  SHORT_MAX_H,
   tableReplacesMap,
 } from '@/utils/hunting/hub/layout';
 import { embedFocusAllowed } from '@/utils/hunting/hub/embed';
@@ -312,7 +314,8 @@ const topicKind = computed(() => ctx?.topic.value.kind ?? 'overview');
 const tableOpen = computed(() => !!ctx && ctx.sel.value.table !== null);
 const sav = computed(() => ctx?.sel.value.sav ?? null);
 const railed = computed(() => !!ctx && topicKind.value === 'snapshot' && ctx.layout.railed.value);
-const drawerOpen = computed(() => railed.value);
+// The table drawer next to the rail (not the rail of a short frame, MOBILE-05).
+const drawerOpen = computed(() => railed.value && isRailed(width.value, tableOpen.value, embed));
 const mapHidden = computed(
   () =>
     !isMobile.value &&
@@ -418,9 +421,13 @@ const LEGEND_H_PHONE = 44;
 function fitLithuania() {
   const map = mapLayers.map ? toRaw(mapLayers.map) : null;
   if (!map) return;
+  // A short frame (a phone held sideways, MOBILE-05): the collapsed legend, little room.
+  const short = window.innerHeight <= SHORT_MAX_H;
   const padding = isMobile.value
     ? [8, 8, LEGEND_H_PHONE + 16, 8]
-    : [16, 16, LEGEND_H_DESKTOP + 24, 16];
+    : short
+      ? [8, 16, LEGEND_H_PHONE + 12, 16]
+      : [16, 16, LEGEND_H_DESKTOP + 24, 16];
   // The free area from the map's size, not the view's cached one: on `change:size` the view
   // has not seen the new size yet.
   const view = map.getView();
@@ -565,7 +572,7 @@ onBeforeUnmount(() => {
   overflow-y: auto;
   border-radius: 0.5rem;
 }
-.hunting-hub--rail .hub-card {
+.hunting-hub--drawer .hub-card {
   right: calc(var(--hub-drawer-w) + var(--hub-gap) + 8px);
 }
 .hub-legend {

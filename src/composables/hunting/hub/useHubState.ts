@@ -17,7 +17,7 @@ import type {
 import { useSnapshot } from '@/composables/hunting/hub/useSnapshot';
 import { seasonLabel, seasonOfDay, todayVilnius } from '@/utils/hunting/dates';
 import { isEmbedQuery, resolveParentOrigin } from '@/utils/hunting/hub/embed';
-import { isRailed, mapPadding } from '@/utils/hunting/hub/layout';
+import { isRailed, mapPadding, SHORT_MAX_H } from '@/utils/hunting/hub/layout';
 import { S } from '@/utils/hunting/hub/strings';
 import { parseSeasonKey, seasonKey } from '@/utils/hunting/hub/time';
 import { DEFAULT_TOPIC, TOPICS, getTopic, hasTopic } from '@/utils/hunting/hub/topics';
@@ -192,8 +192,10 @@ export function useHubState(opts: HubStateOptions = {}): HubContext {
 
   // ---- Layout.
   const tableOpen = computed(() => sel.value.table !== null);
-  const railed = computed(() => isRailed(width.value, tableOpen.value, embed));
-  const padding = computed(() => mapPadding(width.value, tableOpen.value, embed));
+  // A short frame (a phone held sideways) starts the snapshot panel as the rail (MOBILE-05).
+  const isShort = useMediaQuery(`(max-height: ${SHORT_MAX_H}px)`);
+  const railed = computed(() => isRailed(width.value, tableOpen.value, embed, isShort.value));
+  const padding = computed(() => mapPadding(width.value, tableOpen.value, embed, isShort.value));
 
   // ---- URL → state.
   function applyQuery(query: LocationQuery) {
