@@ -11,7 +11,15 @@ import {
   seasonOfDay,
   type PluralForms,
 } from '@/utils/hunting/dates';
-import { P_HUNTED, S, TOPIC_SUBTITLES, TOPIC_TABS } from '../strings';
+import {
+  ABOUT_LOCALE_RULE,
+  P_HUNTED,
+  S,
+  SOURCE_BIOMON,
+  TOPIC_SUBTITLES,
+  TOPIC_TABS,
+} from '../strings';
+import { formatPct } from './common';
 import type {
   AboutDef,
   ChoroplethDef,
@@ -38,11 +46,6 @@ const P_LOCATED: PluralForms = [
   'sumedžioti vilkai su vieta',
   'sumedžiotų vilkų su vieta',
 ];
-
-const percentFormat = new Intl.NumberFormat('lt-LT', {
-  style: 'percent',
-  maximumFractionDigits: 1,
-});
 
 // ---------------------------------------------------------------------------
 // Seasons
@@ -153,9 +156,9 @@ function vilkaiOverview(data: SnapshotData, today: string): OverviewCard {
   const lines: string[] = [];
   if (previous?.official != null && previous.limit) {
     lines.push(
-      `${seasonLabel(c - 1)} sezone – ${formatInt(previous.official)} iš ${formatInt(
+      `${seasonLabel(c - 1)} sezone sumedžiota ${formatInt(previous.official)} iš ${formatInt(
         previous.limit,
-      )} (${percentFormat.format(previous.official / previous.limit)}; oficialus AM skaičius).`,
+      )} (${formatPct(previous.official / previous.limit)}) – oficialus AM skaičius.`,
     );
   }
 
@@ -204,6 +207,107 @@ export function vilkaiOverviewLive(card: OverviewCard, status: VilkaiLiveStatus)
         : `${seasonLabel(status.seasonStart)} sezone sumedžiota ${formatInt(hunted)} iš ${formatInt(limit)} vilkų, liko ${formatInt(left)}.`,
   };
 }
+
+// ---------------------------------------------------------------------------
+// The panel's answer sentence (CONTENT-18): the same anatomy as the snapshot topics'
+// answers ("2025/2026 sezone sumedžioti 247 vilkai, kurių vieta žinoma."). The wolves state
+// keeps its "Rodoma: …" list for the map's label and the standalone page.
+// ---------------------------------------------------------------------------
+
+const P_ANSWER: PluralForms = [
+  'sumedžiotas {n} vilkas, kurio vieta žinoma',
+  'sumedžioti {n} vilkai, kurių vieta žinoma',
+  'sumedžiota {n} vilkų, kurių vieta žinoma',
+];
+
+// Attribute values in the plural, lower case ("patinai, suaugę"); `nenurodyta` per key.
+const ATTR_PLURAL: Record<string, string> = {
+  ADULT: 'suaugę',
+  TWO_YEAR: 'vyresni nei 1 m.',
+  ONE_YEAR: 'jaunikliai iki 1 m.',
+  MALE: 'patinai',
+  FEMALE: 'patelės',
+  TYKOJAMOJI: 'tykojamoji medžioklė',
+  VAROMOJI: 'varomoji medžioklė',
+  SU_VELIAVELEMIS: 'medžioklė su vėliavėlėmis',
+  OTHER: 'kitas būdas',
+};
+const ATTR_NOT_SET = {
+  age: 'amžius nenurodytas',
+  sex: 'lytis nenurodyta',
+  method: 'būdas nenurodytas',
+};
+
+export interface VilkaiAnswerInput {
+  count: number;
+  preset: string; // wolves PresetId: 'season:2025', 'last30', 'all', 'custom'
+  interval: { from: string; to: string };
+  place: string | null; // municipality name, null = all Lithuania
+  attrs: { age: string[]; sex: string[]; method: string[] };
+}
+
+export function vilkaiAnswer({ count, preset, interval, place, attrs }: VilkaiAnswerInput) {
+  const season = /^season:(\d{4})$/.exec(preset);
+  const { from, to } = interval;
+  const period = season
+    ? `${seasonLabel(Number(season[1]))} sezone`
+    : preset === 'last30'
+      ? `Per paskutines 30 d. (${from} – ${to})`
+      : preset === 'all'
+        ? 'Per visus sezonus'
+        : from === to
+          ? from
+          : `Nuo ${from} iki ${to}`;
+  const body =
+    count === 0
+      ? `${period} sumedžiotų vilkų, kurių vieta žinoma, nėra`
+      : `${period} ${pluralLt(count, P_ANSWER).replace('{n}', formatInt(count))}`;
+  const values = (['sex', 'age', 'method'] as const).flatMap((key) =>
+    attrs[key].map(
+      (code) => ATTR_PLURAL[code] || (code === 'nenurodyta' ? ATTR_NOT_SET[key] : code),
+    ),
+  );
+  const text = `${body}${values.length ? ` (${values.join(', ')})` : ''}.`;
+  // After the colon the sentence goes on in lower case ("Kauno r. sav.: per paskutines…").
+  return place ? `${place}: ${text.charAt(0).toLocaleLowerCase('lt')}${text.slice(1)}` : text;
+}
+
+// ---------------------------------------------------------------------------
+// Reconciliation with the official AM figure (J-02): the located total of a closed season
+// next to the official one, where the located total is read (table, CSV, panel).
+// ---------------------------------------------------------------------------
+
+export interface VilkaiReconcile {
+  located: number;
+  official: number;
+  // official − located when the official figure is the larger one; otherwise null (the two
+  // are counted differently, e.g. 2024/2025: 334 located, 326 official).
+  unknown: number | null;
+}
+
+/**
+ * Only for a whole closed season of all Lithuania without attribute filters (the official
+ * figure has no breakdown); null otherwise or without the figure.
+ */
+export function vilkaiReconcile(
+  meta: Meta | null | undefined,
+  season: number | null,
+  currentSeason: number,
+  located: number,
+): VilkaiReconcile | null {
+  if (!meta || season === null || season >= currentSeason) return null;
+  const official = staticSeason(meta, season)?.official;
+  if (official == null) return null;
+  return { located, official, unknown: official >= located ? official - located : null };
+}
+
+// Two lines for the records CSV (as `#` comments, so the columns stay the records').
+export const vilkaiReconcileCsv = (r: VilkaiReconcile) => [
+  `Iš viso su žinoma vieta: ${formatInt(r.located)}`,
+  r.unknown === null
+    ? `Oficialus AM skaičius – ${formatInt(r.official)} (skaičiuojama kitaip)`
+    : `Vieta nežinoma: ${formatInt(r.unknown)} (oficialus AM skaičius – ${formatInt(r.official)})`,
+];
 
 // ---------------------------------------------------------------------------
 // "Kiti rodikliai čia" (SPEC2 §6.6)
@@ -347,7 +451,8 @@ export function vilkaiFallbackView(data: SnapshotData, sel: HubSelection): Topic
       },
     ],
     rows: tableRows,
-    totals: { code: null, name: S.totalsRow, located: national },
+    // The same totals label as the live municipality table (J-02).
+    totals: { code: null, name: 'Iš viso su žinoma vieta', located: national },
     footnotes: unattributed
       ? [`Vietos, kurios nepavyko priskirti savivaldybei: ${formatInt(unattributed)}.`]
       : [],
@@ -390,6 +495,7 @@ export function vilkaiFallbackView(data: SnapshotData, sel: HubSelection): Topic
 // ---------------------------------------------------------------------------
 
 export const VILKAI_COMPARE =
+  'Šiame puslapyje – tik vilkai su žinoma vieta: 2025/2026 – 247, 2024/2025 – 334. ' +
   '2025/2026: AM puslapis „Sumedžioti vilkai“ – 275; MPV naudotojų ataskaitose (BĮIP) – 278. ' +
   'Skirtumas: AM puslapis skaičiuoja kiekvieną vilką pagal BIOMON registraciją, ataskaitos – ' +
   'MPV naudotojų pateiktas sumas. 2024/2025: 326 (iš jų 1 žuvęs kelyje ir 6 pagal leidimus; ' +
@@ -397,6 +503,7 @@ export const VILKAI_COMPARE =
 
 const about: AboutDef = {
   source: [
+    SOURCE_BIOMON,
     'Taškai – BIOMON duomenys (iki 2026-03-31) ir BĮIP elektroninio medžioklės žurnalo įrašai (nuo ' +
       '2025/2026 sezono). Einamojo sezono skaitiklis ir limitas – iš BĮIP.',
     'Duomenys gaunami tiesiogiai iš BĮIP ir BIOMON atidarius šią temą. Jei jų gauti nepavyksta, ' +
@@ -412,10 +519,18 @@ const about: AboutDef = {
   ],
   missing: [
     'Popieriniais lapais po sezono pateiktos suvestinės neturi vietos ir tikrosios datos, todėl ' +
-      'čia nerodomos ir neskaičiuojamos. Oficialus sezono skaičius dėl to gali būti didesnis.',
+      'čia nerodomos ir neskaičiuojamos. Oficialus sezono skaičius dėl to gali skirtis.',
   ],
   compare: [VILKAI_COMPARE],
 };
+
+// Replaces the default "Bendros taisyklės" lines, which promise sums only (snapshot topics)
+// and repeat the live source line: this topic shows every located wolf as a point and a row.
+const aboutCommon = [
+  ABOUT_LOCALE_RULE,
+  'Asmens duomenys neskelbiami: kiekvienas vilkas rodomas atskirai, bet vieta – tik apytiksliai ' +
+    '(1 km tinklelio langelio centre); medžiotojai nenurodomi.',
+];
 
 export const vilkai: TopicDef = {
   id: 'vilkai',
@@ -436,6 +551,7 @@ export const vilkai: TopicDef = {
   // The live tab needs only `meta`; its "Kiti rodikliai" row reads the wolves snapshot.
   otherRowFiles: ['meta', 'wolves'],
   about,
+  aboutCommon,
 };
 
 export default vilkai;

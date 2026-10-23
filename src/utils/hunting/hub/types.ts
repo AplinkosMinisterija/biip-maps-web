@@ -178,6 +178,11 @@ export interface ChartDef {
   title: string;
   bars: ChartBar[];
   series?: { id: string; label: string }[];
+  /** Headers of the screen-reader table: the bars' axis ("Rūšis", "Mėnuo", "Sezonas") and,
+   * without series, the measure ("Sumedžiota"). Default "Pavadinimas" / "Reikšmė". */
+  axisLabel?: string;
+  valueLabel?: string;
+  /** Lines separated by "\n" are shown as separate lines. */
   note?: string;
   /** Stacked column total labels by bar label, when the parts are not all exact ("113–117"). */
   totals?: Record<string, string>;
@@ -307,6 +312,9 @@ export interface TopicDef {
   defaultSeason(meta: Meta, today: string): number;
   dims: DimDef[];
   defaultTable: string;
+  /** Dim picks a table needs to exist (Žala `gyvuliai`: a predator group), or null when the
+   * picks already fit (or explicitly exclude it, so the §5.9 fallback applies). */
+  tableDims?(table: string | null, dims: Record<string, string>): Record<string, string> | null;
   view?(data: SnapshotData, sel: HubSelection): TopicView; // snapshot topics
   overview?(data: SnapshotData, today: string): OverviewCard; // Apžvalga
   otherRow?(data: SnapshotData, sav: number): OtherRow | null; // "Kiti rodikliai čia"

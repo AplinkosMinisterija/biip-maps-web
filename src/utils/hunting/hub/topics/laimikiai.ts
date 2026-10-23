@@ -82,30 +82,31 @@ const GROUP_ORDER = ['Kanopiniai', 'Plėšrūnai', 'Kiti žinduoliai', 'Paukšč
 const SEXED_FORMS = ['HORNED', 'EXTENDED'];
 const upperFirst = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
+const deadInconsistentText = (season: number) =>
+  `${seasonLabel(season)} sezono kritusių gyvūnų duomenys prieštaringi (prie kelių rasta daugiau nei iš viso) – neskelbiami.`;
+
 const T = {
   noMap:
     'Šiai rūšiai žemėlapis nebraižomas – per mažai laimikių patikimam palyginimui. Žr. lentelę.',
   currentMap: (season: number) =>
-    `${seasonLabel(season)} sezono žemėlapis bus po ${season + 1}-05-15, kai MPV naudotojai pateiks sezono ataskaitas.`,
+    `${seasonLabel(season)} sezono žemėlapis bus po ${season + 1}-05-15, kai medžioklės plotų naudotojai pateiks sezono ataskaitas.`,
   currentNotice:
     'Didžioji dalis laimikių pateikiama po sezono (iki gegužės 15 d.), todėl šie skaičiai su ankstesniais sezonais nelyginami.',
   currentMuniDisabled: (season: number) =>
     `Einamojo sezono savivaldybių palyginimas bus po ${season + 1}-05-15.`,
   legend: (unit: number, season: number) =>
-    `Sumedžiota per ${formatInt(unit)} ha MPV ploto · ${seasonLabel(season)}`,
+    `Sumedžiota per ${formatInt(unit)} ha medžioklės plotų · ${seasonLabel(season)}`,
   perUnit: (unit: number) => `per ${formatInt(unit)} ha medžioklės plotų`,
   perUnitShort: (unit: number) => `/ ${formatInt(unit)} ha`,
   kita: (n: number) =>
     `Be to, ataskaitose ${formatInt(n)} ${plural(n, P_ANIMAL_GEN)} rūšis nenurodyta („Kita“) – į sumas neįtraukta.`,
   wolfNote: (bip: number, official: number) =>
     `Vilkų skaičius pagal MPV naudotojų ataskaitas (${formatInt(bip)}). Oficialus AM skaičius – ${formatInt(official)}, žr. „Vilkai“.`,
-  deadNote: (inconsistent: number[]) =>
+  // Only about the season on screen (CONTENT-25).
+  deadNote: (inconsistent: number | null) =>
     'Rasta kritusių – į sumedžiotų skaičių neįtraukta.' +
-    (inconsistent.length
-      ? ` ${inconsistent.map(seasonLabel).join(', ')} sezono kritusių gyvūnų duomenys nenuoseklūs.`
-      : ''),
-  deadInconsistent: (season: number) =>
-    `${seasonLabel(season)} duomenys nenuoseklūs – neskelbiami.`,
+    (inconsistent !== null ? ` ${deadInconsistentText(inconsistent)}` : ''),
+  deadInconsistent: (season: number) => deadInconsistentText(season),
   totalRow: 'Iš viso (be „Kita“)',
 };
 
@@ -309,7 +310,7 @@ function answer(c: Ctx, muni: Municipality | null) {
     return `${name}: ${label} sezone sumedžiota ${formatInt(n)}${tail}`;
   }
   const body = `${label} sezone ${plural(n, P_HUNTED)} ${formatInt(n)} ${plural(n, P_ANIMAL)}${tail}`;
-  return muni ? `${muni.name} ${body}` : body;
+  return muni ? `${muni.name}: ${body}` : body;
 }
 
 // ---------------------------------------------------------------------------
@@ -348,7 +349,7 @@ function kpis(c: Ctx, muni: Municipality | null): KpiDef[] {
   list.push(
     kpi('hunted', 'Sumedžiota', formatInt(agg.n), {
       // No sub-line when the Δ is not available; the ⓘ says why (J-23).
-      sub: c.prev !== null && d ? `${d.text} nei ${prevLabel}` : undefined,
+      sub: c.prev !== null && d ? `${d.text}, palyginti su ${prevLabel}` : undefined,
       tooltip: d ? deltaTooltip(c, d, muni) : c.prev === null ? undefined : S.deltaSuppressed,
       ariaLabel:
         `Sumedžiota ${formatInt(agg.n)}${subject}` +
@@ -417,7 +418,13 @@ function chart(c: Ctx, muni: Municipality | null): ChartDef | undefined {
       const n = cellOf(seasonIndex(c.rows, s), code, c.sp!.id).n;
       return { label: seasonLabel(s), value: n, valueLabel: formatInt(n), current: s === c.season };
     });
-    return { kind: 'columns', title: `${c.sp.name}: sumedžiota pagal sezonus`, bars };
+    return {
+      kind: 'columns',
+      title: `${c.sp.name}: sumedžiota pagal sezonus`,
+      bars,
+      axisLabel: 'Sezonas',
+      valueLabel: 'Sumedžiota',
+    };
   }
   const list = speciesOfPlace(c, c.idx, code).filter((x) => x.agg.n > 0);
   if (!list.length) return undefined;
@@ -435,6 +442,8 @@ function chart(c: Ctx, muni: Municipality | null): ChartDef | undefined {
     kind: 'hbar',
     title: `${c.current ? 'Užregistruota el. žurnale' : 'Sumedžiota'} pagal rūšis · ${seasonLabel(c.season)}`,
     bars,
+    axisLabel: 'Rūšis',
+    valueLabel: c.current ? 'Užregistruota el. žurnale' : 'Sumedžiota',
   };
 }
 
@@ -449,7 +458,9 @@ function map(c: Ctx): ChoroplethDef | MapMessageDef {
       kind: 'message',
       text: T.currentMap(c.season),
       action:
-        back === null ? undefined : { label: `Rodyti ${seasonLabel(back)}`, sel: { season: back } },
+        back === null
+          ? undefined
+          : { label: S.emptyShowSeason(seasonLabel(back)), sel: { season: back } },
     };
   }
   const fixed = CLASSES[c.sp ? c.sp.slug : ALL_SPECIES];
@@ -543,7 +554,7 @@ function speciesTable(c: Ctx, muni: Municipality | null): TableDef<SpeciesRow> {
   const totalAgg = cellOf(c.idx, code, null);
   const totals = toRow(T.totalRow, totalAgg, delta(totalAgg.n, prevN(null)));
 
-  const prevLabel = c.prev === null ? '' : ` nei ${seasonLabel(c.prev)}`;
+  const prevLabel = c.prev === null ? '' : ` nuo ${seasonLabel(c.prev)}`;
   const columns: ColumnDef<SpeciesRow>[] = [
     { id: 'name', label: 'Rūšis', value: (r) => r.name },
     {
@@ -613,18 +624,14 @@ function speciesTable(c: Ctx, muni: Municipality | null): TableDef<SpeciesRow> {
   );
 
   const footnotes: string[] = [];
-  const kita = c.kita.find((k) => k.season === c.season);
-  if (kita && kita.n > 0) footnotes.push(T.kita(kita.n));
+  // The "Kita" note sits in the panel next to the table (CONTENT-25); the totals row names it.
   const wolf = c.meta.species.find((s) => s.slug === 'vilkas');
   const official = c.meta.static.wolves.seasons[`${c.season}`]?.official;
   if (wolf && !muni && typeof official === 'number' && !c.current) {
     const bip = cellOf(c.idx, null, wolf.id).n;
     if (bip > 0) footnotes.push(T.wolfNote(bip, official));
   }
-  const bad = seasonsDesc(c.meta)
-    .filter((s) => s <= c.season && deadInconsistent(c.rows, s))
-    .sort((a, b) => a - b);
-  footnotes.push(T.deadNote(bad));
+  footnotes.push(T.deadNote(deadInconsistent(c.rows, c.season) ? c.season : null));
   // The dash, where it appears: not split by sex and age, or a change too small to compare.
   const all = [totals, ...rows];
   const dashes: string[] = [];
@@ -720,7 +727,7 @@ function municipalityTable(c: Ctx): TableDef<MuniRow> {
     },
     {
       id: 'delta',
-      label: 'Pokytis, %',
+      label: c.prev === null ? 'Pokytis' : `Pokytis nuo ${seasonLabel(c.prev)}`,
       numeric: true,
       unit: '%',
       value: (r) => (r.delta ? Math.round(r.delta.pct * 10) / 10 : null),
@@ -781,7 +788,7 @@ function card(c: Ctx, code: number): CardDef | null {
       );
     }
     const d = placeDelta(c, code);
-    if (d && c.prev !== null) lines.push(`${d.text} nei ${seasonLabel(c.prev)}`);
+    if (d && c.prev !== null) lines.push(`${d.text}, palyginti su ${seasonLabel(c.prev)}`);
   }
   lines.push(`${formatInt(muni.mpvCount)} MPV · ${formatInt(muni.mpvHa)} ha`);
   if (!c.sp) {
@@ -876,7 +883,7 @@ export function overview(data: SnapshotData): OverviewCard {
   if (running !== season && seasonState(running, meta) === 'vyksta') {
     const r = cellOf(seasonIndex(c.rows, running), null, null).n;
     card.lines = [
-      `${seasonLabel(running)} sezonas vyksta: el. žurnale iki ${meta.snapshotDate} užregistruota ${formatInt(r)} (dauguma laimikių pateikiama po sezono).`,
+      `${seasonLabel(running)} sezone el. žurnale iki ${meta.snapshotDate} užregistruota ${formatInt(r)} – dauguma laimikių pateikiama po sezono.`,
     ];
   }
   return card;
@@ -939,7 +946,7 @@ export const about = {
     ATTRIBUTION_RULE,
   ],
   missing: [
-    'Laimikių datų ir vietų (dauguma pateikiama sezono suma), MPV lygmens duomenų, populiacijos dydžio.',
+    'Laimikių datų ir vietų (dauguma pateikiama sezono suma), MPV lygmens duomenų, gyvūnų skaičiaus gamtoje.',
   ],
   compare: [
     '2025/2026: BĮIP 129 485, AM lentelė „Sumedžioti žvėrys ir paukščiai“ 129 494 (skirtumas 9 – vėlesni taisymai). 2024/2025: BĮIP 119 311, AM 118 823.',

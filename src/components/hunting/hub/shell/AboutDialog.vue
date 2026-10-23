@@ -59,6 +59,7 @@ import {
   ABOUT_LOCALE_RULE,
   ATTRIBUTION_RULE,
   S,
+  SOURCE_BIIP,
   TOPIC_TABS,
 } from '@/utils/hunting/hub/strings';
 import { focusRing, trapTab } from './shell';
@@ -75,8 +76,8 @@ const ctx = inject(HUB_CTX)!;
 // Default texts of "Bendros taisyklės" (§5: attribution rule, snapshot, locale, no personal
 // data). The locale rule is shared with the topics' own lines (strings.ts).
 const PRIVACY_RULE =
-  'Asmens duomenys neskelbiami: rodomos tik visos Lietuvos ir savivaldybių sumos, be MPV, ' +
-  'pranešėjų ar tikslių vietų.';
+  'Asmens duomenys neskelbiami: rodomos tik visos Lietuvos ir savivaldybių sumos – be MPV ' +
+  'duomenų, pranešėjų tapatybės ir tikslių vietų.';
 
 // Embedded Apžvalga: the frame grows to its content (D12b), so a centred dialog could open
 // below the visible part of the page; open it at the top of the frame instead.
@@ -124,7 +125,14 @@ const sections = computed(() => {
   const about = props.topics[topicId.value]?.about;
   if (!about) return [];
   return (['source', 'meaning', 'missing', 'compare'] as const)
-    .map((key) => ({ key, heading: ABOUT_HEADINGS[key], lines: about[key] || [] }))
+    .map((key) => {
+      const lines = about[key] || [];
+      // Every "Šaltinis ir atnaujinimas" names the platform in plain words first (JOURNEYS-14).
+      if (key !== 'source' || !lines.length || lines.includes(SOURCE_BIIP)) {
+        return { key, heading: ABOUT_HEADINGS[key], lines };
+      }
+      return { key, heading: ABOUT_HEADINGS[key], lines: [SOURCE_BIIP, ...lines] };
+    })
     .filter((part) => part.lines.length);
 });
 

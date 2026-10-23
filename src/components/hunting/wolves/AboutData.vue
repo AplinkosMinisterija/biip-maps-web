@@ -3,9 +3,11 @@
     <div class="flex flex-col gap-4 text-sm text-gray-800">
       <section>
         <h4 class="font-semibold text-gray-900">Iš kur duomenys</h4>
+        <p>{{ SOURCE_BIIP }}</p>
+        <p>{{ SOURCE_BIOMON }}</p>
         <p>
-          Taškai – BIOMON duomenys (iki 2026-03-31) ir BIIP elektroninio medžioklės lapo įrašai (nuo
-          2025/2026 sezono). Einamojo sezono skaitiklis ir limitas – iš BIIP.
+          Taškai – BIOMON duomenys (iki 2026-03-31) ir BĮIP elektroninio medžioklės lapo įrašai (nuo
+          2025/2026 sezono). Einamojo sezono skaitiklis ir limitas – iš BĮIP.
         </p>
       </section>
 
@@ -51,7 +53,7 @@
       <section v-if="duplicates > 0">
         <h4 class="font-semibold text-gray-900">Galimi pasikartojimai</h4>
         <p>
-          Rasta {{ formatInt(duplicates) }} galimų pasikartojimų tarp BIOMON ir BIIP (ta pati diena,
+          Rasta {{ formatInt(duplicates) }} galimų pasikartojimų tarp BIOMON ir BĮIP (ta pati diena,
           iki 2 km); jie neištrinti.
         </p>
       </section>
@@ -59,7 +61,7 @@
       <section>
         <h4 class="font-semibold text-gray-900">Limitai</h4>
         <p>
-          Einamojo sezono limitas – iš BIIP. Ankstesnių sezonų limitai: {{ pastLimits }}. Oficialūs
+          Einamojo sezono limitas – iš BĮIP. Ankstesnių sezonų limitai: {{ pastLimits }}. Oficialūs
           sezono skaičiai skelbiami am.lrv.lt ir gali skirtis nuo čia rodomo taškų skaičiaus.
           <a
             :href="AM_WOLVES_URL"
@@ -101,6 +103,7 @@ import { computed, inject, nextTick, onBeforeUnmount, ref } from 'vue';
 import { WOLVES_CTX } from '@/composables/hunting/context';
 import { formatDateTime, formatInt, pluralLt } from '@/utils/hunting/dates';
 import { AM_WOLVES_URL, WOLF_LIMITS } from '@/utils/hunting/labels';
+import { SOURCE_BIIP, SOURCE_BIOMON } from '@/utils/hunting/hub/strings';
 
 const ctx = inject(WOLVES_CTX)!;
 const modal = ref<any>(null);
@@ -131,7 +134,7 @@ const paperText = computed(() => {
     `${formatInt(n)} ${pluralLt(n, ['įrašas', 'įrašai', 'įrašų'])} – popieriniais lapais po ` +
     `sezono pateiktos suvestinės${bySeason}. Jose nėra vietos ir tikrosios datos, viena eilutė ` +
     'gali reikšti kelis vilkus, todėl jie čia nerodomi ir neskaičiuojami. Oficialus sezono ' +
-    'skaičius dėl to gali būti didesnis.'
+    'skaičius dėl to gali skirtis.'
   );
 });
 

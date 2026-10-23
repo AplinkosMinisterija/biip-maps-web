@@ -13,7 +13,7 @@
         <h1
           id="hub-title"
           tabindex="-1"
-          class="text-[22px] font-bold leading-[30px] text-ink focus:outline-none"
+          class="text-2xl font-bold leading-8 text-ink focus:outline-none"
         >
           {{ title }}
         </h1>
@@ -34,7 +34,10 @@
           :aria-labelledby="`hub-group-${group.id}`"
           class="flex flex-col gap-4"
         >
-          <h2 :id="`hub-group-${group.id}`" class="text-xl font-bold leading-7 text-ink">
+          <h2
+            :id="`hub-group-${group.id}`"
+            class="border-b border-line-soft pb-2 text-xl font-bold leading-7 text-ink"
+          >
             {{ group.title }}
           </h2>
           <div class="hub-overview__grid">
@@ -49,7 +52,7 @@
               <p class="text-[13px] font-bold uppercase leading-5 tracking-wide text-brand">
                 {{ card.title }}
               </p>
-              <h3 :id="`hub-card-${card.topic}`" class="text-xl font-bold leading-7 text-ink">
+              <h3 :id="`hub-card-${card.topic}`" class="text-lg font-bold leading-[26px] text-ink">
                 {{ card.question }}
               </h3>
               <p
@@ -92,7 +95,9 @@
                   type="button"
                   :class="CTA_LINK"
                   :aria-label="`${S.overviewMap}: ${card.title}`"
-                  @click="ctx.setTopic(card.topic, { openTable: false })"
+                  @click="
+                    ctx.setTopic(card.topic, { openTable: false, season: headlineSeason(card) })
+                  "
                 >
                   {{ S.overviewMap }}
                   <svg
@@ -116,7 +121,9 @@
                   type="button"
                   :class="CTA_LINK"
                   :aria-label="`${S.overviewTable}: ${card.title}`"
-                  @click="ctx.setTopic(card.topic, { openTable: true })"
+                  @click="
+                    ctx.setTopic(card.topic, { openTable: true, season: headlineSeason(card) })
+                  "
                 >
                   {{ S.overviewTable }}
                 </button>
@@ -129,7 +136,7 @@
               aria-labelledby="hub-card-report"
               class="hub-overview__cta flex flex-col gap-3 rounded-lg bg-band p-5 md:p-6"
             >
-              <h3 id="hub-card-report" class="text-xl font-bold leading-7 text-ink">
+              <h3 id="hub-card-report" class="text-lg font-bold leading-[26px] text-ink">
                 {{ S.overviewReportTitle }}
               </h3>
               <p class="text-base leading-6 text-ink">{{ S.overviewReportText }}</p>
@@ -212,10 +219,12 @@ const props = defineProps({
 
 const ctx = inject(HUB_CTX)!;
 
-// Two groups (D8): the hunt itself, and the residents' reports.
+// Two groups (D8): the hunt itself, and the reports of damage and observations.
 const GROUPS: { id: string; title: string; topics: TopicId[] }[] = [
   { id: 'medziokle', title: 'Medžioklė', topics: ['vilkai', 'laimikiai', 'limitai'] },
-  { id: 'pranesimai', title: 'Gyventojų pranešimai', topics: ['zala', 'stebejimai'] },
+  // Observations come mostly from hunting-area users, so the label names the reports, not
+  // the reporters (CONTENT-08).
+  { id: 'pranesimai', title: 'Pranešimai apie žalą ir stebėjimus', topics: ['zala', 'stebejimai'] },
 ];
 
 // §2.2: "Medžioklės sezonas {season}" for the season containing the real Vilnius day.
@@ -297,6 +306,11 @@ const groups = computed(() =>
     cards: g.topics.map(cardOf).filter((c): c is OverviewCard => !!c),
   })),
 );
+
+// D19: the card's actions open the season of its headline number. A card without a number
+// (a sentence: before the wolf hunt starts, observations still loading) opens the topic's
+// own default.
+const headlineSeason = (card: OverviewCard) => (card.value ? card.season : undefined);
 
 // The season chip of a card's headline number (D10): only for figures that are not final.
 const badgeOf = (card: OverviewCard): Badge | undefined =>

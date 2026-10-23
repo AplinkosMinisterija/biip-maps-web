@@ -77,7 +77,7 @@
               </template>
               <template v-else-if="row.limit === DASH">
                 <span aria-hidden="true">{{ DASH }}</span>
-                <span class="sr-only">nepaskelbtas</span>
+                <span class="sr-only">limito šiame puslapyje nėra</span>
               </template>
               <template v-else>{{ row.limit }}</template>
             </td>
@@ -96,7 +96,7 @@
         vilkus, todėl į sumas jos neįtraukiamos.
       </li>
       <li v-if="rows.some((r) => r.limit === DASH)">
-        „{{ DASH }}“ – limitas tam sezonui nepaskelbtas.
+        „{{ DASH }}“ – šio sezono limito šiame puslapyje nėra.
       </li>
     </ul>
   </div>

@@ -42,19 +42,37 @@
             <th scope="col" :class="[TH, NUM]">Jaunikliai</th>
             <th scope="col" :class="[TH, NUM]">Patinai</th>
             <th scope="col" :class="[TH, NUM]">Patelės</th>
-            <th scope="col" :class="[TH, NUM, 'pr-0']">Paskutinis</th>
+            <th scope="col" :class="[TH, NUM, 'pr-0']">Paskutinio data</th>
           </tr>
         </thead>
         <tbody>
           <!-- Totals first (as every hub table): the national figures. -->
           <tr>
-            <th scope="row" :class="[TOTALS_CELL, STICKY_FIRST, 'pl-0']">Iš viso Lietuvoje</th>
+            <th scope="row" :class="[TOTALS_CELL, STICKY_FIRST, 'pl-0']">
+              Iš viso su žinoma vieta
+            </th>
             <td :class="[TOTALS_CELL, NUM]">{{ formatInt(totals.count) }}</td>
             <td :class="[TOTALS_CELL, NUM]">{{ formatInt(totals.adults) }}</td>
             <td :class="[TOTALS_CELL, NUM]">{{ formatInt(totals.juniors) }}</td>
             <td :class="[TOTALS_CELL, NUM]">{{ formatInt(totals.males) }}</td>
             <td :class="[TOTALS_CELL, NUM]">{{ formatInt(totals.females) }}</td>
             <td :class="[TOTALS_CELL, NUM, 'pr-0']">{{ totals.lastDay || DASH }}</td>
+          </tr>
+          <!-- A closed season: the official AM figure where the located total is read (J-02). -->
+          <tr v-if="reconcile">
+            <th scope="row" :class="[TD, TD_BG, STICKY_FIRST, 'pl-0 font-normal text-ink-muted']">
+              {{ reconcile.unknown === null ? 'Oficialus AM skaičius' : 'Vieta nežinoma' }}
+            </th>
+            <td :class="[TD, NUM, 'text-ink-muted']">
+              {{ formatInt(reconcile.unknown ?? reconcile.official) }}
+            </td>
+            <td colspan="5" :class="[TD, 'pr-0 text-xs text-ink-muted']">
+              {{
+                reconcile.unknown === null
+                  ? 'Skaičiuojama kitaip (žr. „Apie duomenis“).'
+                  : `Oficialus AM skaičius – ${formatInt(reconcile.official)}`
+              }}
+            </td>
           </tr>
           <tr v-for="row in visibleRows" :key="row.code ?? 'none'" :class="TR">
             <th
@@ -125,6 +143,8 @@ import { loadMunicipalityIndex, type MunicipalityIndex } from '@/utils/hunting/m
 import { formatInt } from '@/utils/hunting/dates';
 import { countByMunicipality, filterRecords, type MunicipalityCount } from '@/utils/hunting/wolves';
 import { DASH } from '@/utils/hunting/hub/topics/common';
+import { HUB_CTX } from '@/composables/hunting/hub/context';
+import { vilkaiReconcile } from '@/utils/hunting/hub/topics/vilkai';
 import { BTN_TEXT, BTN_TEXT_TOUCH } from '@/components/hunting/hub/shell/controls';
 import {
   FOOTNOTES,
@@ -163,6 +183,8 @@ const emptyRow = (code: number | null, name: string): Row => ({
 
 const ctx = inject(WOLVES_CTX)!;
 const { state, derived, data } = ctx;
+// The hub (optional): its snapshot meta holds the official AM count per season.
+const hub = inject(HUB_CTX, null);
 const mapLayers: any = inject('mapLayers');
 
 const index = shallowRef<MunicipalityIndex | null>(null);
@@ -239,6 +261,18 @@ const totals = computed<Row>(() => {
     if (!total.lastDay || c.lastDay > total.lastDay) total.lastDay = c.lastDay;
   });
   return total;
+});
+
+// The totals row ignores `sav`, so only attribute filters keep the official figure away.
+const reconcile = computed(() => {
+  const attrs = state.attrs.value;
+  if (attrs.age.length || attrs.sex.length || attrs.method.length) return null;
+  return vilkaiReconcile(
+    hub?.data.snapshot.value?.meta,
+    derived.intervalSeason.value,
+    ctx.currentSeason,
+    totals.value.count,
+  );
 });
 
 const selectedName = computed(() =>

@@ -100,6 +100,8 @@ export function useHubState(opts: HubStateOptions = {}): HubContext {
   const dimPicks = ref<Record<string, string>>({});
   const tablePick = ref<string | null>(null);
   const notice = ref<string | null>(null);
+  // A table link implied a dim (REGRESS-04): written back once the topic's data is there.
+  let impliedPending = false;
   // Read the URL before anything loads, so only the requested topic's files are fetched.
   applyQuery(route.query);
 
@@ -208,12 +210,17 @@ export function useHubState(opts: HubStateOptions = {}): HubContext {
     savPick.value = overview ? null : parseSav(queryString(query, 'sav'));
     const lentele = queryString(query, 'lentele');
     tablePick.value = overview || !lentele ? null : lentele;
-    const picks: Record<string, string> = {};
+    let picks: Record<string, string> = {};
     if (!live && !overview) {
       getTopic(topicId.value).dims.forEach((d) => {
         const value = queryString(query, d.key);
         if (value) picks[d.key] = value;
       });
+      const implied = getTopic(topicId.value).tableDims?.(tablePick.value, picks);
+      if (implied) {
+        picks = implied;
+        impliedPending = true;
+      }
     }
     dimPicks.value = picks;
     notice.value = null;
@@ -350,9 +357,15 @@ export function useHubState(opts: HubStateOptions = {}): HubContext {
         dropped = true;
       } else if (table !== tablePick.value) {
         // Embed fallback (§5.9): keep the pick, so the table comes back when the view offers
-        // it again, and write the table actually shown.
+        // it again, and write the table actually shown; say which one it is (REGRESS-04).
         dropped = true;
+        const shown = view.value.tables.find((t) => t.id === table);
+        if (!notice.value && shown) notice.value = S.noticeTableFallback(shown.label);
       }
+    }
+    if (impliedPending && filesReady.value) {
+      impliedPending = false;
+      dropped = true;
     }
     if (dropped && route.path === routePath) scheduleReplace();
   }
@@ -384,7 +397,10 @@ export function useHubState(opts: HubStateOptions = {}): HubContext {
     return { season: season.value, fromRange: false };
   }
 
-  function setTopic(id: TopicId, opts: { openTable?: boolean; table?: string } = {}) {
+  function setTopic(
+    id: TopicId,
+    opts: { openTable?: boolean; table?: string; season?: number } = {},
+  ) {
     const target = hasTopic(id) ? id : DEFAULT_TOPIC;
     if (target === topicId.value) return;
     let carry = carryFromCurrent();
@@ -397,6 +413,11 @@ export function useHubState(opts: HubStateOptions = {}): HubContext {
     if (carry && meta.value && targetDef.kind === 'snapshot') {
       const state = targetDef.seasonState(carry.season, meta.value);
       if (state === 'dalinis' || state === 'preliminarus') carry = null;
+    }
+    // D19: an Apžvalga card opens the season of its headline number (a live target gets it
+    // as `sezonas`; a snapshot target validates it like any other carried season).
+    if (opts.season !== undefined && Number.isInteger(opts.season)) {
+      carry = { season: opts.season, fromRange: false };
     }
     topicId.value = target;
     dimPicks.value = {};
@@ -432,6 +453,8 @@ export function useHubState(opts: HubStateOptions = {}): HubContext {
     // offer falls back to the default one (`tableOf`, embed only).
     tablePick.value =
       opts.openTable && !overview ? opts.table || targetDef.defaultTable || null : null;
+    const implied = targetDef.tableDims?.(tablePick.value, dimPicks.value);
+    if (implied) dimPicks.value = implied;
     validateSeason();
     // The season changed with the topic: say which one is shown and why (J-06).
     if (!notice.value && fromSeason !== null && meta.value && targetDef.kind === 'snapshot') {
@@ -476,6 +499,9 @@ export function useHubState(opts: HubStateOptions = {}): HubContext {
   function setTable(tab: string | null) {
     if (isOverview()) return;
     tablePick.value = tab;
+    // E.g. the WP view switch opening Žala's livestock table: the dims it needs (REGRESS-04).
+    const implied = isLive() ? null : topic.value.tableDims?.(tab, dimPicks.value);
+    if (implied) dimPicks.value = implied;
     scheduleReplace();
   }
 

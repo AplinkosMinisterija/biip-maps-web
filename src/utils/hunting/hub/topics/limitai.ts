@@ -22,6 +22,7 @@ import type {
 } from '../types';
 import {
   DASH,
+  NBSP,
   NONE,
   NOTE_NO_MPV,
   NOTE_POOLED,
@@ -54,26 +55,31 @@ export const CLASSES = {
   tankis: [3.5, 5, 7, 10], // limit per 10 000 ha of MPV area
 };
 
+// AM's own share (a whole number in meta.static), with the locale's NBSP and decimal comma.
+const amPctText = (pct: number) => `${String(pct).replace('.', ',')}${NBSP}%`;
+
 const T = {
   metricUsed: 'Panaudota, %',
   metricDensity: 'Limitas / 10 000 ha',
   legendUsed: (season: number) => `Panaudota limito dalis, % · ${seasonLabel(season)}`,
   legendDensity: (season: number) =>
-    `Briedžių limitas per 10 000 ha MPV ploto · ${seasonLabel(season)}`,
+    `Briedžių limitas per 10 000 ha medžioklės plotų · ${seasonLabel(season)}`,
   unsetLegend: 'Limitas nenustatytas',
   unsetShort: 'limitas nenustatytas',
   noLimit: 'Limitas nenustatytas',
   orderTooltip:
-    'Skirtumas tarp įsakymo sumos ir MPV naudotojams paskirstyto limito aiškinamasi su AAD.',
+    'Įsakymu patvirtinta visos Lietuvos suma. Čia „leidžiama sumedžioti“ ir „panaudota“ skaičiuojami nuo MPV naudotojams paskirstyto limito; AM procentus skaičiuoja nuo įsakymo sumos.',
   overUse:
-    'Sumedžiota daugiau nei paskirstyta: dalis MPV viršijo limitą arba laimikiai užregistruoti be limito. Detalės – AAD.',
+    'Sumedžiota daugiau nei paskirstyta: kai kuriuose MPV sumedžiota daugiau, nei leido limitas, arba laimikiai užregistruoti be limito. Išsamiau – AAD.',
+  allocatedTooltip:
+    'Tiek briedžių leidžiama sumedžioti: limitas, paskirstytas medžioklės plotų naudotojams.',
   usedLater: (season: number) => `bus žinomas po ${season + 1}-05-15`,
   registered: (asOf: string, n: number) =>
-    `El. žurnale iki ${asOf} užregistruota: ${formatInt(n)} (preliminarūs).`,
+    `El. žurnale iki ${asOf} užregistruota sumedžiotų briedžių: ${formatInt(n)} (preliminarus skaičius).`,
   amPct: (pct: number, order: number) =>
-    `AM skelbė ${pct} % – nuo įsakymu patvirtintų ${formatInt(order)}.`,
+    `AM skelbia ${amPctText(pct)}, nes skaičiuoja nuo įsakymu patvirtinto limito (${formatInt(order)}).`,
   left: (n: number) =>
-    `Nepanaudotas likutis: ${formatInt(n)} (sumuojamas kiekviename MPV atskirai).`,
+    `Nepanaudotas likutis – ${formatInt(n)}: kiekvieno MPV nepanaudoto limito suma (MPV, kuriuose sumedžiota daugiau, nei leido limitas, neįtraukti).`,
   ofLimit: (used: number, lim: number) =>
     `${formatInt(used)} iš ${formatInt(lim)} (MPV naudotojams paskirstyto limito)`,
 };
@@ -103,7 +109,6 @@ const emptyAgg = (): Agg => ({
 });
 
 // "leidžiama sumedžioti 3 802 briedžius" (accusative).
-const P_MOOSE_ACC: PluralForms = ['briedį', 'briedžius', 'briedžių'];
 
 const lim = (a: Agg) => a.limM + a.limFj;
 const used = (a: Agg) => a.usedM + a.usedFj;
@@ -177,14 +182,11 @@ function answer(meta: Meta, a: Agg, season: number, muni: Municipality | null, r
     return `${muni.name}: ${label} sezonui briedžių limitas nenustatytas.`;
   }
   if (isCurrent(season, meta)) {
-    if (muni) {
-      return `${muni.name} ${label} sezonui MPV naudotojams paskirstytas limitas – ${formatInt(lim(a))} ${plural(lim(a), P_MOOSE)}.`;
-    }
-    // Two lines on a phone, so the phone peek's next line can show last season's use
-    // (JOURNEYS-04, CONTENT-04): the number is the limit allocated to the MPV users.
+    // The number is the limit allocated to the hunting-area users (JOURNEYS-04, CONTENT-04).
     const order = orderOf(meta, season);
-    const tail = order !== null ? ` (įsakymu patvirtinta ${formatInt(order)})` : '';
-    const body = `${label} sezoną leidžiama sumedžioti ${formatInt(lim(a))} ${plural(lim(a), P_MOOSE_ACC)}${tail}.`;
+    const tail = !muni && order !== null ? ` (įsakymu patvirtinta ${formatInt(order)})` : '';
+    const body = `${label} sezonui medžioklės plotų naudotojams paskirstytas limitas – ${formatInt(lim(a))} ${plural(lim(a), P_MOOSE)}${tail}.`;
+    if (muni) return `${muni.name}: ${body}`;
     // J-15: last season's use, so the running season's panel answers without a switch.
     const closed = closedSeason(meta);
     const c = closed === null || !rows ? null : aggOf(rows, closed, null);
@@ -193,7 +195,7 @@ function answer(meta: Meta, a: Agg, season: number, muni: Municipality | null, r
       : body;
   }
   const body = `${label} sezone sumedžiota ${formatInt(used(a))} iš ${formatInt(lim(a))} paskirstyto limito (${pctText(used(a), lim(a))}).`;
-  return muni ? `${muni.name} ${body}` : body;
+  return muni ? `${muni.name}: ${body}` : body;
 }
 
 function kpis(meta: Meta, a: Agg, season: number, muni: Municipality | null): KpiDef[] {
@@ -201,10 +203,10 @@ function kpis(meta: Meta, a: Agg, season: number, muni: Municipality | null): Kp
   if (isCurrent(season, meta)) {
     const list = [
       // J-15: the tile answers the question; the tooltip says what the number is.
-      kpi('allocated', 'Leidžiama sumedžioti', formatInt(lim(a)), {
+      kpi('allocated', 'Paskirstytas limitas', formatInt(lim(a)), {
         sub: `patinai ${formatInt(a.limM)} · patelės ir jaunikliai ${formatInt(a.limFj)}`,
-        tooltip: 'Limitas, paskirstytas medžioklės plotų naudotojams (MPV naudotojams).',
-        ariaLabel: `Leidžiama sumedžioti (paskirstyta MPV naudotojams) ${formatInt(lim(a))}: patinai ${formatInt(a.limM)}, patelės ir jaunikliai ${formatInt(a.limFj)}`,
+        tooltip: T.allocatedTooltip,
+        ariaLabel: `Paskirstytas limitas ${formatInt(lim(a))}: patinai ${formatInt(a.limM)}, patelės ir jaunikliai ${formatInt(a.limFj)}`,
       }),
     ];
     const order = orderOf(meta, season);
@@ -272,10 +274,11 @@ function chart(meta: Meta, rows: LimitRow[], muni: Municipality | null): ChartDe
   });
   return {
     kind: 'columns',
-    title: 'Paskirstyta ir sumedžiota pagal sezonus',
+    title: 'Paskirstytas limitas ir sumedžiota pagal sezonus',
+    axisLabel: 'Sezonas',
     bars,
     series: [
-      { id: 'allocated', label: 'Paskirstyta' },
+      { id: 'allocated', label: 'Paskirstytas limitas' },
       { id: 'used', label: 'Sumedžiota' },
     ],
   };
@@ -391,7 +394,7 @@ function municipalityTable(meta: Meta, rows: LimitRow[], season: number): TableD
     num('mpv', 'MPV su limitu', (a) => a.mpvWithLimit),
     num('limM', 'Limitas: patinai', (a) => a.limM),
     num('limFj', 'Limitas: patelės ir jaunikliai', (a) => a.limFj),
-    num('lim', 'Limitas iš viso', lim),
+    num('lim', 'Paskirstytas limitas', lim),
   ];
   if (!current) {
     columns.push(
@@ -474,7 +477,7 @@ function seasonTable(meta: Meta, rows: LimitRow[], muni: Municipality | null): T
     },
     {
       id: 'lim',
-      label: 'Paskirstyta MPV naudotojams',
+      label: 'Paskirstytas limitas',
       numeric: true,
       value: (r) => lim(r.a),
       display: (r) => formatInt(lim(r.a)),
@@ -494,7 +497,9 @@ function seasonTable(meta: Meta, rows: LimitRow[], muni: Municipality | null): T
   if (data.some((r) => r.current)) dashes.push('sezonas vyksta, panaudojimas dar nežinomas');
   if (data.some((r) => r.order === null)) {
     dashes.push(
-      muni ? 'įsakymu tvirtinama visos Lietuvos suma' : 'įsakymo suma tam sezonui nepaskelbta',
+      muni
+        ? 'įsakymu tvirtinama visos Lietuvos suma'
+        : 'šio sezono įsakymo sumos šiame puslapyje nėra',
     );
   }
   return {
@@ -503,7 +508,7 @@ function seasonTable(meta: Meta, rows: LimitRow[], muni: Municipality | null): T
     title: `Briedžių limitai pagal sezonus · ${muni ? muni.name : 'Lietuva'}`,
     columns,
     rows: data,
-    footnotes: dashes.length ? [`„${DASH}“ – ${dashes.join('; ')}.`] : [],
+    footnotes: dashes.length ? [`${DASH} – ${dashes.join('; ')}.`] : [],
     csvName: csvName('briedziu-limitai', 'sezonai', seasonsDesc(meta)[0], code),
   };
 }
@@ -578,13 +583,14 @@ export function overview(data: SnapshotData): OverviewCard {
     state: seasonState(season, meta),
     answer: answer(meta, a, season, null),
   };
+  const lines: string[] = [];
   if (isCurrent(season, meta)) {
     const order = orderOf(meta, season);
     result.value = formatInt(lim(a));
+    // One answer to the question; the order sum goes to the context lines, named (CONTENT-07).
     // Full form: the overview is often the first place a visitor meets the term (OVERVIEW-21).
-    result.unit =
-      'briedžių limitas medžioklės plotų naudotojams' +
-      (order !== null ? ` (įsakymu patvirtinta ${formatInt(order)})` : '');
+    result.unit = 'briedžių paskirstyta medžioklės plotų naudotojams';
+    if (order !== null) lines.push(`Įsakymu patvirtintas limitas – ${formatInt(order)}.`);
   } else {
     result.value = formatInt(used(a));
     result.outOf = `iš ${formatInt(lim(a))}`;
@@ -593,12 +599,15 @@ export function overview(data: SnapshotData): OverviewCard {
   const closed = closedSeason(meta);
   if (closed !== null && closed !== season) {
     const c = aggOf(rows, closed, null);
-    // One decimal, like the wolves share on the next card (OVERVIEW-25); panels keep theirs.
-    const r = ratio(used(c), lim(c));
-    result.lines = [
-      `${seasonLabel(closed)} sezone sumedžiota ${formatInt(used(c))} iš ${formatInt(lim(c))} paskirstyto limito (${r === null ? DASH : formatPct(r, 1)}).`,
-    ];
+    // Whole percent, as the panel, the table and the map show the same share (CONTENT-05).
+    const amPct = meta.static.moose.amUsePct[`${closed}`];
+    const am =
+      typeof amPct === 'number' ? ` – AM skaičiuoja nuo įsakymo sumos: ${amPctText(amPct)}` : '';
+    lines.push(
+      `${seasonLabel(closed)} sezone sumedžiota ${formatInt(used(c))} iš ${formatInt(lim(c))} (${pctText(used(c), lim(c))})${am}.`,
+    );
   }
+  if (lines.length) result.lines = lines;
   return result;
 }
 
@@ -640,7 +649,7 @@ export const metricDim: DimDef = {
 export const about = {
   source: ['BĮIP: MPV naudotojams paskirstyti briedžių limitai ir jų laimikiai.'],
   meaning: [
-    'Limitą nustato savivaldybių limitų komisijos, tvirtina aplinkos ministras. Patinai ir patelės su jaunikliais – atskiri limitai. Panaudota – sumedžiota pagal tą limitą, įskaitant ataskaitas, pateiktas po sezono (iki gegužės 15 d.). Likutis – kiekviename MPV nepanaudotas limitas, sumuojamas be MPV, kurie limitą viršijo.',
+    'Limitą nustato savivaldybių limitų komisijos, tvirtina aplinkos ministras. Patinai ir patelės su jaunikliais – atskiri limitai. Panaudota – sumedžiota pagal tą limitą, įskaitant ataskaitas, pateiktas po sezono (iki gegužės 15 d.). Likutis – kiekviename MPV nepanaudotas limitas, sumuojamas be MPV, kuriuose sumedžiota daugiau, nei leido limitas.',
     ATTRIBUTION_RULE,
   ],
   missing: [

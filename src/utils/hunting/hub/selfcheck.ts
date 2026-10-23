@@ -1165,13 +1165,13 @@ function runLiveTopicChecks(check: Check, eq: Eq) {
     if (common.indexOf(ABOUT_LOCALE_RULE) < 0) problems.push('no ABOUT_LOCALE_RULE');
     forbiddenWordsIn([texts]).forEach((word) => problems.push(`"${word}"`));
     const counts = [about.source, about.meaning, about.missing, about.compare].map((l) => l.length);
-    if (JSON.stringify(counts) !== JSON.stringify([2, 4, 2, 2])) {
+    if (JSON.stringify(counts) !== JSON.stringify([2, 4, 2, 1])) {
       problems.push(`sections ${counts.join('/')}`);
     }
-    // Apžvalga states its own rules too (OVERVIEW-27: the Stebėjimai card shows exact places).
-    const others = TOPICS.filter(
-      (t) => t.id !== 'stebejimai' && t.id !== 'apzvalga' && t.aboutCommon,
-    ).map((t) => t.id);
+    // Apžvalga states its own rules too (OVERVIEW-27: the Stebėjimai card shows exact places),
+    // and so does Vilkai (CONTENT-03: one point and one row per wolf).
+    const own = ['stebejimai', 'apzvalga', 'vilkai'];
+    const others = TOPICS.filter((t) => own.indexOf(t.id) < 0 && t.aboutCommon).map((t) => t.id);
     if (others.length) problems.push(`aboutCommon on ${others.join(', ')}`);
     return problems.length === 0 || problems.join('; ');
   });
@@ -1518,7 +1518,8 @@ export function runHubDataChecks(data: SnapshotData | null | undefined): SelfChe
       return missing.length === 0 || `"${answer}"`;
     });
   };
-  // Apžvalga keeps every number it showed before the card redesign (exact for 2026-10-09).
+  // Apžvalga keeps every number it showed before the card redesign (exact for 2026-10-09);
+  // shares in whole percent, as the topics show them (CONTENT-05).
   const card = (id: string, expected: string[]) => {
     const topic = TOPICS.find((t) => t.id === id);
     if (!topic?.overview || topic.files.some((f) => f !== 'meta' && (data as any)[f] === undefined))
@@ -1534,9 +1535,9 @@ export function runHubDataChecks(data: SnapshotData | null | undefined): SelfChe
   };
   if (exactDay) {
     card('laimikiai', ['129 485', '8,5 %', '9 381']);
-    card('limitai', ['3 802', '3 935', '2 372', '4 177', '56,8 %']);
+    card('limitai', ['3 802', '3 935', '2 372', '4 177', '57 %']);
     card('zala', ['503', '226', '283', 'Kėdainių r. sav. (92)']);
-    card('vilkai', ['275', '307', '89,6 %']);
+    card('vilkai', ['275', '307', '90 %']);
   }
   headline('laimikiai', 2025, ['129 485', '8,5 %']);
   headline('limitai', 2025, ['2 372', '4 177', '57 %']);

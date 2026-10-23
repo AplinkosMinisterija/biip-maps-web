@@ -63,7 +63,7 @@
       <dt class="text-ink-muted">{{ SS.cardCount }}:</dt>
       <dd class="tabular-nums">{{ countText(record) }}</dd>
       <dt class="text-ink-muted">{{ SS.cardFact }}:</dt>
-      <dd>{{ factText(record) }}</dd>
+      <dd class="[overflow-wrap:normal]">{{ factText(record) }}</dd>
       <dt class="text-ink-muted">{{ SS.cardMunicipality }}:</dt>
       <dd>{{ record.municipality || NOT_SET_LABEL }}</dd>
       <dt class="text-ink-muted">{{ SS.cardEldership }}:</dt>

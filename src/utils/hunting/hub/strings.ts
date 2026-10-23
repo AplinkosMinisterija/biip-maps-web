@@ -65,6 +65,21 @@ export const ABOUT_LOCALE_RULE =
   'Datos rašomos formatu metai-mėnuo-diena (pvz., 2026-10-09), laikas – 24 valandų formatu, ' +
   'trupmenos – su kableliu.';
 
+// The sources in plain words, once per About dialog (JOURNEYS-14): the dialog opens
+// "Šaltinis ir atnaujinimas" with the BĮIP line, Vilkai adds the BIOMON line. The same
+// expansions are the titles of the acronyms in the provenance line.
+// TODO(product owner): confirm the official names before the release.
+export const SOURCE_BIIP =
+  'BĮIP – Biologinės įvairovės informacinė platforma (biip.lt): čia medžiotojai pildo ' +
+  'elektroninį medžioklės lapą, o gyventojai teikia pranešimus.';
+export const SOURCE_BIOMON =
+  'BIOMON – vilkų sumedžiojimo vietų duomenys iki 2026-03-31 (nuo tada – BĮIP el. medžioklės ' +
+  'lapas).';
+export const SOURCE_TITLES: Record<string, string> = {
+  BĮIP: 'Biologinės įvairovės informacinė platforma (biip.lt)',
+  BIOMON: 'Vilkų sumedžiojimo vietų duomenys iki 2026-03-31',
+};
+
 // Attribution rule, part of every About "Ką reiškia skaičiai" (§3.5).
 export const ATTRIBUTION_RULE =
   'Savivaldybės skaičiai – jai priskirtų medžioklės plotų vienetų (MPV) suma. Kiekvienas MPV ' +
@@ -107,11 +122,12 @@ export const S = {
   segmentFilters: 'Filtrai',
   showOnMap: 'Rodyti žemėlapyje',
   // Apžvalga (D8).
-  overviewLead: 'Prie kiekvieno skaičiaus nurodyta, kurio sezono jis.',
+  overviewLead:
+    'Kol einamojo sezono skaičiai nepilni, kortelėje rodomas ankstesnis sezonas – jis nurodytas virš skaičiaus.',
   overviewMap: 'Rodyti žemėlapyje',
   overviewTable: 'Rodyti lentelę',
-  overviewReportTitle: 'Pastebėjote žalą ar stambų plėšrūną?',
-  overviewReportText: 'Praneškite – pranešimai patenka į šiuos duomenis.',
+  overviewReportTitle: 'Pastebėjote žalą, stambų plėšrūną ar stumbrą?',
+  overviewReportText: 'Praneškite – jūsų pranešimai papildo šiuos duomenis.',
   overviewReportDamage: 'Pranešti apie žalą',
   overviewReportObservation: 'Pildyti stebėjimo anketą',
   showInTable: 'Rodyti lentelėje',
@@ -152,7 +168,7 @@ export const S = {
   // `at` = 'yyyy-MM-dd HH:mm' (Vilnius).
   provenanceLive: (at: string) => `Duomenys atnaujinti ${at} · BĮIP ir BIOMON`,
   provenanceOverview: (date: string) =>
-    `Duomenys ${date} būklei · vilkų ir stebėjimų – tiesiogiai iš BĮIP`,
+    `Duomenys ${date} būklei · vilkai ir stebėjimai – tiesiogiai iš BĮIP`,
   provenanceLink: 'Apie duomenis', // appended as a link after " · "
   provenanceSnapshotTitle: (date: string) =>
     `Rodoma ${date} parengta BĮIP suvestinių kopija; vėlesni įrašai į ją nepatenka.`,
@@ -175,6 +191,9 @@ export const S = {
       : state === 'vyksta'
         ? `${topic}: rodomas ${season} sezonas – jis dar vyksta, skaičiai keisis.`
         : `${topic}: rodomas ${season} sezonas (${BADGE_LABELS_AFTER_SEASON[state]}).`,
+  // A linked table this selection does not offer (embed, §5.9): the one shown instead.
+  noticeTableFallback: (shown: string) =>
+    `Nuorodoje nurodyta lentelė šiam pasirinkimui neskelbiama – rodoma lentelė „${shown}“.`,
   noticeSeasonMissing: (topic: string, season: string, fallback: string) =>
     `${topic} duomenų už ${season} nėra – rodomas ${fallback} sezonas.`,
 } as const;
