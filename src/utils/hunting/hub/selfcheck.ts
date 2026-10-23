@@ -43,7 +43,6 @@ import {
   ABOUT_LOCALE_RULE,
   ATTRIBUTION_RULE,
   BADGE_LABELS,
-  BANDOMOJI_TOOLTIP,
   S,
   TOPIC_ORDER,
   TOPIC_SUBTITLES,
@@ -557,7 +556,6 @@ export function uiTexts(): string[] {
     ...textsOf(S as unknown as Record<string, unknown>),
     ...textsOf(stebStrings?.SS),
     ...Object.values(BADGE_LABELS),
-    BANDOMOJI_TOOLTIP,
     ...Object.values(TOPIC_TABS),
     ...Object.values(TOPIC_SUBTITLES),
     ...TOPICS.flatMap((t) => [

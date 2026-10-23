@@ -36,7 +36,6 @@
       <!-- Embedded, the WP header line shows the provenance once (with the staging marker). -->
       <div v-if="!ctx.embed" class="flex flex-col gap-0.5 border-t border-line-soft pt-2">
         <HuntingHubShellProvenanceLine :provenance="view.provenance" :large="mobile" />
-        <HuntingHubShellPrototypeLine :dismissible="mobile" />
       </div>
     </template>
 

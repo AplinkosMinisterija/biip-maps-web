@@ -5,9 +5,6 @@
 import type { PluralForms } from '@/utils/hunting/dates';
 import type { Badge, SeasonState, TopicId } from './types';
 
-// Link of the staging line "Pastabos apie puslapį"; the link is hidden while empty.
-export const FEEDBACK_URL = '';
-
 export const TOPIC_ORDER: TopicId[] = [
   'apzvalga',
   'vilkai',
@@ -40,17 +37,13 @@ export const BADGE_LABELS: Record<Badge, string> = {
   vyksta: 'Sezonas vyksta',
   preliminarus: 'Preliminarūs duomenys',
   dalinis: 'Dalinis sezonas',
-  bandomoji: 'Bandomoji aplinka',
 };
 // Right after a season label ("2026/2027 sezonas [vyksta]"): the season is already named.
 export const BADGE_LABELS_AFTER_SEASON: Record<Badge, string> = {
   vyksta: 'vyksta',
   preliminarus: 'preliminarūs duomenys',
   dalinis: 'dalinis sezonas',
-  bandomoji: 'Bandomoji aplinka',
 };
-export const BANDOMOJI_TOOLTIP =
-  'Rodomi bandomosios sistemos duomenys; jie gali skirtis nuo oficialių.';
 
 export const ABOUT_HEADINGS = {
   source: 'Šaltinis ir atnaujinimas',
@@ -174,10 +167,6 @@ export const S = {
   provenanceSnapshotTitle: (date: string) =>
     `Rodoma ${date} parengta BĮIP suvestinių kopija; vėlesni įrašai į ją nepatenka.`,
   provenanceCsv: (date: string) => `# Duomenys: ${date} momentinė kopija; BĮIP`,
-  // The staging marker (standalone app off production only; embedded, the WP header has it).
-  prototypeLine: 'Bandomoji aplinka',
-  prototypeFeedback: 'Pastabos apie puslapį',
-  prototypeClose: 'Uždaryti pranešimą apie bandomąją aplinką',
   documentTitle: (tab: string) => `${tab} – Medžioklės duomenys – BĮIP žemėlapiai`,
   mapRegion: (answer: string) =>
     `${answer ? `Žemėlapis: ${answer.replace(/\.$/, '')}` : 'Žemėlapis'}. Tie patys duomenys – rodinyje „Lentelė“.`,

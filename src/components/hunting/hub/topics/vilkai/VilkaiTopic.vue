@@ -112,26 +112,13 @@
           :ref="(node) => trackPanel(node as HTMLElement | null)"
           class="relative overflow-hidden p-4 flex flex-col gap-3"
         >
-          <!-- The badge shares the H1 row so the status line keeps the full panel width and
-               the histogram stays above y = 600 at 1440 × 900 (SPEC2 §14). -->
-          <div class="flex items-start justify-between gap-2">
-            <h1
-              id="hub-vilkai-title"
-              tabindex="-1"
-              class="text-xl font-semibold text-ink focus:outline-none"
-            >
-              {{ VILKAI_H1 }}
-            </h1>
-            <span
-              v-if="showStagingBadge"
-              class="mt-1 shrink-0"
-              :class="badgeClass"
-              :title="BANDOMOJI_TOOLTIP"
-              :aria-label="`${BADGE_LABELS.bandomoji}. ${BANDOMOJI_TOOLTIP}`"
-            >
-              {{ BADGE_LABELS.bandomoji }}
-            </span>
-          </div>
+          <h1
+            id="hub-vilkai-title"
+            tabindex="-1"
+            class="text-xl font-semibold text-ink focus:outline-none"
+          >
+            {{ VILKAI_H1 }}
+          </h1>
           <!-- Plain wrappers: the branches swap async components, keep their parents stable. -->
           <div v-if="fallback" class="flex flex-col gap-3">
             <HuntingWolvesStatusCard variant="line" />
@@ -164,16 +151,6 @@
               <button type="button" :class="linkButton" @click="openAbout">
                 {{ S.provenanceLink }}
               </button>
-            </p>
-            <p v-if="showStagingBadge">
-              {{ S.prototypeLine }}
-              <template v-if="FEEDBACK_URL">
-                ·
-                <a :href="FEEDBACK_URL" target="_blank" rel="noopener" :class="linkButton">
-                  {{ S.prototypeFeedback }}
-                  <span class="sr-only">(atidaroma naujame lange)</span>
-                </a>
-              </template>
             </p>
           </footer>
           <HuntingWolvesDebugPanel v-if="ctx.debug" />
@@ -332,11 +309,8 @@
         @detent="(detent: SheetDetent) => (sheetDetent = detent)"
       >
         <template #status>
-          <div v-if="!loadingData" class="flex items-start gap-2">
-            <div class="flex-1 min-w-0"><HuntingWolvesStatusCard variant="line" /></div>
-            <span v-if="showStagingBadge" :class="badgeClass" :title="BANDOMOJI_TOOLTIP">
-              {{ BADGE_LABELS.bandomoji }}
-            </span>
+          <div v-if="!loadingData" class="min-w-0">
+            <HuntingWolvesStatusCard variant="line" />
           </div>
         </template>
         <HuntingHubTopicsVilkaiVilkaiFallback
@@ -344,29 +318,6 @@
           :snapshot="fallbackSnapshot"
           @view="(view: TopicView) => (fallbackView = view)"
         />
-        <p
-          v-if="showStagingBadge && !prototypeDismissed"
-          class="flex items-center gap-2 text-xs text-ink-muted"
-        >
-          <span class="flex-1">
-            {{ S.prototypeLine }}
-            <template v-if="FEEDBACK_URL">
-              ·
-              <a :href="FEEDBACK_URL" target="_blank" rel="noopener" :class="linkButton">
-                {{ S.prototypeFeedback }}
-              </a>
-            </template>
-          </span>
-          <button
-            type="button"
-            :aria-label="S.prototypeClose"
-            class="w-11 h-11 flex items-center justify-center rounded text-gray-700 hover:bg-gray-100"
-            :class="focusRing"
-            @click="dismissPrototype"
-          >
-            <UiIcon name="close" :size="16" aria-hidden="true" />
-          </button>
-        </p>
       </HuntingWolvesMobileSheet>
       <!-- Embedded, the snapshot fallback's table from the WP view switch: below the chip
            row, over the map and the sheet, as cards (D7). -->
@@ -477,14 +428,7 @@ import {
   mobileHeader,
   tableReplacesMap,
 } from '@/utils/hunting/hub/layout';
-import {
-  ABOUT_HEADINGS,
-  BADGE_LABELS,
-  BANDOMOJI_TOOLTIP,
-  FEEDBACK_URL,
-  S,
-  TOPIC_TABS,
-} from '@/utils/hunting/hub/strings';
+import { ABOUT_HEADINGS, S, TOPIC_TABS } from '@/utils/hunting/hub/strings';
 import type { SnapshotData, TableDef, TopicView } from '@/utils/hunting/hub/types';
 import type { SortState } from '@/components/hunting/hub/table/sort';
 import { embedFocusAllowed } from '@/utils/hunting/hub/embed';
@@ -519,18 +463,12 @@ const embed = !!hub?.embed;
 const isProductionHost = hub ? hub.isProductionHost : window.location.hostname === 'maps.biip.lt';
 const isMobile: Ref<boolean> = hub ? hub.isMobile : useMediaQuery('(max-width: 767px)');
 const { width } = useWindowSize();
-// The live tab always reads the environment's own API, so the standalone app marks every
-// non-production host "Bandomoji aplinka" (SPEC2 §5). Embedded, the WP header line is the one
-// place of that marker (and of the provenance), so the panel shows neither.
-const showStagingBadge = !isProductionHost && !embed;
 
 // Standalone "Žemėlapis | Lentelė" switch: the segmented control of the vocabulary.
 const viewButton = `${SEG_ITEM} gap-2`;
 const viewButtonActive = SEG_ITEM_ON;
 const viewButtonIdle = '';
 const linkButton = `font-semibold text-brand underline rounded ${focusRing}`;
-const badgeClass =
-  'shrink-0 rounded border border-gray-400 bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-800';
 
 // ---- Wolves context, as wolves.vue createContext() (SPEC2 §6.2).
 const wolfDraft = ref<{ total: number; date: string } | null>(null);
@@ -884,23 +822,6 @@ watch(tableOpen, (open, wasOpen) => {
 // ---- About: the wolves dialog with the comparison paragraph.
 const about = ref<{ open: () => void } | null>(null);
 const openAbout = () => about.value?.open();
-
-// ---- Mobile prototype note, dismissed once per browser (SPEC2 §4.3).
-const PROTOTYPE_KEY = 'hunting-hub:prototype-dismissed';
-const prototypeDismissed = ref(false);
-try {
-  prototypeDismissed.value = window.localStorage.getItem(PROTOTYPE_KEY) === '1';
-} catch (err) {
-  prototypeDismissed.value = false;
-}
-function dismissPrototype() {
-  prototypeDismissed.value = true;
-  try {
-    window.localStorage.setItem(PROTOTYPE_KEY, '1');
-  } catch (err) {
-    // Storage blocked: the note stays hidden for this visit only.
-  }
-}
 
 // ---- UiMap controls: keep them clear of the bars, the rail/drawer and the sheet. The map
 // is the shell's element, so the state goes on <body> as classes (removed on unmount).
