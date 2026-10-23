@@ -1,4 +1,5 @@
-// Display helpers for table and card text (display only: the CSV keeps the source strings).
+// Display helpers for table and card text; the Stebėjimai CSV uses `mpvName` too, so the file
+// spells an MPV as the screen does (REGRESS-08).
 
 const QUOTED_MPV = /^["„“”](.*)["“”]\s*MPV$/;
 

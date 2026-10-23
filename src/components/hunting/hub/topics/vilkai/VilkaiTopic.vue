@@ -98,14 +98,20 @@
         </div>
       </div>
 
-      <!-- Panel: the answer first, the chart right under the KPIs (SPEC2 §7). -->
+      <!-- Panel: the answer first, the chart right under the KPIs (SPEC2 §7); as tall as its
+           content, up to the bottom of the frame (D18). -->
       <section
         v-if="!railed"
         id="hub-panel"
+        ref="panelEl"
         aria-labelledby="hub-vilkai-title"
-        class="absolute left-[var(--hub-panel-left)] top-[calc(var(--hub-top)+8px)] bottom-2 w-[var(--hub-panel-w)] z-30 bg-white rounded-lg shadow-lg overflow-y-auto"
+        class="absolute left-[var(--hub-panel-left)] top-[calc(var(--hub-top)+8px)] max-h-[calc(100%-var(--hub-top)-16px)] w-[var(--hub-panel-w)] z-30 bg-white rounded-lg shadow-lg overflow-y-auto overscroll-contain"
+        :class="panelMore ? MORE_BELOW_MASK : ''"
       >
-        <div class="p-4 flex flex-col gap-3">
+        <div
+          :ref="(node) => trackPanel(node as HTMLElement | null)"
+          class="relative overflow-hidden p-4 flex flex-col gap-3"
+        >
           <!-- The badge shares the H1 row so the status line keeps the full panel width and
                the histogram stays above y = 600 at 1440 × 900 (SPEC2 §14). -->
           <div class="flex items-start justify-between gap-2">
@@ -174,30 +180,18 @@
         </div>
       </section>
 
-      <!-- ≥ 1280 px with the table open: the panel collapses to a 56 px rail (SPEC2 §4.1). -->
+      <!-- ≥ 1280 px with the table open: the panel collapses to the 56 px rail (D14), the same
+           floating rail as the other topics; it closes the table. -->
       <aside
         v-else
         id="hub-panel"
         aria-label="Suvestinė"
-        class="absolute left-0 top-[var(--hub-top)] bottom-0 w-14 z-30 bg-white shadow-lg flex flex-col items-center gap-3 py-3"
+        class="absolute left-[var(--hub-panel-left)] top-[calc(var(--hub-top)+8px)] w-14 z-30 bg-white rounded-lg shadow-lg overflow-hidden"
       >
-        <button
-          type="button"
-          :aria-label="S.railExpand"
-          :title="S.railExpand"
-          class="w-11 h-11 flex items-center justify-center rounded text-gray-800 hover:bg-gray-100"
-          :class="focusRing"
-          @click="setTable(false)"
-        >
-          <UiIcon name="chevron-right" :size="20" aria-hidden="true" />
-        </button>
-        <p class="[writing-mode:vertical-rl] rotate-180 text-sm font-semibold text-gray-900">
-          <span class="tabular-nums">{{ railCount }}</span>
-          {{ railLabel }}
-        </p>
+        <HuntingHubShellPanelRail :title="railTitle" :value="railCount" @expand="setTable(false)" />
       </aside>
 
-      <!-- Table: a drawer next to the rail (≥ 1280 px) or in place of the map (768–1279 px). -->
+      <!-- Table: in place of the map, right of the rail (≥ 1280 px) or of the panel (D14). -->
       <HuntingWolvesTableDrawer compact :drawer-class="drawerClass" @show-on-map="onShowOnMap" />
       <!-- Embedded, the snapshot fallback's table opens from the WP view switch, in place of
            the map like the live table. -->
@@ -241,11 +235,11 @@
         <HuntingWolvesMapLegend collapsible />
       </div>
 
-      <!-- Top right on the container edge, as the other topics' cards (VISUAL-10). -->
+      <!-- Top right on the container edge, as the other topics' cards (VISUAL-10); under a
+           desktop table the map is hidden (D14), so the card only shows with the map. -->
       <div
         v-if="hasSelection && !replacesMap"
-        class="absolute top-[calc(var(--hub-top)+8px)] z-30"
-        :class="railed ? 'right-[576px]' : 'right-[var(--hub-gutter,16px)]'"
+        class="absolute top-[calc(var(--hub-top)+8px)] right-[var(--hub-gutter,16px)] z-30"
       >
         <div class="w-[360px] max-w-[calc(100vw-32px)]">
           <HuntingWolvesWolfCard />
@@ -489,13 +483,14 @@ import {
   BADGE_LABELS,
   BANDOMOJI_TOOLTIP,
   FEEDBACK_URL,
-  P_HUNTED,
   S,
+  TOPIC_TABS,
 } from '@/utils/hunting/hub/strings';
 import type { SnapshotData, TableDef, TopicView } from '@/utils/hunting/hub/types';
 import type { SortState } from '@/components/hunting/hub/table/sort';
 import { embedFocusAllowed } from '@/utils/hunting/hub/embed';
 import { useMapInert } from '@/components/hunting/hub/shell/sheet';
+import { MORE_BELOW_MASK, useMoreBelow } from '@/components/hunting/hub/shell/useMoreBelow';
 import {
   VILKAI_COMPARE,
   VILKAI_H1,
@@ -796,27 +791,24 @@ watch(isMobile, (mobile) => {
   if (!mobile) filtersOpen.value = false;
 });
 
-// ---- Rail: the answer's number, vertical.
+// ---- Panel height (D18) and rail: the topic and the answer's number, vertical.
+const panelEl = ref<HTMLElement | null>(null);
+const { more: panelMore, track: trackPanel } = useMoreBelow(panelEl);
+const railTitle = TOPIC_TABS.vilkai;
 const railCount = computed(() =>
-  ctx?.data.dataset.value ? formatInt(ctx.derived.filtered.value.length) : '—',
-);
-const railLabel = computed(() =>
-  ctx?.data.dataset.value
-    ? `${pluralLt(ctx.derived.filtered.value.length, P_HUNTED)} · ${ctx.derived.periodLabel.value}`
-    : '',
+  ctx?.data.dataset.value ? formatInt(ctx.derived.filtered.value.length) : '',
 );
 
-// Embedded, the table's content ends at the site container's right edge (D3), clear of the
-// site's accessibility button: the right gutter minus the rows' own 16 px padding.
-const EMBED_DRAWER_RIGHT = 'pr-[calc(var(--hub-gutter,24px)-16px)]';
-const drawerClass = computed(() =>
-  railed.value
-    ? 'absolute right-0 top-[var(--hub-top)] bottom-0 w-[var(--hub-drawer-w)] z-30 bg-white shadow-lg flex flex-col'
-    : `absolute right-0 top-[var(--hub-top)] bottom-0 left-[var(--hub-content-left)] z-30 bg-white shadow-lg flex flex-col${embed ? ` ${EMBED_DRAWER_RIGHT}` : ''}`,
+// The table pane (D14), as the snapshot topics' TableView: right of the rail or the panel to
+// the window edge, the content to the right gutter (the gutter minus the rows' 16 px padding).
+const drawerClass = computed(
+  () =>
+    `absolute right-0 top-[var(--hub-top)] bottom-0 z-30 bg-white flex flex-col pr-[max(0px,calc(var(--hub-gutter,16px)-16px))] ${
+      railed.value ? 'left-[var(--hub-table-left)]' : 'left-[var(--hub-content-left)]'
+    }`,
 );
-const legendLeft = computed(() =>
-  railed.value ? 'left-[64px]' : 'left-[var(--hub-content-left)]',
-);
+// The legend's place matches the snapshot topics' (data.vue .hub-legend), VISUAL-21.
+const legendLeft = 'left-[calc(var(--hub-content-left)+8px)]';
 
 const hasSelection = computed(() => !!ctx?.state.selection.value);
 const provenanceTime = computed(() => {
@@ -828,10 +820,9 @@ function setTable(open: boolean) {
   if (ctx) ctx.state.tableOpen.value = open;
 }
 
-// "Rodyti žemėlapyje" below 1280 px (embedded: at every width): the table covers the map,
-// so close it (SPEC2 §4.1).
+// "Rodyti žemėlapyje": the table covers the map at every desktop width (D14), so close it.
 function onShowOnMap() {
-  if (!railed.value && !isMobile.value) setTable(false);
+  if (!isMobile.value) setTable(false);
 }
 
 // Closing the table (its button, Esc or the rail) removes the focused element; give focus
@@ -1001,22 +992,13 @@ defineExpose({ openAbout, shareUrl, carry, railed, fallbackView });
 
 <style>
 /* UiMap's own controls (SPEC2 §4): below the 112 px bars (embedded: 56 px; the shell sets
-   --hub-top / --hub-mobile-header), right of the panel or rail, left of the drawer, above the
-   mobile sheet. */
+   --hub-top / --hub-mobile-header), right of the panel, above the mobile sheet. An open table
+   hides the map (data.vue `.hub-map`, `hub-vilkai--replace`). */
 body.hub-vilkai--desktop #mapControlsRT {
   transform: translateY(var(--hub-top, 112px));
 }
 body.hub-vilkai--desktop .bottomLeft {
   transform: translateX(calc(var(--hub-content-left, 396px) - 8px));
-}
-body.hub-vilkai--railed .bottomLeft {
-  transform: translateX(64px);
-}
-body.hub-vilkai--railed #mapControlsRT {
-  transform: translate(-560px, var(--hub-top, 112px));
-}
-body.hub-vilkai--railed .rightBottom {
-  transform: translateX(-560px);
 }
 body.hub-vilkai--mobile #mapControlsRT {
   transform: translateY(var(--hub-mobile-header, 108px));

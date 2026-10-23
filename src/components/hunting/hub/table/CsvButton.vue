@@ -20,7 +20,7 @@ import { BTN_SECONDARY } from '../shell/controls';
 import { sortRows, type SortState } from './sort';
 
 // CSV of one hub table as shown (same columns, same sort, totals first). The first line
-// is the provenance (SPEC2 §5): '# Duomenys: {date} momentinė kopija; BĮIP'.
+// is the provenance (SPEC2 §5): '# Duomenys {date} būklei; BĮIP', as the screen names it.
 const props = defineProps({
   table: { type: Object as PropType<TableDef>, required: true },
   caption: { type: String, default: '' },

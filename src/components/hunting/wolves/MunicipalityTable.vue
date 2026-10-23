@@ -1,10 +1,19 @@
 <template>
-  <div class="flex flex-col gap-3 text-sm text-ink">
-    <div class="overflow-x-auto max-w-full">
+  <div ref="rootEl" class="flex flex-col gap-3 text-sm text-ink">
+    <!-- Phones: the hub's card list, as Laimikiai (JOURNEYS-07). -->
+    <HuntingHubTableCardList
+      v-if="ctx.isMobile.value"
+      v-model:sort="cardSort"
+      :table="table"
+      :caption="caption"
+      :selected-sav="state.sav.value"
+      @show-on-map="selectMunicipality"
+    />
+    <Scroller v-else sticky-first>
       <table :class="TABLE">
         <caption class="sr-only">
           {{
-            `Sumedžioti vilkai pagal savivaldybes: ${periodLabel}`
+            caption
           }}
         </caption>
         <thead>
@@ -50,11 +59,12 @@
           <tr v-for="row in visibleRows" :key="row.code ?? 'none'" :class="TR">
             <th
               scope="row"
+              :data-selected="isSelected(row) || undefined"
               :class="[
                 TD,
                 STICKY_FIRST,
                 'pl-0 font-normal',
-                row.code !== null && row.code === state.sav.value ? TD_SELECTED : TD_BG,
+                isSelected(row) ? [TD_SELECTED, TD_SELECTED_FIRST] : TD_BG,
               ]"
             >
               <button
@@ -77,7 +87,7 @@
           </tr>
         </tbody>
       </table>
-    </div>
+    </Scroller>
 
     <button
       v-if="zeroCount > 0"
@@ -105,7 +115,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, onMounted, ref, shallowRef } from 'vue';
+import { computed, inject, nextTick, onMounted, ref, shallowRef, watch } from 'vue';
+import Scroller from '@/components/hunting/hub/table/Scroller.vue';
+import { revealRow } from '@/components/hunting/hub/table/reveal';
+import type { SortState } from '@/components/hunting/hub/table/sort';
+import type { TableDef } from '@/utils/hunting/hub/types';
 import { WOLVES_CTX } from '@/composables/hunting/context';
 import { loadMunicipalityIndex, type MunicipalityIndex } from '@/utils/hunting/municipalities';
 import { formatInt } from '@/utils/hunting/dates';
@@ -127,6 +141,7 @@ import {
   TD,
   TD_BG,
   TD_SELECTED,
+  TD_SELECTED_FIRST,
   TH,
   TOTALS_CELL,
   TR,
@@ -242,8 +257,62 @@ const ariaSort = (key: 'count' | 'name') =>
   sortKey.value === key ? (sortDir.value === 'asc' ? 'ascending' : 'descending') : 'none';
 const sortArrow = (key: 'count' | 'name') =>
   sortKey.value === key ? (sortDir.value === 'asc' ? '▲' : '▼') : '↕';
-const cellBg = (row: Row) =>
-  row.code !== null && row.code === state.sav.value ? TD_SELECTED : TD_BG;
+const isSelected = (row: Row) => row.code !== null && row.code === state.sav.value;
+const cellBg = (row: Row) => (isSelected(row) ? TD_SELECTED : TD_BG);
+
+const caption = computed(() => `Sumedžioti vilkai pagal savivaldybes: ${periodLabel.value}`);
+
+// The table as a hub TableDef: the phone cards and the CSV of what the screen shows
+// (REGRESS-03): the shown rows in the shown order, totals first, the same notes.
+const TABLE_COLUMNS: { id: (typeof VALUE_KEYS)[number]; label: string }[] = [
+  { id: 'count', label: 'Vilkai' },
+  { id: 'adults', label: 'Suaugę' },
+  { id: 'juniors', label: 'Jaunikliai' },
+  { id: 'males', label: 'Patinai' },
+  { id: 'females', label: 'Patelės' },
+];
+const fileSuffix = computed(() => {
+  const season = derived.intervalSeason.value;
+  const { from, to } = state.interval.value;
+  return season !== null ? `${season}-${season + 1}` : `${from}_${to}`;
+});
+const table = computed<TableDef<Row>>(() => ({
+  id: 'savivaldybes',
+  label: 'Savivaldybės',
+  title: `Sumedžioti vilkai pagal savivaldybes · ${periodLabel.value}`,
+  columns: [
+    { id: 'name', label: 'Savivaldybė', value: (r) => r.name },
+    ...TABLE_COLUMNS.map((c) => ({
+      id: c.id,
+      label: c.label,
+      numeric: true,
+      value: (r: Row) => r[c.id],
+    })),
+    { id: 'lastDay', label: 'Paskutinis', value: (r) => r.lastDay },
+  ],
+  rows: visibleRows.value,
+  totals: { ...totals.value, name: 'Iš viso Lietuvoje' },
+  footnotes: [
+    ...(selectedName.value
+      ? [`Lentelėje rodomos visos savivaldybės; pasirinkta „${selectedName.value}“ paryškinta.`]
+      : []),
+    'Savivaldybė nustatyta pagal sumedžiojimo vietą; prie ribų galimas nedidelis netikslumas.',
+  ],
+  rowSav: (r) => r.code,
+  csvName: `vilkai-savivaldybes-${fileSuffix.value}`,
+}));
+// The cards' own sort ("Kaip lentelėje" = the table's order above).
+const cardSort = ref<SortState | null>(null);
+defineExpose({ table });
+
+// The selected municipality's row in view inside the table (JOURNEYS-07), on open and when
+// the selection changes.
+const rootEl = ref<HTMLElement | null>(null);
+function revealSelected() {
+  nextTick(() => revealRow(rootEl.value?.querySelector<HTMLElement>('[data-selected]'), 80));
+}
+onMounted(revealSelected);
+watch([() => state.sav.value, index, sortKey, sortDir], revealSelected);
 
 function selectMunicipality(code: number) {
   const next = state.sav.value === code ? null : code;

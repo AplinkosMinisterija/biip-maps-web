@@ -23,16 +23,11 @@
       <li v-for="row in pageRows" :key="row.id">
         <button
           type="button"
-          :class="[
-            'w-full min-h-[44px] rounded-lg border border-line bg-white p-3 text-left hover:bg-brand-50',
-            FOCUS_RING,
-          ]"
+          :class="RECORD_CARD"
           :aria-label="showOnMapLabel(row)"
           @click="showOnMap(row)"
         >
-          <span
-            class="flex flex-wrap items-center gap-x-2 text-[15px] font-semibold leading-5 text-brand tabular-nums"
-          >
+          <span :class="RECORD_CARD_TITLE">
             {{ row.day }}
             <span class="font-normal text-ink-muted">
               · {{ row.municipalityName || 'Nenustatyta' }}
@@ -42,10 +37,10 @@
           <span v-if="!row.inWolfWindow" :class="tagClass" class="mt-1">
             ne vilkų medžioklės laikotarpiu
           </span>
-          <span class="mt-1 block text-ink">
+          <span :class="RECORD_CARD_LINE">
             {{ ageLabel(row.age) }} · {{ sexLabel(row.sex) }} · {{ methodLabel(row.method) }}
           </span>
-          <span class="block text-[13px] leading-[18px] text-ink-muted">
+          <span :class="RECORD_CARD_META">
             Gaujos narys: {{ packLabel(row.packMember, row.packAmount) }} ·
             {{ sourceLabel(row.source) }}
           </span>
@@ -53,7 +48,7 @@
       </li>
     </ul>
 
-    <div v-else class="overflow-x-auto">
+    <Scroller v-else>
       <table :class="TABLE">
         <caption class="sr-only">
           {{
@@ -93,7 +88,7 @@
               <th scope="col" :class="TH">Gaujos narys</th>
               <th scope="col" :class="TH">Šaltinis</th>
             </template>
-            <th scope="col" :class="[TH, 'sticky right-0 z-30 w-12 px-1']">
+            <th scope="col" :class="[TH, 'w-10 px-1']">
               <span class="sr-only">Veiksmai</span>
             </th>
           </tr>
@@ -122,9 +117,8 @@
                 <span class="sr-only">{{ sourceLabel(row.source) }}</span>
               </td>
             </template>
-            <!-- One 40 px icon button at the row end; sticky so it stays visible when the
-                 columns scroll in the drawer. -->
-            <td :class="[TD, TD_BG, 'sticky right-0 z-10 px-1 py-0 align-middle']">
+            <!-- One 32 px icon button at the row end, on the text's line (VISUAL-14). -->
+            <td :class="[TD, TD_BG, 'px-1']">
               <button
                 type="button"
                 :class="ROW_ICON_BTN"
@@ -138,7 +132,7 @@
           </tr>
         </tbody>
       </table>
-    </div>
+    </Scroller>
 
     <!-- No aria-live: the range is read with the buttons, a live region read it twice. -->
     <div v-if="rows.length" class="flex flex-wrap items-center justify-between gap-2">
@@ -167,9 +161,14 @@ import { computed, inject, ref, watch } from 'vue';
 import { WOLVES_CTX } from '@/composables/hunting/context';
 import { HUB_CTX } from '@/composables/hunting/hub/context';
 import type { WolfRecord } from '@/utils/hunting/types';
-import { CHECK, FOCUS_RING } from '@/components/hunting/hub/shell/controls';
+import { CHECK } from '@/components/hunting/hub/shell/controls';
+import Scroller from '@/components/hunting/hub/table/Scroller.vue';
 import {
   PAGER_BTN,
+  RECORD_CARD,
+  RECORD_CARD_LINE,
+  RECORD_CARD_META,
+  RECORD_CARD_TITLE,
   ROW_ICON_BTN,
   SORT_BTN,
   SORT_ICON,

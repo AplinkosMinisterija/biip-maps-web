@@ -1,6 +1,10 @@
 <template>
-  <div class="flex flex-col gap-3 text-sm text-ink" :class="fill ? 'h-full min-h-0' : ''">
-    <div class="relative max-w-full overflow-auto" :class="fill ? 'min-h-0' : ''">
+  <div
+    ref="rootEl"
+    class="flex flex-col gap-3 text-sm text-ink"
+    :class="fill ? 'h-full min-h-0' : ''"
+  >
+    <Scroller :fill="fill" sticky-first>
       <!-- At most 960 px while the columns fit, so the numbers stay near their names. -->
       <table :class="TABLE">
         <caption class="sr-only">
@@ -14,25 +18,19 @@
               v-for="(col, i) in table.columns"
               :key="col.id"
               scope="col"
-              :class="[TH, i === 0 ? `${STICKY_FIRST} z-30 pl-0` : '', col.numeric ? NUM : TEXT]"
+              :class="[TH, i === 0 ? `${STICKY_FIRST} z-30 pl-0` : '', col.numeric ? NUM_TH : TEXT]"
+              :style="col.numeric && i > 0 ? numThStyle(col.label) : undefined"
               :aria-sort="ariaSort(currentSort, col.id)"
               :title="col.tooltip"
             >
+              <!-- The arrow flows with the label: before a number's label, after a text's
+                   label (VISUAL-13), also when a numeric header wraps. -->
               <button
                 type="button"
                 :class="[SORT_BTN, col.numeric ? 'justify-end text-right' : 'text-left']"
                 @click="toggleSort(col)"
               >
-                <span
-                  aria-hidden="true"
-                  :class="[
-                    SORT_ICON,
-                    col.numeric ? 'order-first' : '',
-                    sortDir(col.id) ? SORT_ICON_ON : SORT_ICON_IDLE,
-                  ]"
-                  v-text="sortIcon(sortDir(col.id))"
-                />
-                <span :class="sortDir(col.id) ? SORT_LABEL_ON : ''">{{ col.label }}</span>
+                <SortLabel :label="col.label" :dir="sortDir(col.id)" :numeric="col.numeric" />
                 <span v-if="col.tooltip" class="sr-only">. {{ col.tooltip }}</span>
               </button>
             </th>
@@ -64,12 +62,13 @@
             <template v-for="(col, i) in table.columns" :key="col.id">
               <th
                 v-if="i === 0"
+                :data-selected="isSelected(row) || undefined"
                 scope="row"
                 :class="[
                   TD,
                   STICKY_FIRST,
                   'pl-0 font-normal whitespace-nowrap',
-                  isSelected(row) ? TD_SELECTED : TD_BG,
+                  isSelected(row) ? [TD_SELECTED, TD_SELECTED_FIRST] : TD_BG,
                 ]"
               >
                 <RowName
@@ -95,12 +94,13 @@
             </tr>
             <tr v-for="(row, r) in noted" :key="rowKey(row, rows.length + r)" :class="TR">
               <th
+                :data-selected="isSelected(row) || undefined"
                 scope="row"
                 :class="[
                   TD,
                   STICKY_FIRST,
                   'pl-0 font-normal whitespace-nowrap',
-                  isSelected(row) ? TD_SELECTED : TD_BG,
+                  isSelected(row) ? [TD_SELECTED, TD_SELECTED_FIRST] : TD_BG,
                 ]"
               >
                 <RowName
@@ -134,7 +134,7 @@
           </tr>
         </tbody>
       </table>
-    </div>
+    </Scroller>
 
     <ul v-if="table.footnotes.length" :class="[FOOTNOTES, 'max-w-[960px]']">
       <li v-for="(note, i) in table.footnotes" :key="i">{{ note }}</li>
@@ -143,31 +143,32 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, type PropType } from 'vue';
+import { computed, nextTick, onMounted, ref, watch, type PropType } from 'vue';
 import { useElementSize } from '@vueuse/core';
 import { S } from '@/utils/hunting/hub/strings';
 import type { ColumnDef, RowNote, TableDef } from '@/utils/hunting/hub/types';
 import RowName from './RowName.vue';
+import { revealRow } from './reveal';
+import Scroller from './Scroller.vue';
+import SortLabel from './SortLabel';
 import { ariaSort, cellText, nextSort, notedRows, sortRows, type SortState } from './sort';
 import {
   DIVIDER_CELL,
   FOOTNOTES,
   NUM,
+  NUM_TH,
+  numThStyle,
   SORT_BTN,
-  SORT_ICON,
-  SORT_ICON_IDLE,
-  SORT_ICON_ON,
-  SORT_LABEL_ON,
   STICKY_FIRST,
   TABLE,
   TD,
   TD_BG,
   TD_SELECTED,
+  TD_SELECTED_FIRST,
   TEXT,
   TH,
   TOTALS_CELL,
   TR,
-  sortIcon,
 } from './spec';
 
 // Generic sortable table of the hub (SPEC2 §10, one spec with the wolves and Stebėjimai
@@ -223,4 +224,17 @@ const rowKey = (row: unknown, index: number) => {
   const code = savOf(row);
   return code !== null ? `sav-${code}` : `row-${index}`;
 };
+
+// The selected municipality's row is scrolled into view inside the table (JOURNEYS-07), on
+// open and when the selection or the sort changes; never the page around it.
+const rootEl = ref<HTMLElement | null>(null);
+function revealSelected() {
+  nextTick(() => {
+    const el = rootEl.value?.querySelector<HTMLElement>('[data-selected]');
+    // Below the sticky header and totals row.
+    revealRow(el, theadHeight.value * (props.table.totals ? 2 : 1));
+  });
+}
+onMounted(revealSelected);
+watch(() => [props.selectedSav, currentSort.value, props.table], revealSelected);
 </script>

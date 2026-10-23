@@ -44,41 +44,35 @@
         </div>
       </div>
 
+      <!-- As tall as its content, up to the bottom of the frame (D18). -->
       <section
         v-if="!railed"
         id="hub-panel"
+        ref="panelEl"
         aria-labelledby="hub-title"
-        class="absolute bottom-2 left-[var(--hub-panel-left)] top-[calc(var(--hub-top)+8px)] z-30 w-[var(--hub-panel-w)] overflow-y-auto rounded-lg bg-white shadow-lg"
+        class="absolute left-[var(--hub-panel-left)] top-[calc(var(--hub-top)+8px)] z-30 max-h-[calc(100%-var(--hub-top)-16px)] w-[var(--hub-panel-w)] overflow-y-auto overscroll-contain rounded-lg bg-white shadow-lg"
+        :class="panelMore ? MORE_BELOW_MASK : ''"
       >
-        <div class="p-4">
+        <div
+          :ref="(node) => trackPanel(node as HTMLElement | null)"
+          class="relative overflow-hidden p-4"
+        >
           <StebPanel />
         </div>
       </section>
 
-      <!-- ≥ 1280 px with the table open (standalone): the panel collapses to a 56 px rail. -->
+      <!-- ≥ 1280 px with the table open: the panel collapses to the 56 px rail (D14), the same
+           floating rail as the other topics; it closes the table. -->
       <aside
         v-else
         id="hub-panel"
         :aria-label="SS.segmentSummary"
-        class="absolute bottom-0 left-0 top-[var(--hub-top)] z-30 flex w-14 flex-col items-center gap-3 bg-white py-3 shadow-lg"
+        class="absolute left-[var(--hub-panel-left)] top-[calc(var(--hub-top)+8px)] z-30 w-14 overflow-hidden rounded-lg bg-white shadow-lg"
       >
-        <button
-          type="button"
-          :aria-label="S.railExpand"
-          :title="S.railExpand"
-          class="flex h-11 w-11 items-center justify-center rounded text-gray-800 hover:bg-gray-100"
-          :class="focusRing"
-          @click="setTable(false)"
-        >
-          <UiIcon name="chevron-right" :size="20" aria-hidden="true" />
-        </button>
-        <p class="rotate-180 text-sm font-semibold text-gray-900 [writing-mode:vertical-rl]">
-          <span class="tabular-nums">{{ railCount }}</span>
-          {{ railLabel }}
-        </p>
+        <HuntingHubShellPanelRail :title="railTitle" :value="railCount" @expand="setTable(false)" />
       </aside>
 
-      <!-- Table: a drawer next to the rail (≥ 1280 px) or in place of the map. -->
+      <!-- Table: in place of the map, right of the rail (≥ 1280 px) or of the panel (D14). -->
       <StebTable
         v-if="tableOpen"
         ref="tableRef"
@@ -91,11 +85,11 @@
         <StebLegend />
       </div>
 
-      <!-- Top right on the container edge, as the snapshot topics' area card (VISUAL-10). -->
+      <!-- Top right on the container edge, as the other topics' cards (VISUAL-10); under a
+           desktop table the map is hidden (D14), so the card only shows with the map. -->
       <div
         v-if="hasSelection && !replacesMap"
-        class="absolute top-[calc(var(--hub-top)+8px)] z-30"
-        :class="railed ? 'right-[576px]' : 'right-[var(--hub-gutter,16px)]'"
+        class="absolute top-[calc(var(--hub-top)+8px)] right-[var(--hub-gutter,16px)] z-30"
       >
         <div class="w-[360px] max-w-[calc(100vw-32px)]">
           <StebCard />
@@ -175,7 +169,8 @@ import {
   mobileHeader,
   tableReplacesMap,
 } from '@/utils/hunting/hub/layout';
-import { S } from '@/utils/hunting/hub/strings';
+import { S, TOPIC_TABS } from '@/utils/hunting/hub/strings';
+import { MORE_BELOW_MASK, useMoreBelow } from '@/components/hunting/hub/shell/useMoreBelow';
 import { SS } from '@/utils/hunting/hub/stebejimai/strings';
 import StebCard from './StebCard.vue';
 import StebFilters from './StebFilters.vue';
@@ -239,24 +234,23 @@ const answerText = computed(() =>
 );
 watchDebounced(answerText, (text) => (announced.value = text), { debounce: 500 });
 
-// ---- Rail and drawer geometry (as the Vilkai host).
+// ---- Panel height (D18), rail and table pane geometry (as the Vilkai host).
+const panelEl = ref<HTMLElement | null>(null);
+const { more: panelMore, track: trackPanel } = useMoreBelow(panelEl);
+const railTitle = TOPIC_TABS.stebejimai;
 const railCount = computed(() =>
-  ctx?.derived.ready.value ? formatInt(ctx.derived.filtered.value.length) : '—',
+  ctx?.derived.ready.value ? formatInt(ctx.derived.filtered.value.length) : '',
 );
-const railLabel = computed(() =>
-  ctx?.derived.ready.value ? SS.railLabel(ctx.derived.filtered.value.length) : '',
+// The table pane (D14), as the snapshot topics' TableView: right of the rail or the panel to
+// the window edge, the content to the right gutter (the gutter minus the rows' 16 px padding).
+const drawerClass = computed(
+  () =>
+    `absolute right-0 top-[var(--hub-top)] bottom-0 z-30 bg-white flex flex-col pr-[max(0px,calc(var(--hub-gutter,16px)-16px))] ${
+      railed.value ? 'left-[var(--hub-table-left)]' : 'left-[var(--hub-content-left)]'
+    }`,
 );
-// Embedded, the table's content ends at the site container's right edge (D3), clear of the
-// site's accessibility button: the right gutter minus the rows' own 16 px padding.
-const EMBED_DRAWER_RIGHT = 'pr-[calc(var(--hub-gutter,24px)-16px)]';
-const drawerClass = computed(() =>
-  railed.value
-    ? 'absolute right-0 top-[var(--hub-top)] bottom-0 w-[var(--hub-drawer-w)] z-30 bg-white shadow-lg flex flex-col'
-    : `absolute right-0 top-[var(--hub-top)] bottom-0 left-[var(--hub-content-left)] z-30 bg-white shadow-lg flex flex-col${embed ? ` ${EMBED_DRAWER_RIGHT}` : ''}`,
-);
-const legendLeft = computed(() =>
-  railed.value ? 'left-[64px]' : 'left-[var(--hub-content-left)]',
-);
+// The legend's place matches the snapshot topics' (data.vue .hub-legend), VISUAL-21.
+const legendLeft = 'left-[calc(var(--hub-content-left)+8px)]';
 const loadingPill = computed(
   () => !!ctx && !ctx.derived.ready.value && ctx.data.phase.value !== 'error' && !replacesMap.value,
 );
@@ -273,10 +267,9 @@ function openTableByUser() {
   nextTick(() => tableRef.value?.focusTab());
 }
 
-// "Rodyti žemėlapyje" where the table covers the map (embedded at every width, standalone
-// 768–1279 px): close it first.
+// "Rodyti žemėlapyje": the table covers the map at every desktop width (D14), close it first.
 function onShowOnMap() {
-  if (!railed.value && !isMobile.value) setTable(false);
+  if (!isMobile.value) setTable(false);
 }
 
 // Closing the table removes the focused element; give focus back to the view switch.
@@ -385,22 +378,13 @@ defineExpose({ openAbout, railed });
 
 <style>
 /* UiMap's own controls: below the bars (embedded: 56 px; the hub sets --hub-top /
-   --hub-mobile-header), right of the panel or rail, left of the drawer, above the mobile
-   sheet. Same offsets as the Vilkai host's rules. */
+   --hub-mobile-header), right of the panel, above the mobile sheet. Same offsets as the
+   Vilkai host's rules; an open table hides the map (data.vue `.hub-map`). */
 body.hub-steb--desktop #mapControlsRT {
   transform: translateY(var(--hub-top, 112px));
 }
 body.hub-steb--desktop .bottomLeft {
   transform: translateX(calc(var(--hub-content-left, 396px) - 8px));
-}
-body.hub-steb--railed .bottomLeft {
-  transform: translateX(64px);
-}
-body.hub-steb--railed #mapControlsRT {
-  transform: translate(-560px, var(--hub-top, 112px));
-}
-body.hub-steb--railed .rightBottom {
-  transform: translateX(-560px);
 }
 body.hub-steb--mobile #mapControlsRT {
   transform: translateY(var(--hub-mobile-header, 108px));
