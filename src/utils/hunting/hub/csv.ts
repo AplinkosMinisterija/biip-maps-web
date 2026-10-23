@@ -13,14 +13,13 @@ export { CSV_MIME };
 
 /**
  * Raw cell value: numbers stay numbers (decimal comma), a null value uses `display` ('<3'),
- * and a dash ("nėra / netaikoma") is an empty cell, so numeric columns stay numeric, unless
- * `keepDash` (`TableDef.csvDash`).
+ * and a dash ("nėra / netaikoma") is an empty cell, so numeric columns stay numeric.
  */
-export function csvCell<R>(column: ColumnDef<R>, row: R, keepDash = false): string {
+export function csvCell<R>(column: ColumnDef<R>, row: R): string {
   const value = column.value(row);
   if (value === null || value === undefined) {
     const text = column.display ? column.display(row) : '';
-    return !keepDash && NOT_APPLICABLE.test(text.trim()) ? '' : text;
+    return NOT_APPLICABLE.test(text.trim()) ? '' : text;
   }
   if (typeof value === 'number') {
     // at most 2 decimals, so float noise never reaches the spreadsheet
@@ -43,7 +42,8 @@ const WITHHELD_NOTE = new RegExp(`^${WITHHELD_MARK} \\(„neskelbiama“\\) – 
 export const csvNote = (note: string) =>
   note
     .replace(WITHHELD_NOTE, '„neskelbiama“ – ')
-    .replace(/^[–—-] stulpel/, 'Tuščias langelis stulpel');
+    .replace(/^[–—-] stulpel/, 'Tuščias langelis stulpel')
+    .replace(/^[–—-] – /, 'Tuščias langelis – ');
 
 export interface TableCsvOptions<R = any> {
   provenance: Provenance;
@@ -58,7 +58,6 @@ export function buildTableCsv<R>(table: TableDef<R>, options: TableCsvOptions<R>
   const exported = table.columns.map((c, i) => ({ c, i })).filter((x) => x.c.csv !== false);
   const columns = exported.map((x) => x.c);
   const comment = (text: string) => `# ${csvSafe(text.replace(/[\r\n]+/g, ' '))}`;
-  const keepDash = !!table.csvDash;
   const lines = [csvProvenanceLine(options.provenance)];
   if (options.title) lines.push(comment(options.title));
   // Percent columns name their unit (J-24).
@@ -76,7 +75,7 @@ export function buildTableCsv<R>(table: TableDef<R>, options: TableCsvOptions<R>
     let noteDone = note?.text === NOTE_NO_MPV;
     return exported
       .map(({ c, i }) => {
-        if (!note || i < note.from) return csvField(csvCell(c, r, keepDash));
+        if (!note || i < note.from) return csvField(csvCell(c, r));
         if (noteDone) return '';
         noteDone = true;
         return csvField(note.text);
@@ -86,13 +85,13 @@ export function buildTableCsv<R>(table: TableDef<R>, options: TableCsvOptions<R>
   if (table.totals) {
     const totals = table.totals;
     const cells = columns.map((c, i) => {
-      const text = csvCell(c, totals, keepDash);
+      const text = csvCell(c, totals);
       return i === 0 && (!text || text === '–') ? S.totalsRow : text;
     });
     lines.push(cells.map(csvField).join(CSV_SEPARATOR));
   }
   (options.rows || table.rows).forEach((r) => lines.push(row(r)));
-  table.footnotes.forEach((note) => lines.push(comment(keepDash ? note : csvNote(note))));
+  table.footnotes.forEach((note) => lines.push(comment(csvNote(note))));
   if (noMpv.length)
     lines.push(
       comment(

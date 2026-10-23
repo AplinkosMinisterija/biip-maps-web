@@ -242,8 +242,6 @@ export interface TableDef<R = any> {
   defaultSort?: { col: string; dir: 'asc' | 'desc' };
   disabled?: string;
   csvName: string;
-  /** The CSV writes the screen's "–" instead of an empty cell (a footnote explains the dash). */
-  csvDash?: boolean;
 }
 export interface CardDef {
   title: string;

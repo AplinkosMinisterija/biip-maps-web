@@ -386,7 +386,7 @@ export function runHubUnitChecks(): SelfCheckResult[] {
       ],
     ),
   );
-  check('CSV: „–“ kaip ekrane (csvDash)', () => {
+  check('CSV: „–“ – tuščias langelis, išnaša tai sako', () => {
     type Row = { name: string; n: number | null };
     const table: TableDef<Row> = {
       id: 't',
@@ -413,13 +413,7 @@ export function runHubUnitChecks(): SelfCheckResult[] {
         .slice(1)
         .split('\r\n')
         .slice(2, 5);
-    return eq(
-      [lines(table), lines({ ...table, csvDash: true })],
-      [
-        ['A;', 'B;3', '# – – sezonas vyksta.'],
-        ['A;–', 'B;3', '# – – sezonas vyksta.'],
-      ],
-    );
+    return eq(lines(table), ['A;', 'B;3', '# Tuščias langelis – sezonas vyksta.']);
   });
   check('Lentelių stulpeliai (zip)', () => {
     const rows = zip<{ a: number; b: string }>(
