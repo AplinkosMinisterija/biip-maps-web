@@ -1103,7 +1103,7 @@ export const about = {
     `Skaičiai, mažesni nei 3 (0, 1 arba 2), neskelbiami ir rodomi kaip „${S.suppressed}“; jei savivaldybėje per sezoną pranešimų visai nėra, rodomas 0. Kai kurie skaičiai gali būti „${S.withheld}“ – kad mažų skaičių nebūtų galima apskaičiuoti iš sumų. Sumos („Iš viso“) skaičiuojamos iš visų pranešimų, todėl gali būti didesnės už paskelbtų dalių sumą.`,
   ],
   missing: [
-    'Žalos dydžio ir kompensacijų, tikslių vietų, datų, pranešėjų duomenų. Smulkesnio nei savivaldybė ir sezonas suskirstymo – kad nebūtų galima atpažinti pranešėjo.',
+    'Žalos dydžio ir kompensacijų, tikslių vietų, datų, pranešėjų duomenų. Savivaldybių skaičiai skelbiami tik viso sezono, mėnesių – tik visos Lietuvos, kad nebūtų galima atpažinti pranešėjo.',
   ],
   compare: [
     'Oficialios žalos įvertinimo ir kompensacijų suvestinės skelbia savivaldybės; BĮIP jų neturi.',
