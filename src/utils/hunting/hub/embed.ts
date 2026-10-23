@@ -212,10 +212,12 @@ function embedTableAllowed(tema: TopicId | undefined, table: string): boolean {
 export interface EmbedProvenance {
   kind: 'snapshot' | 'live';
   asOf: string | null; // 'yyyy-MM-dd'
+  // Kept for protocol compatibility: the WP page no longer shows a staging marker, so
+  // nothing on screen depends on it.
   environment: 'production' | 'staging' | 'other';
   // D12a (additive): the exact provenance line of the current topic, plain text of at most
-  // PROVENANCE_TEXT_MAX characters. WP shows it instead of its own fallback (and still
-  // appends " · Bandomoji aplinka" off production); an older WP page ignores it.
+  // PROVENANCE_TEXT_MAX characters. WP shows it as is instead of its own fallback, on every
+  // host (no staging marker appended); an older WP page ignores it.
   text?: string;
 }
 

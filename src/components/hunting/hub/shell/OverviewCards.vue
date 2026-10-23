@@ -171,7 +171,7 @@
           </div>
         </section>
 
-        <!-- Embedded, the WP header line has the provenance and the staging marker (D9). -->
+        <!-- Embedded, the WP header line has the provenance (D9), with no staging marker. -->
         <div
           v-if="!ctx.embed && provenance"
           class="flex flex-col gap-0.5 border-t border-line-soft pt-2"

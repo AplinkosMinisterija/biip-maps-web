@@ -33,7 +33,7 @@
           <li v-for="note in view.notes" :key="note">{{ note }}</li>
         </ul>
       </template>
-      <!-- Embedded, the WP header line shows the provenance once (with the staging marker). -->
+      <!-- Embedded, the WP header line shows the provenance once (no staging marker). -->
       <div v-if="!ctx.embed" class="flex flex-col gap-0.5 border-t border-line-soft pt-2">
         <HuntingHubShellProvenanceLine :provenance="view.provenance" :large="mobile" />
       </div>

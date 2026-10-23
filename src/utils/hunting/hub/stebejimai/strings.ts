@@ -1,5 +1,5 @@
-// Lithuanian UI texts of the Stebėjimai topic (STEB-SPEC §3). Shared hub texts (S, badges,
-// the prototype line) come from `utils/hunting/hub/strings.ts`. Forbidden in UI text:
+// Lithuanian UI texts of the Stebėjimai topic (STEB-SPEC §3). Shared hub texts (S, badges)
+// come from `utils/hunting/hub/strings.ts`. Forbidden in UI text:
 // "būrelis"; MPV is "medžioklės plotų vienetas (MPV)".
 import { formatInt, pluralLt, type PluralForms } from '@/utils/hunting/dates';
 

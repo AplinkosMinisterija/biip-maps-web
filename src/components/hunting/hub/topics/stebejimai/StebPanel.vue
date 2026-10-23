@@ -70,7 +70,7 @@
       </ul>
     </template>
 
-    <!-- Embedded, the WP header line has the provenance and the staging marker (once). -->
+    <!-- Embedded, the WP header line has the provenance (once), with no staging marker. -->
     <footer
       v-if="!embed"
       class="flex flex-col gap-1 border-t border-line-soft pt-2 text-xs text-ink-muted"
