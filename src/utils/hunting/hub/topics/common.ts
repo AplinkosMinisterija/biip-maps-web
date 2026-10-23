@@ -65,6 +65,8 @@ const pct1Format = new Intl.NumberFormat('lt-LT', {
 
 export { formatInt };
 export const formatDec = (v: number) => decFormat.format(v);
+// Always one decimal ('4,0', '0,3'): a column of decimals in one precision.
+export const formatDec1 = (v: number) => dec1Format.format(v);
 // Ratio → "57 %"; `digits` 1 → "89,6 %".
 export const formatPct = (ratio: number, digits: 0 | 1 = 0) =>
   (digits ? pct1Format : pctFormat).format(ratio);

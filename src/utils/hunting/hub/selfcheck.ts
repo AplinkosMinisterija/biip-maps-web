@@ -1370,6 +1370,39 @@ export function runHubDataChecks(data: SnapshotData | null | undefined): SelfChe
         [2372, 790, 572, 1010, 2825],
       );
     });
+    // A row split by sex and age shows 0 in its other sex columns; "–" stays only for a
+    // category the species records nowhere (Šernas: "Jaunikliai"). The density column has
+    // one decimal in every row.
+    check('Laimikiai: lyties 0 vietoj „–“, tankis vieno skaitmens', () => {
+      const topic = getTopic('laimikiai');
+      if (!topic?.view) return 'no view';
+      const recorded = (name: string, key: 'm' | 'f' | 'j') => {
+        const sp = meta.species.find((x) => x.name === name);
+        return !!sp && loots.rows.some((r) => r.sp === sp.id && r[key] !== null);
+      };
+      const bad: string[] = [];
+      for (const sav of [null, 53]) {
+        const view = topic.view(data, selectionFor(topic, meta, 2025, sav));
+        const table = (id: string) => view.tables.find((t) => t.id === id);
+        const species = table('rusys');
+        const sex = species?.columns.filter((c) => ['m', 'f', 'j'].indexOf(c.id) >= 0) || [];
+        species?.rows.forEach((r) => {
+          const texts = sex.map((c) => c.display!(r));
+          const split = texts.some((t) => t !== '–');
+          if (
+            split &&
+            sex.some((c, i) => texts[i] === '–' && recorded(r.name, c.id as 'm' | 'f' | 'j'))
+          )
+            bad.push(`${r.name}: ${texts.join(' | ')}`);
+        });
+        const dens = table('vietoves')?.columns.find((c) => c.id === 'density');
+        table('vietoves')?.rows.forEach((r) => {
+          const text = dens?.display?.(r) ?? '';
+          if (text !== '–' && !/^\d[\d\s]*,\d$/.test(text)) bad.push(`${r.name}: ${text}`);
+        });
+      }
+      return bad.length === 0 || bad.slice(0, 5).join('; ');
+    });
     check('Kėdainių r. laimikiai 2024 / 2025', () =>
       eq(
         [
