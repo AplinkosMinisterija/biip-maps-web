@@ -36,7 +36,7 @@
       <div
         role="tablist"
         :aria-label="SS.tablesLabel"
-        class="flex min-w-0 gap-1 overflow-x-auto p-0.5"
+        class="flex min-w-0 gap-1 overflow-x-auto p-0.5 max-md:flex-wrap max-md:overflow-visible"
       >
         <button
           v-for="tab in tabs"
@@ -87,47 +87,45 @@
         <!-- Įrašai: cards where the table would not fit (by the panel's own width), else a
              sortable table. -->
         <template v-else-if="active === 'irasai'">
+          <!-- Phone cards in the record-card anatomy of the hub (VISUAL-17): title "date ·
+               species" with a chevron, the fact and count, then the place and MPV in muted
+               text; every public field. The whole card opens the record page (the map pin
+               where a record has no page). -->
           <ul v-if="narrow" class="flex flex-col gap-2" :aria-label="caption">
-            <li
-              v-for="r in pageRows"
-              :key="r.key"
-              class="rounded-lg border border-line bg-white p-3"
-            >
-              <!-- The title is the "show on map" action; every public field below. -->
-              <button
-                v-if="r.x !== null"
-                type="button"
-                :class="cardTitleButton"
-                :aria-label="showLabel(r)"
-                @click="showRecord(r)"
+            <li v-for="r in pageRows" :key="r.key">
+              <component
+                :is="cardAction(r) === 'link' ? 'a' : cardAction(r) === 'map' ? 'button' : 'div'"
+                :href="cardAction(r) === 'link' ? ctx.state.linkOf(r) : undefined"
+                :target="cardAction(r) === 'link' ? linkTarget : undefined"
+                :rel="cardAction(r) === 'link' ? linkRel : undefined"
+                :type="cardAction(r) === 'map' ? 'button' : undefined"
+                :aria-label="
+                  cardAction(r) === 'link'
+                    ? `${cardTitle(r)}. ${viewLabel(r)}`
+                    : cardAction(r) === 'map'
+                      ? showLabel(r)
+                      : undefined
+                "
+                :class="cardAction(r) === 'none' ? RECORD_CARD_STATIC : RECORD_CARD"
+                @click="cardAction(r) === 'map' && showRecord(r)"
               >
-                <span>{{ dateTimeText(r) }} · {{ r.species || NOT_SET_LABEL }}</span>
-                <UiIcon name="chevron-right" :size="16" class="shrink-0" aria-hidden="true" />
-              </button>
-              <p v-else class="text-[15px] font-semibold leading-5 tabular-nums">
-                {{ dateTimeText(r) }} · {{ r.species || NOT_SET_LABEL }}
-                <span class="font-normal text-ink-muted">· {{ SS.noPlace }}</span>
-              </p>
-              <dl class="mt-1 grid grid-cols-[minmax(0,9rem)_minmax(0,1fr)] gap-x-3 gap-y-0.5">
-                <template v-for="field in cardFields(r)" :key="field.label">
-                  <dt class="text-[13px] leading-5 text-ink-muted">{{ field.label }}</dt>
-                  <dd class="leading-5">{{ field.value }}</dd>
-                </template>
-              </dl>
-              <a
-                v-if="ctx.state.linkOf(r)"
-                :href="ctx.state.linkOf(r)!"
-                :target="linkTarget"
-                :rel="linkRel"
-                :aria-label="viewLabel(r)"
-                :class="[INLINE_LINK, 'mt-1 inline-flex min-h-[44px] items-center']"
-              >
-                {{ SS.view }}
-              </a>
+                <span :class="RECORD_CARD_TITLE">
+                  {{ cardTitle(r) }}
+                  <UiIcon
+                    v-if="cardAction(r) !== 'none'"
+                    name="chevron-right"
+                    :size="16"
+                    class="ml-auto shrink-0"
+                    aria-hidden="true"
+                  />
+                </span>
+                <span :class="RECORD_CARD_LINE">{{ factText(r) }} · {{ cardCount(r) }}</span>
+                <span :class="RECORD_CARD_META">{{ cardPlace(r) }}</span>
+              </component>
             </li>
           </ul>
 
-          <div v-else class="overflow-x-auto">
+          <Scroller v-else>
             <table :class="TABLE">
               <caption class="sr-only">
                 {{
@@ -140,10 +138,14 @@
                     v-for="(col, i) in columns"
                     :key="col.key"
                     scope="col"
-                    :class="[TH, i === 0 ? 'pl-0' : '']"
+                    :class="[TH, i === 0 ? 'pl-0' : '', col.key === 'count' ? 'text-right' : '']"
                     :aria-sort="ariaSort(col.key)"
                   >
-                    <button type="button" :class="SORT_BTN" @click="toggleSort(col.key)">
+                    <button
+                      type="button"
+                      :class="[SORT_BTN, col.key === 'count' ? 'justify-end' : '']"
+                      @click="toggleSort(col.key)"
+                    >
                       <abbr v-if="col.key === 'mpv'" :title="SS.colMpvTitle" class="no-underline">
                         <span :class="sortKey === col.key ? SORT_LABEL_ON : ''">{{
                           col.label
@@ -154,12 +156,16 @@
                       }}</span>
                       <span
                         aria-hidden="true"
-                        :class="[SORT_ICON, sortKey === col.key ? SORT_ICON_ON : SORT_ICON_IDLE]"
+                        :class="[
+                          SORT_ICON,
+                          sortIconOrder(col.key === 'count'),
+                          sortKey === col.key ? SORT_ICON_ON : SORT_ICON_IDLE,
+                        ]"
                         v-text="sortArrow(col.key)"
                       />
                     </button>
                   </th>
-                  <th scope="col" :class="[TH, 'sticky right-0 z-30 w-12 px-1']">
+                  <th scope="col" :class="[TH, 'w-10 px-1']">
                     <span class="sr-only">{{ SS.colActions }}</span>
                   </th>
                 </tr>
@@ -169,15 +175,37 @@
                   <td :class="[TD, TD_BG, 'whitespace-nowrap pl-0 tabular-nums']">
                     {{ dateTimeText(r) }}
                   </td>
-                  <td :class="[TD, TD_BG]">{{ r.species || NOT_SET_LABEL }}</td>
-                  <td :class="[TD, TD_BG, 'tabular-nums']">{{ countText(r) }}</td>
-                  <td :class="[TD, TD_BG]">{{ factText(r) }}</td>
-                  <td :class="[TD, TD_BG]">{{ r.municipality || NOT_SET_LABEL }}</td>
-                  <td :class="[TD, TD_BG]">{{ r.eldership || NOT_SET_LABEL }}</td>
-                  <td :class="[TD, TD_BG]">{{ mpvName(r.huntingArea) || NOT_SET_LABEL }}</td>
-                  <!-- One 40 px icon button at the row end; the record page link is in the
-                       card the button opens. -->
-                  <td :class="[TD, TD_BG, 'sticky right-0 z-10 px-1 py-0 align-middle']">
+                  <!-- The species is the record page link (REGRESS-02); the pin shows the
+                       record on the map. -->
+                  <td :class="[TD, TD_BG]">
+                    <a
+                      v-if="ctx.state.linkOf(r)"
+                      :href="ctx.state.linkOf(r)!"
+                      :target="linkTarget"
+                      :rel="linkRel"
+                      :aria-label="`${r.species || NOT_SET_LABEL}. ${viewLabel(r)}`"
+                      :title="SS.view"
+                      :class="INLINE_LINK"
+                    >
+                      {{ r.species || NOT_SET_LABEL }}
+                    </a>
+                    <template v-else>{{ r.species || NOT_SET_LABEL }}</template>
+                  </td>
+                  <td :class="[TD, TD_BG, 'text-right tabular-nums']">{{ countText(r) }}</td>
+                  <td :class="[TD, TD_BG, '[overflow-wrap:normal]']">{{ factText(r) }}</td>
+                  <!-- Vieta: the municipality, the eldership under it (VISUAL-03). -->
+                  <td :class="[TD, TD_BG]">
+                    {{ r.municipality || NOT_SET_LABEL }}
+                    <span class="block text-ink-muted">
+                      <span class="sr-only">{{ SS.colEldership }}: </span>
+                      {{ r.eldership || NOT_SET_LABEL }}
+                    </span>
+                  </td>
+                  <td :class="[TD, TD_BG, 'min-w-[9rem]']">
+                    {{ mpvName(r.huntingArea, { suffix: false }) || NOT_SET_LABEL }}
+                  </td>
+                  <!-- One 32 px icon button on the text's line (VISUAL-14). -->
+                  <td :class="[TD, TD_BG, 'px-1']">
                     <button
                       v-if="r.x !== null"
                       type="button"
@@ -188,14 +216,14 @@
                     >
                       <UiIcon name="pin" :size="18" aria-hidden="true" />
                     </button>
-                    <span v-else class="block whitespace-nowrap px-1 py-2 text-xs text-ink-muted">
+                    <span v-else class="block whitespace-nowrap px-1 text-xs text-ink-muted">
                       {{ SS.noPlace }}
                     </span>
                   </td>
                 </tr>
               </tbody>
             </table>
-          </div>
+          </Scroller>
 
           <!-- No aria-live: the range is read with the buttons, a live region read it twice. -->
           <div class="flex flex-wrap items-center justify-between gap-2">
@@ -218,8 +246,9 @@
           </div>
         </template>
 
-        <!-- Rūšys / Savivaldybės: totals first, one row per group; the name is the action. -->
-        <div v-else class="overflow-x-auto">
+        <!-- Rūšys / Savivaldybės: totals first, one row per group; the name is the action.
+             Sortable like every hub table (VISUAL-13). -->
+        <Scroller v-else>
           <table :class="TABLE">
             <caption class="sr-only">
               {{
@@ -228,11 +257,32 @@
             </caption>
             <thead>
               <tr>
-                <th scope="col" :class="[TH, TEXT, 'pl-0']">
-                  {{ active === 'rusys' ? SS.colSpecies : SS.colMunicipality }}
+                <th
+                  v-for="col in groupColumns"
+                  :key="col.key"
+                  scope="col"
+                  :class="[TH, col.numeric ? NUM : [TEXT, 'pl-0']]"
+                  :aria-sort="groupAriaSort(col.key)"
+                >
+                  <button
+                    type="button"
+                    :class="[SORT_BTN, col.numeric ? 'justify-end' : '']"
+                    @click="toggleGroupSort(col.key)"
+                  >
+                    <span :class="groupSort?.key === col.key ? SORT_LABEL_ON : ''">{{
+                      col.label
+                    }}</span>
+                    <span
+                      aria-hidden="true"
+                      :class="[
+                        SORT_ICON,
+                        sortIconOrder(col.numeric),
+                        groupSort?.key === col.key ? SORT_ICON_ON : SORT_ICON_IDLE,
+                      ]"
+                      v-text="groupArrow(col.key)"
+                    />
+                  </button>
                 </th>
-                <th scope="col" :class="[TH, NUM]">{{ COL_OBSERVATIONS }}</th>
-                <th scope="col" :class="[TH, NUM]">{{ COL_ANIMALS }}</th>
               </tr>
             </thead>
             <tbody>
@@ -241,7 +291,7 @@
                 <td :class="[TOTALS_CELL, NUM]">{{ formatInt(rows.length) }}</td>
                 <td :class="[TOTALS_CELL, NUM]">{{ animalsText(animalsOf(rows)) }}</td>
               </tr>
-              <tr v-for="g in groups" :key="g.key" :class="TR">
+              <tr v-for="g in sortedGroups" :key="g.key" :class="TR">
                 <th scope="row" :class="[TD, TD_BG, 'pl-0 font-normal']">
                   <span class="flex items-center gap-2">
                     <span
@@ -269,7 +319,7 @@
               </tr>
             </tbody>
           </table>
-        </div>
+        </Scroller>
       </div>
     </div>
   </component>
@@ -317,6 +367,11 @@ import {
 import {
   NUM,
   PAGER_BTN,
+  RECORD_CARD,
+  RECORD_CARD_LINE,
+  RECORD_CARD_META,
+  RECORD_CARD_STATIC,
+  RECORD_CARD_TITLE,
   ROW_ACTION,
   ROW_ACTION_PIN,
   ROW_ICON_BTN,
@@ -325,6 +380,7 @@ import {
   SORT_ICON_IDLE,
   SORT_ICON_ON,
   SORT_LABEL_ON,
+  sortIconOrder,
   TABLE,
   TD,
   TD_BG,
@@ -334,8 +390,9 @@ import {
   TR,
 } from '@/components/hunting/hub/table/spec';
 import { mpvName } from '@/components/hunting/hub/table/text';
+import Scroller from '@/components/hunting/hub/table/Scroller.vue';
 
-type SortKey = 'date' | 'species' | 'count' | 'fact' | 'muni' | 'elder' | 'mpv';
+type SortKey = 'date' | 'species' | 'count' | 'fact' | 'muni' | 'mpv';
 
 const PAGE_SIZE = 50;
 // The standalone view switch points here (`aria-controls`).
@@ -367,7 +424,7 @@ const narrow = computed(() =>
 // Summary table heads in the nominative plural, as the other hub tables (DATAVIZ-11).
 const COL_OBSERVATIONS = 'Stebėjimai';
 const COL_ANIMALS = 'Gyvūnai';
-const cardTitleButton = `-mx-1 -my-2 inline-flex min-h-[44px] w-[calc(100%+0.5rem)] items-center justify-between gap-2 rounded px-1 text-left text-[15px] font-semibold leading-5 text-brand tabular-nums underline-offset-2 hover:underline ${FOCUS_RING}`;
+const COL_PLACE = 'Vieta';
 
 const linkTarget = ctx.embed ? '_top' : '_blank';
 const linkRel = ctx.embed ? undefined : 'noopener';
@@ -405,22 +462,31 @@ function onTabKeydown(event: KeyboardEvent) {
 const loading = computed(() => !ctx.derived.ready.value);
 const placeCaption = computed(() => {
   const sav = ctx.state.sav.value;
-  return sav === null ? SS.allPlaces : ctx.meta.nameOf(sav) || `${sav}`;
+  return sav === null ? SS.allPlacesLower : ctx.meta.nameOf(sav) || `${sav}`;
 });
+// Heading and caption: the table's own title, then the period and place.
 const caption = computed(() =>
-  SS.caption(TABLE_LABELS[active.value], ctx.derived.periodLabel.value, placeCaption.value),
+  SS.caption(SS.tableTitles[active.value], ctx.derived.periodLabel.value, placeCaption.value),
 );
-// Heading: the topic, then the table, period and place.
-const title = computed(() => `Stebėjimai: ${caption.value}`);
+const title = caption;
 
-// Every public field of a record for its phone card (the title has date and species).
-const cardFields = (r: StebRecord) => [
-  { label: SS.colCount, value: countText(r) },
-  { label: SS.colFact, value: factText(r) },
-  { label: SS.colMunicipality, value: r.municipality || NOT_SET_LABEL },
-  { label: SS.colEldership, value: r.eldership || NOT_SET_LABEL },
-  { label: SS.cardMpv, value: mpvName(r.huntingArea) || NOT_SET_LABEL },
-];
+// Phone card lines (VISUAL-17): every public field of the record.
+const cardTitle = (r: StebRecord) => `${dateTimeText(r)} · ${r.species || NOT_SET_LABEL}`;
+function cardCount(r: StebRecord) {
+  if (r.count === null) return `${SS.colCount.toLowerCase()} ${NOT_SET_LABEL.toLowerCase()}`;
+  const n = formatInt(r.count);
+  // "3 gyv. (patinų 1, patelių 1, jauniklių 1)"
+  return `${n} gyv.${countText(r).slice(n.length)}`;
+}
+const cardPlace = (r: StebRecord) =>
+  [
+    r.municipality || `${SS.colMunicipality} – ${NOT_SET_LABEL.toLowerCase()}`,
+    r.eldership || `${SS.colEldership.toLowerCase()} – ${NOT_SET_LABEL.toLowerCase()}`,
+    mpvName(r.huntingArea) || `${SS.colMpv} – ${NOT_SET_LABEL.toLowerCase()}`,
+  ].join(' · ');
+// One action per card: the record page, else the map, else none.
+const cardAction = (r: StebRecord): 'link' | 'map' | 'none' =>
+  ctx.state.linkOf(r) ? 'link' : r.x !== null ? 'map' : 'none';
 
 // ---- Įrašai: sort and pages.
 const columns: { key: SortKey; label: string }[] = [
@@ -428,8 +494,8 @@ const columns: { key: SortKey; label: string }[] = [
   { key: 'species', label: SS.colSpecies },
   { key: 'count', label: SS.colCount },
   { key: 'fact', label: SS.colFact },
-  { key: 'muni', label: SS.colMunicipality },
-  { key: 'elder', label: SS.colEldership },
+  // Savivaldybė and Seniūnija in one cell (VISUAL-03), sorted by the municipality.
+  { key: 'muni', label: COL_PLACE },
   { key: 'mpv', label: SS.colMpv },
 ];
 const sortKey = ref<SortKey>('date');
@@ -441,7 +507,6 @@ function textValue(key: TextKey, r: StebRecord): string | null {
   if (key === 'species') return r.species;
   if (key === 'fact') return r.fact || r.factOther ? factText(r) : null;
   if (key === 'muni') return r.municipality;
-  if (key === 'elder') return r.eldership;
   return r.huntingArea;
 }
 
@@ -497,10 +562,48 @@ function showRecord(r: StebRecord) {
   emit('show-on-map');
 }
 
-// ---- Rūšys / Savivaldybės.
+// ---- Rūšys / Savivaldybės: sortable by name, observations and animals (VISUAL-13); until the
+// visitor sorts, the summary's own order. The CSV follows the order shown.
+type GroupKey = 'name' | 'n' | 'animals';
 const groups = computed<SummaryRow[]>(() =>
   active.value === 'rusys' ? speciesSummary(rows.value) : municipalitySummary(rows.value),
 );
+const groupColumns = computed<{ key: GroupKey; label: string; numeric: boolean }[]>(() => [
+  {
+    key: 'name',
+    label: active.value === 'rusys' ? SS.colSpecies : SS.colMunicipality,
+    numeric: false,
+  },
+  { key: 'n', label: COL_OBSERVATIONS, numeric: true },
+  { key: 'animals', label: COL_ANIMALS, numeric: true },
+]);
+const groupSort = ref<{ key: GroupKey; dir: 'asc' | 'desc' } | null>(null);
+watch(active, () => (groupSort.value = null));
+const sortedGroups = computed(() => {
+  const sort = groupSort.value;
+  if (!sort) return groups.value;
+  const dir = sort.dir === 'asc' ? 1 : -1;
+  const value = (g: SummaryRow) => (sort.key === 'name' ? g.label : g[sort.key]);
+  return [...groups.value].sort((a, b) => {
+    const va = value(a);
+    const vb = value(b);
+    if (va === null || vb === null) return va === vb ? 0 : va === null ? 1 : -1;
+    return dir * (typeof va === 'number' ? va - (vb as number) : compareLt(va, vb as string));
+  });
+});
+function toggleGroupSort(key: GroupKey) {
+  const sort = groupSort.value;
+  if (sort?.key === key) groupSort.value = { key, dir: sort.dir === 'desc' ? 'asc' : 'desc' };
+  else groupSort.value = { key, dir: key === 'name' ? 'asc' : 'desc' };
+}
+const groupAriaSort = (key: GroupKey) =>
+  groupSort.value?.key === key
+    ? groupSort.value.dir === 'asc'
+      ? 'ascending'
+      : 'descending'
+    : 'none';
+const groupArrow = (key: GroupKey) =>
+  groupSort.value?.key === key ? (groupSort.value.dir === 'asc' ? '▲' : '▼') : '↕';
 const animalsText = (n: number | null) => (n === null ? '–' : formatInt(n));
 function groupAction(g: SummaryRow) {
   if (active.value === 'rusys') return true;
@@ -517,12 +620,13 @@ function showGroup(g: SummaryRow) {
   emit('show-on-map');
 }
 
-// ---- CSV of the active table: all filtered rows in the shown order (§3.6).
+// ---- CSV of the active table: all filtered rows, or the groups, in the shown order (§3.6).
 function downloadCurrent() {
   const table = active.value;
   const csv = buildStebCsv({
     table,
     records: rows.value,
+    groups: table === 'irasai' ? undefined : sortedGroups.value,
     fetchedAt: ctx.data.fetchedAt.value,
     labels: {
       period: ctx.derived.periodLabel.value,

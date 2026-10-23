@@ -1,10 +1,16 @@
 <template>
-  <div ref="rootEl" class="relative" :class="shrinkable ? 'min-w-0 max-w-[22rem]' : 'shrink-0'">
+  <div
+    ref="rootEl"
+    class="relative"
+    :class="shrinkable ? 'min-w-0 max-w-[22rem]' : 'shrink-0'"
+    :title="disabled && disabledHint ? disabledHint : undefined"
+  >
     <HuntingHubShellFilterChip
       ref="triggerEl"
       :name="name"
       :value="value"
       :active="active"
+      :disabled="disabled"
       :open="isOpen"
       :name-class="nameClass"
       :sr-label="srLabel"
@@ -55,6 +61,9 @@ const props = defineProps({
   srLabel: { type: String, default: '' },
   // Selector of the element that gets focus on open (default: the first control).
   initialFocus: { type: String, default: '' },
+  // Not available now (the Vilkai fallback); the hint says why (shown on hover).
+  disabled: { type: Boolean, default: false },
+  disabledHint: { type: String, default: '' },
 });
 
 const panelId = `hub-vilkai-popover-${getCurrentInstance()?.uid ?? 0}`;

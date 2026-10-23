@@ -43,7 +43,11 @@
       class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2"
       :class="variant === 'drawer' ? 'px-4' : ''"
     >
-      <div role="tablist" aria-label="Lentelės" class="flex min-w-0 gap-1 overflow-x-auto p-0.5">
+      <div
+        role="tablist"
+        aria-label="Lentelės"
+        class="flex min-w-0 gap-1 overflow-x-auto p-0.5 max-md:flex-wrap max-md:overflow-visible"
+      >
         <button
           v-for="tab in tabs"
           :id="tabId(tab.id)"
@@ -65,7 +69,17 @@
           {{ tab.label }}
         </button>
       </div>
-      <HuntingWolvesCsvButton />
+      <!-- The CSV of the table on screen (REGRESS-03): the records, or the summary table as
+           shown. Element-rooted v-if branches (async components). -->
+      <div v-if="activeTab === 'irasai'" class="contents"><HuntingWolvesCsvButton /></div>
+      <div v-else class="contents">
+        <HuntingHubTableCsvButton
+          :table="summaryTable || EMPTY_TABLE"
+          :caption="title"
+          :sort="activeTab === 'savivaldybes' ? municipalitySort : null"
+          :provenance="provenance"
+        />
+      </div>
     </div>
 
     <div
@@ -88,7 +102,7 @@
             :compact="compact"
             @show-on-map="(record: unknown) => emit('show-on-map', record)"
           />
-          <HuntingWolvesSeasonMonthTable v-else-if="tab.id === 'sezonai'" />
+          <HuntingWolvesSeasonMonthTable v-else-if="tab.id === 'sezonai'" :ref="setSummary" />
           <!-- The tab stays when the boundaries fail, so a shared link keeps its view. -->
           <div
             v-else-if="municipalityStatus === 'failed'"
@@ -106,7 +120,12 @@
           <p v-else-if="!municipalitiesReady" class="text-sm text-ink-muted" role="status">
             Skaičiuojama…
           </p>
-          <HuntingWolvesMunicipalityTable v-else />
+          <HuntingWolvesMunicipalityTable
+            v-else
+            :ref="setSummary"
+            v-model:sort="municipalitySort"
+            @show-on-map="(code: number) => emit('show-on-map', code)"
+          />
         </template>
       </div>
     </div>
@@ -114,11 +133,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, nextTick, watch } from 'vue';
+import { computed, inject, nextTick, ref, watch } from 'vue';
 import { WOLVES_CTX } from '@/composables/hunting/context';
 import { HUB_CTX } from '@/composables/hunting/hub/context';
 import { embedFocusAllowed } from '@/utils/hunting/hub/embed';
 import { hasMunicipalities } from '@/utils/hunting/municipalities';
+import { formatDateTime } from '@/utils/hunting/dates';
+import { S } from '@/utils/hunting/hub/strings';
+import type { Provenance, TableDef } from '@/utils/hunting/hub/types';
+import type { SortState } from '@/components/hunting/hub/table/sort';
 import {
   BTN_SECONDARY,
   BTN_TEXT,
@@ -139,7 +162,8 @@ const props = defineProps({
   drawerClass: { type: String, default: '' },
   compact: { type: Boolean, default: false },
 });
-// 'show-on-map' (record: WolfRecord): the parent may collapse the mobile sheet.
+// 'show-on-map' (record: WolfRecord, or code: number from the municipality table): the parent
+// closes the table where it covers the map, or collapses the mobile sheet.
 const emit = defineEmits(['show-on-map']);
 
 // The map toggle button ("Lentelė" / "Slėpti lentelę") should use
@@ -248,4 +272,28 @@ watch(
 function close() {
   state.tableOpen.value = false;
 }
+
+// The summary tables expose their content as a hub TableDef; until one is mounted the CSV
+// button waits (disabled, no rows).
+const summaryRef = ref<{ table: TableDef } | null>(null);
+// A function ref: the tables sit in the tabs' v-for (a string ref would be an array).
+const setSummary = (el: unknown) => (summaryRef.value = (el as { table: TableDef } | null) || null);
+const summaryTable = computed(() =>
+  activeTab.value === 'irasai' ? null : summaryRef.value?.table,
+);
+// The municipality table's sort, here so the CSV follows the table and the phone cards.
+const municipalitySort = ref<SortState | null>(null);
+const EMPTY_TABLE: TableDef = {
+  id: '',
+  label: '',
+  columns: [],
+  rows: [],
+  footnotes: [],
+  csvName: '',
+};
+// First CSV line: the live provenance, as the WP header line names it.
+const provenance = computed<Provenance>(() => {
+  const at = data.fetchedAt?.value;
+  return { kind: 'live', asOf: '', text: at ? S.provenanceLive(formatDateTime(at)) : S.appTitle };
+});
 </script>

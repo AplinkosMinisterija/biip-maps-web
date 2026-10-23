@@ -42,6 +42,8 @@ export interface CsvOptions {
   withMunicipality?: boolean;
   // Preparation time; defaults to now.
   now?: Date;
+  // Comment lines after the first one (e.g. the official AM figure of a closed season).
+  notes?: string[];
 }
 
 export function buildCsv(records: WolfRecord[], options: CsvOptions) {
@@ -50,8 +52,9 @@ export function buildCsv(records: WolfRecord[], options: CsvOptions) {
   const lines: string[] = [
     `# Sumedžioti vilkai; ${interval.from}–${interval.to}; ` +
       `${csvSafe((placeLabel || 'visa Lietuva').replace(/[;\r\n]/g, ' '))}; ` +
-      `parengta ${formatDateTime(now)}; šaltinis: BIIP ir BIOMON (medziokle.biip.lt); ` +
+      `parengta ${formatDateTime(now)}; šaltinis: BĮIP ir BIOMON (medziokle.biip.lt); ` +
       'vietos koordinatės ir identifikatoriai neįtraukti',
+    ...(options.notes || []).map((note) => `# ${note.replace(/[\r\n]/g, ' ')}`),
     [...HEADER, ...(withMunicipality ? ['savivaldybe'] : [])].join(CSV_SEPARATOR),
   ];
   records.forEach((r) => {

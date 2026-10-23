@@ -19,6 +19,7 @@ import { CSV_BOM, CSV_EOL, CSV_SEPARATOR, csvField, csvSafe } from '@/utils/hunt
 import type { Interval } from '@/utils/hunting/types';
 import { P_ANIMAL, P_SPECIFIED } from '@/utils/hunting/hub/strings';
 import { truncatedPart } from './strings';
+import { mpvName } from '@/components/hunting/hub/table/text';
 
 // ---------------------------------------------------------------------------
 // Contract constants (§4.2; S2 keeps the contract copies, ?debug=1 checks they agree)
@@ -361,10 +362,15 @@ export function countText(r: StebRecord): string {
   );
 }
 
-/** "Faktas – kitas faktas", the fact alone, or "Nenurodyta". */
+// Form notation off a displayed value: "Stebėtas gyvas individas(-ai)" → "Stebėtas gyvas
+// individas" (CONTENT-16). Display only; the CSV keeps the source text.
+export const plainFact = (text: string) => text.replace(/\s*\(-ai\)$/, '').trim();
+
+/** "Faktas – kitas faktas", the fact alone, or "Nenurodyta" (display: no "(-ai)"). */
 export function factText(r: StebRecord): string {
-  if (r.fact && r.factOther) return `${r.fact} – ${r.factOther}`;
-  return r.fact || r.factOther || NOT_SET_LABEL;
+  const fact = r.fact ? plainFact(r.fact) : r.fact;
+  if (fact && r.factOther) return `${fact} – ${r.factOther}`;
+  return fact || r.factOther || NOT_SET_LABEL;
 }
 
 /** 'yyyy-MM-dd HH:mm' (Vilnius) or "Nenurodyta". */
@@ -569,6 +575,13 @@ export function firstDay(records: StebRecord[]): string | null {
   return first || null;
 }
 
+/** The newest record day of `records`, or null. */
+export function lastDay(records: StebRecord[]): string | null {
+  let last = '';
+  for (const r of records) if (r.day && r.day > last) last = r.day;
+  return last || null;
+}
+
 /**
  * The sentence prefix of a period: "Nuo …" (all records, used for the no-record sentence:
  * since the first record, `since` when given, else the first day of `records`), "Per
@@ -594,10 +607,11 @@ export function answerPrefix(
 }
 
 /**
- * "{prefix} užregistruota 13 stebėjimų: vilkas – 6, lūšis – 5, rudasis lokys – 2." plus
- * "Pranešimuose nurodyta 17 gyvūnų." when a row has a count; all records: "Iš viso
- * užregistruoti 8 stebėjimai (pirmasis – 2026-09-21): …" (the date does not look like a
- * period filter); for no rows "{prefix} stebėjimų neužregistruota.". Species are common
+ * "{prefix} užregistruota 13 stebėjimų (paskutinis – 2026-10-16): vilkas – 6, lūšis – 5,
+ * rudasis lokys – 2." plus "Pranešimuose nurodyta 17 gyvūnų." when a row has a count; all
+ * records: "Iš viso nuo 2026-09-21 užregistruoti 8 stebėjimai (paskutinis – 2026-10-16): …"
+ * (the dates do not look like a period filter); for no rows "{prefix} stebėjimų
+ * neužregistruota.". Species are common
  * nouns inside the sentence (lower case). `records` are the filtered rows; `since` is the
  * first day of all loaded rows.
  */
@@ -618,12 +632,15 @@ export function answerText(
     .join(', ');
   const verb = pluralLt(n, P_REGISTERED);
   const count = `${formatInt(n)} ${pluralLt(n, P_OBSERVATION)}`;
+  // The newest day answers "recently?" (JOURNEYS-08); the first one says since when.
+  const last = lastDay(records);
+  const first = firstDay(records);
+  const latest = last && n > 1 ? ` (paskutinis –${NBSP}${last})` : '';
   let head: string;
   if (period.kind === 'all' || !periodInterval(period, today)) {
-    const first = firstDay(records);
-    head = `Iš viso ${verb} ${count}${first ? ` (pirmasis –${NBSP}${first})` : ''}`;
+    head = `Iš viso${first ? ` nuo ${first}` : ''} ${verb} ${count}${latest}`;
   } else {
-    head = `${prefix} ${verb} ${count}`;
+    head = `${prefix} ${verb} ${count}${latest}`;
   }
   const sentence = `${head}: ${list}.`;
   const m = animalsOf(records);
@@ -751,6 +768,9 @@ export interface StebCsvOptions {
   table: StebTableId;
   /** Filtered rows in the order the table shows them (irasai). */
   records: StebRecord[];
+  /** Rūšys / Savivaldybės: the groups in the order the table shows them (default: the
+   *  summary's own order). */
+  groups?: SummaryRow[];
   /** When the data was read. */
   fetchedAt: Date | null;
   /** Texts of the selection (§3.6 line 2). */
@@ -799,7 +819,8 @@ export function buildStebCsv(options: StebCsvOptions): string {
           r.factOther,
           r.municipality,
           r.eldership,
-          r.huntingArea,
+          // The MPV name as the table shows it (REGRESS-08).
+          mpvName(r.huntingArea),
           r.x === null ? null : Math.round(r.x),
           r.y === null ? null : Math.round(r.y),
           options.linkOf(r),
@@ -807,7 +828,9 @@ export function buildStebCsv(options: StebCsvOptions): string {
       );
     });
   } else {
-    const rows = table === 'rusys' ? speciesSummary(records) : municipalitySummary(records);
+    const rows =
+      options.groups ||
+      (table === 'rusys' ? speciesSummary(records) : municipalitySummary(records));
     lines.push(line([table === 'rusys' ? 'Rūšis' : 'Savivaldybė', 'Stebėjimų', 'Gyvūnų']));
     lines.push(line(['Iš viso', records.length, animalsOf(records)]));
     rows.forEach((g) => lines.push(line([g.label, g.n, g.animals])));

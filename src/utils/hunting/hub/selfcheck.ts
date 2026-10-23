@@ -8,6 +8,7 @@
 // Expected values are those verified on prod for the 2026-10-09 snapshot; values marked
 // "exact for a 2026-10-09 run" are only checked when meta.snapshotDate is that day.
 import { WOLF_LIMITS } from '@/utils/hunting/labels';
+import { foldLt, rankByQuery } from '@/components/hunting/hub/shell/shell';
 import type { SelfCheckResult } from '@/utils/hunting/selfcheck';
 import { classIndex, classLabels } from './classes';
 import { buildTableCsv, tableCsvFileName } from './csv';
@@ -24,8 +25,10 @@ import {
 } from './time';
 import {
   createHeightReporter,
+  createModalReporter,
   EMBED_TOPICS,
   heightMessage,
+  modalMessage,
   isAllowedParent,
   PASS_KEYS,
   parseCommand,
@@ -35,6 +38,7 @@ import {
   stateQuery,
 } from './embed';
 import { hubTop, isRailed, mapPadding, tableReplacesMap } from './layout';
+import { firstSentence, peekSecondLine } from '@/components/hunting/hub/shell/sheet';
 import {
   ABOUT_LOCALE_RULE,
   ATTRIBUTION_RULE,
@@ -231,6 +235,40 @@ export function runHubUnitChecks(): SelfCheckResult[] {
       ],
     );
   });
+  check('Paieška: žodžio pradžia pirmiau (Vieta, Rūšis)', () => {
+    const keyed = (labels: string[], group?: string) =>
+      labels.map((label) => ({ label, group, key: foldLt(label) }));
+    const places = keyed([
+      'Visa Lietuva',
+      'Kaišiadorių r. sav.',
+      'Kauno m. sav.',
+      'Kauno r. sav.',
+      'Šilutės r. sav.',
+      'Utenos r. sav.',
+    ]);
+    const labels = (q: string) => rankByQuery(places, foldLt(q)).map((i) => i.label);
+    // Grouped (Rūšis): a group stays together, the group with the best hit first.
+    const grouped = (a: string[], b: string[]) =>
+      rankByQuery([...keyed(a, 'A'), ...keyed(b, 'B')], 'bbb').map((i) => i.label);
+    return eq(
+      [
+        labels('ute')[0],
+        labels('Kau'),
+        labels('kaisiadoriu'),
+        labels(''),
+        grouped(['Aaa bbb', 'Xbbb'], ['Bbb c']),
+        grouped(['Xbbb'], ['Bbb c']),
+      ],
+      [
+        'Utenos r. sav.',
+        ['Kauno m. sav.', 'Kauno r. sav.'],
+        ['Kaišiadorių r. sav.'],
+        places.map((i) => i.label),
+        ['Aaa bbb', 'Xbbb', 'Bbb c'],
+        ['Bbb c', 'Xbbb'],
+      ],
+    );
+  });
   check('Klasės', () =>
     eq(
       [
@@ -280,7 +318,7 @@ export function runHubUnitChecks(): SelfCheckResult[] {
       [csv.slice(1).split('\r\n'), tableCsvFileName(table)],
       [
         [
-          '# Duomenys: 2026-10-09 momentinė kopija; BĮIP',
+          '# Duomenys 2026-10-09 būklei; BĮIP',
           'Savivaldybė;Pranešimai;per 1 000 ha',
           'Iš viso;14;1,5',
           "'=SUM(A1);<3;20,6",
@@ -324,7 +362,7 @@ export function runHubUnitChecks(): SelfCheckResult[] {
     return eq(csv.slice(1).split('\r\n').slice(2, 5), [
       'A;5;7;1,5',
       'B;2;Neskelbiama (mažiau nei 3 MPV);',
-      'C;Nėra MPV;;',
+      'C;;;',
     ]);
   });
   check('Lentelių stulpeliai (zip)', () => {
@@ -803,6 +841,54 @@ function runEmbedChecks(check: Check, eq: Eq) {
     );
   });
 
+  check('Telefono lapo antra eilutė nekartoja pirmos (JOURNEYS-04)', () => {
+    const second = (answer: string, kpis: { value: string; label: string; sub?: string }[]) =>
+      peekSecondLine(answer, firstSentence(answer), kpis);
+    return eq(
+      [
+        second(
+          'Gauti 503 pranešimai apie žalą iš 226 pranešėjų. Daugiausia – Kėdainių r. sav. (92).',
+          [{ value: '503', label: 'Pranešimai' }],
+        ),
+        second(
+          '2026/2027 sezoną leidžiama sumedžioti 3 802 briedžius (įsakymu patvirtinta 3 935). ' +
+            '2025/2026 sezone sumedžiota 2 372 iš 4 177 (57 %).',
+          [{ value: '3 802', label: 'Leidžiama sumedžioti' }],
+        ),
+        second('Sumedžioti 129 485 gyvūnai.', [
+          { value: '129 485', label: 'Sumedžiota', sub: '+8,5 %' },
+          { value: '20,6', label: 'Per 1 000 ha', sub: 'x' },
+        ]),
+        second('Utenos r. sav. 2026/2027 sezonui limitas nenustatytas.', [
+          { value: '12', label: 'Sumedžiota', sub: '+1' },
+        ]),
+      ],
+      [
+        'Daugiausia – Kėdainių r. sav. (92).',
+        '2025/2026 sezone sumedžiota 2 372 iš 4 177 (57 %).',
+        '20,6 per 1 000 ha',
+        '12 sumedžiota · +1',
+      ],
+    );
+  });
+
+  check('Įterpimas: modal žinutė tik po ready ir tik pasikeitus (D16)', () => {
+    const sent: boolean[] = [];
+    const reporter = createModalReporter((open) => sent.push(open));
+    reporter.set(true); // before `ready`: held back
+    reporter.ready(); // reported now
+    reporter.set(true); // no change: nothing
+    reporter.set(false);
+    reporter.set(false);
+    reporter.set(true);
+    reporter.stop(); // the hub leaves with a modal open: closed
+    reporter.set(true); // after stop: nothing
+    return eq(
+      [sent, modalMessage(true), modalMessage(false).biipHunting.open],
+      [[true, false, true, false], { biipHunting: { v: 1, type: 'modal', open: true } }, false],
+    );
+  });
+
   check('Įterpimas: išdėstymas', () =>
     eq(
       [
@@ -812,11 +898,24 @@ function runEmbedChecks(check: Check, eq: Eq) {
         tableReplacesMap(390, true, true),
         mapPadding(1440, false, true)[0],
       ],
-      [56, false, true, false, 56],
+      [56, true, true, false, 56],
     ),
   );
 
-  check('Išdėstymas be įterpimo nepakito', () =>
+  check('Žemas rėmelis: skydelis – juostelė ant žemėlapio (MOBILE-05)', () =>
+    eq(
+      [
+        isRailed(844, false, true, true),
+        isRailed(844, true, true, true),
+        isRailed(390, false, true, true),
+        isRailed(844, false, true),
+        mapPadding(844, false, true, true),
+      ],
+      [true, false, false, false, [56, 0, 0, 64]],
+    ),
+  );
+
+  check('Išdėstymas be įterpimo', () =>
     eq(
       [
         mapPadding(1440, true),
@@ -825,7 +924,7 @@ function runEmbedChecks(check: Check, eq: Eq) {
         tableReplacesMap(1440, true),
         tableReplacesMap(1100, true),
       ],
-      [[112, 568, 0, 64], 112, true, false, true],
+      [[112, 0, 0, 396], 112, true, true, true],
     ),
   );
 
@@ -1066,13 +1165,13 @@ function runLiveTopicChecks(check: Check, eq: Eq) {
     if (common.indexOf(ABOUT_LOCALE_RULE) < 0) problems.push('no ABOUT_LOCALE_RULE');
     forbiddenWordsIn([texts]).forEach((word) => problems.push(`"${word}"`));
     const counts = [about.source, about.meaning, about.missing, about.compare].map((l) => l.length);
-    if (JSON.stringify(counts) !== JSON.stringify([2, 4, 2, 2])) {
+    if (JSON.stringify(counts) !== JSON.stringify([2, 4, 2, 1])) {
       problems.push(`sections ${counts.join('/')}`);
     }
-    // Apžvalga states its own rules too (OVERVIEW-27: the Stebėjimai card shows exact places).
-    const others = TOPICS.filter(
-      (t) => t.id !== 'stebejimai' && t.id !== 'apzvalga' && t.aboutCommon,
-    ).map((t) => t.id);
+    // Apžvalga states its own rules too (OVERVIEW-27: the Stebėjimai card shows exact places),
+    // and so does Vilkai (CONTENT-03: one point and one row per wolf).
+    const own = ['stebejimai', 'apzvalga', 'vilkai'];
+    const others = TOPICS.filter((t) => own.indexOf(t.id) < 0 && t.aboutCommon).map((t) => t.id);
     if (others.length) problems.push(`aboutCommon on ${others.join(', ')}`);
     return problems.length === 0 || problems.join('; ');
   });
@@ -1419,7 +1518,8 @@ export function runHubDataChecks(data: SnapshotData | null | undefined): SelfChe
       return missing.length === 0 || `"${answer}"`;
     });
   };
-  // Apžvalga keeps every number it showed before the card redesign (exact for 2026-10-09).
+  // Apžvalga keeps every number it showed before the card redesign (exact for 2026-10-09);
+  // shares in whole percent, as the topics show them (CONTENT-05).
   const card = (id: string, expected: string[]) => {
     const topic = TOPICS.find((t) => t.id === id);
     if (!topic?.overview || topic.files.some((f) => f !== 'meta' && (data as any)[f] === undefined))
@@ -1435,9 +1535,9 @@ export function runHubDataChecks(data: SnapshotData | null | undefined): SelfChe
   };
   if (exactDay) {
     card('laimikiai', ['129 485', '8,5 %', '9 381']);
-    card('limitai', ['3 802', '3 935', '2 372', '4 177', '56,8 %']);
+    card('limitai', ['3 802', '3 935', '2 372', '4 177', '57 %']);
     card('zala', ['503', '226', '283', 'Kėdainių r. sav. (92)']);
-    card('vilkai', ['275', '307', '89,6 %']);
+    card('vilkai', ['275', '307', '90 %']);
   }
   headline('laimikiai', 2025, ['129 485', '8,5 %']);
   headline('limitai', 2025, ['2 372', '4 177', '57 %']);

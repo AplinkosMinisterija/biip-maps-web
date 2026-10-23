@@ -159,12 +159,14 @@ export const isExact = (c: Count) => c.lo === c.hi;
 export const isSuppressed = (c: Count) => !c.withheld && c.hi > 0 && c.hi < 3;
 const isUnknown = (c: Count) => c.withheld || (c.lo === 0 && c.hi === Infinity);
 
-// "<3", "5", "5–7", "≥ 5" or "neskelbiama".
+// "<3", "5", "5–7", "iki 12", "≥ 5" or "neskelbiama". A range from 0 reads as an upper bound
+// ("iki 12", not "0–12": the same bounds in the reader's terms, CONTENT-28).
 export function formatCount(c: Count) {
   if (isUnknown(c)) return S.withheld;
   if (isSuppressed(c)) return S.suppressed;
   if (isExact(c)) return formatInt(c.lo);
   if (c.hi === Infinity) return `≥${NBSP}${formatInt(c.lo)}`;
+  if (c.lo === 0) return `iki ${formatInt(c.hi)}`;
   return `${formatInt(c.lo)}–${formatInt(c.hi)}`;
 }
 
@@ -187,13 +189,14 @@ export function formatMapCount(v: number) {
   return `~${NBSP}${formatInt(Math.round(v))}`;
 }
 
-// "92 pranešimai" / "mažiau nei 3 pranešimai" / "nuo 5 iki 7 pranešimų" /
+// "92 pranešimai" / "mažiau nei 3 pranešimai" / "nuo 5 iki 7 pranešimų" / "iki 12 pranešimų" /
 // "ne mažiau nei 5 pranešimų" / "neskelbiamas skaičius pranešimų".
 export function countPhrase(c: Count, forms: PluralForms) {
   if (isUnknown(c)) return `neskelbiamas skaičius ${forms[2]}`;
   if (isSuppressed(c)) return `mažiau nei 3 ${forms[1]}`;
   if (isExact(c)) return `${formatInt(c.lo)} ${pluralLt(c.lo, forms)}`;
   if (c.hi === Infinity) return `ne mažiau nei ${formatInt(c.lo)} ${forms[2]}`;
+  if (c.lo === 0) return `iki ${formatInt(c.hi)} ${forms[2]}`;
   return `nuo ${formatInt(c.lo)} iki ${formatInt(c.hi)} ${forms[2]}`;
 }
 

@@ -51,10 +51,7 @@ const about: AboutDef = {
     'Pranešėjų vardai, telefonai, el. pašto adresai, pastabos ir nuotraukos neskelbiami.',
     'Plėšrūnų užpulti gyvūnai nurodomi įrašo puslapyje (nuoroda „Peržiūrėti įrašą“).',
   ],
-  compare: [
-    'Įrašo puslapis medžioklės svetainėje rodo tą patį įrašą.',
-    'Ankstesnis žemėlapis rodė tuos pačius pranešimus sluoksnyje „Stebėti gyvūnai“.',
-  ],
+  compare: ['Įrašo puslapis medžioklės svetainėje rodo tą patį įrašą.'],
 };
 
 // Replaces the default "Bendros taisyklės" lines, which promise sums without MPV or exact

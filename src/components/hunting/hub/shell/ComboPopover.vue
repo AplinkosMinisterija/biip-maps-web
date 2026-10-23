@@ -36,7 +36,7 @@
       v-if="mode === 'sheet'"
       :open="isOpen"
       :title="sheetTitle || placeholder"
-      initial-focus="input"
+      :initial-focus="coarsePointer ? '' : 'input'"
       @close="close()"
     >
       <ComboList />
@@ -64,9 +64,10 @@ import {
   watch,
   type PropType,
 } from 'vue';
-import { foldLt } from './shell';
+import { foldLt, rankByQuery } from './shell';
 import {
   FIELD,
+  FIELD_FOCUS_INSET,
   FIELD_TOUCH,
   GROUP_LABEL,
   OPTION,
@@ -102,6 +103,9 @@ const emit = defineEmits(['update:modelValue']);
 
 const uid = `hub-combo-${getCurrentInstance()?.uid ?? 0}`;
 const isOpen = ref(false);
+// Touch: the sheet's title gets focus, as in the other sheets, and the keyboard opens only
+// when the search field is tapped; it would cover half of the list (MOBILE-18).
+const coarsePointer = window.matchMedia?.('(pointer: coarse)').matches ?? false;
 const query = ref('');
 const active = ref(0);
 const root = ref<HTMLElement | null>(null);
@@ -114,10 +118,8 @@ const current = computed(() => props.items.find((i) => i.value === props.modelVa
 const isSet = computed(() => props.modelValue !== props.defaultValue);
 const chipText = computed(() => props.valueText || current.value?.label || '');
 
-const filtered = computed(() => {
-  const q = foldLt(query.value.trim());
-  return q ? keyed.value.filter((i) => i.key.includes(q)) : keyed.value;
-});
+// Word-start hits first, so "ute" + Enter picks Utenos r. sav., not Šilutės (JOURNEYS-01).
+const filtered = computed(() => rankByQuery(keyed.value, foldLt(query.value.trim())));
 const optionId = (item: ComboItem) => `${uid}-opt-${item.value}`;
 const activeId = computed(() => {
   const item = filtered.value[active.value];
@@ -231,7 +233,7 @@ const ComboList = defineComponent({
                 : i === active.value && inputFocused.value
                   ? OPTION_HIGHLIGHT
                   : '',
-              i === active.value && inputFocused.value ? 'ring-2 ring-inset ring-brand' : '',
+              i === active.value && inputFocused.value ? 'shadow-[inset_3px_0_0_#004650]' : '',
               'justify-between',
             ],
             onMousedown: (e: MouseEvent) => e.preventDefault(),
@@ -277,7 +279,11 @@ const ComboList = defineComponent({
           'aria-expanded': 'true',
           'aria-controls': `${uid}-list`,
           'aria-activedescendant': activeId.value,
-          class: [FIELD, large ? FIELD_TOUCH : '', 'placeholder:text-ink-muted'],
+          class: [
+            props.mode === 'inline' ? FIELD : FIELD_FOCUS_INSET,
+            large ? FIELD_TOUCH : '',
+            'placeholder:text-ink-muted',
+          ],
           onInput: (e: Event) => (query.value = (e.target as HTMLInputElement).value),
           onKeydown,
           onFocus: () => (inputFocused.value = true),

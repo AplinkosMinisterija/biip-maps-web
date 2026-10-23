@@ -59,9 +59,11 @@ import {
   ABOUT_LOCALE_RULE,
   ATTRIBUTION_RULE,
   S,
+  SOURCE_BIIP,
   TOPIC_TABS,
 } from '@/utils/hunting/hub/strings';
 import { focusRing, trapTab } from './shell';
+import { useModalState } from './sheet';
 
 // About dialog (§5): four fixed headings per topic, then "Bendros taisyklės" (the topic's
 // own `aboutCommon` lines when it has them, else the shell's default lines).
@@ -74,8 +76,8 @@ const ctx = inject(HUB_CTX)!;
 // Default texts of "Bendros taisyklės" (§5: attribution rule, snapshot, locale, no personal
 // data). The locale rule is shared with the topics' own lines (strings.ts).
 const PRIVACY_RULE =
-  'Asmens duomenys neskelbiami: rodomos tik visos Lietuvos ir savivaldybių sumos, be MPV, ' +
-  'pranešėjų ar tikslių vietų.';
+  'Asmens duomenys neskelbiami: rodomos tik visos Lietuvos ir savivaldybių sumos – be MPV ' +
+  'duomenų, pranešėjų tapatybės ir tikslių vietų.';
 
 // Embedded Apžvalga: the frame grows to its content (D12b), so a centred dialog could open
 // below the visible part of the page; open it at the top of the frame instead.
@@ -86,6 +88,8 @@ const LIVE_SOURCE_RULE =
   'šią temą.';
 
 const isOpen = ref(false);
+// Embedded, the WP page dims and disables its own chrome while the dialog is open (D16).
+useModalState(isOpen);
 const topicId = ref<TopicId>(ctx.sel.value.topic);
 const dialog = ref<HTMLElement | null>(null);
 const titleEl = ref<HTMLElement | null>(null);
@@ -121,7 +125,14 @@ const sections = computed(() => {
   const about = props.topics[topicId.value]?.about;
   if (!about) return [];
   return (['source', 'meaning', 'missing', 'compare'] as const)
-    .map((key) => ({ key, heading: ABOUT_HEADINGS[key], lines: about[key] || [] }))
+    .map((key) => {
+      const lines = about[key] || [];
+      // Every "Šaltinis ir atnaujinimas" names the platform in plain words first (JOURNEYS-14).
+      if (key !== 'source' || !lines.length || lines.includes(SOURCE_BIIP)) {
+        return { key, heading: ABOUT_HEADINGS[key], lines };
+      }
+      return { key, heading: ABOUT_HEADINGS[key], lines: [SOURCE_BIIP, ...lines] };
+    })
     .filter((part) => part.lines.length);
 });
 

@@ -306,7 +306,7 @@ export function runStebejimaiChecks(): SelfCheckResult[] {
       [countText(bison), factText(bison), factText(noPoint), countText(noPoint)],
       [
         '6 (patinų 2, patelių 3, jauniklių 1)',
-        'Stebėtas gyvas individas(-ai)',
+        'Stebėtas gyvas individas',
         'Aptikti pėdsakai – =1+1',
         '4',
       ],
@@ -454,11 +454,11 @@ export function runStebejimaiChecks(): SelfCheckResult[] {
       [
         'Per paskutines 30 d. stebėjimų neužregistruota.',
         'Per paskutines 30 d. užregistruotas 1 stebėjimas: vilkas – 1.',
-        'Per paskutines 30 d. užregistruoti 2 stebėjimai: vilkas – 2.',
-        'Per paskutines 30 d. užregistruota 10 stebėjimų: vilkas – 10.',
-        'Per paskutines 30 d. užregistruota 11 stebėjimų: vilkas – 11.',
-        'Per paskutines 30 d. užregistruotas 21 stebėjimas: vilkas – 21.',
-        'Per paskutines 30 d. užregistruoti 22 stebėjimai: vilkas – 22.',
+        'Per paskutines 30 d. užregistruoti 2 stebėjimai (paskutinis – 2026-10-18): vilkas – 2.',
+        'Per paskutines 30 d. užregistruota 10 stebėjimų (paskutinis – 2026-10-18): vilkas – 10.',
+        'Per paskutines 30 d. užregistruota 11 stebėjimų (paskutinis – 2026-10-18): vilkas – 11.',
+        'Per paskutines 30 d. užregistruotas 21 stebėjimas (paskutinis – 2026-10-18): vilkas – 21.',
+        'Per paskutines 30 d. užregistruoti 22 stebėjimai (paskutinis – 2026-10-18): vilkas – 22.',
       ],
     ),
   );
@@ -484,15 +484,16 @@ export function runStebejimaiChecks(): SelfCheckResult[] {
           .text,
       ].map(sp),
       [
-        'Iš viso užregistruoti 8 stebėjimai (pirmasis – 2024-05-02): vilkas – 3, lūšis – 2, ' +
-          'rudasis lokys – 1, stumbras – 1, nenurodyta – 1. Pranešimuose nurodyta 18 gyvūnų.',
-        '2026/2027 sezone užregistruoti 8 stebėjimai: vilkas – 2, lūšis – 2, stumbras – 2, ' +
-          'briedis – 2.',
+        'Iš viso nuo 2024-05-02 užregistruoti 8 stebėjimai (paskutinis – 2026-10-18): vilkas – 3, ' +
+          'lūšis – 2, rudasis lokys – 1, stumbras – 1, nenurodyta – 1. Pranešimuose nurodyta 18 ' +
+          'gyvūnų.',
+        '2026/2027 sezone užregistruoti 8 stebėjimai (paskutinis – 2026-10-18): vilkas – 2, ' +
+          'lūšis – 2, stumbras – 2, briedis – 2.',
         'Stebėjimų neužregistruota.',
         '2026-04-01 užregistruotas 1 stebėjimas: vilkas – 1.',
         'Iš viso užregistruotas 1 stebėjimas: nenurodyta – 1.',
         'Nuo 2024-05-02 stebėjimų neužregistruota.',
-        'Iš viso užregistruotas 1 stebėjimas (pirmasis – 2026-10-01): lūšis – 1.',
+        'Iš viso nuo 2026-10-01 užregistruotas 1 stebėjimas: lūšis – 1.',
         'Laikotarpiu 2026-10-01 – 2026-10-20 užregistruotas 1 stebėjimas: vilkas – 1. ' +
           'Pranešimuose nurodytas 1 gyvūnas.',
       ],
@@ -658,9 +659,9 @@ export function runStebejimaiChecks(): SelfCheckResult[] {
   check('Stebėjimai: rūšių spalvos', () =>
     eq(['vilkas', 'lusis', 'rudasis-lokys', 'stumbras', 'briedis', '__proto__'].map(speciesColor), [
       '#B45309',
-      '#8B5CF6',
-      '#0891B2',
-      '#65A30D',
+      '#7C7CCB',
+      '#1DA09F',
+      '#638353',
       STEB_OTHER_COLOR,
       STEB_OTHER_COLOR,
     ]),

@@ -4,8 +4,6 @@
     :class="{
       'hunting-hub--mobile': isMobile,
       'hunting-hub--desktop': !isMobile && !isProductionHost,
-      'hunting-hub--rail': railed && !isMobile,
-      'hunting-hub--drawer': drawerOpen,
       'hunting-hub--overview': topicKind === 'overview',
       'hunting-hub--embed': embed,
     }"
@@ -33,8 +31,8 @@
             <HuntingHubShellTopicPanel />
           </HuntingHubShellPanelFrame>
 
-          <!-- Table: drawer ≥ 1280 px, replaces the map 768–1279 px; it positions itself and
-               shows while `lentele` is set. -->
+          <!-- Table (D14): right of the rail ≥ 1280 px, right of the panel 768–1279 px, in
+               place of the map; it positions itself and shows while `lentele` is set. -->
           <component :is="T4.tableView" v-if="T4.tableView" />
 
           <div
@@ -74,8 +72,13 @@
           />
           <!-- Not under the full sheet: its buttons would take focus behind it. -->
           <component :is="T4.mapMessage" v-if="T4.mapMessage && !sheetFull" />
-          <!-- Phone legend: floats bottom left, above the collapsed sheet (DATAVIZ-01). -->
-          <div v-if="T4.legend" class="hub-legend-phone absolute left-3 z-20">
+          <!-- Phone legend: floats bottom left, above the collapsed sheet (DATAVIZ-01); out of
+               the Tab order under the full sheet (MOBILE-02). -->
+          <div
+            v-if="T4.legend"
+            class="hub-legend-phone absolute left-3 z-20"
+            :inert="mapCovered || undefined"
+          >
             <component :is="T4.legend" phone />
           </div>
         </template>
@@ -84,7 +87,11 @@
       <!-- Live topic (Vilkai, Stebėjimai; LIVE_HOSTS): the host renders its own panel, table,
            card and controls, and may teleport its chips into the shell slots (HUB_SLOTS).
            Keyed by topic, so a switch between two live topics always replaces the host. -->
-      <component :is="liveHost" v-if="topicKind === 'live' && liveHost" :key="liveHostKey" />
+      <component
+        :is="liveHostComponent"
+        v-if="topicKind === 'live' && liveHostComponent"
+        :key="liveHostKey"
+      />
       <!-- The live topic's snapshot fallback map (Vilkai without /wolfs): legend and tooltip. -->
       <template v-if="topicKind === 'live' && ctx.liveMap.value && !isMobile">
         <div v-if="T4.legend" class="hub-legend absolute z-20">
@@ -95,6 +102,7 @@
       <div
         v-if="topicKind === 'live' && ctx.liveMap.value && isMobile && T4.legend"
         class="hub-legend-phone hub-legend-phone--live absolute left-3 z-20"
+        :inert="mapCovered || undefined"
       >
         <component :is="T4.legend" phone />
       </div>
@@ -108,9 +116,10 @@
       <HuntingHubShellAboutDialog ref="about" :topics="topics" />
     </template>
 
-    <!-- The map's keyboard and screen reader equivalent is the table (MOBILE-A11Y-09). -->
+    <!-- The map's keyboard and screen reader equivalent is the table (MOBILE-A11Y-09); not
+         while a phone sheet covers the map (MOBILE-02). -->
     <button
-      v-if="ctx && tableTarget"
+      v-if="ctx && tableTarget && !mapCovered"
       type="button"
       class="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-[calc(var(--hub-top)+8px)] focus:z-50 focus:rounded focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-brand max-md:focus:top-[calc(var(--hub-mobile-header)+8px)]"
       :class="FOCUS_RING"
@@ -119,14 +128,17 @@
       {{ S.mapToTable }}
     </button>
     <!-- Last in the DOM so keyboard users reach the panel before the map controls. Fractional
-         zoom, so Lithuania fills the free map area instead of the next lower zoom step. -->
+         zoom, so Lithuania fills the free map area instead of the next lower zoom step. Under a
+         phone sheet that covers it, the whole map with its control containers (zoom, globe,
+         attribution) leaves the Tab order and the accessibility tree (MOBILE-02). -->
     <UiMap
       :show-scale-line="true"
       :constrain-resolution="false"
       :projection="projection3857"
+      class="hub-map"
       :class="{ invisible: mapHidden }"
-      :aria-hidden="topicKind === 'overview' ? 'true' : undefined"
-      :inert="topicKind === 'overview' ? true : undefined"
+      :aria-hidden="topicKind === 'overview' || mapCovered ? 'true' : undefined"
+      :inert="topicKind === 'overview' || mapCovered ? true : undefined"
     />
   </div>
 </template>
@@ -141,7 +153,10 @@ import '@fontsource/noto-sans/700.css';
 import '@fontsource/atkinson-hyperlegible/700.css';
 import {
   computed,
+  defineAsyncComponent,
+  defineComponent,
   getCurrentInstance,
+  h,
   inject,
   nextTick,
   onBeforeUnmount,
@@ -150,6 +165,7 @@ import {
   ref,
   toRaw,
   watch,
+  type Component,
 } from 'vue';
 import { useRoute } from 'vue-router';
 import { useWindowSize, watchDebounced } from '@vueuse/core';
@@ -164,6 +180,7 @@ import {
   hubTop,
   MOBILE_MAX,
   mobileHeader,
+  SHORT_MAX_H,
   tableReplacesMap,
 } from '@/utils/hunting/hub/layout';
 import { embedFocusAllowed } from '@/utils/hunting/hub/embed';
@@ -174,6 +191,10 @@ import { useHubState } from '@/composables/hunting/hub/useHubState';
 import { LIVE_HOSTS, TOPICS } from '@/utils/hunting/hub/topics';
 import { HUB_SHELL, type HubShell } from '@/components/hunting/hub/shell/shell';
 import { FOCUS_RING } from '@/components/hunting/hub/shell/controls';
+import LoadState from '@/components/hunting/hub/shell/LoadState.vue';
+import _ from 'lodash';
+import { mapCovered as sheetCoversMap } from '@/components/hunting/hub/shell/sheet';
+import { MINUS } from '@/utils/hunting/hub/topics/common';
 
 const mapLayers: any = inject('mapLayers');
 const route = useRoute();
@@ -184,6 +205,8 @@ const isProductionHost = hostname === 'maps.biip.lt';
 
 const { width } = useWindowSize();
 const isMobile = computed(() => width.value <= MOBILE_MAX);
+// A phone sheet covers the whole map (its full detent, a table over the map).
+const mapCovered = computed(() => isMobile.value && sheetCoversMap.value);
 
 // ---- Topic registry. A topic whose module is not there yet gets a placeholder, so the shell
 // still renders its tab (with the load error state). Topics with a live host are live.
@@ -294,12 +317,65 @@ const liveHost = computed(() => {
 });
 const liveHostKey = computed(() => ctx?.sel.value.topic ?? '');
 
+// A live host's chunk that fails (a network error, or old chunk hashes after a deploy) must end
+// in a message with a way out, not an endless spinner (JOURNEYS-10): the hosts load with a
+// timeout, one retry and an error state; a failed preload reloads the page once per session.
+const hostLoaders = import.meta.glob<Component>('@/components/hunting/hub/topics/*/*Topic.vue');
+const hostName = (path: string) =>
+  _.upperFirst(_.camelCase(path.replace(/^.*\/components\//, '').replace(/\.vue$/, '')));
+const TopicLoadFailed = defineComponent({
+  setup() {
+    return () =>
+      h(
+        'div',
+        {
+          class: isMobile.value
+            ? 'absolute inset-x-4 top-4 z-30'
+            : 'absolute left-[var(--hub-panel-left)] top-[calc(var(--hub-top)+8px)] z-30 w-[var(--hub-panel-w)] rounded-lg bg-white shadow-lg',
+        },
+        [h(LoadState, { topic: true, large: isMobile.value })],
+      );
+  },
+});
+const guardedHosts: Record<string, Component> = {};
+Object.entries(hostLoaders).forEach(([path, loader]) => {
+  guardedHosts[hostName(path)] = defineAsyncComponent({
+    // A host that loaded proves the chunks are current: a later failure may reload again.
+    loader: () => loader().then((mod) => (clearReloadMark(), mod)),
+    timeout: 15000,
+    errorComponent: TopicLoadFailed,
+    onError: (err, retry, fail, attempts) => (attempts < 2 ? retry() : fail()),
+  });
+});
+const liveHostComponent = computed(() =>
+  liveHost.value ? guardedHosts[liveHost.value] || liveHost.value : null,
+);
+const RELOAD_KEY = 'hunting-hub:chunk-reload';
+function clearReloadMark() {
+  try {
+    sessionStorage.removeItem(RELOAD_KEY);
+  } catch (err) {
+    // storage blocked
+  }
+}
+function onPreloadError(event: Event) {
+  try {
+    if (sessionStorage.getItem(RELOAD_KEY)) return;
+    sessionStorage.setItem(RELOAD_KEY, '1');
+  } catch (err) {
+    return; // storage blocked: no reload loop, the error states stay
+  }
+  event.preventDefault();
+  window.location.reload();
+}
+window.addEventListener('vite:preloadError', onPreloadError);
+onBeforeUnmount(() => window.removeEventListener('vite:preloadError', onPreloadError));
+
 // ---- Layout state.
 const topicKind = computed(() => ctx?.topic.value.kind ?? 'overview');
 const tableOpen = computed(() => !!ctx && ctx.sel.value.table !== null);
 const sav = computed(() => ctx?.sel.value.sav ?? null);
 const railed = computed(() => !!ctx && topicKind.value === 'snapshot' && ctx.layout.railed.value);
-const drawerOpen = computed(() => railed.value);
 const mapHidden = computed(
   () =>
     !isMobile.value &&
@@ -405,9 +481,13 @@ const LEGEND_H_PHONE = 44;
 function fitLithuania() {
   const map = mapLayers.map ? toRaw(mapLayers.map) : null;
   if (!map) return;
+  // A short frame (a phone held sideways, MOBILE-05): the collapsed legend, little room.
+  const short = window.innerHeight <= SHORT_MAX_H;
   const padding = isMobile.value
     ? [8, 8, LEGEND_H_PHONE + 16, 8]
-    : [16, 16, LEGEND_H_DESKTOP + 24, 16];
+    : short
+      ? [8, 16, LEGEND_H_PHONE + 12, 16]
+      : [16, 16, LEGEND_H_DESKTOP + 24, 16];
   // The free area from the map's size, not the view's cached one: on `change:size` the view
   // has not seen the new size yet.
   const view = map.getView();
@@ -492,6 +572,8 @@ function labelMapControls() {
     });
   name('.ol-zoom-in', 'Artinti');
   name('.ol-zoom-out', 'Tolinti');
+  // A real minus next to the "+" (OpenLayers' default label is an en dash; VISUAL-20).
+  root.querySelectorAll<HTMLElement>('.ol-zoom-out').forEach((el) => (el.textContent = MINUS));
   name('.ol-attribution button', 'Žemėlapio duomenų šaltiniai');
   name('.ol-rotate-reset', 'Atstatyti kryptį');
 }
@@ -543,22 +625,17 @@ onBeforeUnmount(() => {
 <style scoped>
 .hub-card {
   top: calc(var(--hub-top) + var(--hub-gap));
-  right: 16px;
+  /* On the site container's right edge (D3), clear of the accessibility button. */
+  right: var(--hub-gutter, 16px);
   width: 360px;
   max-width: calc(100vw - var(--hub-panel-w) - 48px);
   max-height: calc(100% - var(--hub-top) - 120px);
   overflow-y: auto;
   border-radius: 0.5rem;
 }
-.hunting-hub--rail .hub-card {
-  right: calc(var(--hub-drawer-w) + var(--hub-gap) + 8px);
-}
 .hub-legend {
   left: calc(var(--hub-content-left) + 8px);
   bottom: 40px;
-}
-.hunting-hub--rail .hub-legend {
-  left: calc(var(--hub-rail-w) + 2 * var(--hub-gap) + 8px);
 }
 /* Phones: above the collapsed sheet (the sheet, z-30, covers it when raised). */
 .hub-legend-phone {
@@ -588,14 +665,11 @@ body:has(.hunting-hub) {
 .hunting-hub--desktop:not(.hunting-hub--overview) .bottomLeft {
   transform: translateX(calc(var(--hub-content-left) - var(--hub-gap)));
 }
-.hunting-hub--rail .bottomLeft {
-  transform: translateX(calc(var(--hub-rail-w) + var(--hub-gap))) !important;
-}
-.hunting-hub--drawer #mapControlsRT {
-  transform: translate(calc(-1 * (var(--hub-drawer-w) + var(--hub-gap))), var(--hub-top));
-}
-.hunting-hub--drawer .rightBottom {
-  transform: translateX(calc(-1 * (var(--hub-drawer-w) + var(--hub-gap))));
+/* A live topic's table covers the map (D14): hide the map under it, as the snapshot topics
+   do with `mapHidden`, so no strip of map shows next to the pane (VISUAL-02). */
+body.hub-vilkai--replace .hub-map,
+body.hub-steb--replace .hub-map {
+  visibility: hidden;
 }
 /* Embedded: the site's floating accessibility button owns the page's bottom-right corner;
    the zoom stack stays ≥ 72 px above the bottom (DATAVIZ-09, CONTROLS-14). */
@@ -659,6 +733,8 @@ body:has(.hunting-hub) {
 .hunting-hub .rightBottom button:focus-visible {
   outline: 2px solid #004650 !important;
   outline-offset: 2px !important;
+  /* A white halo fills the offset, so the ring reads over the darkest map class too. */
+  box-shadow: 0 0 0 2px #fff !important;
   position: relative;
   z-index: 1;
 }

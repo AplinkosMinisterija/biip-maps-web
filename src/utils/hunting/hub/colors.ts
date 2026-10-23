@@ -25,16 +25,18 @@ export const MAP_LAND = '#F2F3F0';
 export const SELECTION_INK = '#121926';
 export const SELECTION_HALO = '#FFFFFF';
 
-// ---- Species, keyed by entity (Žala damage groups). Checked for lightness, chroma, ≥ 3:1 on
-// white and colour-vision distance. Wolves keep the colour of the Vilkai map.
+// ---- Species, keyed by entity (Žala damage groups). Muted to the site's chroma (D17), hue
+// order as before; wolves keep the colour of the Vilkai map. Checked (Machado 2009 simulation,
+// severity 1): every pair, OTHER_SPECIES_COLOR included, ≥ 12.3 CIEDE2000 under normal,
+// protan and deutan vision (≥ 10.2 tritan), and each colour ≥ 3.19:1 on white.
 export const SPECIES_COLORS: Readonly<Record<string, string>> = Object.freeze(
   Object.assign(Object.create(null) as Record<string, string>, {
-    kanopiniai: '#1D4ED8',
-    stumbrai: '#65A30D',
-    bebrai: '#DB2777',
+    kanopiniai: '#3954A0',
+    stumbrai: '#638353',
+    bebrai: '#C16386',
     vilkai: '#B45309',
-    lusys: '#8B5CF6',
-    lokiai: '#0891B2',
+    lusys: '#7C7CCB',
+    lokiai: '#1DA09F',
   }),
 );
 // Stebėjimai species slugs → the same entities.

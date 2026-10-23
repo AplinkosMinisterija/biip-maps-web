@@ -6,7 +6,7 @@ export type HubLayoutMode = 'mobile' | 'tablet' | 'desktop' | 'wide';
 
 export const MOBILE_MAX = 767; // < 768 px: mobile header + bottom sheet
 export const DESKTOP_MIN = 1024; // 768–1023 px: tablet
-export const WIDE_MIN = 1280; // ≥ 1280 px: wider panel, table as a drawer next to a rail
+export const WIDE_MIN = 1280; // ≥ 1280 px: wider panel; an open table collapses it to the rail
 
 export const HUB_TOP = 112; // 56 px top bar + 56 px filter bar
 export const HUB_TOP_EMBED = 56; // embedded in the WP page (SPEC §5.11): filter bar only
@@ -14,7 +14,6 @@ export const HUB_PANEL_W = 360;
 export const HUB_PANEL_W_WIDE = 380; // ≥ 1280 px
 export const HUB_PANEL_W_TABLET = 320;
 export const HUB_RAIL_W = 56;
-export const HUB_DRAWER_W = 560;
 export const HUB_GAP = 8;
 // The medziokle.biip.lt content container (decision D3): 1120 px, centred, gutter ≥ 24 px.
 export const SITE_CONTAINER = 1120;
@@ -60,18 +59,30 @@ export function panelWidth(width: number) {
   return 0;
 }
 
-// The panel collapses to the rail only when the table drawer is open at ≥ 1280 px. Between
-// 768 and 1279 px the table replaces the map instead; below 768 px it lives in the sheet.
-// Embedded, there is no rail: the table replaces the map at every width from 768 px.
-export const isRailed = (width: number, tableOpen: boolean, embed = false) =>
-  !embed && tableOpen && layoutMode(width) === 'wide';
+// Table view (decision D14, embedded and standalone alike): ≥ 1280 px the panel collapses to
+// the 56 px rail and the table pane spans from the rail to the right gutter; 768–1279 px the
+// table replaces the map right of the panel; below 768 px it lives in the sheet.
+// `short` (a frame under SHORT_MAX_H px from 768 px wide, e.g. a phone held sideways): the
+// snapshot panel starts as the rail on the map, so the map keeps the frame (MOBILE-05); the
+// table view keeps the panel next to the table. The `embed` parameter stays for the callers;
+// the layout no longer depends on it.
+export const SHORT_MAX_H = 500;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const isRailed = (width: number, tableOpen: boolean, _embed = false, short = false) =>
+  (short && !tableOpen && layoutMode(width) !== 'mobile') ||
+  (tableOpen && layoutMode(width) === 'wide');
 
-// The table hides the map (visibility: hidden, not unmounted) between 768 and 1279 px
-// (embedded: from 768 px).
-export const tableReplacesMap = (width: number, tableOpen: boolean, embed = false) =>
-  embed
-    ? tableOpen && layoutMode(width) !== 'mobile'
-    : tableOpen && (layoutMode(width) === 'tablet' || layoutMode(width) === 'desktop');
+// Every open table on desktop/tablet covers the map, so the map is hidden (visibility: hidden,
+// not unmounted) from 768 px.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const tableReplacesMap = (width: number, tableOpen: boolean, _embed = false) =>
+  tableOpen && layoutMode(width) !== 'mobile';
+
+// Left edge of the table pane: right of the rail (≥ 1280 px) or of the panel.
+export const tableLeft = (width: number, embed = false) =>
+  layoutMode(width) === 'wide'
+    ? panelLeft(width, embed) + HUB_RAIL_W + HUB_GAP
+    : panelLeft(width, embed) + (panelWidth(width) || HUB_PANEL_W) + HUB_GAP;
 
 /** CSS variables for the shell root element (SPEC2 §4.1; embedded: SPEC §5.11). */
 export function hubCssVars(width: number, embed = false): Record<string, string> {
@@ -85,25 +96,31 @@ export function hubCssVars(width: number, embed = false): Record<string, string>
     '--hub-mobile-header': `${mobileHeader(embed)}px`,
     '--hub-panel-w': `${panelWidth(width) || HUB_PANEL_W}px`,
     '--hub-rail-w': `${HUB_RAIL_W}px`,
-    '--hub-drawer-w': `${HUB_DRAWER_W}px`,
     '--hub-gap': `${HUB_GAP}px`,
     '--hub-gutter': `${hubGutter(width, embed)}px`,
     '--hub-panel-left': `${panelLeft(width, embed)}px`,
     // First free x right of the floating panel (legend, table next to the panel).
     '--hub-content-left': `${panelLeft(width, embed) + (panelWidth(width) || HUB_PANEL_W) + HUB_GAP}px`,
+    // Left edge of the table pane while a table is open (D14).
+    '--hub-table-left': `${tableLeft(width, embed)}px`,
   };
 }
 
 /**
  * Map area covered by the shell, as OpenLayers view padding [top, right, bottom, left] in px.
- * Rail + drawer at 1440 px: [112, 568, 0, 64], leaving 1440 − 56 − 560 = 824 px of map.
+ * The floating panel at 1440 px standalone: [112, 0, 0, 396]. An open table hides the map
+ * (D14); the padding stays the panel's, so the view does not jump when the map returns.
  */
-export function mapPadding(width: number, tableOpen: boolean, embed = false): number[] {
+export function mapPadding(
+  width: number,
+  tableOpen = false,
+  embed = false,
+  short = false,
+): number[] {
   const mode = layoutMode(width);
   if (mode === 'mobile') return [mobileHeader(embed), 0, HUB_MOBILE_PEEK, 0];
-  if (isRailed(width, tableOpen, embed)) {
-    return [hubTop(embed), HUB_DRAWER_W + HUB_GAP, 0, HUB_RAIL_W + HUB_GAP];
-  }
+  // A short frame: the rail alone on the map (MOBILE-05).
+  if (short && !tableOpen) return [hubTop(embed), 0, 0, HUB_RAIL_W + HUB_GAP];
   // Floating panel on the left (desktop/tablet). When the table replaces the map the
   // padding is irrelevant; the same value keeps the view stable when the map returns.
   return [hubTop(embed), 0, 0, panelLeft(width, embed) + panelWidth(width) + HUB_GAP];

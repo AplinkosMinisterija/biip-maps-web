@@ -1,6 +1,5 @@
 <template>
-  <component
-    :is="mode === 'drawer' ? 'aside' : 'section'"
+  <section
     v-if="visible && view && tables.length"
     :id="mode === 'sheet' ? undefined : HUB_TABLE_ID"
     :aria-labelledby="`${uid}-title`"
@@ -35,10 +34,11 @@
     </div>
 
     <!-- Sub-tabs left, the table's action right (clear of the site's accessibility button in
-         the bottom-right corner); on phones the button wraps above the cards. -->
+         the bottom-right corner); in the phone sheet one row with a compact CSV button, so
+         the cards start higher (MOBILE-07). -->
     <div
-      class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2"
-      :class="mode === 'sheet' ? '' : 'px-4'"
+      class="flex items-center justify-between"
+      :class="mode === 'sheet' ? 'flex-nowrap gap-2' : 'flex-wrap gap-x-3 gap-y-2 px-4'"
     >
       <HuntingHubTableTableTabs
         ref="tabsRef"
@@ -54,6 +54,7 @@
           :table="active"
           :caption="captionOf(active)"
           :sort="sortOf(active)"
+          :compact="mode === 'sheet'"
         />
       </div>
     </div>
@@ -115,7 +116,7 @@
         </button>
       </p>
     </div>
-  </component>
+  </section>
 </template>
 
 <script setup lang="ts">
@@ -124,22 +125,24 @@ import { useMediaQuery } from '@vueuse/core';
 import { HUB_CTX } from '@/composables/hunting/hub/context';
 import { seasonLabel } from '@/utils/hunting/dates';
 import { embedFocusAllowed } from '@/utils/hunting/hub/embed';
-import { HUB_DRAWER_W, HUB_GAP, HUB_TOP } from '@/utils/hunting/hub/layout';
+import { HUB_TOP } from '@/utils/hunting/hub/layout';
 import { S } from '@/utils/hunting/hub/strings';
 import type { TableDef } from '@/utils/hunting/hub/types';
 import { BTN_TEXT, FOCUS_RING, INLINE_LINK } from '../shell/controls';
 import { effectiveSort, type SortState } from './sort';
 
-// Tables of the active snapshot topic (SPEC2 §4.1 "Table mode"):
-// - ≥ 1280 px: right drawer (560 px) next to the panel rail; the map stays;
-// - 768–1279 px: replaces the map, full width right of the panel (the shell hides the map);
+// Tables of the active snapshot topic (decision D14, embedded and standalone alike):
+// - ≥ 1280 px: the panel collapses to the rail; the pane spans from the rail to the window
+//   edge, its content to the right gutter;
+// - 768–1279 px: the pane replaces the map right of the panel;
 // - < 768 px: `variant="sheet"` inside the mobile sheet's "Lentelė" segment (card list).
-// Embedded in the WP page (SPEC §4), the table replaces the map from 768 px, without a drawer.
-// With `variant="auto"` the component positions itself and shows only while `sel.table`
-// is set; the "Lentelė" toggle should use `aria-controls="hunting-hub-table"`.
+// The shell hides the map under the pane. With `variant="auto"` the component positions
+// itself and shows only while `sel.table` is set; the "Lentelė" toggle should use
+// `aria-controls="hunting-hub-table"`.
 const HUB_TABLE_ID = 'hunting-hub-table';
-// The right gutter (--hub-gutter) minus the rows' own 16 px padding.
-const EMBED_TABLE_PAD_RIGHT = 'calc(var(--hub-gutter, 24px) - 16px)';
+// The content ends at the right gutter (D3): the gutter minus the rows' own 16 px padding
+// (standalone the gutter is 16 px, so 0). The white pane still covers the window edge.
+const TABLE_PAD_RIGHT = 'max(0px, calc(var(--hub-gutter, 16px) - 16px))';
 
 const props = defineProps({
   variant: { type: String as PropType<'auto' | 'sheet'>, default: 'auto' },
@@ -152,10 +155,7 @@ const narrow = useMediaQuery('(max-width: 599px)');
 const view = computed(() => ctx.view.value);
 const tables = computed<TableDef[]>(() => view.value?.tables || []);
 
-const mode = computed<'drawer' | 'replace' | 'sheet'>(() => {
-  if (props.variant === 'sheet') return 'sheet';
-  return ctx.isWide.value && !ctx.embed ? 'drawer' : 'replace';
-});
+const mode = computed<'replace' | 'sheet'>(() => (props.variant === 'sheet' ? 'sheet' : 'replace'));
 const visible = computed(() => {
   if (props.variant === 'sheet') return true;
   return !ctx.isMobile.value && ctx.sel.value.table !== null;
@@ -199,20 +199,16 @@ const provenanceTitle = computed(() => {
 
 const containerClass = computed(() => {
   if (mode.value === 'sheet') return 'flex flex-col';
-  const base = 'absolute right-0 bottom-0 z-30 bg-white flex flex-col';
-  return mode.value === 'drawer' ? `${base} shadow-lg max-w-full` : base;
+  // A frame too short for the rows and the footnotes scrolls the whole pane (MOBILE-03).
+  return 'absolute right-0 bottom-0 z-30 bg-white flex flex-col overflow-y-auto overscroll-contain';
 });
-// Geometry from the shell's CSS variables (layout.ts), with the same numbers as fallbacks.
+// Geometry from the shell's CSS variables (layout.ts): right of the rail or of the panel.
 const containerStyle = computed(() => {
   if (mode.value === 'sheet') return undefined;
-  const top = `var(--hub-top, ${HUB_TOP}px)`;
-  if (mode.value === 'drawer') return { top, width: `var(--hub-drawer-w, ${HUB_DRAWER_W}px)` };
   return {
-    top,
-    left: `var(--hub-content-left, calc(var(--hub-panel-w, 320px) + 2 * var(--hub-gap, ${HUB_GAP}px)))`,
-    // Embedded, the content ends at the site container's right edge (D3), clear of the site's
-    // accessibility button; the white area still covers the hidden map to the window edge.
-    paddingRight: ctx.embed ? EMBED_TABLE_PAD_RIGHT : undefined,
+    top: `var(--hub-top, ${HUB_TOP}px)`,
+    left: ctx.layout.railed.value ? 'var(--hub-table-left)' : 'var(--hub-content-left)',
+    paddingRight: TABLE_PAD_RIGHT,
   };
 });
 
@@ -227,21 +223,16 @@ function close() {
   emit('close');
 }
 
-// "Rodyti žemėlapyje": select the municipality; below 1280 px (embedded: always) the table
-// gives way to the map.
+// "Rodyti žemėlapyje": the table covers the map at every width (D14), so it gives way to the
+// map with the municipality selected.
 function showOnMap(code: number) {
-  if (ctx.embed) {
-    // Close first: setSav's immediate URL write then carries both changes. A close scheduled
-    // after that write is dropped when the write lands, and the URL would keep `lentele`.
-    ctx.setTable(null);
-    ctx.setSav(code);
-    return;
-  }
+  // Close first: setSav's immediate URL write then carries both changes. A close scheduled
+  // after that write is dropped when the write lands, and the URL would keep `lentele`.
+  ctx.setTable(null);
   ctx.setSav(code);
-  if (!ctx.isWide.value) ctx.setTable(null);
 }
 
-// Move focus into the drawer / replaced view when it opens, so keyboard users land on the tabs.
+// Move focus into the table view when it opens, so keyboard users land on the tabs.
 // Embedded, only while the iframe document has focus and without scrolling the page (§5.8).
 function focusActiveTab() {
   if (!ctx.embed) return tabsRef.value?.focusActive();

@@ -66,7 +66,9 @@ export interface HubContext {
   layout: { railed: Ref<boolean>; mapPadding: ComputedRef<number[]> };
   // `openTable`: open the target topic's table (embed `set` with view 'table'): `table` when
   // given (an unavailable one falls back as in §5.9), else the topic's default table.
-  setTopic(id: TopicId, opts?: { openTable?: boolean; table?: string }): void;
+  // `season`: open the target on this season (Apžvalga cards: the season of their headline
+  // number, D19) instead of carrying the current one.
+  setTopic(id: TopicId, opts?: { openTable?: boolean; table?: string; season?: number }): void;
   setSeason(s: number): void;
   setSav(code: number | null): void;
   setDim(key: string, value: string | null): void;

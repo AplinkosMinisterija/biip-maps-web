@@ -4,7 +4,7 @@
       <div v-for="i in 5" :key="i" class="h-6 rounded bg-page animate-pulse" />
     </div>
 
-    <div v-else class="overflow-x-auto max-w-full">
+    <Scroller v-else sticky-first>
       <table :class="TABLE">
         <caption class="sr-only">
           Sumedžioti vilkai pagal sezonus ir mėnesius (visi sezonai, naujausi pirmi)
@@ -35,7 +35,8 @@
         </thead>
         <tbody>
           <tr v-for="row in rows" :key="row.season" :class="TR">
-            <!-- The season is the row's action; the month counts are plain numbers. -->
+            <!-- The season is the row's action; a month's count shows that month's records
+                 (REGRESS-10). -->
             <th
               scope="row"
               :class="[TD, TD_BG, STICKY_FIRST, 'pl-0 font-normal whitespace-nowrap']"
@@ -54,7 +55,16 @@
               :key="month.value"
               :class="[TD, TD_BG, NUM_COMPACT, row.months[month.value] ? '' : 'text-ink-muted']"
             >
-              {{ formatInt(row.months[month.value]) }}
+              <button
+                v-if="row.months[month.value]"
+                type="button"
+                :class="[ROW_ACTION, 'font-normal']"
+                :aria-label="`${month.full} ${row.label}: ${wolves(row.months[month.value])}. Rodyti šio mėnesio įrašus.`"
+                @click="selectMonth(row.season, month.value)"
+              >
+                {{ formatInt(row.months[month.value]) }}
+              </button>
+              <template v-else>{{ formatInt(row.months[month.value]) }}</template>
             </td>
             <td :class="[TD, TD_BG, NUM_COMPACT]">{{ formatInt(row.other) }}</td>
             <td :class="[TD, TD_BG, NUM_COMPACT, 'font-semibold']">
@@ -67,7 +77,7 @@
               </template>
               <template v-else-if="row.limit === DASH">
                 <span aria-hidden="true">{{ DASH }}</span>
-                <span class="sr-only">nepaskelbtas</span>
+                <span class="sr-only">limito šiame puslapyje nėra</span>
               </template>
               <template v-else>{{ row.limit }}</template>
             </td>
@@ -77,7 +87,7 @@
           </tr>
         </tbody>
       </table>
-    </div>
+    </Scroller>
 
     <ul :class="FOOTNOTES">
       <li>„Kiti mėn.“ – įrašai, kurių data balandžio–rugsėjo mėn.</li>
@@ -86,7 +96,7 @@
         vilkus, todėl į sumas jos neįtraukiamos.
       </li>
       <li v-if="rows.some((r) => r.limit === DASH)">
-        „{{ DASH }}“ – limitas tam sezonui nepaskelbtas.
+        „{{ DASH }}“ – šio sezono limito šiame puslapyje nėra.
       </li>
     </ul>
   </div>
@@ -94,10 +104,12 @@
 
 <script setup lang="ts">
 import { computed, inject } from 'vue';
+import Scroller from '@/components/hunting/hub/table/Scroller.vue';
 import { WOLVES_CTX } from '@/composables/hunting/context';
 import type { Interval, WolfRecord } from '@/utils/hunting/types';
+import type { ColumnDef, TableDef } from '@/utils/hunting/hub/types';
 
-import { formatInt, pluralLt, WOLVES } from '@/utils/hunting/dates';
+import { daysInMonth, formatInt, pluralLt, toDay, WOLVES } from '@/utils/hunting/dates';
 import { WOLF_LIMITS } from '@/utils/hunting/labels';
 import { DASH } from '@/utils/hunting/hub/topics/common';
 import {
@@ -128,6 +140,8 @@ interface PivotRow {
   other: number;
   total: number;
   limit: string;
+  // The limit as a number for the CSV (null: not approved or not published).
+  limitValue: number | null;
   paperRows: number;
 }
 
@@ -146,13 +160,14 @@ const showPaperRows = computed(
   () => data.seasons.value.length > 0 && rows.value.some((r) => r.paperRows > 0),
 );
 
+function limitOf(season: number): number | null {
+  if (season === ctx.currentSeason) return data.totals.value?.wolfLimit ?? null;
+  return WOLF_LIMITS[season] || null;
+}
 function limitLabel(season: number): string {
-  if (season === ctx.currentSeason) {
-    const limit = data.totals.value?.wolfLimit;
-    if (limit === undefined || limit === null) return DASH;
-    return limit === 0 ? NOT_APPROVED : formatInt(limit);
-  }
-  return WOLF_LIMITS[season] ? formatInt(WOLF_LIMITS[season]) : DASH;
+  const limit = limitOf(season);
+  if (season === ctx.currentSeason && limit === 0) return NOT_APPROVED;
+  return limit ? formatInt(limit) : DASH;
 }
 
 // Over ALL records (ignores the interval), newest season first.
@@ -187,6 +202,7 @@ const rows = computed<PivotRow[]>(() => {
       other,
       total: records.length,
       limit: limitLabel(season),
+      limitValue: limitOf(season) || null,
       paperRows: dataset.paperRowsBySeason[season] || 0,
     });
   }
@@ -197,6 +213,58 @@ function selectSeason(season: number) {
   const interval: Interval = { from: `${season}-04-01`, to: `${season + 1}-03-31` };
   state.setInterval(interval, `season:${season}`, true);
 }
+
+// A month's count: that calendar month (October–December in the season's first year,
+// January–March in the next), up to today, in the records table.
+function selectMonth(season: number, month: number) {
+  const year = month >= 4 ? season : season + 1;
+  const last = toDay(year, month, daysInMonth(year, month));
+  const interval = { from: toDay(year, month, 1), to: last < ctx.today ? last : ctx.today };
+  state.setInterval(interval, undefined, true);
+  state.tableTab.value = 'irasai';
+}
+
+// The table on screen as a hub TableDef, for its CSV (REGRESS-03): the same columns, rows and
+// notes; the limit as a number where there is one.
+const count = (id: string, label: string, get: (r: PivotRow) => number): ColumnDef<PivotRow> => ({
+  id,
+  label,
+  numeric: true,
+  value: get,
+});
+const table = computed<TableDef<PivotRow>>(() => ({
+  id: 'sezonai',
+  label: 'Sezonai ir mėnesiai',
+  title: 'Sumedžioti vilkai pagal sezonus ir mėnesius',
+  columns: [
+    { id: 'season', label: 'Sezonas', value: (r) => r.label },
+    ...MONTH_COLUMNS.map((m) => count(`m${m.value}`, m.full, (r) => r.months[m.value])),
+    count('other', 'Kiti mėn.', (r) => r.other),
+    count('total', 'Iš viso (su vieta)', (r) => r.total),
+    {
+      id: 'limit',
+      label: 'Limitas',
+      numeric: true,
+      value: (r) => r.limitValue,
+      display: (r) => (r.limit === DASH ? '' : r.limit),
+    },
+    ...(showPaperRows.value ? [count('paper', 'Be vietos (įrašai)', (r) => r.paperRows)] : []),
+  ],
+  rows: rows.value,
+  footnotes: [
+    '„Kiti mėn.“ – įrašai, kurių data balandžio–rugsėjo mėn.',
+    ...(showPaperRows.value
+      ? [
+          '„Be vietos“ – popieriniais lapais pateiktos suvestinės: viena eilutė gali reikšti kelis vilkus, todėl į sumas jos neįtraukiamos.',
+        ]
+      : []),
+    ...(rows.value.some((r) => r.limit === DASH)
+      ? ['Tuščias langelis stulpelyje „Limitas“ – limitas tam sezonui nepaskelbtas.']
+      : []),
+  ],
+  csvName: 'vilkai-sezonai',
+}));
+defineExpose({ table });
 
 // Twelve narrow numeric columns must fit the 520 px drawer: less padding than NUM.
 const NUM_COMPACT = 'w-[1%] whitespace-nowrap px-1.5 text-right tabular-nums';

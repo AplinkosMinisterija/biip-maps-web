@@ -20,16 +20,27 @@
           class="contents"
           :class="loadingData ? '[&>*]:opacity-60' : ''"
         >
-          <HuntingHubTopicsVilkaiChipPopover
-            name="Laikotarpis"
-            :value="loadingData ? '…' : ctx.derived.periodLabel.value"
-            title="Laikotarpis"
-            :active="!loadingData && !isDefaultPeriod"
-            shrinkable
-            panel-class="w-[400px]"
-          >
-            <HuntingWolvesPeriodFilter :show-season-note="false" />
-          </HuntingHubTopicsVilkaiChipPopover>
+          <!-- The snapshot fallback: the chip shows and picks the copy's season, so there is
+               one season control (JOURNEYS-11). Element-rooted branches (async components). -->
+          <div v-if="fallback" class="contents">
+            <HuntingHubTopicsVilkaiFallbackSeasonChip
+              :seasons="fallbackSeasons"
+              :model-value="fallbackSeason"
+              @update:model-value="setFallbackSeason"
+            />
+          </div>
+          <div v-else class="contents">
+            <HuntingHubTopicsVilkaiChipPopover
+              name="Laikotarpis"
+              :value="loadingData ? '…' : ctx.derived.periodLabel.value"
+              title="Laikotarpis"
+              :active="!loadingData && !isDefaultPeriod"
+              shrinkable
+              panel-class="w-[400px]"
+            >
+              <HuntingWolvesPeriodFilter :show-season-note="false" />
+            </HuntingHubTopicsVilkaiChipPopover>
+          </div>
           <HuntingHubShellPlacePicker
             :model-value="ctx.state.sav.value"
             :items="municipalityList"
@@ -40,6 +51,8 @@
             :value="S.moreFilters(attrCount)"
             title="Daugiau filtrų"
             :active="attrCount > 0"
+            :disabled="fallback"
+            :disabled-hint="S_LIVE_ONLY"
             panel-class="w-[440px]"
           >
             <HuntingWolvesMoreFilters embedded />
@@ -85,21 +98,27 @@
         </div>
       </div>
 
-      <!-- Panel: the answer first, the chart right under the KPIs (SPEC2 §7). -->
+      <!-- Panel: the answer first, the chart right under the KPIs (SPEC2 §7); as tall as its
+           content, up to the bottom of the frame (D18). -->
       <section
         v-if="!railed"
         id="hub-panel"
+        ref="panelEl"
         aria-labelledby="hub-vilkai-title"
-        class="absolute left-[var(--hub-panel-left)] top-[calc(var(--hub-top)+8px)] bottom-2 w-[var(--hub-panel-w)] z-30 bg-white rounded-lg shadow-lg overflow-y-auto"
+        class="absolute left-[var(--hub-panel-left)] top-[calc(var(--hub-top)+8px)] max-h-[calc(100%-var(--hub-top)-16px)] w-[var(--hub-panel-w)] z-30 bg-white rounded-lg shadow-lg overflow-y-auto overscroll-contain"
+        :class="panelMore ? MORE_BELOW_MASK : ''"
       >
-        <div class="p-4 flex flex-col gap-3">
+        <div
+          :ref="(node) => trackPanel(node as HTMLElement | null)"
+          class="relative overflow-hidden p-4 flex flex-col gap-3"
+        >
           <!-- The badge shares the H1 row so the status line keeps the full panel width and
                the histogram stays above y = 600 at 1440 × 900 (SPEC2 §14). -->
           <div class="flex items-start justify-between gap-2">
             <h1
               id="hub-vilkai-title"
               tabindex="-1"
-              class="text-xl font-semibold text-gray-900 focus:outline-none"
+              class="text-xl font-semibold text-ink focus:outline-none"
             >
               {{ VILKAI_H1 }}
             </h1>
@@ -124,7 +143,11 @@
             <p v-else role="status" class="text-sm text-gray-700">{{ S.loading }}</p>
           </div>
           <div v-else class="flex flex-col gap-3">
-            <HuntingWolvesFilterSentence />
+            <!-- The other topics' anatomy (AnswerBlock): badge, then the answer (VISUAL-19). -->
+            <div class="flex flex-col gap-1">
+              <p v-if="seasonBadge"><HuntingHubShellStateBadge :badge="seasonBadge" /></p>
+              <HuntingWolvesFilterSentence />
+            </div>
             <HuntingWolvesLoadState placement="panel" :show-timestamp="false" />
             <!-- One loading line (the answer) until the records arrive; then the current
                  season's status, named as such, below the answer of the chosen period. -->
@@ -157,30 +180,18 @@
         </div>
       </section>
 
-      <!-- ≥ 1280 px with the table open: the panel collapses to a 56 px rail (SPEC2 §4.1). -->
+      <!-- ≥ 1280 px with the table open: the panel collapses to the 56 px rail (D14), the same
+           floating rail as the other topics; it closes the table. -->
       <aside
         v-else
         id="hub-panel"
         aria-label="Suvestinė"
-        class="absolute left-0 top-[var(--hub-top)] bottom-0 w-14 z-30 bg-white shadow-lg flex flex-col items-center gap-3 py-3"
+        class="absolute left-[var(--hub-panel-left)] top-[calc(var(--hub-top)+8px)] w-14 z-30 bg-white rounded-lg shadow-lg overflow-hidden"
       >
-        <button
-          type="button"
-          :aria-label="S.railExpand"
-          :title="S.railExpand"
-          class="w-11 h-11 flex items-center justify-center rounded text-gray-800 hover:bg-gray-100"
-          :class="focusRing"
-          @click="setTable(false)"
-        >
-          <UiIcon name="chevron-right" :size="20" aria-hidden="true" />
-        </button>
-        <p class="[writing-mode:vertical-rl] rotate-180 text-sm font-semibold text-gray-900">
-          <span class="tabular-nums">{{ railCount }}</span>
-          {{ railLabel }}
-        </p>
+        <HuntingHubShellPanelRail :title="railTitle" :value="railCount" @expand="setTable(false)" />
       </aside>
 
-      <!-- Table: a drawer next to the rail (≥ 1280 px) or in place of the map (768–1279 px). -->
+      <!-- Table: in place of the map, right of the rail (≥ 1280 px) or of the panel (D14). -->
       <HuntingWolvesTableDrawer compact :drawer-class="drawerClass" @show-on-map="onShowOnMap" />
       <!-- Embedded, the snapshot fallback's table opens from the WP view switch, in place of
            the map like the live table. -->
@@ -224,10 +235,11 @@
         <HuntingWolvesMapLegend collapsible />
       </div>
 
+      <!-- Top right on the container edge, as the other topics' cards (VISUAL-10); under a
+           desktop table the map is hidden (D14), so the card only shows with the map. -->
       <div
         v-if="hasSelection && !replacesMap"
-        class="absolute bottom-10 z-30"
-        :class="railed ? 'right-[576px]' : 'right-12'"
+        class="absolute top-[calc(var(--hub-top)+8px)] right-[var(--hub-gutter,16px)] z-30"
       >
         <div class="w-[360px] max-w-[calc(100vw-32px)]">
           <HuntingWolvesWolfCard />
@@ -261,6 +273,14 @@
               Laikotarpis: …
             </button>
           </div>
+          <div v-else-if="fallback" class="contents">
+            <HuntingHubTopicsVilkaiFallbackSeasonChip
+              mobile
+              :seasons="fallbackSeasons"
+              :model-value="fallbackSeason"
+              @update:model-value="setFallbackSeason"
+            />
+          </div>
           <div v-else class="contents"><HuntingWolvesPeriodSheet compact class="shrink-0" /></div>
           <HuntingHubShellPlacePicker
             mobile
@@ -276,41 +296,40 @@
             :badge="attrCount"
             :active="attrCount > 0"
             :chevron="false"
+            :disabled="fallback"
+            :title="fallback ? S_LIVE_ONLY : undefined"
             :sr-label="S.filtersChip(attrCount)"
             aria-haspopup="dialog"
             @click="openFilters"
           />
         </fieldset>
         <HuntingHubShellFullSheet :open="filtersOpen" :title="S.filters" @close="closeFilters">
-          <div class="flex min-h-full flex-col">
-            <HuntingWolvesMoreFilters v-model:draft="attrsDraft" large embedded staged />
-            <!-- Staged: the map redraws only with "Rodyti N vilkų" (CONTROLS-17). -->
-            <div
-              class="sticky bottom-0 -mx-4 -mb-3 mt-auto flex gap-3 border-t border-line bg-white px-4 pt-3"
-              style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom))"
+          <HuntingWolvesMoreFilters v-model:draft="attrsDraft" large embedded staged />
+          <!-- Staged: the map redraws only with "Rodyti N vilkų" (CONTROLS-17); the actions
+               are pinned below the list (MOBILE-09). -->
+          <template #footer>
+            <button
+              type="button"
+              :class="[BTN_SECONDARY, BTN_TOUCH, 'text-base']"
+              @click="attrsDraft = { age: [], sex: [], method: [] }"
             >
-              <button
-                type="button"
-                :class="[BTN_SECONDARY, BTN_TOUCH, 'text-base']"
-                @click="attrsDraft = { age: [], sex: [], method: [] }"
-              >
-                {{ S.reset }}
-              </button>
-              <button
-                type="button"
-                :class="[BTN_PRIMARY, BTN_TOUCH, 'flex-1 text-base']"
-                @click="applyFilters"
-              >
-                {{ draftLabel }}
-              </button>
-            </div>
-          </div>
+              {{ S.reset }}
+            </button>
+            <button
+              type="button"
+              :class="[BTN_PRIMARY, BTN_TOUCH, 'flex-1 text-base']"
+              @click="applyFilters"
+            >
+              {{ draftLabel }}
+            </button>
+          </template>
         </HuntingHubShellFullSheet>
       </div>
       <HuntingWolvesMobileSheet
         ref="sheet"
         clip-histogram
         :inert="fallbackTableShown ? true : undefined"
+        @detent="(detent: SheetDetent) => (sheetDetent = detent)"
       >
         <template #status>
           <div v-if="!loadingData" class="flex items-start gap-2">
@@ -384,9 +403,9 @@
         />
       </section>
       <!-- Phone legend above the collapsed sheet (DATAVIZ-01); the fallback map uses the
-           shell's choropleth legend. -->
+           shell's choropleth legend. Not under a sheet that covers the map (MOBILE-02). -->
       <div
-        v-if="!fallback && !tableOpen"
+        v-if="!fallback && !tableOpen && !mapCovered"
         class="absolute left-3 z-20 bottom-[calc(var(--hub-vilkai-sheet,176px)+8px)]"
       >
         <HuntingWolvesMapLegend phone />
@@ -397,7 +416,7 @@
          expanded phone sheet, which covers them). -->
     <div
       class="absolute inset-x-0 bottom-0 top-[var(--hub-top)] z-20 pointer-events-none"
-      :inert="isMobile && tableOpen ? true : undefined"
+      :inert="isMobile && mapCovered ? true : undefined"
     >
       <HuntingWolvesLoadState placement="map" />
     </div>
@@ -427,6 +446,7 @@ import {
   provide,
   ref,
   shallowRef,
+  toRaw,
   watch,
   watchEffect,
   type Ref,
@@ -438,6 +458,7 @@ import { HUB_SHELL } from '@/components/hunting/hub/shell/shell';
 import { useWolvesData } from '@/composables/hunting/useWolvesData';
 import { useWolvesMap } from '@/composables/hunting/useWolvesMap';
 import { useWolvesState } from '@/composables/hunting/useWolvesState';
+import { WOLVES_MUNICIPALITY_OUTLINE_LAYER_ID } from '@/utils/hunting/layers';
 import {
   formatDateTime,
   formatInt,
@@ -461,14 +482,20 @@ import {
   BADGE_LABELS,
   BANDOMOJI_TOOLTIP,
   FEEDBACK_URL,
-  P_HUNTED,
   S,
+  TOPIC_TABS,
 } from '@/utils/hunting/hub/strings';
 import type { SnapshotData, TableDef, TopicView } from '@/utils/hunting/hub/types';
 import type { SortState } from '@/components/hunting/hub/table/sort';
 import { embedFocusAllowed } from '@/utils/hunting/hub/embed';
-import { useMapInert } from '@/components/hunting/hub/shell/sheet';
-import { VILKAI_COMPARE, VILKAI_H1, type VilkaiCarry } from '@/utils/hunting/hub/topics/vilkai';
+import { mapCovered, useMapInert, type SheetDetent } from '@/components/hunting/hub/shell/sheet';
+import { MORE_BELOW_MASK, useMoreBelow } from '@/components/hunting/hub/shell/useMoreBelow';
+import {
+  VILKAI_COMPARE,
+  VILKAI_H1,
+  vilkaiFallbackSeasons,
+  type VilkaiCarry,
+} from '@/utils/hunting/hub/topics/vilkai';
 import { WOLVES_TABLES } from '@/utils/hunting/hub/url';
 import { filterRecords } from '@/utils/hunting/wolves';
 import {
@@ -531,15 +558,18 @@ const replacesMap = computed(
 );
 const cssVars = computed(() => hubCssVars(width.value, embed));
 
-// The wolves sheet is taller than the hub's 96 px peek (status line, histogram): on phones
-// the map keeps Lithuania above the collapsed sheet. While the sheet is expanded (table)
-// the padding stays put, so the map does not jump behind it.
+// On phones the map keeps Lithuania above the sheet (the wolves sheet measures itself: the
+// peek, the half detent or a wolf's card). While the sheet covers the map (the table, the
+// full detent) the padding stays put, so the map does not jump behind it.
 const sheet = ref<any>(null);
+const sheetDetent = ref<SheetDetent>('peek');
 const { height: sheetHeight } = useElementSize(sheet, undefined, { box: 'border-box' });
 let collapsedSheet = HUB_MOBILE_PEEK;
 function viewPadding(open: boolean): number[] {
   if (!isMobile.value) return mapPadding(width.value, open, embed);
-  if (!open && sheetHeight.value) collapsedSheet = Math.max(HUB_MOBILE_PEEK, sheetHeight.value);
+  if (!open && sheetDetent.value !== 'full' && sheetHeight.value) {
+    collapsedSheet = Math.max(HUB_MOBILE_PEEK, sheetHeight.value);
+  }
   return [mobileHeader(embed), 0, collapsedSheet, 0];
 }
 
@@ -628,6 +658,23 @@ watch(fallback, (failed) => {
   setTable(false);
 });
 
+// The fallback's season: the wolves period when it is a closed season of the copy, else the
+// newest one (as VilkaiFallback); a pick sets the wolves period, so the URL keeps it.
+const fallbackSeasons = computed(() =>
+  fallbackSnapshot.value ? vilkaiFallbackSeasons(fallbackSnapshot.value) : [],
+);
+const fallbackSeason = computed<number | null>(() => {
+  const current = ctx?.derived.intervalSeason.value ?? null;
+  return current !== null && fallbackSeasons.value.includes(current)
+    ? current
+    : (fallbackSeasons.value[0] ?? null);
+});
+function setFallbackSeason(season: number) {
+  ctx?.state.setInterval(seasonInterval(season), `season:${season}`);
+}
+// The attribute filters need the live records.
+const S_LIVE_ONLY = 'Galima tik su gyvais duomenimis';
+
 // ---- Embedded fallback table (the municipality table of the wolves.json copy), opened and
 // closed by the WP page's view switch through the bridge.
 const fallbackTable = computed<TableDef | null>(() => fallbackView.value?.tables[0] ?? null);
@@ -674,6 +721,14 @@ watch(
   { immediate: true },
 );
 
+// "Sezonas vyksta" while the shown period is the current season (the live data is never
+// preliminary); none for a past season or a custom date range.
+const seasonBadge = computed(() =>
+  ctx && !loadingData.value && ctx.derived.intervalSeason.value === ctx.currentSeason
+    ? ('vyksta' as const)
+    : undefined,
+);
+
 // ---- Filter bar labels.
 const isDefaultPeriod = computed(() => {
   if (!ctx) return true;
@@ -693,15 +748,58 @@ const placeIndex = shallowRef<Awaited<ReturnType<typeof loadMunicipalityIndex>> 
 const municipalityList = computed(() =>
   (placeIndex.value?.list || []).map((m) => ({ code: m.code, name: m.name })),
 );
-// As the wolves page's municipality select: zoom to the municipality, or back to Lithuania.
+// The place picker sets the municipality; the watch below moves the map.
 function onPlace(code: number | null) {
-  if (!ctx) return;
-  ctx.state.sav.value = code;
-  const info = code !== null ? placeIndex.value?.byCode[code] : null;
-  if (!mapLayers) return;
-  const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-  if (info) mapLayers.zoomToExtent(info.extent3857, { animate: !reduceMotion, maxZoom: 12 });
-  else if (code === null) mapLayers.centerMap();
+  if (ctx) ctx.state.sav.value = code;
+}
+// Every municipality change zooms to it, or back to Lithuania (JOURNEYS-03): the picker, a
+// deep link (?sav=82), the table's "Rodyti žemėlapyje", Back/Forward. After the map has
+// loaded and the DOM settled (on phones the full-screen picker has closed), so the view has
+// its real size and padding.
+if (ctx) {
+  watch(
+    () => [ctx.state.sav.value, placeIndex.value] as const,
+    async ([code, index], previous) => {
+      if (!mapLayers || !index) return;
+      const [oldCode, oldIndex] = previous || [undefined, null];
+      if (oldIndex && code === oldCode) return;
+      await mapLayers.waitForLoaded;
+      await nextTick();
+      if (unmounted || ctx.state.sav.value !== code) return;
+      const info = code != null ? index.byCode[code] : null;
+      const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+      if (info) {
+        mapLayers.zoomToExtent(info.extent3857, { animate: !reduceMotion, maxZoom: 12 });
+        if (ctx.debug) checkOutline(info.name);
+      } else if (code == null && oldIndex && oldCode != null) mapLayers.centerMap();
+    },
+    { immediate: true },
+  );
+}
+// ?debug=1: once the map has drawn the place, exactly one municipality is outlined, and it
+// is the chosen one (JOURNEYS-03).
+function checkOutline(name: string) {
+  const map = mapLayers?.map ? toRaw(mapLayers.map) : null;
+  const layer = map
+    ?.getLayers()
+    .getArray()
+    .find((l: any) => l.get('id') === WOLVES_MUNICIPALITY_OUTLINE_LAYER_ID);
+  if (!map || !layer) return;
+  map.once('rendercomplete', () => {
+    const extent = map.getView().calculateExtent(map.getSize());
+    const names = [
+      ...new Set(
+        (layer.getSource().getFeaturesInExtent(extent) as any[])
+          .filter((f) => f.getGeometry()?.getType() !== 'Point' && layer.getStyleFunction()(f, 1))
+          .map((f) => `${f.get('name') || ''}`),
+      ),
+    ];
+    const ok = names.length === 1 && names[0] === name;
+    // eslint-disable-next-line no-console
+    (ok ? console.info : console.error)(
+      `[hunting/hub] savitikra: pažymėta savivaldybė ${ok ? 'OK' : 'KLAIDA'} (${names.join(', ') || '–'})`,
+    );
+  });
 }
 
 // ---- Phone Filtrai sheet: the attribute filters, staged until "Rodyti N vilkų".
@@ -738,27 +836,24 @@ watch(isMobile, (mobile) => {
   if (!mobile) filtersOpen.value = false;
 });
 
-// ---- Rail: the answer's number, vertical.
+// ---- Panel height (D18) and rail: the topic and the answer's number, vertical.
+const panelEl = ref<HTMLElement | null>(null);
+const { more: panelMore, track: trackPanel } = useMoreBelow(panelEl);
+const railTitle = TOPIC_TABS.vilkai;
 const railCount = computed(() =>
-  ctx?.data.dataset.value ? formatInt(ctx.derived.filtered.value.length) : '—',
-);
-const railLabel = computed(() =>
-  ctx?.data.dataset.value
-    ? `${pluralLt(ctx.derived.filtered.value.length, P_HUNTED)} · ${ctx.derived.periodLabel.value}`
-    : '',
+  ctx?.data.dataset.value ? formatInt(ctx.derived.filtered.value.length) : '',
 );
 
-// Embedded, the table's content ends at the site container's right edge (D3), clear of the
-// site's accessibility button: the right gutter minus the rows' own 16 px padding.
-const EMBED_DRAWER_RIGHT = 'pr-[calc(var(--hub-gutter,24px)-16px)]';
-const drawerClass = computed(() =>
-  railed.value
-    ? 'absolute right-0 top-[var(--hub-top)] bottom-0 w-[var(--hub-drawer-w)] z-30 bg-white shadow-lg flex flex-col'
-    : `absolute right-0 top-[var(--hub-top)] bottom-0 left-[var(--hub-content-left)] z-30 bg-white shadow-lg flex flex-col${embed ? ` ${EMBED_DRAWER_RIGHT}` : ''}`,
+// The table pane (D14), as the snapshot topics' TableView: right of the rail or the panel to
+// the window edge, the content to the right gutter (the gutter minus the rows' 16 px padding).
+const drawerClass = computed(
+  () =>
+    `absolute right-0 top-[var(--hub-top)] bottom-0 z-30 bg-white flex flex-col pr-[max(0px,calc(var(--hub-gutter,16px)-16px))] ${
+      railed.value ? 'left-[var(--hub-table-left)]' : 'left-[var(--hub-content-left)]'
+    }`,
 );
-const legendLeft = computed(() =>
-  railed.value ? 'left-[64px]' : 'left-[var(--hub-content-left)]',
-);
+// The legend's place matches the snapshot topics' (data.vue .hub-legend), VISUAL-21.
+const legendLeft = 'left-[calc(var(--hub-content-left)+8px)]';
 
 const hasSelection = computed(() => !!ctx?.state.selection.value);
 const provenanceTime = computed(() => {
@@ -770,10 +865,9 @@ function setTable(open: boolean) {
   if (ctx) ctx.state.tableOpen.value = open;
 }
 
-// "Rodyti žemėlapyje" below 1280 px (embedded: at every width): the table covers the map,
-// so close it (SPEC2 §4.1).
+// "Rodyti žemėlapyje": the table covers the map at every desktop width (D14), so close it.
 function onShowOnMap() {
-  if (!railed.value && !isMobile.value) setTable(false);
+  if (!isMobile.value) setTable(false);
 }
 
 // Closing the table (its button, Esc or the rail) removes the focused element; give focus
@@ -943,22 +1037,13 @@ defineExpose({ openAbout, shareUrl, carry, railed, fallbackView });
 
 <style>
 /* UiMap's own controls (SPEC2 §4): below the 112 px bars (embedded: 56 px; the shell sets
-   --hub-top / --hub-mobile-header), right of the panel or rail, left of the drawer, above the
-   mobile sheet. */
+   --hub-top / --hub-mobile-header), right of the panel, above the mobile sheet. An open table
+   hides the map (data.vue `.hub-map`, `hub-vilkai--replace`). */
 body.hub-vilkai--desktop #mapControlsRT {
   transform: translateY(var(--hub-top, 112px));
 }
 body.hub-vilkai--desktop .bottomLeft {
   transform: translateX(calc(var(--hub-content-left, 396px) - 8px));
-}
-body.hub-vilkai--railed .bottomLeft {
-  transform: translateX(64px);
-}
-body.hub-vilkai--railed #mapControlsRT {
-  transform: translate(-560px, var(--hub-top, 112px));
-}
-body.hub-vilkai--railed .rightBottom {
-  transform: translateX(-560px);
 }
 body.hub-vilkai--mobile #mapControlsRT {
   transform: translateY(var(--hub-mobile-header, 108px));

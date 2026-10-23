@@ -124,7 +124,8 @@ const S_PERIOD = {
   seasonSelect: 'Sezonas',
   last30: 'Paskutinės 30 d.',
   range: 'Nuo–iki',
-  invalid: 'Data „Iki“ negali būti ankstesnė nei „Nuo“.',
+  // The same wording as Stebėjimai (SS.rangeInvalid, CONTENT-27).
+  invalid: 'Pabaiga negali būti ankstesnė už pradžią.',
   hint: 'Palikus „Iki“ tuščią, rodomas visas „Nuo“ laikotarpis (metai, mėnuo ar diena).',
 };
 
