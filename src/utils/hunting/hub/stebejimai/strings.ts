@@ -71,7 +71,6 @@ export const SS = {
   loadError: 'Nepavyko įkelti duomenų.',
   retry: 'Bandyti dar kartą',
   noRecordsProd: 'Stebėjimų įrašų nėra.',
-  noRecordsTest: 'Bandomojoje aplinkoje stebėjimų įrašų nėra.',
   showAllPeriod: 'Rodyti visą laikotarpį',
   showAllSpecies: 'Rodyti visas rūšis',
   showAllFacts: 'Rodyti viską',

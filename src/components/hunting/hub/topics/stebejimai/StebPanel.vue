@@ -21,7 +21,7 @@
     </p>
 
     <p v-else-if="!ctx.derived.records.value.length" class="text-sm text-gray-900">
-      {{ ctx.isProductionHost ? SS.noRecordsProd : SS.noRecordsTest }}
+      {{ SS.noRecordsProd }}
     </p>
 
     <template v-else>

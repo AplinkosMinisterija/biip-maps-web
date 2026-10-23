@@ -571,8 +571,13 @@ export function uiTexts(): string[] {
 }
 
 // Words that must never render: "būrelis" (official: MPV naudotojas), and the prototype /
-// test-version wording, which would reach production when the gate is lifted (D9).
-export const FORBIDDEN_UI_WORDS: readonly RegExp[] = [/būrel/i, /prototip/i, /bandomoji versija/i];
+// test-version / staging wording: staging shows what production will (D9).
+export const FORBIDDEN_UI_WORDS: readonly RegExp[] = [
+  /būrel/i,
+  /prototip/i,
+  /bandomoji versija/i,
+  /bandom\S* aplink/i,
+];
 
 export function forbiddenWordsIn(texts: string[]): string[] {
   const text = texts.join(' ');
@@ -593,11 +598,15 @@ function runCopyChecks(check: Check) {
     }
     return problems.length === 0 || problems.join('; ');
   });
-  check('Tekstai: be „būrel…“, „prototip…“, „Bandomoji versija“', () => {
+  check('Tekstai: be „būrel…“, „prototip…“, „Bandomoji versija / aplinka“', () => {
     const found = forbiddenWordsIn(uiTexts());
     // The check itself must catch a planted word.
-    const planted = forbiddenWordsIn(['Prototipas rodo kopiją', 'Bandomoji versija']);
-    if (planted.length !== 2) return `planted words not caught: ${planted.join(', ')}`;
+    const planted = forbiddenWordsIn([
+      'Prototipas rodo kopiją',
+      'Bandomoji versija',
+      'Bandomojoje aplinkoje įrašų nėra',
+    ]);
+    if (planted.length !== 3) return `planted words not caught: ${planted.join(', ')}`;
     return found.length === 0 || `found ${found.join(', ')}`;
   });
 }
