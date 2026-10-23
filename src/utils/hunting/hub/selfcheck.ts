@@ -365,6 +365,41 @@ export function runHubUnitChecks(): SelfCheckResult[] {
       'C;;;',
     ]);
   });
+  check('CSV: „–“ kaip ekrane (csvDash)', () => {
+    type Row = { name: string; n: number | null };
+    const table: TableDef<Row> = {
+      id: 't',
+      label: 'Lentelė',
+      columns: [
+        { id: 'name', label: 'Sezonas', value: (r) => r.name },
+        {
+          id: 'n',
+          label: 'Sumedžiota',
+          numeric: true,
+          value: (r) => r.n,
+          display: (r) => (r.n === null ? '–' : formatInt(r.n)),
+        },
+      ],
+      rows: [
+        { name: 'A', n: null },
+        { name: 'B', n: 3 },
+      ],
+      footnotes: ['– – sezonas vyksta.'],
+      csvName: 't',
+    };
+    const lines = (t: TableDef<Row>) =>
+      buildTableCsv(t, { provenance: { kind: 'snapshot', asOf: '2026-10-09', text: '' } })
+        .slice(1)
+        .split('\r\n')
+        .slice(2, 5);
+    return eq(
+      [lines(table), lines({ ...table, csvDash: true })],
+      [
+        ['A;', 'B;3', '# – – sezonas vyksta.'],
+        ['A;–', 'B;3', '# – – sezonas vyksta.'],
+      ],
+    );
+  });
   check('Lentelių stulpeliai (zip)', () => {
     const rows = zip<{ a: number; b: string }>(
       { columns: ['b', 'extra', 'a'], rows: [['x', 'secret', 1]] },

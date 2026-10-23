@@ -244,8 +244,9 @@ export const provenance = (data: SnapshotData): Provenance => ({
 
 export const seasonSlug = (season: number) => `${season}-${season + 1}`;
 
-export function csvName(topic: string, table: string, season: number, sav: number | null) {
-  return `${topic}-${table}-${seasonSlug(season)}${sav === null ? '' : `-sav-${sav}`}`;
+// A table over all seasons passes `season` null: its name names none.
+export function csvName(topic: string, table: string, season: number | null, sav: number | null) {
+  return `${topic}-${table}${season === null ? '' : `-${seasonSlug(season)}`}${sav === null ? '' : `-sav-${sav}`}`;
 }
 
 export function emptyState(defaultSeason: number) {

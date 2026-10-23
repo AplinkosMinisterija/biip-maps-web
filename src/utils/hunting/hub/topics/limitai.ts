@@ -507,7 +507,8 @@ function seasonTable(meta: Meta, rows: LimitRow[], muni: Municipality | null): T
     columns,
     rows: data,
     footnotes: dashes.length ? [`${DASH} – ${dashes.join('; ')}.`] : [],
-    csvName: csvName('briedziu-limitai', 'sezonai', seasonsDesc(meta)[0], code),
+    csvName: csvName('briedziu-limitai', 'sezonai', null, code),
+    csvDash: true,
   };
 }
 

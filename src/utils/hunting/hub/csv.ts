@@ -13,13 +13,14 @@ export { CSV_MIME };
 
 /**
  * Raw cell value: numbers stay numbers (decimal comma), a null value uses `display` ('<3'),
- * and a dash ("nėra / netaikoma") is an empty cell, so numeric columns stay numeric.
+ * and a dash ("nėra / netaikoma") is an empty cell, so numeric columns stay numeric, unless
+ * `keepDash` (`TableDef.csvDash`).
  */
-export function csvCell<R>(column: ColumnDef<R>, row: R): string {
+export function csvCell<R>(column: ColumnDef<R>, row: R, keepDash = false): string {
   const value = column.value(row);
   if (value === null || value === undefined) {
     const text = column.display ? column.display(row) : '';
-    return NOT_APPLICABLE.test(text.trim()) ? '' : text;
+    return !keepDash && NOT_APPLICABLE.test(text.trim()) ? '' : text;
   }
   if (typeof value === 'number') {
     // at most 2 decimals, so float noise never reaches the spreadsheet
@@ -57,6 +58,7 @@ export function buildTableCsv<R>(table: TableDef<R>, options: TableCsvOptions<R>
   const exported = table.columns.map((c, i) => ({ c, i })).filter((x) => x.c.csv !== false);
   const columns = exported.map((x) => x.c);
   const comment = (text: string) => `# ${csvSafe(text.replace(/[\r\n]+/g, ' '))}`;
+  const keepDash = !!table.csvDash;
   const lines = [csvProvenanceLine(options.provenance)];
   if (options.title) lines.push(comment(options.title));
   // Percent columns name their unit (J-24).
@@ -74,7 +76,7 @@ export function buildTableCsv<R>(table: TableDef<R>, options: TableCsvOptions<R>
     let noteDone = note?.text === NOTE_NO_MPV;
     return exported
       .map(({ c, i }) => {
-        if (!note || i < note.from) return csvField(csvCell(c, r));
+        if (!note || i < note.from) return csvField(csvCell(c, r, keepDash));
         if (noteDone) return '';
         noteDone = true;
         return csvField(note.text);
@@ -84,13 +86,13 @@ export function buildTableCsv<R>(table: TableDef<R>, options: TableCsvOptions<R>
   if (table.totals) {
     const totals = table.totals;
     const cells = columns.map((c, i) => {
-      const text = csvCell(c, totals);
+      const text = csvCell(c, totals, keepDash);
       return i === 0 && (!text || text === '–') ? S.totalsRow : text;
     });
     lines.push(cells.map(csvField).join(CSV_SEPARATOR));
   }
   (options.rows || table.rows).forEach((r) => lines.push(row(r)));
-  table.footnotes.forEach((note) => lines.push(comment(csvNote(note))));
+  table.footnotes.forEach((note) => lines.push(comment(keepDash ? note : csvNote(note))));
   if (noMpv.length)
     lines.push(
       comment(
