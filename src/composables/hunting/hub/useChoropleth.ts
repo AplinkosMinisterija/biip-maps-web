@@ -32,7 +32,7 @@ import { loadMunicipalityIndex, type MunicipalityIndex } from '@/utils/hunting/m
 import { S } from '@/utils/hunting/hub/strings';
 import type { ChoroplethDef } from '@/utils/hunting/hub/types';
 import { atCountryFit } from '@/utils/hunting/hub/mapFit';
-import { HUB_GAP, hubGutter } from '@/utils/hunting/hub/layout';
+import { HUB_GAP, HUB_MOBILE_PEEK, hubGutter } from '@/utils/hunting/hub/layout';
 import {
   CHOROPLETH_NO_DATA_FILL,
   CHOROPLETH_OUTLINE,
@@ -539,20 +539,24 @@ export function useChoropleth(ctx: HubContext): HubChoroplethApi {
     }
     const info = index.byCode[code];
     if (!info || !map) return;
-    // view.fit subtracts this padding on top of the view padding (bars, panel, drawer), so
-    // only the extra margin goes here (VISUAL-05): 16 px around the place, and on desktop the
-    // area card's strip. The card sits at the top right on the gutter (railed: 8 px left of
-    // the drawer, which the view padding already covers).
+    // view.fit subtracts this padding on top of the view padding (bars, panel), so only the
+    // extra margin goes here (VISUAL-05): 16 px around the place, and on desktop the area
+    // card's strip at the top right on the gutter.
     const padding = [FIT_MARGIN, FIT_MARGIN, FIT_MARGIN, FIT_MARGIN];
     const width = window.innerWidth;
     if (!ctx.isMobile.value && width >= 1024) {
       const cardRight = ctx.layout.railed.value ? HUB_GAP : hubGutter(width, ctx.embed);
       padding[1] += cardRight + AREA_CARD_W;
     }
+    // Phones: the selection raises the sheet to half the frame (its card); fit above it, so
+    // the neighbours stay in view (MOBILE-10). The view padding already holds the peek.
+    if (ctx.isMobile.value) {
+      padding[2] += Math.max(0, Math.round(window.innerHeight / 2) - HUB_MOBILE_PEEK);
+    }
     map.getView().fit(info.extent3857, {
       padding,
       duration: prefersReducedMotion() ? 0 : 400,
-      maxZoom: SELECTED_MAX_ZOOM,
+      maxZoom: ctx.isMobile.value ? SELECTED_MAX_ZOOM - 1 : SELECTED_MAX_ZOOM,
     });
   }
 

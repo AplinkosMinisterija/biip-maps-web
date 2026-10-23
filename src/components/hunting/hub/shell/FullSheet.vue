@@ -30,18 +30,30 @@
       <div class="flex-1 overflow-y-auto overscroll-contain px-5 py-4">
         <slot />
       </div>
+      <!-- Actions pinned to the bottom edge, outside the scroller (MOBILE-09): nothing scrolls
+           below them, and the border runs edge to edge. -->
+      <div
+        v-if="$slots.footer"
+        class="flex shrink-0 gap-3 border-t border-line bg-white px-5 pt-3"
+        style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom))"
+      >
+        <slot name="footer" />
+      </div>
     </div>
   </Teleport>
 </template>
 
 <script setup lang="ts">
-import { getCurrentInstance, nextTick, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, getCurrentInstance, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import { S } from '@/utils/hunting/hub/strings';
 import { focusWhenReady, trapTab } from './shell';
 import { FOCUS_RING } from './controls';
+import { useModalState } from './sheet';
 
 // Full-screen modal sheet for phones (season, place, filters): focus moves in, Tab is trapped, Esc
-// closes; the caller returns focus to its trigger (§10).
+// closes; the caller returns focus to its trigger (§10). Embedded, the WP page dims and
+// disables its own chrome while it is open (`modal` message, D16). The optional `footer`
+// slot holds the sheet's actions, pinned below the scrolling content.
 const props = defineProps({
   open: { type: Boolean, required: true },
   title: { type: String, required: true },
@@ -49,6 +61,7 @@ const props = defineProps({
   initialFocus: { type: String, default: '' },
 });
 const emit = defineEmits(['close']);
+useModalState(computed(() => props.open));
 
 const uid = `hub-sheet-${getCurrentInstance()?.uid ?? 0}`;
 const dialog = ref<HTMLElement | null>(null);

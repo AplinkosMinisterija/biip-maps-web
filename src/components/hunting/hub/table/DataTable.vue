@@ -4,7 +4,9 @@
     class="flex flex-col gap-3 text-sm text-ink"
     :class="fill ? 'h-full min-h-0' : ''"
   >
-    <Scroller :fill="fill" sticky-first>
+    <!-- Fill: at least 10rem of rows in a short frame (the footnotes follow below and the
+         pane scrolls, MOBILE-03). -->
+    <Scroller :fill="fill" sticky-first :class="fill ? 'min-h-[10rem] flex-1' : ''">
       <!-- At most 960 px while the columns fit, so the numbers stay near their names. -->
       <table :class="TABLE">
         <caption class="sr-only">

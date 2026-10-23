@@ -4,7 +4,7 @@
     :aria-labelledby="showsPanel ? 'hub-title' : 'hub-sheet-title'"
     class="hub-sheet fixed inset-x-0 bottom-0 z-30 flex flex-col rounded-t-xl bg-white shadow-[0_-4px_16px_rgba(0,0,0,0.15)]"
     :class="[
-      detent === 'peek' ? 'pt-3.5' : 'pt-11',
+      detent === 'peek' ? 'pt-3.5' : tableShown && detent === 'full' ? 'pt-8' : 'pt-11',
       dragging ? '' : 'transition-[height] duration-200 motion-reduce:transition-none',
     ]"
     :style="{ height: dragHeight !== null ? `${dragHeight}px` : HEIGHTS[detent] }"
@@ -36,13 +36,10 @@
       {{ S.segmentTable }}
     </button>
 
-    <!-- The topic question; in the summary the panel's own heading takes its place. -->
-    <h2
-      v-if="!showsPanel"
-      id="hub-sheet-title"
-      class="shrink-0 truncate px-5 text-[15px] font-bold leading-5 text-ink"
-      :class="{ 'pr-24': peekTableLink, 'mb-2': detent !== 'peek' }"
-    >
+    <!-- The topic question; in the summary the panel's own heading takes its place. With
+         the table shown the table's caption is the visible heading and the question only
+         names the region (MOBILE-07; the WP tab above already says it). -->
+    <h2 v-if="!showsPanel" id="hub-sheet-title" :class="tableShown ? 'sr-only' : titleClass">
       {{ view?.h1 || TOPIC_TABS[ctx.sel.value.topic] }}
     </h2>
 
@@ -53,7 +50,8 @@
       </div>
 
       <template v-else>
-        <!-- Peek: the answer (2 lines) and one number; a tap anywhere opens the sheet. -->
+        <!-- Peek: the answer (2 lines) and one more line that adds to it (the next sentence or
+             the second number, JOURNEYS-04); a tap anywhere opens the sheet. -->
         <div v-if="detent === 'peek'" class="flex flex-col px-5 pb-1">
           <button
             v-if="view"
@@ -64,9 +62,14 @@
             aria-expanded="false"
             @click="cycle"
           >
-            <span class="line-clamp-2 text-sm leading-5 text-ink">{{ peekAnswer }}</span>
-            <span v-if="headline" class="block truncate text-sm font-semibold leading-5 text-ink">
-              <span class="tabular-nums">{{ headline }}</span>
+            <span class="line-clamp-2 text-sm leading-5 text-ink">
+              <NowrapText :text="peekAnswer" />
+            </span>
+            <span
+              v-if="peekSecond"
+              class="block truncate text-sm font-semibold leading-5 text-ink tabular-nums"
+            >
+              <NowrapText :text="peekSecond" />
             </span>
           </button>
           <HuntingHubShellLoadState v-else large :failed="ctx.data.phase.value === 'ready'" />
@@ -121,33 +124,63 @@
       </template>
     </div>
 
-    <!-- The header's "Filtrai": the topic's filters, full screen. -->
+    <!-- The header's "Filtrai": the topic's filters, full screen. A choice applies at once;
+         the footer resets them or goes back to the view, as the Vilkai and Stebėjimai
+         sheets (MOBILE-08). -->
     <HuntingHubShellFullSheet :open="filtersOpen" :title="S.segmentFilters" @close="closeFilters">
       <div class="flex flex-col gap-3">
         <HuntingHubShellFilterChips large />
       </div>
+      <template #footer>
+        <button
+          type="button"
+          :class="[BTN_SECONDARY, BTN_TOUCH, 'text-base']"
+          :disabled="!dimsSet"
+          @click="resetDims"
+        >
+          {{ S.reset }}
+        </button>
+        <button
+          type="button"
+          :class="[BTN_PRIMARY, BTN_TOUCH, 'flex-1 text-base']"
+          @click="closeFilters"
+        >
+          {{ ctx.sel.value.table ? SHOW_TABLE : SHOW_MAP }}
+        </button>
+      </template>
     </HuntingHubShellFullSheet>
   </section>
 </template>
 
 <script setup lang="ts">
-import {
-  computed,
-  getCurrentInstance,
-  inject,
-  nextTick,
-  onBeforeUnmount,
-  ref,
-  watch,
-  type PropType,
-} from 'vue';
+import { computed, getCurrentInstance, inject, nextTick, ref, watch, type PropType } from 'vue';
 import type { TopicDef } from '@/utils/hunting/hub/types';
 import { HUB_CTX } from '@/composables/hunting/hub/context';
 import { HUB_MOBILE_PEEK, mobileHeader } from '@/utils/hunting/hub/layout';
 import { S, TOPIC_TABS } from '@/utils/hunting/hub/strings';
 import { setTableOpen } from './shell';
-import { FOCUS_RING_INSET, SEG, SEG_ITEM, SEG_ITEM_ON, SEG_TOUCH } from './controls';
-import { firstSentence, lowerFirst, SHEET_HANDLE, useMapInert, type SheetDetent } from './sheet';
+import {
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  BTN_TOUCH,
+  FOCUS_RING_INSET,
+  SEG,
+  SEG_ITEM,
+  SEG_ITEM_ON,
+  SEG_TOUCH,
+} from './controls';
+import {
+  firstSentence,
+  nearestDetent,
+  nextDetent,
+  peekSecondLine,
+  SHEET_HANDLE,
+  useMapInert,
+  useSheetDrag,
+  type SheetDetent,
+} from './sheet';
+import { useDimChips } from './useDimChips';
+import NowrapText from './NowrapText.vue';
 
 type Detent = SheetDetent;
 type Segment = 'summary' | 'table';
@@ -196,6 +229,14 @@ const showsPanel = computed(
 const peekTableLink = computed(
   () => detent.value === 'peek' && !showCard.value && !!view.value?.tables.length && !ctx.embed,
 );
+const titleClass = computed(() => [
+  'shrink-0 truncate px-5 text-[15px] font-bold leading-5 text-ink',
+  { 'pr-24': peekTableLink.value, 'mb-2': detent.value !== 'peek' },
+]);
+// The table is on screen (its caption is the sheet's visible heading).
+const tableShown = computed(
+  () => !showCard.value && detent.value !== 'peek' && segment.value === 'table' && !!tableView,
+);
 
 const segments = computed(() => [
   { id: 'summary' as const, label: S.segmentSummary, disabled: false },
@@ -206,12 +247,12 @@ const segments = computed(() => [
 // puts its ellipsis after a full stop.
 const peekAnswer = computed(() => firstSentence(view.value?.answer || ''));
 
-// "129 485 sumedžiota · +8,5 % nei 2024/2025": the label continues the number in lower case.
-const headline = computed(() => {
-  const kpi = view.value?.kpis[0];
-  if (!kpi) return '';
-  return [`${kpi.value} ${lowerFirst(kpi.label)}`, kpi.sub].filter(Boolean).join(' · ');
-});
+// The second line never repeats the first: the answer's next sentence ("Daugiausia –
+// Kėdainių r. sav. (92), …"), else the second number, else the headline ("129 485
+// sumedžiota · +8,5 % nei 2024/2025") when the first line does not state it.
+const peekSecond = computed(() =>
+  peekSecondLine(view.value?.answer || '', peekAnswer.value, view.value?.kpis || []),
+);
 
 // Set while the sheet itself closes the table (see the watch below).
 let closedBySheet = false;
@@ -285,11 +326,8 @@ function onTabKeydown(event: KeyboardEvent) {
 }
 
 function cycle() {
-  if (suppressClick) {
-    suppressClick = false;
-    return;
-  }
-  setDetent(detent.value === 'peek' ? 'half' : detent.value === 'half' ? 'full' : 'peek');
+  if (consumeClick()) return;
+  setDetent(nextDetent(detent.value));
 }
 
 // "Filtrai" in the header: a full-screen sheet over everything; an open table stays open
@@ -308,6 +346,15 @@ async function closeFilters() {
   filtersTrigger = null;
 }
 
+// "Atstatyti": every dimension of the topic back to its default (the sheet holds no place).
+const SHOW_TABLE = 'Rodyti lentelę';
+const SHOW_MAP = 'Rodyti žemėlapį';
+const dimChips = useDimChips(ctx);
+const dimsSet = computed(() => dimChips.value.some((c) => c.value !== c.fallback));
+function resetDims() {
+  dimChips.value.filter((c) => c.value !== c.fallback).forEach((c) => ctx.setDim(c.key, null));
+}
+
 // The area card's ✕ or Esc (it clears the municipality, as on desktop): its button is gone,
 // so focus goes to the sheet handle instead of the document (MOBILE-A11Y-10).
 const handle = ref<HTMLButtonElement | null>(null);
@@ -322,54 +369,11 @@ function openSummary() {
 
 defineExpose({ openFilters, openSummary });
 
-// ---- Drag on the handle.
+// ---- Drag on the handle: snaps to the nearest detent.
 const sheet = ref<HTMLElement | null>(null);
-const dragging = ref(false);
-const dragHeight = ref<number | null>(null);
-let startY = 0;
-let startH = 0;
-let suppressClick = false;
-
-function onDragStart(event: PointerEvent) {
-  if (!sheet.value) return;
-  startY = event.clientY;
-  startH = sheet.value.getBoundingClientRect().height;
-  dragging.value = true;
-  window.addEventListener('pointermove', onDragMove);
-  window.addEventListener('pointerup', onDragEnd);
-  window.addEventListener('pointercancel', onDragEnd);
-}
-
-function removeDragListeners() {
-  window.removeEventListener('pointermove', onDragMove);
-  window.removeEventListener('pointerup', onDragEnd);
-  window.removeEventListener('pointercancel', onDragEnd);
-}
-onBeforeUnmount(removeDragListeners);
-
-function onDragMove(event: PointerEvent) {
-  const dy = startY - event.clientY;
-  if (Math.abs(dy) < 6 && dragHeight.value === null) return;
-  const max = window.innerHeight - headerHeight;
-  dragHeight.value = Math.max(HUB_MOBILE_PEEK, Math.min(max, startH + dy));
-}
-
-function onDragEnd() {
-  removeDragListeners();
-  dragging.value = false;
-  const h = dragHeight.value;
-  dragHeight.value = null;
-  if (h === null) return;
-  // The click that ends a drag must not also cycle the detent.
-  suppressClick = true;
-  setTimeout(() => (suppressClick = false), 100);
-  const full = window.innerHeight - headerHeight;
-  const half = window.innerHeight / 2;
-  const options: [Detent, number][] = [
-    ['peek', HUB_MOBILE_PEEK],
-    ['half', half],
-    ['full', full],
-  ];
-  setDetent(options.reduce((a, b) => (Math.abs(b[1] - h) < Math.abs(a[1] - h) ? b : a))[0]);
-}
+const { dragging, dragHeight, onDragStart, consumeClick } = useSheetDrag({
+  sheet,
+  max: () => window.innerHeight - headerHeight,
+  onEnd: (h) => setDetent(nearestDetent(h, window.innerHeight - headerHeight)),
+});
 </script>

@@ -36,7 +36,7 @@
       v-if="mode === 'sheet'"
       :open="isOpen"
       :title="sheetTitle || placeholder"
-      initial-focus="input"
+      :initial-focus="coarsePointer ? '' : 'input'"
       @close="close()"
     >
       <ComboList />
@@ -103,6 +103,9 @@ const emit = defineEmits(['update:modelValue']);
 
 const uid = `hub-combo-${getCurrentInstance()?.uid ?? 0}`;
 const isOpen = ref(false);
+// Touch: the sheet's title gets focus, as in the other sheets, and the keyboard opens only
+// when the search field is tapped; it would cover half of the list (MOBILE-18).
+const coarsePointer = window.matchMedia?.('(pointer: coarse)').matches ?? false;
 const query = ref('');
 const active = ref(0);
 const root = ref<HTMLElement | null>(null);

@@ -109,10 +109,12 @@
         <StebFilters mobile />
       </div>
       <StebSheet ref="sheet" />
-      <!-- Phone legend above the collapsed sheet (DATAVIZ-01). -->
+      <!-- Phone legend above the collapsed sheet (DATAVIZ-01); out of the Tab order while the
+           full sheet covers it (MOBILE-02). -->
       <div
         v-if="!tableOpen"
         class="absolute left-3 z-20 bottom-[calc(var(--hub-mobile-peek,96px)+8px)]"
+        :inert="mapCovered || undefined"
       >
         <StebLegend phone />
       </div>
@@ -171,6 +173,7 @@ import {
 } from '@/utils/hunting/hub/layout';
 import { S, TOPIC_TABS } from '@/utils/hunting/hub/strings';
 import { MORE_BELOW_MASK, useMoreBelow } from '@/components/hunting/hub/shell/useMoreBelow';
+import { mapCovered } from '@/components/hunting/hub/shell/sheet';
 import { SS } from '@/utils/hunting/hub/stebejimai/strings';
 import StebCard from './StebCard.vue';
 import StebFilters from './StebFilters.vue';

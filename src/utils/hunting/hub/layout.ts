@@ -61,11 +61,16 @@ export function panelWidth(width: number) {
 
 // Table view (decision D14, embedded and standalone alike): ≥ 1280 px the panel collapses to
 // the 56 px rail and the table pane spans from the rail to the right gutter; 768–1279 px the
-// table replaces the map right of the panel; below 768 px it lives in the sheet. The `embed`
-// parameter stays for the callers; the layout no longer depends on it.
+// table replaces the map right of the panel; below 768 px it lives in the sheet.
+// `short` (a frame under SHORT_MAX_H px from 768 px wide, e.g. a phone held sideways): the
+// snapshot panel starts as the rail on the map, so the map keeps the frame (MOBILE-05); the
+// table view keeps the panel next to the table. The `embed` parameter stays for the callers;
+// the layout no longer depends on it.
+export const SHORT_MAX_H = 500;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const isRailed = (width: number, tableOpen: boolean, _embed = false) =>
-  tableOpen && layoutMode(width) === 'wide';
+export const isRailed = (width: number, tableOpen: boolean, _embed = false, short = false) =>
+  (short && !tableOpen && layoutMode(width) !== 'mobile') ||
+  (tableOpen && layoutMode(width) === 'wide');
 
 // Every open table on desktop/tablet covers the map, so the map is hidden (visibility: hidden,
 // not unmounted) from 768 px.
@@ -106,9 +111,17 @@ export function hubCssVars(width: number, embed = false): Record<string, string>
  * The floating panel at 1440 px standalone: [112, 0, 0, 396]. An open table hides the map
  * (D14); the padding stays the panel's, so the view does not jump when the map returns.
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function mapPadding(width: number, _tableOpen = false, embed = false): number[] {
+export function mapPadding(
+  width: number,
+  tableOpen = false,
+  embed = false,
+  short = false,
+): number[] {
   const mode = layoutMode(width);
   if (mode === 'mobile') return [mobileHeader(embed), 0, HUB_MOBILE_PEEK, 0];
+  // A short frame: the rail alone on the map (MOBILE-05).
+  if (short && !tableOpen) return [hubTop(embed), 0, 0, HUB_RAIL_W + HUB_GAP];
+  // Floating panel on the left (desktop/tablet). When the table replaces the map the
+  // padding is irrelevant; the same value keeps the view stable when the map returns.
   return [hubTop(embed), 0, 0, panelLeft(width, embed) + panelWidth(width) + HUB_GAP];
 }

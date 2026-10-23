@@ -34,10 +34,11 @@
     </div>
 
     <!-- Sub-tabs left, the table's action right (clear of the site's accessibility button in
-         the bottom-right corner); on phones the button wraps above the cards. -->
+         the bottom-right corner); in the phone sheet one row with a compact CSV button, so
+         the cards start higher (MOBILE-07). -->
     <div
-      class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2"
-      :class="mode === 'sheet' ? '' : 'px-4'"
+      class="flex items-center justify-between"
+      :class="mode === 'sheet' ? 'flex-nowrap gap-2' : 'flex-wrap gap-x-3 gap-y-2 px-4'"
     >
       <HuntingHubTableTableTabs
         ref="tabsRef"
@@ -53,6 +54,7 @@
           :table="active"
           :caption="captionOf(active)"
           :sort="sortOf(active)"
+          :compact="mode === 'sheet'"
         />
       </div>
     </div>
@@ -195,11 +197,11 @@ const provenanceTitle = computed(() => {
   return p?.kind === 'snapshot' ? S.provenanceSnapshotTitle(p.asOf) : undefined;
 });
 
-const containerClass = computed(() =>
-  mode.value === 'sheet'
-    ? 'flex flex-col'
-    : 'absolute right-0 bottom-0 z-30 bg-white flex flex-col',
-);
+const containerClass = computed(() => {
+  if (mode.value === 'sheet') return 'flex flex-col';
+  // A frame too short for the rows and the footnotes scrolls the whole pane (MOBILE-03).
+  return 'absolute right-0 bottom-0 z-30 bg-white flex flex-col overflow-y-auto overscroll-contain';
+});
 // Geometry from the shell's CSS variables (layout.ts): right of the rail or of the panel.
 const containerStyle = computed(() => {
   if (mode.value === 'sheet') return undefined;

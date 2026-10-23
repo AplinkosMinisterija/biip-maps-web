@@ -82,6 +82,7 @@ import {
   BTN_TEXT_TOUCH,
   BTN_TOUCH,
 } from '@/components/hunting/hub/shell/controls';
+import { useModalState } from '@/components/hunting/hub/shell/sheet';
 
 interface Draft {
   interval: Interval;
@@ -98,6 +99,8 @@ const ctx = inject(WOLVES_CTX)!;
 const uid = `wolves-period-sheet-${getCurrentInstance()?.uid ?? 0}`;
 
 const isOpen = ref(false);
+// In the hub embedded in the WP page, the page dims its own chrome meanwhile (D16).
+useModalState(isOpen);
 const triggerEl = ref<{ focus(): void } | null>(null);
 const dialogEl = ref<HTMLElement | null>(null);
 const titleEl = ref<HTMLElement | null>(null);

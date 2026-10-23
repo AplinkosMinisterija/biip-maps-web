@@ -329,5 +329,44 @@ export function createHeightReporter(opts: {
   };
 }
 
+// D16 (additive): one of the hub's modal dialogs or full-screen sheets opened (open: true),
+// or the last one closed (open: false). WP accepts it from the hub origin after `ready` and
+// meanwhile dims everything but the frame and makes its own chrome inert.
+export const modalMessage = (open: boolean) => ({
+  biipHunting: { v: EMBED_VERSION, type: 'modal' as const, open: !!open },
+});
+
+/**
+ * Reports the modal state to the parent page: only after `ready()` (WP ignores a `modal`
+ * message before `ready`), and only on a change. A modal open at `ready()` is reported
+ * then; `stop()` reports a still open one as closed, so the page never stays dimmed.
+ * Pure, so ?debug=1 can test it.
+ */
+export function createModalReporter(send: (open: boolean) => void) {
+  let ready = false;
+  let open = false;
+  let sent = false;
+  const flush = () => {
+    if (!ready || open === sent) return;
+    sent = open;
+    send(open);
+  };
+  return {
+    ready() {
+      ready = true;
+      flush();
+    },
+    set(next: boolean) {
+      open = !!next;
+      flush();
+    },
+    stop() {
+      open = false;
+      flush();
+      ready = false;
+    },
+  };
+}
+
 /** In embed, the hub moves focus only while its own document has focus (§5.8). */
 export const embedFocusAllowed = (embed: boolean) => !embed || document.hasFocus();

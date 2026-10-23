@@ -3,15 +3,19 @@
 // embed mode with a validated parent origin; on the production host ctx is null and this
 // never runs.
 //
-// iframe → WP: one `ready` per document load, then `state` (debounced, deduplicated), and
-// `aboutClosed` when the About dialog WP opened is closed inside the frame.
+// iframe → WP: one `ready` per document load, then `state` (debounced, deduplicated),
+// `aboutClosed` when the About dialog WP opened is closed inside the frame, and `modal` when
+// a modal dialog or full-screen sheet of the hub opens or the last one closes (D16).
 // WP → iframe: `set` (topic and/or map/table view, optionally the table) and `about`.
 import { onMounted, onScopeDispose, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import type { HubContext } from '@/composables/hunting/hub/context';
 import { setTableOpen, type HubShell } from '@/components/hunting/hub/shell/shell';
+import { modalOpen } from '@/components/hunting/hub/shell/sheet';
 import {
   aboutClosedMessage,
+  createModalReporter,
+  modalMessage,
   parseCommand,
   readyMessage,
   stateMessage,
@@ -210,9 +214,17 @@ export function useEmbedBridge(ctx: HubContext, shell: HubShell | null): void {
   }
   onScopeDispose(() => clearTimeout(stateTimer));
 
+  // ---- Modal state (D16): after `ready`, on every change of "a modal is open".
+  const modal = createModalReporter((open) => post(modalMessage(open)));
+  // Synchronous (see useModalState): `modal: false` goes out before `aboutClosed`.
+  watch(modalOpen, (open) => modal.set(open), { immediate: true, flush: 'sync' });
+  // Leaving the hub with a dialog open: the page must not stay dimmed.
+  onScopeDispose(() => modal.stop());
+
   onMounted(() => {
     post(readyMessage());
     readySent = true;
+    modal.ready();
     postState();
   });
 

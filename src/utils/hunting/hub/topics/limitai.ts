@@ -1,6 +1,6 @@
 // Briedžių limitai: moose limits allocated to MPV users and their use (SPEC2 §6.4), from the
 // `limits.json` snapshot. Pure: view(), overview() and otherRow() read only their arguments.
-import { seasonLabel } from '../../dates';
+import { seasonLabel, type PluralForms } from '../../dates';
 import { ATTRIBUTION_RULE, P_MOOSE, S, TOPIC_SUBTITLES, TOPIC_TABS } from '../strings';
 import { CHOROPLETH_UNSET_FILL } from '../colors';
 import type {
@@ -102,6 +102,9 @@ const emptyAgg = (): Agg => ({
   leftFj: 0,
 });
 
+// "leidžiama sumedžioti 3 802 briedžius" (accusative).
+const P_MOOSE_ACC: PluralForms = ['briedį', 'briedžius', 'briedžių'];
+
 const lim = (a: Agg) => a.limM + a.limFj;
 const used = (a: Agg) => a.usedM + a.usedFj;
 const left = (a: Agg) => a.leftM + a.leftFj;
@@ -174,10 +177,14 @@ function answer(meta: Meta, a: Agg, season: number, muni: Municipality | null, r
     return `${muni.name}: ${label} sezonui briedžių limitas nenustatytas.`;
   }
   if (isCurrent(season, meta)) {
+    if (muni) {
+      return `${muni.name} ${label} sezonui MPV naudotojams paskirstytas limitas – ${formatInt(lim(a))} ${plural(lim(a), P_MOOSE)}.`;
+    }
+    // Two lines on a phone, so the phone peek's next line can show last season's use
+    // (JOURNEYS-04, CONTENT-04): the number is the limit allocated to the MPV users.
     const order = orderOf(meta, season);
-    const tail = !muni && order !== null ? ` (įsakymu patvirtinta ${formatInt(order)})` : '';
-    const body = `${label} sezonui MPV naudotojams paskirstytas limitas – ${formatInt(lim(a))} ${plural(lim(a), P_MOOSE)}${tail}.`;
-    if (muni) return `${muni.name} ${body}`;
+    const tail = order !== null ? ` (įsakymu patvirtinta ${formatInt(order)})` : '';
+    const body = `${label} sezoną leidžiama sumedžioti ${formatInt(lim(a))} ${plural(lim(a), P_MOOSE_ACC)}${tail}.`;
     // J-15: last season's use, so the running season's panel answers without a switch.
     const closed = closedSeason(meta);
     const c = closed === null || !rows ? null : aggOf(rows, closed, null);

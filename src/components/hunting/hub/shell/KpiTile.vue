@@ -28,7 +28,7 @@
         ref="tipButton"
         type="button"
         class="flex shrink-0 items-center justify-center rounded-full text-ink-muted hover:text-ink"
-        :class="[focusRing, large ? '-m-3 w-11 h-11' : 'w-4 h-4']"
+        :class="[focusRing, large ? '-m-3 w-11 h-11' : '-m-1 h-6 w-6']"
         :aria-expanded="tipOpen ? 'true' : 'false'"
         :aria-controls="tipOpen ? tipId : undefined"
         :aria-label="`Paaiškinimas: ${kpi.label}`"
