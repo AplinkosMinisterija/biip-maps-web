@@ -73,7 +73,7 @@ export const ROW_ICON_BTN = `-my-1.5 inline-flex h-8 w-8 items-center justify-ce
 export const RECORD_CARD = `block w-full min-h-[44px] rounded-lg border border-line bg-white p-3 text-left no-underline hover:bg-brand-50 ${FOCUS_RING}`;
 export const RECORD_CARD_STATIC = 'block rounded-lg border border-line bg-white p-3';
 export const RECORD_CARD_TITLE =
-  'flex flex-wrap items-center gap-x-2 text-[15px] font-semibold leading-5 text-brand tabular-nums';
+  'flex flex-wrap items-center gap-x-1 text-[15px] font-semibold leading-5 text-brand tabular-nums';
 export const RECORD_CARD_LINE = 'mt-1 block text-sm leading-5 text-ink';
 export const RECORD_CARD_META = 'block text-[13px] leading-[18px] text-ink-muted';
 
