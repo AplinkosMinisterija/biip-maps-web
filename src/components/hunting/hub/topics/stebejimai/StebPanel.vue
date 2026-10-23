@@ -72,10 +72,10 @@
 
     <!-- Embedded, the WP header line has the provenance (once), with no staging marker. -->
     <footer
-      v-if="!embed"
+      v-if="!embed && provenanceTime"
       class="flex flex-col gap-1 border-t border-line-soft pt-2 text-xs text-ink-muted"
     >
-      <p v-if="provenanceTime">
+      <p>
         {{ SS.provenance(provenanceTime) }}
         <template v-if="ctx.hub">
           ·

@@ -145,8 +145,11 @@
             </div>
           </div>
 
-          <footer v-if="!embed" class="flex flex-col gap-1 text-xs text-ink-muted">
-            <p v-if="!fallback && provenanceTime">
+          <footer
+            v-if="!embed && !fallback && provenanceTime"
+            class="flex flex-col gap-1 text-xs text-ink-muted"
+          >
+            <p>
               {{ S.provenanceLive(provenanceTime) }} ·
               <button type="button" :class="linkButton" @click="openAbout">
                 {{ S.provenanceLink }}

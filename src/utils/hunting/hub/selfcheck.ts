@@ -1384,6 +1384,7 @@ export function runHubDataChecks(data: SnapshotData | null | undefined): SelfChe
       if (recorded('Šernas', 'j')) return 'Šernas records „Jaunikliai“';
       const ONE_DECIMAL = /^\d[\d\s]*,\d$/;
       const moose = meta.species.find((x) => x.name === 'Briedis');
+      if (!moose?.slug) return 'no Briedis in the snapshot';
       const bad: string[] = [];
       for (const sav of [null, 53]) {
         const view = topic.view(data, selectionFor(topic, meta, 2025, sav));
@@ -1408,7 +1409,7 @@ export function runHubDataChecks(data: SnapshotData | null | undefined): SelfChe
       }
       // The municipality table (all species and one species): the screen's density text and
       // the CSV cell of the same row, both with one decimal.
-      for (const rusis of [undefined, moose?.slug]) {
+      for (const rusis of [undefined, moose.slug]) {
         const sel = selectionFor(topic, meta, 2025);
         if (rusis) sel.dims.rusis = rusis;
         const muni = topic.view(data, sel).tables.find((t) => t.id === 'vietoves');
