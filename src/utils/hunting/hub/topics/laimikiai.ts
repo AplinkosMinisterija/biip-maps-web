@@ -651,7 +651,10 @@ function speciesTable(c: Ctx, muni: Municipality | null): TableDef<SpeciesRow> {
   );
 
   const footnotes: string[] = [];
-  // The "Kita" note sits in the panel next to the table (CONTENT-25); the totals row names it.
+  // The totals row names "Kita": its note (the panel's, CONTENT-25) also under the table, as
+  // the table view collapses the panel.
+  const kita = c.kita.find((k) => k.season === c.season);
+  if (!muni && kita && kita.n > 0) footnotes.push(T.kita(kita.n));
   const wolf = c.meta.species.find((s) => s.slug === 'vilkas');
   const official = c.meta.static.wolves.seasons[`${c.season}`]?.official;
   if (wolf && !muni && typeof official === 'number' && !c.current) {
