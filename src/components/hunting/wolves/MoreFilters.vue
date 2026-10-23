@@ -103,7 +103,7 @@ const groups: { key: AttrKey; title: string; options: { code: string; label: str
       { code: 'ADULT', label: 'Suaugęs' },
       { code: 'TWO_YEAR', label: 'Vyresnis nei 1 m.' },
       { code: 'ONE_YEAR', label: 'Jauniklis iki 1 m.' },
-      { code: 'nenurodyta', label: 'Nenurodyta' },
+      { code: 'nenurodyta', label: 'Nenurodytas' },
     ],
   },
   {

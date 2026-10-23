@@ -32,7 +32,8 @@ export const SOURCE_LABELS: Record<WolfSource, string> = {
 const label = (map: Record<string, string>, code: string | null, empty: string) =>
   code === null || code === undefined || code === '' ? empty : (map[code] ?? code);
 
-export const ageLabel = (code: string | null) => label(AGE_LABELS, code, 'Nenurodyta');
+// "amžius" is masculine: "Nenurodytas"; "lytis" feminine: "Nenurodyta" (CONTENT-27).
+export const ageLabel = (code: string | null) => label(AGE_LABELS, code, 'Nenurodytas');
 export const sexLabel = (code: string | null) => label(SEX_LABELS, code, 'Nenurodyta');
 export const methodLabel = (code: string | null) => label(METHOD_LABELS, code, 'Nenurodytas');
 export const sourceLabel = (source: WolfSource) => SOURCE_LABELS[source] ?? source;
