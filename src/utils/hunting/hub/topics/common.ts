@@ -170,8 +170,10 @@ export function formatCount(c: Count) {
   return `${formatInt(c.lo)}–${formatInt(c.hi)}`;
 }
 
-// Value for sorting and CSV: the exact number, or the displayed text when not exact.
-export const countValue = (c: Count): number | string => (isExact(c) ? c.lo : formatCount(c));
+// Value for sorting and CSV: the exact number, or the displayed text when not exact. A count
+// narrowed to exactly 1 or 2 stays "<3", as on the screen.
+export const countValue = (c: Count): number | string =>
+  isExact(c) && !isSuppressed(c) ? c.lo : formatCount(c);
 
 // Map value of a count (it picks the class; the tooltip shows `formatCount`): exact counts as
 // is, "<3" as 1.5 (class "<3"), a range by its middle, an open range by its lower bound + 0.5,
