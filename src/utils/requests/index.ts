@@ -118,9 +118,35 @@ export function serializeQuery(obj: any) {
   return result.length > 0 ? result : '';
 }
 
-export function wmsImageLoaderFn(headers?: any) {
+// Sudaro WMS `SLD_BODY` pagal konkrečios GetMap užklausos sluoksnius ir DPI.
+export type WMSSldBodyFactory = (request: { layers: string[]; dpi: number }) => string;
+
+// OGC/OL bazinis WMS DPI; OL su serverType 'qgis' siunčia DPI=90×devicePixelRatio
+// tik kai devicePixelRatio ≠ 1.
+export const WMS_BASE_DPI = 90;
+
+// SLD sudaromas kiekvienai GetMap užklausai, nes LAYERS (posluoksnių jungikliai) ir
+// DPI (HiDPI) keičiasi tarp užklausų. Pridedama prie jau sudaryto URL, o ne prie OL
+// params, kad GetFeatureInfo ir legendos užklausos liktų be SLD.
+function withSldBody(src: string, sldBodyFor?: WMSSldBodyFactory) {
+  if (!sldBodyFor) return src;
+
+  const params = new URL(src, window.location.href).searchParams;
+  const layers = (params.get('LAYERS') || '').split(',').filter(Boolean);
+  if (!layers.length) return src;
+
+  const dpi = Number(params.get('DPI')) || WMS_BASE_DPI;
+  return `${src}&SLD_BODY=${encodeURIComponent(sldBodyFor({ layers, dpi }))}`;
+}
+
+export function wmsImageLoaderFn(headers?: any, sldBodyFor?: WMSSldBodyFactory) {
   return function (image: any, src: string) {
-    const { method, body, headers: requestHeaders, url } = splitUrlIfNeeded(src, headers);
+    const {
+      method,
+      body,
+      headers: requestHeaders,
+      url,
+    } = splitUrlIfNeeded(withSldBody(src, sldBodyFor), headers);
 
     fetch(url, {
       method,
