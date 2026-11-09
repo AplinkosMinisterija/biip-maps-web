@@ -6,6 +6,7 @@ import { useConfigStore } from '@/stores/config';
 import { getCopyrightLabel } from '../utils';
 import { qgisServerUrl, rusysApiHost } from '../../config';
 import { getVectorLayer, getWMSImageLayer } from './utils';
+import { GAMTOTVARKA_PLOT_COLORS, gamtotvarkaPlotsSldBody } from './gamtotvarka-plots-sld';
 import { projection } from '../constants';
 
 const config = () => {
@@ -568,6 +569,7 @@ export const gamtotvarkaPlanuPlotai = {
     'https://wmsgisservice.biomon.lt/opengisservice/gamtotvarka',
     'gamtotvarkos_plotai_patvirtintas',
     vsttCopyright,
+    { sldBody: gamtotvarkaPlotsSldBody(GAMTOTVARKA_PLOT_COLORS.planai) },
   ),
 };
 gamtotvarkaPlanuPlotai.layer.set('id', 'gamtotvarkaPlanuPlotai');
@@ -640,6 +642,7 @@ export const gamtotvarkaProgramuPlotai = {
     'https://wmsgisservice.biomon.lt/opengisservice/gamtotvarka',
     'tvarkymo_programu_plotai_patvirtintas',
     vsttCopyright,
+    { sldBody: gamtotvarkaPlotsSldBody(GAMTOTVARKA_PLOT_COLORS.tvarkymoProgramos) },
   ),
 };
 gamtotvarkaProgramuPlotai.layer.set('id', 'gamtotvarkaProgramuPlotai');
@@ -712,6 +715,7 @@ export const gamtotvarkaTiksliniuProgramuPlotai = {
     'https://wmsgisservice.biomon.lt/opengisservice/gamtotvarka',
     'tikslines_programos_plotai_patvirtintas',
     vsttCopyright,
+    { sldBody: gamtotvarkaPlotsSldBody(GAMTOTVARKA_PLOT_COLORS.tikslinesProgramos) },
   ),
 };
 gamtotvarkaTiksliniuProgramuPlotai.layer.set('id', 'gamtotvarkaTiksliniuProgramuPlotai');
@@ -787,6 +791,7 @@ export const gamtotvarkaVeiksmuPlanuPlotai = {
     'https://wmsgisservice.biomon.lt/opengisservice/gamtotvarka',
     'rusiu_veiksmu_planu_plotai_patvirtintas',
     vsttCopyright,
+    { sldBody: gamtotvarkaPlotsSldBody(GAMTOTVARKA_PLOT_COLORS.veiksmuPlanai) },
   ),
 };
 gamtotvarkaVeiksmuPlanuPlotai.layer.set('id', 'gamtotvarkaVeiksmuPlanuPlotai');
@@ -859,6 +864,7 @@ export const gamtotvarkaStTvarkymoPlanuPlotai = {
     'https://wmsgisservice.biomon.lt/opengisservice/gamtotvarka',
     'st_tvarkymo_planu_plotai_patvirtintas',
     vsttCopyright,
+    { sldBody: gamtotvarkaPlotsSldBody(GAMTOTVARKA_PLOT_COLORS.stTvarkymoPlanai) },
   ),
 };
 gamtotvarkaStTvarkymoPlanuPlotai.layer.set('id', 'gamtotvarkaStTvarkymoPlanuPlotai');
@@ -931,6 +937,7 @@ export const gamtotvarkaInvaVeiksmuPlanuPlotai = {
     'https://wmsgisservice.biomon.lt/opengisservice/gamtotvarka',
     'invaziniu_rusiu_veiksmu_plotai_patvirtintas',
     vsttCopyright,
+    { sldBody: gamtotvarkaPlotsSldBody(GAMTOTVARKA_PLOT_COLORS.invaVeiksmuPlanai) },
   ),
 };
 gamtotvarkaInvaVeiksmuPlanuPlotai.layer.set('id', 'gamtotvarkaInvaVeiksmuPlanuPlotai');
