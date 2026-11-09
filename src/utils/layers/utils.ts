@@ -2,7 +2,7 @@ import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import type { FeatureLike } from 'ol/Feature';
 import { Stroke, Style } from 'ol/style';
-import { geosjonLoaderFn, wmsImageLoaderFn } from '../requests';
+import { geosjonLoaderFn, wmsImageLoaderFn, type WMSSldBodyFactory } from '../requests';
 import { GeoJSON } from 'ol/format';
 import { projection } from '../constants';
 import ImageLayer from 'ol/layer/Image';
@@ -59,9 +59,12 @@ export function getWMSImageLayer(
     serverType?: ServerType;
     requestHeaders?: any;
     extraParams?: Record<string, string>;
+    // Serverio stiliaus perrašymas kiekvienai GetMap užklausai (WMSSldBodyFactory);
+    // nenaudoti kartu su statiniu `extraParams.SLD_BODY`.
+    sldBody?: WMSSldBodyFactory;
   },
 ) {
-  const imageLoadFunction = wmsImageLoaderFn(opts?.requestHeaders);
+  const imageLoadFunction = wmsImageLoaderFn(opts?.requestHeaders, opts?.sldBody);
 
   const layer = new ImageLayer({
     source: new ImageWMS({
