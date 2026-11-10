@@ -247,6 +247,7 @@ if (screenshotLayout.value) {
 }
 
 mapLayers
+  .setHighlightStyle({ color: '#921ae9', width: 3, fillOpacity: 0.3, strokeOpacity: 1 })
   .addBaseLayer(geoportalTopoGray.id)
   .addBaseLayer(geoportalTopo.id)
   .addBaseLayer(geoportalOrto.id)

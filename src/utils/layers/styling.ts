@@ -350,11 +350,18 @@ function getScale(resolution: number, center: number[]) {
   return res * inchesPerMeter * dpi;
 }
 
-export function vectorLayerStyles(layer: string, options: { color: string }): any {
-  const fill = new Fill({ color: getColorWithOpacity(options?.color, 0.2) });
+export type VectorLayerStyleOptions = {
+  color: string;
+  width?: number;
+  fillOpacity?: number;
+  strokeOpacity?: number;
+};
+
+export function vectorLayerStyles(layer: string, options: VectorLayerStyleOptions): any {
+  const fill = new Fill({ color: getColorWithOpacity(options.color, options.fillOpacity ?? 0.2) });
   const stroke = new Stroke({
-    color: getColorWithOpacity(options?.color, 0.8),
-    width: 1,
+    color: getColorWithOpacity(options.color, options.strokeOpacity ?? 0.8),
+    width: options.width ?? 1,
   });
   const circle = new Circle({
     fill,
