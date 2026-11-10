@@ -861,7 +861,9 @@ export class MapLayers extends Queues {
   }
 
   setHighlightStyle(options: VectorLayerStyleOptions) {
-    this.getLayer(highlightLayerId).setStyle(vectorLayerStyles(highlightLayerId, options));
+    [fixedHighlightLayerId, highlightLayerId].forEach((layerId) => {
+      this.getLayer(layerId).setStyle(vectorLayerStyles(layerId, options));
+    });
     return this;
   }
 
