@@ -83,6 +83,7 @@
         :inline="true"
         :legend-url="uetkService.legendUrl"
         :legend-layers-order="uetkService.legendLayersOrder"
+        :extra-items="legendExtraItems"
       />
     </div>
     <UiModal
@@ -172,6 +173,7 @@ import {
   getGeometriesFromFeaturesArray,
   getPropertiesFromFeaturesArray,
 } from '@/utils';
+import { vectorLayerLegendIcon, type VectorLayerStyleOptions } from '@/utils/layers/styling';
 import { inject, ref, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
@@ -202,6 +204,14 @@ const parcelId = ref('');
 
 const noResultsModal = ref();
 const downloadDataModal = ref();
+
+const highlightStyle: VectorLayerStyleOptions = {
+  color: '#921ae9',
+  width: 3,
+  fillOpacity: 0.3,
+  strokeOpacity: 1,
+};
+const legendExtraItems = ref([] as { title: string; icon: string }[]);
 
 function onSearch(search: string) {
   filtersStore.search = search;
@@ -247,7 +257,7 @@ if (screenshotLayout.value) {
 }
 
 mapLayers
-  .setHighlightStyle({ color: '#921ae9', width: 3, fillOpacity: 0.3, strokeOpacity: 1 })
+  .setHighlightStyle(highlightStyle)
   .addBaseLayer(geoportalTopoGray.id)
   .addBaseLayer(geoportalTopo.id)
   .addBaseLayer(geoportalOrto.id)
@@ -315,11 +325,21 @@ const filterByCadastralId = async (cadastralId: any, maxZoom?: number) => {
     filters.on(item).set('kadastro_id', cadastralId);
   });
 
-  await mapLayers.zoom(uetkService.id, { addStroke: true, filters, maxZoom });
+  return mapLayers.zoom(uetkService.id, { addStroke: true, filters, maxZoom });
 };
 
 if (query.cadastralId) {
-  await filterByCadastralId(query.cadastralId, screenshotLayout.value ? 11 : undefined);
+  const features = await filterByCadastralId(
+    query.cadastralId,
+    screenshotLayout.value ? 11 : undefined,
+  );
+
+  const geometryType = features?.[0]?.geometry?.type;
+  if (screenshotLayout.value && geometryType) {
+    legendExtraItems.value = [
+      { title: 'Išrašo objektas', icon: vectorLayerLegendIcon(highlightStyle, geometryType) },
+    ];
+  }
 
   // In screenshot mode, view.fit kicks off a second tile fetch at the new
   // extent. mapLayers.waitForLoaded.once('loadend') already resolved on
