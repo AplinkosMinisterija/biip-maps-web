@@ -45,10 +45,13 @@ const PLOT_STATUS = {
 
 // Etiketės pakeitimai: tamsus tekstas įskaitomas ir ant ortofoto, ir ant šviesaus
 // topografinio fono; 2 px halo (90 DPI) – serverio ~1 px halo ant ortofoto
-// neišskiria teksto, 1 ir 1.5 px lyginti gyvai ir buvo silpnesni.
+// neišskiria teksto, 1 ir 1.5 px lyginti gyvai ir buvo silpnesni. Bold visiems
+// statusams (serveryje – tik patvirtintiems gamtotvarkos planams): užsakovui
+// regular numeriai ant ortofoto vis dar buvo per ploni (#259).
 const LABEL_COLOR = '#1a1a1a';
 const LABEL_HALO_COLOR = '#ffffff';
 const LABEL_HALO_RADIUS_PX = 2;
+const LABEL_FONT_WEIGHT = 'bold';
 
 const POINTS_PER_INCH = 72;
 
@@ -148,6 +151,7 @@ const plotNumberLabel = (dpi: number) => `
       <se:Font>
         ${svgParam('font-family', SERVER_STYLE.labelFontFamily)}
         ${svgParam('font-size', (SERVER_STYLE.labelFontSizePt * dpi) / POINTS_PER_INCH)}
+        ${svgParam('font-weight', LABEL_FONT_WEIGHT)}
       </se:Font>
       <se:LabelPlacement>
         <se:PointPlacement>
