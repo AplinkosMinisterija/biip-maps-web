@@ -25,6 +25,7 @@ import { Queues } from './queues';
 import { GeoJSON } from 'ol/format';
 import { Point, Circle } from 'ol/geom';
 import type BaseEvent from 'ol/events/Event';
+import { vectorLayerStyles, type VectorLayerStyleOptions } from '@/utils/layers/styling';
 
 type LayerOptions = {
   opacity?: number;
@@ -857,6 +858,13 @@ export class MapLayers extends Queues {
 
   getMapProjection() {
     return this.map?.getView()?.getProjection().getCode() || '';
+  }
+
+  setHighlightStyle(options: VectorLayerStyleOptions) {
+    [fixedHighlightLayerId, highlightLayerId].forEach((layerId) => {
+      this.getLayer(layerId).setStyle(vectorLayerStyles(layerId, options));
+    });
+    return this;
   }
 
   highlightFeatures(

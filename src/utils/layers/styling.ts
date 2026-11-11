@@ -350,16 +350,60 @@ function getScale(resolution: number, center: number[]) {
   return res * inchesPerMeter * dpi;
 }
 
-export function vectorLayerStyles(layer: string, options: { color: string }): any {
-  const fill = new Fill({ color: getColorWithOpacity(options?.color, 0.2) });
-  const stroke = new Stroke({
-    color: getColorWithOpacity(options?.color, 0.8),
-    width: 1,
-  });
+export type VectorLayerStyleOptions = {
+  color: string;
+  width?: number;
+  fillOpacity?: number;
+  strokeOpacity?: number;
+};
+
+function resolveVectorLayerStyle(options: VectorLayerStyleOptions) {
+  return {
+    fillColor: getColorWithOpacity(options.color, options.fillOpacity ?? 0.2),
+    strokeColor: getColorWithOpacity(options.color, options.strokeOpacity ?? 0.8),
+    width: options.width ?? 1,
+    radius: 4,
+  };
+}
+
+export function vectorLayerLegendIcon(options: VectorLayerStyleOptions, geometryType: string) {
+  const { fillColor, strokeColor, width, radius } = resolveVectorLayerStyle(options);
+  const size = 16;
+  const pixelRatio = 2;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = size * pixelRatio;
+  canvas.height = size * pixelRatio;
+  const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
+  ctx.scale(pixelRatio, pixelRatio);
+  ctx.fillStyle = fillColor;
+  ctx.strokeStyle = strokeColor;
+  ctx.lineWidth = width;
+
+  ctx.beginPath();
+  if (['LineString', 'MultiLineString'].includes(geometryType)) {
+    ctx.moveTo(0, size / 2);
+    ctx.lineTo(size, size / 2);
+  } else if (['Point', 'MultiPoint'].includes(geometryType)) {
+    ctx.arc(size / 2, size / 2, radius, 0, 2 * Math.PI);
+    ctx.fill();
+  } else {
+    ctx.rect(width / 2, width / 2, size - width, size - width);
+    ctx.fill();
+  }
+  ctx.stroke();
+
+  return canvas.toDataURL('image/png').replace('data:image/png;base64,', '');
+}
+
+export function vectorLayerStyles(layer: string, options: VectorLayerStyleOptions): any {
+  const { fillColor, strokeColor, width, radius } = resolveVectorLayerStyle(options);
+  const fill = new Fill({ color: fillColor });
+  const stroke = new Stroke({ color: strokeColor, width });
   const circle = new Circle({
     fill,
     stroke,
-    radius: 4,
+    radius,
   });
   const polygon = new Style({ fill });
   const strokedPolygon = new Style({ fill, stroke });

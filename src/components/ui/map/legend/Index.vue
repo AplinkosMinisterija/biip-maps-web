@@ -1,6 +1,14 @@
 <template>
   <div class="text-xs">
     <p class="text-sm font-semibold mb-3">{{ title }}</p>
+    <UiMapLegendItem
+      v-for="(item, index) in extraItems"
+      :key="index"
+      :title="item.title"
+      :icon="item.icon"
+      :inline="inline"
+      class="mb-1"
+    />
     <UiMapLegendItems v-if="legendData.length" :items="legendData" :inline="inline" />
     <UiIcon v-else name="spinner" />
   </div>
@@ -45,6 +53,10 @@ const props = defineProps({
   // order can be chosen independently of how the map renders.
   legendLayersOrder: {
     type: Array as () => string[],
+    default: () => [],
+  },
+  extraItems: {
+    type: Array as () => { title: string; icon: string }[],
     default: () => [],
   },
 });
