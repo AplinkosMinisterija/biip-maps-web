@@ -11,7 +11,12 @@
         <span class="text-xs text-gray-700" v-html="subtitle" />
         <span v-if="description" class="text-xxs text-gray-600" v-html="description" />
       </div>
-      <UiIcon name="chevron-down" class="transition" :class="{ 'rotate-180': isOpen }" />
+      <div class="flex items-center gap-1 shrink-0">
+        <div v-if="$slots.actions" @click.stop>
+          <slot name="actions" />
+        </div>
+        <UiIcon name="chevron-down" class="transition" :class="{ 'rotate-180': isOpen }" />
+      </div>
     </div>
     <div :class="{ hidden: !isOpen }" class="mt-2">
       <slot />
