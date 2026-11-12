@@ -78,6 +78,7 @@ import {
   parseRouteParams,
   rusysGridService,
   rusysRequestService,
+  rusysSelectedHighlightLayer,
   rusysService,
   srisAccessService,
   srisPrivateService,
@@ -322,7 +323,11 @@ mapLayers
     selectedFeatures.value = [];
     eventBus.emit('uiSidebar', { open: false });
     mapLayers.highlightFeatures(null, { layer: highlightLayerName });
+    mapLayers.highlightFeatures(null, { layer: rusysSelectedHighlightLayer.id });
     mapLayers.getFeatureInfo(rusysService.id, coordinate, ({ properties, geometries }: any) => {
+      if (properties.length === geometries.length) {
+        properties.forEach((p: any, i: number) => (p._geometry = geometries[i]));
+      }
       selectedFeatures.value.push(...properties);
       mapLayers.highlightFeatures(geometries, {
         merge: true,

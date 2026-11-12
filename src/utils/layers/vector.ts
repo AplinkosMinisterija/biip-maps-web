@@ -171,23 +171,26 @@ export const fixedHighlightLayer = {
   }),
 };
 
-// Atskiras ryškus highlight sluoksnis gamtotvarkos žemėlapiui (#6): pasirinkus
-// įrašą sąraše, paryškina to ploto ribas kontrastine spalva (atskirai nuo
-// bendro highlightLayer, kuris žymi visus paspaustus persidengiančius plotus).
-const gamtotvarkaHighlightColor = '#ff6600';
+
+const selectedHighlightColor = '#ff6600';
+const selectedHighlightStyle = new Style({
+  stroke: new Stroke({ color: selectedHighlightColor, width: 4 }),
+  fill: new Fill({ color: 'rgba(255,102,0,0.15)' }),
+  image: new Circle({
+    radius: 9,
+    stroke: new Stroke({ color: selectedHighlightColor, width: 4 }),
+    fill: new Fill({ color: 'rgba(255,102,0,0.3)' }),
+  }),
+});
+
 export const gamtotvarkaHighlightLayer = {
   id: 'gamtotvarkaHighlightLayer',
-  layer: new VectorLayer({
-    style: new Style({
-      stroke: new Stroke({ color: gamtotvarkaHighlightColor, width: 4 }),
-      fill: new Fill({ color: 'rgba(255,102,0,0.15)' }),
-      image: new Circle({
-        radius: 9,
-        stroke: new Stroke({ color: gamtotvarkaHighlightColor, width: 4 }),
-        fill: new Fill({ color: 'rgba(255,102,0,0.3)' }),
-      }),
-    }),
-  }),
+  layer: new VectorLayer({ style: selectedHighlightStyle }),
+};
+
+export const rusysSelectedHighlightLayer = {
+  id: 'rusysSelectedHighlightLayer',
+  layer: new VectorLayer({ style: selectedHighlightStyle }),
 };
 
 export const drawLayer = {
@@ -281,6 +284,7 @@ export const vectorsLayer = {
       gamtotvarkaHighlightLayer.layer,
       markerLayer.layer,
       highlightLayerRusys.layer,
+      rusysSelectedHighlightLayer.layer,
     ],
   }),
 };
