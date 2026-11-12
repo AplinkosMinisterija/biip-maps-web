@@ -7,6 +7,7 @@
       :subtitle="getSubtitle(feature)"
       :description="getDescription(feature)"
       :badge="feature?._layerTitle"
+      @click="highlightFeature(feature)"
     >
       <UiTable class="text-xs">
         <UiTableRow v-for="(r, key) in filteredRows(feature)" :key="key">
@@ -31,7 +32,7 @@
 
 <script setup lang="ts">
 import { useConfigStore } from '@/stores/config';
-import { SpeciesTypes } from '@/utils';
+import { rusysSelectedHighlightLayer, SpeciesTypes } from '@/utils';
 import moment from 'moment';
 import { computed, inject } from 'vue';
 const props = defineProps({
@@ -42,6 +43,7 @@ const props = defineProps({
 });
 const config = useConfigStore();
 const postMessage: any = inject('postMessage');
+const mapLayers: any = inject('mapLayers');
 
 const radavietesFeatureIds = ['radavietes', 'radavietes_invazines', 'radavietes_svetimzemes'];
 const stebejimaiFeatureId = [
@@ -333,6 +335,12 @@ const filteredRows = (feature: any) => {
     return !r.show || r.show(feature);
   });
 };
+
+function highlightFeature(feature: any) {
+  if (!mapLayers || !feature?._geometry) return;
+
+  mapLayers.highlightFeatures(feature._geometry, { layer: rusysSelectedHighlightLayer.id });
+}
 
 function selectFeature(feature: any) {
   const id = getFeatureId(feature);
