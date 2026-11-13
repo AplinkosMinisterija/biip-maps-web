@@ -51,9 +51,11 @@ const formatLength = (line: LineString, projection?: string) => {
     : (Math.round(length * 100) / 100).toFixed(2) + ' m';
 };
 
-const formatArea = (polygon: Polygon, projection?: string) => {
+export type AreaUnit = 'm2';
+
+const formatArea = (polygon: Polygon, projection?: string, areaUnit?: AreaUnit) => {
   const area = getArea(polygon, { projection });
-  return area > 10000
+  return area > 10000 && areaUnit !== 'm2'
     ? (Math.round((area / 1000000) * 100) / 100).toFixed(2) + ' km²'
     : (Math.round(area * 100) / 100).toFixed(2) + ' m²';
 };
@@ -64,6 +66,7 @@ export function getMeasurementStyles(
     showSegments?: boolean;
     showLength?: boolean;
     showArea?: boolean;
+    areaUnit?: AreaUnit;
     projection?: string;
   },
 ) {
@@ -78,7 +81,7 @@ export function getMeasurementStyles(
 
   if (type === 'Polygon' && opts?.showArea) {
     point = (geometry as Polygon).getInteriorPoint();
-    label = formatArea(geometry as Polygon, opts?.projection);
+    label = formatArea(geometry as Polygon, opts?.projection, opts?.areaUnit);
     line = new LineString((geometry as Polygon).getCoordinates()[0]);
   } else if (type === 'LineString') {
     line = geometry as LineString;
@@ -101,7 +104,7 @@ export function getMeasurementStyles(
       );
 
       const bufferPolygon = new Polygon(bufferCoords);
-      label = formatArea(bufferPolygon, opts?.projection);
+      label = formatArea(bufferPolygon, opts?.projection, opts?.areaUnit);
       point = new Point(getCenter(bufferPolygon.getExtent()));
     }
   } else if (type === 'Point' && opts?.showArea) {
@@ -109,7 +112,7 @@ export function getMeasurementStyles(
     if (bufferSize) {
       const circle = new Circle((geometry as Point).getCoordinates(), bufferSize);
       const polygon = fromCircle(circle);
-      label = formatArea(polygon, opts?.projection);
+      label = formatArea(polygon, opts?.projection, opts?.areaUnit);
       point = new Point(getCenter(polygon.getExtent()));
     }
   }

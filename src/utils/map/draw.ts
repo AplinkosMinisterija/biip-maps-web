@@ -9,7 +9,7 @@ import { Queues } from './queues';
 import { click } from 'ol/events/condition';
 import _ from 'lodash';
 import { GeometryType, getFeatures, parse } from 'geojsonjs';
-import { getLayerStyles } from '../layers';
+import { getLayerStyles, type AreaUnit } from '../layers';
 import { convertFeaturesToPoints } from './utils';
 import type { GenericObject } from '@/types';
 
@@ -137,7 +137,7 @@ export class MapDraw extends Queues {
   }
 
   enableMeasurements(
-    opts: { length?: boolean; area?: boolean; segments?: boolean } = {
+    opts: { length?: boolean; area?: boolean; segments?: boolean; areaUnit?: AreaUnit } = {
       length: true,
       area: true,
       segments: true,
@@ -148,6 +148,7 @@ export class MapDraw extends Queues {
         length: opts?.length || false,
         area: opts?.area || false,
         segments: opts?.segments || false,
+        areaUnit: opts?.areaUnit,
       },
     });
   }
