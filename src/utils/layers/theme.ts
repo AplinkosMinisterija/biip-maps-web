@@ -312,6 +312,7 @@ export const rusysGridService = {
   },
   stats: {
     url: `${rusysApiHost}/maps/hexagons/stats`,
+    speciesUrl: (id: number) => `${rusysApiHost}/maps/hexagons/${id}/species`,
     styleFn: (data: any) => {
       if (!Array.isArray(data)) return;
       const maxValue = Math.max(...data.map((item: any) => item.count));
