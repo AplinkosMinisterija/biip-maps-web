@@ -241,12 +241,17 @@ mapLayers
   .add(inspireParcelService.id, { isHidden: true })
   .enableLocationTracking();
 
+let lastSentFeatures: string | undefined;
+
 mapDraw.value
   .setMulti(!!query.multi)
   .enableBufferSize(!!query.buffer, bufferMin)
   .enableContinuousDraw(enableContinuousDraw)
   .on(['change', 'remove'], ({ features, featuresJSON }: any) => {
-    postMessage('data', features);
+    if (features !== lastSentFeatures) {
+      lastSentFeatures = features;
+      postMessage('data', features);
+    }
     if (!!query.autoZoom && !!featuresJSON?.features?.length) {
       mapLayers.zoomToFeatureCollection(featuresJSON);
     }
