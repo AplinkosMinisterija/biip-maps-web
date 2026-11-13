@@ -66,16 +66,18 @@
 import { useFiltersStore } from '@/stores/filters';
 import {
   gamtotvarkaService,
-  geoportalForests,
+  geoportalForestCadastre,
+  geoportalForestResources,
   geoportalGrpk,
   geoportalOrto,
+  geoportalOrto2021,
   geoportalTopo,
   geoportalTopoGray,
   highlightLayerRusys,
-  inspireParcelService,
   invaService,
   municipalitiesService,
   parseRouteParams,
+  rcParcelsService,
   rusysGridService,
   rusysRequestService,
   rusysSelectedHighlightLayer,
@@ -83,6 +85,7 @@ import {
   srisAccessService,
   srisPrivateService,
   srisService,
+  stvkEbBuveines,
   stvkService,
   sznsPievosPelkes,
   uetkService,
@@ -209,12 +212,15 @@ const toggleLayers = [
   rusysService,
   uetkService,
   stvkService,
+  stvkEbBuveines,
   municipalitiesService,
   geoportalGrpk,
-  geoportalForests,
+  geoportalForestResources,
+  geoportalForestCadastre,
   sznsPievosPelkes,
   gamtotvarkaService,
-  inspireParcelService,
+  geoportalOrto2021,
+  rcParcelsService,
 ];
 
 const filterById = (key: string, id: any) => {
@@ -309,9 +315,12 @@ mapLayers
   .addBaseLayer(geoportalTopoGray.id)
   .addBaseLayer(geoportalTopo.id)
   .addBaseLayer(geoportalOrto.id)
-  .add(inspireParcelService.id, { isHidden: true })
+  .add(rcParcelsService.id, { isHidden: true })
   .add(stvkService.id, { isHidden: true })
-  .add(geoportalForests.id, { isHidden: true })
+  .add(stvkEbBuveines.id, { isHidden: true })
+  .add(geoportalForestResources.id, { isHidden: true })
+  .add(geoportalForestCadastre.id, { isHidden: true })
+  .add(geoportalOrto2021.id, { isHidden: true })
   .add(geoportalGrpk.id, { isHidden: true })
   .add(uetkService.id, { isHidden: true })
   .add(municipalitiesService.id, { isHidden: true })
