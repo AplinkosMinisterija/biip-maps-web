@@ -109,10 +109,12 @@ const query = parseRouteParams($route.query, [
   'bufferMax',
   'closeOnSearch',
   'showArea',
+  'areaUnit',
 ]);
 const isPreview = !!query.preview;
 const doHideToolbar = !!query.hideToolbar;
 const showArea = !!query.showArea;
+const areaUnit = query.areaUnit === 'm2' ? 'm2' : undefined;
 
 const activeDrawType = computed(() => mapDraw.value.activeType);
 const selectedFeature = ref({} as any);
@@ -225,7 +227,7 @@ const toggleDrawType = (type: string) => {
   }
 
   const draw = mapDraw.value.start(type);
-  if (showArea) draw.enableMeasurements({ area: true });
+  if (showArea) draw.enableMeasurements({ area: true, areaUnit });
 };
 
 mapLayers
@@ -282,6 +284,7 @@ events.on('geom', (data: any) => {
   }
 
   mapLayers.zoomToFeatureCollection(geom);
+  if (showArea && areaUnit) mapDraw.value.enableMeasurements({ area: true, areaUnit });
   mapDraw.value.setFeatures(geom);
   if (!isPreview) mapDraw.value.edit();
 });

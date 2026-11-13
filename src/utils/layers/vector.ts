@@ -9,8 +9,10 @@ import CircleStyle from 'ol/style/Circle';
 import Stroke from 'ol/style/Stroke';
 import Style from 'ol/style/Style';
 import { featureToPoint } from '../map';
-import { getMeasurementStyles } from './styles/measurements';
+import { getMeasurementStyles, type AreaUnit } from './styles/measurements';
 import { vectorLayerStyles } from './styling';
+
+export type { AreaUnit };
 
 const color = 'rgba(0,70,80,0.8)';
 const colorFill = 'rgba(0,70,80,0.2)';
@@ -28,6 +30,7 @@ export function getLayerStyles(opts: {
     length: boolean;
     area: boolean;
     segments: boolean;
+    areaUnit?: AreaUnit;
   };
   projection?: string;
 }) {
@@ -127,6 +130,7 @@ export function getLayerStyles(opts: {
         showSegments: opts?.showMeasurements?.segments,
         showLength: opts?.showMeasurements?.length,
         showArea: opts?.showMeasurements?.area,
+        areaUnit: opts?.showMeasurements?.areaUnit,
         projection,
       });
 
