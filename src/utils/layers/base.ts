@@ -485,7 +485,6 @@ export const geoportalForestResources = {
   ],
 };
 
-geoportalForestResources.layer.set('id', 'geoportalForestResources');
 geoportalForestResources.layer.set('type', 'ARCGIS');
 
 export const geoportalForestCadastre = {
@@ -513,7 +512,6 @@ export const geoportalForestCadastre = {
   ],
 };
 
-geoportalForestCadastre.layer.set('id', 'geoportalForestCadastre');
 geoportalForestCadastre.layer.set('type', 'ARCGIS');
 
 export const rcSzns = {

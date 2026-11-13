@@ -270,9 +270,9 @@ export const inspireParcelService = {
 
 export const rcParcelsService = {
   id: 'rcParcelsService',
-  description: rcCopyright,
+  description: zudcCopyright,
   title: 'Kadastriniai sklypai',
-  layer: getWMSImageLayer(`${qgisServerUrl}/uetk_szns_parcels`, 'sklypai', rcCopyright),
+  layer: getWMSImageLayer(`${qgisServerUrl}/uetk_szns_parcels`, 'sklypai', zudcCopyright),
 };
 
 export const municipalitiesService = {
