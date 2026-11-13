@@ -215,7 +215,9 @@ const rows: any[] = [
   {
     name: 'Statusas',
     fn: getStatus,
-    show: checkFeatureId(radavietesFeatureIds),
+    show: (feature: any) =>
+      (config.user.isAdmin || config.user.isExpert) &&
+      checkFeatureId(radavietesFeatureIds)(feature),
     fnParams: ['Radavietės statusas'],
   },
   { name: 'Karalystė', fn: getTextFromProps, fnParams: ['kingdom'] },
