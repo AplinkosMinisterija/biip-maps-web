@@ -1,4 +1,4 @@
-import { projection4326 } from '@/utils/constants';
+import { areaUnitSquareMeters, projection4326, type AreaUnit } from '@/utils/constants';
 import * as turf from '@turf/turf';
 import type { Feature } from 'ol';
 import { getCenter } from 'ol/extent';
@@ -51,11 +51,9 @@ const formatLength = (line: LineString, projection?: string) => {
     : (Math.round(length * 100) / 100).toFixed(2) + ' m';
 };
 
-export type AreaUnit = 'm2';
-
 const formatArea = (polygon: Polygon, projection?: string, areaUnit?: AreaUnit) => {
   const area = getArea(polygon, { projection });
-  return area > 10000 && areaUnit !== 'm2'
+  return area > 10000 && areaUnit !== areaUnitSquareMeters
     ? (Math.round((area / 1000000) * 100) / 100).toFixed(2) + ' km²'
     : (Math.round(area * 100) / 100).toFixed(2) + ' m²';
 };

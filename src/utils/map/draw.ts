@@ -4,12 +4,12 @@ import VectorSource from 'ol/source/Vector';
 import { Draw, Modify, Snap, Interaction, Select } from 'ol/interaction';
 import type { Type as DrawType } from 'ol/geom/Geometry';
 import { GeoJSON } from 'ol/format';
-import { projection } from '../constants';
+import { projection, type AreaUnit } from '../constants';
 import { Queues } from './queues';
 import { click } from 'ol/events/condition';
 import _ from 'lodash';
 import { GeometryType, getFeatures, parse } from 'geojsonjs';
-import { getLayerStyles, type AreaUnit } from '../layers';
+import { getLayerStyles } from '../layers';
 import { convertFeaturesToPoints } from './utils';
 import type { GenericObject } from '@/types';
 

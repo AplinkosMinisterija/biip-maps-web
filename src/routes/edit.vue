@@ -64,6 +64,7 @@
 import { useFiltersStore } from '@/stores/filters';
 import type { Buffer } from '@/types';
 import {
+  areaUnitSquareMeters,
   convertFeatureCollectionProjection,
   geoportalForestCadastre,
   geoportalForestResources,
@@ -114,7 +115,7 @@ const query = parseRouteParams($route.query, [
 const isPreview = !!query.preview;
 const doHideToolbar = !!query.hideToolbar;
 const showArea = !!query.showArea;
-const areaUnit = query.areaUnit === 'm2' ? 'm2' : undefined;
+const areaUnit = query.areaUnit === areaUnitSquareMeters ? areaUnitSquareMeters : undefined;
 
 const activeDrawType = computed(() => mapDraw.value.activeType);
 const selectedFeature = ref({} as any);
