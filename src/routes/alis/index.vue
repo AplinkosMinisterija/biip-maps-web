@@ -57,7 +57,8 @@ import {
   geoportalHybrid,
   geoportalGrpk,
   parseRouteParams,
-  geoportalForests,
+  geoportalForestResources,
+  geoportalForestCadastre,
   biomonNatura2000Rengiami,
   projection3857,
   vectorBright,
@@ -83,7 +84,8 @@ const toggleLayers = [
   uetkService,
   forestCutsLkmpVT,
   sentinelPlyniKirtimai,
-  geoportalForests,
+  geoportalForestResources,
+  geoportalForestCadastre,
   sznsUetkService,
   biomonNatura2000Rengiami,
   stvkService,
@@ -131,7 +133,7 @@ mapLayers.setSublayers(uetkService.id, uetkLayers);
 const isSearchEnabled = !!query.show_search || !!query.preview;
 
 const layersByType: any = {
-  [availableModes.miskai]: [forestCutsLkmpVT.id, geoportalForests.id, artimaAplinkaVT.id],
+  [availableModes.miskai]: [forestCutsLkmpVT.id, geoportalForestCadastre.id, artimaAplinkaVT.id],
   [availableModes.zvejyba]: [uetkService.id],
 };
 
@@ -159,8 +161,9 @@ mapLayers
   .add(rusysGridService.id, { isHidden: true })
   .add(stvkService.id, { isHidden: true })
   .add(sznsUetkService.id, { isHidden: true })
-  .add(geoportalForests.id, { isHidden: doHideLayer(geoportalForests.id) })
-  .add(biomonNatura2000Rengiami.id, { isHidden: doHideLayer(geoportalForests.id) })
+  .add(geoportalForestResources.id, { isHidden: true })
+  .add(geoportalForestCadastre.id, { isHidden: doHideLayer(geoportalForestCadastre.id) })
+  .add(biomonNatura2000Rengiami.id, { isHidden: doHideLayer(geoportalForestCadastre.id) })
   .add(sentinelPlyniKirtimai.id, { isHidden: true })
   .add(forestCutsLkmpVT.id, { isHidden: doHideLayer(forestCutsLkmpVT.id) })
   .add(uetkService.id, { isHidden: doHideLayer(uetkService.id) })

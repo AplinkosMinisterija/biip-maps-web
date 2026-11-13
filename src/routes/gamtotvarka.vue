@@ -66,8 +66,8 @@ import {
   geoportalGrpk,
   gamtotvarkaService,
   gamtotvarkaStvkServiceExtended,
-  gamtotvarkaForestResources,
-  gamtotvarkaForestCadastre,
+  geoportalForestResources,
+  geoportalForestCadastre,
   geoportalKvr,
   parseRouteParams,
   invaService,
@@ -86,8 +86,8 @@ const isPreview = ref(!!query.preview);
 const toggleLayers = [
   gamtotvarkaService,
   gamtotvarkaStvkServiceExtended,
-  gamtotvarkaForestResources,
-  gamtotvarkaForestCadastre,
+  geoportalForestResources,
+  geoportalForestCadastre,
   geoportalKvr,
   inspireParcelService,
   municipalitiesService,
@@ -154,8 +154,8 @@ mapLayers
   .addBaseLayer(geoportalGrpk.id)
   .add(gamtotvarkaService.id)
   .add(gamtotvarkaStvkServiceExtended.id, { isHidden: true })
-  .add(gamtotvarkaForestResources.id, { isHidden: true })
-  .add(gamtotvarkaForestCadastre.id, { isHidden: true })
+  .add(geoportalForestResources.id, { isHidden: true })
+  .add(geoportalForestCadastre.id, { isHidden: true })
   .add(geoportalKvr.id, { isHidden: true })
   .add(municipalitiesService.id, { isHidden: true })
   .add(inspireParcelService.id, { isHidden: true })
