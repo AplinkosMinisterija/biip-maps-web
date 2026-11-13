@@ -8,11 +8,10 @@ import { Circle, Fill, Icon } from 'ol/style';
 import CircleStyle from 'ol/style/Circle';
 import Stroke from 'ol/style/Stroke';
 import Style from 'ol/style/Style';
+import type { AreaUnit } from '../constants';
 import { featureToPoint } from '../map';
-import { getMeasurementStyles, type AreaUnit } from './styles/measurements';
+import { getMeasurementStyles } from './styles/measurements';
 import { vectorLayerStyles } from './styling';
-
-export type { AreaUnit };
 
 const color = 'rgba(0,70,80,0.8)';
 const colorFill = 'rgba(0,70,80,0.2)';
