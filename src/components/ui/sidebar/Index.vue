@@ -5,7 +5,7 @@
   >
     <div class="flex items-center justify-between gap-3 w-full mb-3">
       <span class="font-semibold">{{ title }}</span>
-      <UiButton type="ghost" icon="close" @click="close" />
+      <UiButton type="ghost" size="icon" icon="close" @click="close" />
     </div>
     <slot />
   </div>

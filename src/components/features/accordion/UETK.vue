@@ -6,6 +6,9 @@
       :title="getFeatureTitle(feature)"
       :subtitle="getSubtitle(feature)"
     >
+      <template v-if="feature[cadastralIdAttribute]" #actions>
+        <UiButtonCopyLink :url="getFeatureUrl(feature)" />
+      </template>
       <UiTable class="text-xs">
         <UiTableRow v-for="item in getSorted(feature)" :key="item.id">
           <UiTableCell class="w-1/2">
@@ -29,6 +32,7 @@
 
 <script setup lang="ts">
 import { isInteger } from 'lodash';
+import { useRouter } from 'vue-router';
 
 defineProps({
   features: {
@@ -37,11 +41,17 @@ defineProps({
   },
 });
 
+const router = useRouter();
 const urlAttribute = 'Papildoma informacija';
+const cadastralIdAttribute = '2. Kadastro identifikavimo kodas';
+
+const getFeatureUrl = (feature: any) =>
+  window.location.origin +
+  router.resolve({ path: '/uetk', query: { cadastralId: feature[cadastralIdAttribute] } }).href;
 
 function getSubtitle(feature: any) {
   const cadastralId = getValue(feature, [
-    '2. Kadastro identifikavimo kodas',
+    cadastralIdAttribute,
     '2. Hidrostatinio unikalus identifikatorius',
   ]);
   const translates: any = {
