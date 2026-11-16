@@ -3,7 +3,7 @@
     <span class="text-sm font-semibold">Filtrai</span>
     <UiButton type="link" @click="clearFilters"> Valyti filtrus </UiButton>
   </div>
-  <UiButtonRow>
+  <UiButtonRow class="justify-center">
     <UiButton
       v-for="k in kingdoms"
       :key="k.id"
