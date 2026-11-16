@@ -16,7 +16,7 @@
       wrapper:
         'h-full mx-auto w-full flex items-center justify-end cursor-pointer outline-none gap-1',
       singleLabel:
-        'flex items-center h-full max-w-full absolute left-0 top-0 pointer-events-none bg-transparent leading-snug pl-3.5 pr-16 text-sm',
+        'flex items-center h-full max-w-full absolute left-0 top-0 pointer-events-none bg-transparent leading-snug pl-2 pr-16 text-sm',
       singleLabelText: 'overflow-ellipsis overflow-hidden block whitespace-nowrap max-w-full',
       multipleLabel:
         'flex items-center h-full absolute left-0 top-0 pointer-events-none bg-transparent leading-snug pl-3.5',
@@ -37,7 +37,7 @@
       tagsSearchCopy: 'invisible whitespace-pre-wrap inline-block h-px',
       placeholder: $attrs.searchable
         ? 'hidden'
-        : 'flex items-center h-full absolute left-0 top-0 pointer-events-none bg-transparent leading-snug pl-3.5 text-sm text-gray-400',
+        : 'flex items-center h-full absolute left-0 top-0 pointer-events-none bg-transparent leading-snug pl-2 text-sm text-gray-400',
       caret:
         'bg-multiselect-caret bg-center bg-no-repeat w-2.5 h-4 py-px box-content mr-3.5 relative z-10 opacity-40 flex-shrink-0 flex-grow-0 transition-transform transform pointer-events-none',
       caretOpen: 'rotate-180 pointer-events-auto',
