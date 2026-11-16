@@ -2369,7 +2369,7 @@
   resolved "https://registry.yarnpkg.com/@vueform/multiselect/-/multiselect-2.6.11.tgz#3585bf1989b969019cd6f8095c8a27d4d45c61e7"
   integrity sha512-iG4TGfqE3baftbSGF0PhoS+xZOCnV0ChkDo9rwhJ/Qi2YlCdb6tyQCjvyug3jnzncga8+d85kx0WvG7rDYFqiA==
 
-"@vuepic/vue-datepicker@8.8.1":
+"@vuepic/vue-datepicker@^8.8.1":
   version "8.8.1"
   resolved "https://registry.yarnpkg.com/@vuepic/vue-datepicker/-/vue-datepicker-8.8.1.tgz#8c336cfb2d8f3f145c4dfdd3b99b5d437a7ce227"
   integrity sha512-8ehfUz1m69Vuc16Pm4ukgb3Mg1VT14x4EsG1ag4O/qbSNRWztTo+pUV4JnFt0FGLl5gGb6NXlxIvR7EjLgD7Gg==
