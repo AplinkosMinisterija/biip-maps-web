@@ -6,11 +6,19 @@
       placeholder="Pasirinkite metus"
       :options="years"
       :can-clear="true"
+      full-width
       @change="setYear"
     />
-    <div class="flex gap-2 mt-2">
-      <UiInput :model-value="from" type="date" label="Nuo" @change="emitPeriod($event, to)" />
-      <UiInput :model-value="to" type="date" label="Iki" @change="emitPeriod(from, $event)" />
+    <div class="grid grid-cols-2 gap-2 mt-2">
+      <label v-for="field in fields" :key="field.key" class="flex flex-col gap-1">
+        <span class="text-xs text-gray-500">{{ field.label }}</span>
+        <input
+          type="date"
+          :value="field.value"
+          class="w-full h-12 px-2 text-sm bg-white border rounded focus:outline-none focus:border-origin-500"
+          @change="field.onChange(($event.target as HTMLInputElement).value)"
+        />
+      </label>
     </div>
   </div>
 </template>
@@ -37,6 +45,21 @@ const year = computed(() => {
   const match = props.from.match(/^(\d{4})-01-01$/);
   return match && props.to === `${match[1]}-12-31` ? Number(match[1]) : null;
 });
+
+const fields = computed(() => [
+  {
+    key: 'from',
+    label: 'Nuo',
+    value: props.from,
+    onChange: (from: string) => emitPeriod(from, props.to),
+  },
+  {
+    key: 'to',
+    label: 'Iki',
+    value: props.to,
+    onChange: (to: string) => emitPeriod(props.from, to),
+  },
+]);
 
 function setYear(value: number | null) {
   if (!value) return emitPeriod('', '');

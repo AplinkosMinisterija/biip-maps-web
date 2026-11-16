@@ -6,7 +6,6 @@
     <div class="relative h-full">
       <input
         v-model="value"
-        :type="type"
         class="w-full focus:outline-none px-2 py-1 text-sm focus:border-origin-500 rounded h-full"
         :class="{ 'pl-8': icon, 'border border-gray-200': !hideBorder }"
         :placeholder="placeholder"
@@ -29,7 +28,6 @@ const props = defineProps({
   label: { type: String, default: '' },
   icon: { type: String, default: '' },
   hideBorder: { type: Boolean },
-  type: { type: String, default: 'text' },
 });
 
 const emit = defineEmits(['update:modelValue', 'change', 'focus', 'blur', 'clickIcon']);

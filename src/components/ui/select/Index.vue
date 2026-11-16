@@ -6,8 +6,9 @@
     :label="labelProp"
     no-results-text="Nėra rezultatų"
     :classes="{
-      container:
-        'relative mx-auto w-60 max-w-full flex items-center justify-end cursor-pointer rounded bg-white px-2 py-1 border',
+      container: `relative ${
+        fullWidth ? 'w-full' : 'mx-auto w-60'
+      } max-w-full flex items-center justify-end cursor-pointer rounded bg-white px-2 py-1 border`,
       containerDisabled: 'cursor-default bg-gray-100',
       containerOpen: '',
       containerOpenTop: '',
@@ -130,5 +131,6 @@ defineProps({
     type: String,
     default: '',
   },
+  fullWidth: Boolean,
 });
 </script>
