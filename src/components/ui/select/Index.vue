@@ -37,7 +37,7 @@
       tagsSearchCopy: 'invisible whitespace-pre-wrap inline-block h-px',
       placeholder: $attrs.searchable
         ? 'hidden'
-        : 'flex items-center h-full absolute left-0 top-0 pointer-events-none bg-transparent leading-snug text-sm text-gray-400',
+        : 'flex items-center h-full absolute left-0 top-0 pointer-events-none bg-transparent leading-snug pl-3.5 text-sm text-gray-400',
       caret:
         'bg-multiselect-caret bg-center bg-no-repeat w-2.5 h-4 py-px box-content mr-3.5 relative z-10 opacity-40 flex-shrink-0 flex-grow-0 transition-transform transform pointer-events-none',
       caretOpen: 'rotate-180 pointer-events-auto',
