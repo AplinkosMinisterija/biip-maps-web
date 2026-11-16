@@ -15,10 +15,24 @@
         </div>
       </template>
     </div>
+    <div v-if="speciesLoading || species.length" class="text-xxs">
+      <hr class="my-2" />
+      <div class="font-semibold mb-1">
+        {{ speciesLoading ? 'Rūšys' : `Rūšys (${species.length})` }}
+      </div>
+      <div v-if="speciesLoading" class="text-gray-500">Kraunamas rūšių sąrašas...</div>
+      <ul v-else class="flex flex-col gap-0.5">
+        <li v-for="item in species" :key="item.id">
+          {{ item.name }}
+          <span v-if="item.nameLatin" class="italic text-gray-500">{{ item.nameLatin }}</span>
+        </li>
+      </ul>
+    </div>
   </UiPopupContent>
 </template>
 
 <script setup lang="ts">
+import { rusysGridService } from '@/utils';
 import { computed, inject, ref, watch } from 'vue';
 const mapLayers: any = inject('mapLayers');
 
@@ -57,6 +71,24 @@ const rows = ref([
 
 const overlayLayer = ref();
 const hoverFeatureData = ref({} as any);
+const species = ref([] as any[]);
+const speciesLoading = ref(false);
+let speciesRequest = 0;
+
+const loadSpecies = async (featureId: number) => {
+  const request = ++speciesRequest;
+  species.value = [];
+  speciesLoading.value = true;
+
+  try {
+    const data = await mapLayers.loadStatsSpecies(rusysGridService.id, featureId);
+    if (request === speciesRequest) species.value = Array.isArray(data) ? data : [];
+  } catch (err) {
+    console.error(err);
+  } finally {
+    if (request === speciesRequest) speciesLoading.value = false;
+  }
+};
 
 const filteredRows = computed(() => {
   const keys = Object.keys(hoverFeatureData.value);
@@ -85,5 +117,6 @@ mapLayers.click(({ features }: any) => {
   if (!center || !hoverFeatureData.value?.count) return togglePopup();
 
   togglePopup(center);
+  loadSpecies(feature.get('id'));
 });
 </script>

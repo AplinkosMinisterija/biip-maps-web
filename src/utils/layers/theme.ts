@@ -268,6 +268,13 @@ export const inspireParcelService = {
   ),
 };
 
+export const rcParcelsService = {
+  id: 'rcParcelsService',
+  description: zudcCopyright,
+  title: 'Kadastriniai sklypai',
+  layer: getWMSImageLayer(`${qgisServerUrl}/uetk_szns_parcels`, 'sklypai', zudcCopyright),
+};
+
 export const municipalitiesService = {
   id: 'municipalitiesService',
   description: rcCopyright,
@@ -305,6 +312,7 @@ export const rusysGridService = {
   },
   stats: {
     url: `${rusysApiHost}/maps/hexagons/stats`,
+    speciesUrl: (id: number) => `${rusysApiHost}/maps/hexagons/${id}/species`,
     styleFn: (data: any) => {
       if (!Array.isArray(data)) return;
       const maxValue = Math.max(...data.map((item: any) => item.count));
@@ -1442,8 +1450,8 @@ export const gamtotvarkaStvkNatura2000 = makeGamtotvarkaStvk(
     { value: 'bast', name: 'Buveinių apsaugai svarbios teritorijos' },
   ],
 );
-export const gamtotvarkaStvkEbBuveines = makeGamtotvarkaStvk(
-  'gamtotvarkaStvkEbBuveines',
+export const stvkEbBuveines = makeGamtotvarkaStvk(
+  'stvkEbBuveines',
   'Europos bendrijos buveinės',
   'eb_buveines',
 );
@@ -1508,7 +1516,7 @@ export const gamtotvarkaStvkGpo = makeGamtotvarkaStvk(
 const gamtotvarkaStvkSubServices = [
   gamtotvarkaStvkPajurio,
   gamtotvarkaStvkNatura2000,
-  gamtotvarkaStvkEbBuveines,
+  stvkEbBuveines,
   gamtotvarkaStvkFpz,
   gamtotvarkaStvkBufApsZonos,
   gamtotvarkaStvkGenetiniai,

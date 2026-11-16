@@ -4,7 +4,7 @@ import VectorSource from 'ol/source/Vector';
 import { Draw, Modify, Snap, Interaction, Select } from 'ol/interaction';
 import type { Type as DrawType } from 'ol/geom/Geometry';
 import { GeoJSON } from 'ol/format';
-import { projection } from '../constants';
+import { projection, type AreaUnit } from '../constants';
 import { Queues } from './queues';
 import { click } from 'ol/events/condition';
 import _ from 'lodash';
@@ -137,7 +137,7 @@ export class MapDraw extends Queues {
   }
 
   enableMeasurements(
-    opts: { length?: boolean; area?: boolean; segments?: boolean } = {
+    opts: { length?: boolean; area?: boolean; segments?: boolean; areaUnit?: AreaUnit } = {
       length: true,
       area: true,
       segments: true,
@@ -148,6 +148,7 @@ export class MapDraw extends Queues {
         length: opts?.length || false,
         area: opts?.area || false,
         segments: opts?.segments || false,
+        areaUnit: opts?.areaUnit,
       },
     });
   }

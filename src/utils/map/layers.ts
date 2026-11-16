@@ -517,6 +517,20 @@ export class MapLayers extends Queues {
     return getCenter(geometry.getExtent());
   }
 
+  async loadStatsSpecies(id: string, featureId: number) {
+    const layer = this.get(id);
+    if (!layer?.stats?.speciesUrl || !featureId) return [];
+
+    const filters = this.filters(id).toQuery();
+    const { method, body, url, headers } = splitUrlIfNeeded(
+      `${layer.stats.speciesUrl(featureId)}?${filters}`,
+    );
+
+    const options = _.merge({}, this._getRequestOptions(id), { headers, body, method });
+
+    return fetch(url, options).then((response) => (response.ok ? response.json() : []));
+  }
+
   async loadStats(id: string, filter?: any) {
     const layer = this.get(id);
     if (!layer?.stats?.url) return;

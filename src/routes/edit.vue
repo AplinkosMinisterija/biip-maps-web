@@ -64,8 +64,10 @@
 import { useFiltersStore } from '@/stores/filters';
 import type { Buffer } from '@/types';
 import {
+  areaUnitSquareMeters,
   convertFeatureCollectionProjection,
-  geoportalForests,
+  geoportalForestCadastre,
+  geoportalForestResources,
   geoportalGrpk,
   geoportalOrto,
   geoportalOrto1995,
@@ -74,14 +76,16 @@ import {
   geoportalOrto2012,
   geoportalOrto2015,
   geoportalOrto2018,
+  geoportalOrto2021,
   geoportalTopo,
   geoportalTopoGray,
-  inspireParcelService,
   municipalitiesService,
   parseRouteParams,
   projection,
   projection4326,
+  rcParcelsService,
   searchGeoportal,
+  stvkEbBuveines,
   stvkService,
   uetkService,
 } from '@/utils';
@@ -106,10 +110,12 @@ const query = parseRouteParams($route.query, [
   'bufferMax',
   'closeOnSearch',
   'showArea',
+  'areaUnit',
 ]);
 const isPreview = !!query.preview;
 const doHideToolbar = !!query.hideToolbar;
 const showArea = !!query.showArea;
+const areaUnit = query.areaUnit === areaUnitSquareMeters ? areaUnitSquareMeters : undefined;
 
 const activeDrawType = computed(() => mapDraw.value.activeType);
 const selectedFeature = ref({} as any);
@@ -120,16 +126,19 @@ const showBufferChangeBox = computed(
 const toggleLayers = [
   uetkService,
   stvkService,
+  stvkEbBuveines,
   municipalitiesService,
   geoportalGrpk,
-  geoportalForests,
+  geoportalForestResources,
+  geoportalForestCadastre,
+  geoportalOrto2021,
   geoportalOrto2018,
   geoportalOrto2015,
   geoportalOrto2012,
   geoportalOrto2009,
   geoportalOrto2005,
   geoportalOrto1995,
-  inspireParcelService,
+  rcParcelsService,
 ];
 
 const mapDraw = computed(() => mapLayers.getDraw());
@@ -219,7 +228,7 @@ const toggleDrawType = (type: string) => {
   }
 
   const draw = mapDraw.value.start(type);
-  if (showArea) draw.enableMeasurements({ area: true });
+  if (showArea) draw.enableMeasurements({ area: true, areaUnit });
 };
 
 mapLayers
@@ -230,15 +239,17 @@ mapLayers
   .add(stvkService.id, { isHidden: true })
   .add(municipalitiesService.id, { isHidden: true })
   .add(geoportalGrpk.id, { isHidden: true })
-  .add(geoportalForests.id, { isHidden: true })
-  .add(geoportalGrpk.id, { isHidden: true })
+  .add(geoportalForestResources.id, { isHidden: true })
+  .add(geoportalForestCadastre.id, { isHidden: true })
+  .add(geoportalOrto2021.id, { isHidden: true })
   .add(geoportalOrto2018.id, { isHidden: true })
   .add(geoportalOrto2015.id, { isHidden: true })
   .add(geoportalOrto2012.id, { isHidden: true })
   .add(geoportalOrto2009.id, { isHidden: true })
   .add(geoportalOrto2005.id, { isHidden: true })
   .add(geoportalOrto1995.id, { isHidden: true })
-  .add(inspireParcelService.id, { isHidden: true })
+  .add(stvkEbBuveines.id, { isHidden: true })
+  .add(rcParcelsService.id, { isHidden: true })
   .enableLocationTracking();
 
 mapDraw.value
@@ -274,6 +285,7 @@ events.on('geom', (data: any) => {
   }
 
   mapLayers.zoomToFeatureCollection(geom);
+  if (showArea && areaUnit) mapDraw.value.enableMeasurements({ area: true, areaUnit });
   mapDraw.value.setFeatures(geom);
   if (!isPreview) mapDraw.value.edit();
 });

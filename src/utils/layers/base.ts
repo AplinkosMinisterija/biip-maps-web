@@ -437,73 +437,11 @@ export const geoportalGrpk = {
   }),
 };
 
-export const geoportalForests = {
-  id: 'geoportalForests',
-  title: 'Miškai',
-  layer: new ImageLayer({
-    source: new ImageArcGISRest({
-      attributions: geoportalCopyright('vmt_mkd'),
-      ratio: 1,
-      params: {
-        LAYERS: 'show:0,1,2,4,5,9',
-      },
-      url: `${geoportalUrl('vmt_mkd')}/MapServer`,
-    }),
-  }),
-  sublayers: [
-    {
-      name: 'VMU urėdijos regioniniai padaliniai',
-      value: '0',
-    },
-    {
-      name: 'Urėdijos',
-      value: '1',
-    },
-    {
-      name: 'Girininkijos',
-      value: '2',
-    },
-    {
-      name: 'Girininkijos iki 2022-12-31',
-      value: '3',
-    },
-    {
-      name: 'Kertinės miško buveinės',
-      value: '4',
-    },
-    {
-      name: 'Kvartalai',
-      value: '5',
-    },
-    {
-      name: 'Kvartalai iki 2022-12-31',
-      value: '6',
-    },
-    {
-      name: 'Valstybinės reikšmės miškų plotų ribos',
-      value: '7',
-    },
-    {
-      name: 'Miškų pogrupiai',
-      value: '8',
-    },
-    {
-      name: 'Miško sklypai',
-      value: '9',
-    },
-  ],
-};
-
-geoportalForests.layer.set('type', 'ARCGIS');
-
-// Gamtotvarkos žemėlapiui miškai suskaidyti į DU atskirus geoportal servisus
-// (užsakovo prašymas, gamtotvarka-public#39 punktas 8). Anksčiau čia buvo viena
-// „Miškai" kopija, rodanti į `vmt_mkd` su sluoksnių id 0,1,2,4,5,9 — tie id
-// nebeegzistuoja: geoportal servisą suskaidė, dalis sluoksnių persikėlė į
-// `vmt_valst_reiksmes_miskai`, o `vmt_mkd` liko tik Kvartalai ir Miško sklypai.
-// Bendras `geoportalForests` (alis/rusys/medziokle) sąmoningai NEliečiamas.
-export const gamtotvarkaForestResources = {
-  id: 'gamtotvarkaForestResources',
+// Miškų sluoksniai yra dviejuose geoportal servisuose: `vmt_mkd` teikia tik
+// Kvartalus ir Miško sklypus, visa kita (girininkijų ribos, miškų grupės,
+// valstybinės reikšmės miškai) — `vmt_valst_reiksmes_miskai`.
+export const geoportalForestResources = {
+  id: 'geoportalForestResources',
   title: 'Miškų išteklių informacijos duomenys',
   layer: new ImageLayer({
     source: new ImageArcGISRest({
@@ -547,11 +485,10 @@ export const gamtotvarkaForestResources = {
   ],
 };
 
-gamtotvarkaForestResources.layer.set('id', 'gamtotvarkaForestResources');
-gamtotvarkaForestResources.layer.set('type', 'ARCGIS');
+geoportalForestResources.layer.set('type', 'ARCGIS');
 
-export const gamtotvarkaForestCadastre = {
-  id: 'gamtotvarkaForestCadastre',
+export const geoportalForestCadastre = {
+  id: 'geoportalForestCadastre',
   title: 'Miškų valstybės kadastro duomenys',
   layer: new ImageLayer({
     source: new ImageArcGISRest({
@@ -575,8 +512,7 @@ export const gamtotvarkaForestCadastre = {
   ],
 };
 
-gamtotvarkaForestCadastre.layer.set('id', 'gamtotvarkaForestCadastre');
-gamtotvarkaForestCadastre.layer.set('type', 'ARCGIS');
+geoportalForestCadastre.layer.set('type', 'ARCGIS');
 
 export const rcSzns = {
   id: 'rcSzns',

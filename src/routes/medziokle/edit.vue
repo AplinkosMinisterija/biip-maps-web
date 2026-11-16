@@ -69,7 +69,8 @@ import type { Buffer } from '@/types';
 import {
   administrativeBoundariesLabelsService,
   convertFeatureCollectionProjection,
-  geoportalForests,
+  geoportalForestResources,
+  geoportalForestCadastre,
   geoportalGrpk,
   geoportalOrto,
   geoportalOrto2018,
@@ -129,7 +130,8 @@ const toggleLayers = [
   municipalitiesService,
   administrativeBoundariesLabelsService,
   geoportalGrpk,
-  geoportalForests,
+  geoportalForestResources,
+  geoportalForestCadastre,
   geoportalOrto2018,
   inspireParcelService,
 ];
@@ -231,7 +233,8 @@ mapLayers
   .add(municipalitiesService.id, { isHidden: true })
   .add(administrativeBoundariesLabelsService.id, { isHidden: true })
   .add(geoportalGrpk.id, { isHidden: true })
-  .add(geoportalForests.id, { isHidden: true })
+  .add(geoportalForestResources.id, { isHidden: true })
+  .add(geoportalForestCadastre.id, { isHidden: true })
   .add(geoportalOrto2018.id, { isHidden: true })
   .add(inspireParcelService.id, { isHidden: true })
   .enableLocationTracking();
