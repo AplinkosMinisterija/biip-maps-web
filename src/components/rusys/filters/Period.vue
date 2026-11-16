@@ -10,20 +10,32 @@
       @change="setYear"
     />
     <div class="grid grid-cols-2 gap-2 mt-2">
-      <label v-for="field in fields" :key="field.key" class="flex flex-col gap-1">
+      <div v-for="field in fields" :key="field.key" class="flex flex-col gap-1">
         <span class="text-xs text-gray-500">{{ field.label }}</span>
-        <input
-          type="date"
-          :value="field.value"
-          class="w-full h-12 px-2 text-sm bg-white border rounded focus:outline-none focus:border-origin-500"
-          @change="field.onChange(($event.target as HTMLInputElement).value)"
+        <VueDatePicker
+          :model-value="field.value || null"
+          model-type="yyyy-MM-dd"
+          format="yyyy-MM-dd"
+          locale="lt"
+          :format-locale="lt"
+          :week-start="1"
+          month-name-format="long"
+          :enable-time-picker="false"
+          :auto-apply="true"
+          :teleport="true"
+          placeholder="Pasirinkite"
+          input-class-name="rusys-period-input"
+          @update:model-value="field.onChange($event || '')"
         />
-      </label>
+      </div>
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
+import VueDatePicker from '@vuepic/vue-datepicker';
+import '@vuepic/vue-datepicker/dist/main.css';
+import { lt } from 'date-fns/locale';
 import { computed } from 'vue';
 
 const FIRST_YEAR = 1990;
@@ -71,3 +83,10 @@ function emitPeriod(from: string, to: string) {
   emit('change', { from: from || '', to: to || '' });
 }
 </script>
+
+<style>
+.rusys-period-input {
+  height: 3rem;
+  font-size: 0.875rem;
+}
+</style>
