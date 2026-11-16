@@ -685,26 +685,6 @@
     <path d="M2 9.33325V9.99992" stroke="#075A9D" stroke-linecap="round" stroke-linejoin="round" />
   </svg>
   <svg
-    v-else-if="name === 'download'"
-    width="18"
-    height="18"
-    viewBox="0 0 18 18"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <g clip-path="url(#clip0_12_197)">
-      <path
-        d="M13.5 11.25V13.5H4.5V11.25H3V13.5C3 14.325 3.675 15 4.5 15H13.5C14.325 15 15 14.325 15 13.5V11.25H13.5ZM12.75 8.25L11.6925 7.1925L9.75 9.1275V3H8.25V9.1275L6.3075 7.1925L5.25 8.25L9 12L12.75 8.25Z"
-        fill="#1F2937"
-      />
-    </g>
-    <defs>
-      <clipPath id="clip0_12_197">
-        <rect width="18" height="18" fill="white" />
-      </clipPath>
-    </defs>
-  </svg>
-  <svg
     v-else-if="name === 'link'"
     xmlns="http://www.w3.org/2000/svg"
     :width="size"
@@ -720,6 +700,21 @@
     <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
     <polyline points="15 3 21 3 21 9"></polyline>
     <line x1="10" y1="14" x2="21" y2="3"></line>
+  </svg>
+  <svg
+    v-else-if="name === 'link-chain'"
+    xmlns="http://www.w3.org/2000/svg"
+    :width="size"
+    :height="size"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
   </svg>
   <svg
     v-else-if="name === 'copy'"

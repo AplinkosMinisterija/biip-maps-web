@@ -206,7 +206,7 @@ const noResultsModal = ref();
 const downloadDataModal = ref();
 
 const highlightStyle: VectorLayerStyleOptions = {
-  color: '#921ae9',
+  color: '#1800e3',
   width: 3,
   fillOpacity: 0.3,
   strokeOpacity: 1,
