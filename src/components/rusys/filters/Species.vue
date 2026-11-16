@@ -15,6 +15,7 @@
       :options="loadOptions"
       :search-filter="searchFilter"
       :infinite="true"
+      full-width
     />
   </div>
 </template>
