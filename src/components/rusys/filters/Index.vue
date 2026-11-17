@@ -30,6 +30,8 @@ const FORM_LAYERS = [
   'stebejimai_interpretuojami',
   'stebejimai_tyrineta_nerasta_invazines',
   'stebejimai_tyrineta_nerasta_svetimzemes',
+  'stebejimai_pavieniai_invazines',
+  'stebejimai_pavieniai_svetimzemes',
 ];
 
 const rusysServiceFilters = mapLayers.filters(rusysService.id);

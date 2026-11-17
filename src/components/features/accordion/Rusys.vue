@@ -46,11 +46,14 @@ const postMessage: any = inject('postMessage');
 const mapLayers: any = inject('mapLayers');
 
 const radavietesFeatureIds = ['radavietes', 'radavietes_invazines', 'radavietes_svetimzemes'];
-const stebejimaiFeatureId = [
-  'stebejimai_interpretuojami',
-  'stebejimai_tyrineta_nerasta_invazines',
-  'stebejimai_tyrineta_nerasta_svetimzemes',
-];
+const stebejimaiDescriptions: Record<string, string> = {
+  stebejimai_interpretuojami: 'Radavietė (pavienis stebėjimas)',
+  stebejimai_pavieniai_invazines: 'Pavienis stebėjimas (invazinė)',
+  stebejimai_pavieniai_svetimzemes: 'Pavienis stebėjimas (svetimžemė)',
+  stebejimai_tyrineta_nerasta_invazines: 'Tyrinėta, bet nerasta (invazinė)',
+  stebejimai_tyrineta_nerasta_svetimzemes: 'Tyrinėta, bet nerasta (svetimžemė)',
+};
+const stebejimaiFeatureId = Object.keys(stebejimaiDescriptions);
 
 const getFeatureName = (feature: any) => {
   return feature.featureId.split('.')[0];
@@ -84,22 +87,13 @@ function isEndangeredSpeciesType(feature: any) {
   return getSpeciesType(feature) === 'ENDANGERED';
 }
 
-function isInvasiveSpeciesType(feature: any) {
-  return getSpeciesType(feature) === 'INVASIVE';
-}
-
 const getDescription = (feature: any) => {
   if (isFeaturePlace(feature)) {
     const text = `${feature?.['Radavietės kodas']}`;
     const type = getValue(feature, ['Apsaugos grupė', 'species_type'], SpeciesTypes);
     return `${text} (${type} radavietė)`;
   } else if (isFeatureForm(feature)) {
-    if (isEndangeredSpeciesType(feature)) {
-      return 'Radavietė (pavienis stebėjimas)';
-    } else if (isInvasiveSpeciesType(feature)) {
-      return 'Tyrinėta, bet nerasta (invazinė)';
-    }
-    return 'Tyrinėta, bet nerasta (svetimžemė)';
+    return stebejimaiDescriptions[getFeatureName(feature)];
   }
 
   return;

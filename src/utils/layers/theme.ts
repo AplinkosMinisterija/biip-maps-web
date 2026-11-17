@@ -431,6 +431,14 @@ export const invaService = {
       name: 'Radavietės (svetimžemės)',
       value: 'radavietes_svetimzemes',
     },
+    {
+      name: 'Pavieniai stebėjimai',
+      value: 'stebejimai_pavieniai_invazines',
+    },
+    {
+      name: 'Pavieniai stebėjimai (svetimžemės)',
+      value: 'stebejimai_pavieniai_svetimzemes',
+    },
   ],
 };
 
