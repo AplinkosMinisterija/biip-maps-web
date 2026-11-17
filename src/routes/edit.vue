@@ -79,16 +79,22 @@ import {
   geoportalOrto2021,
   geoportalTopo,
   geoportalTopoGray,
+  invaService,
   municipalitiesService,
   parseRouteParams,
   projection,
   projection4326,
   rcParcelsService,
   searchGeoportal,
+  srisAccessService,
+  srisPrivateService,
+  srisService,
   stvkEbBuveines,
   stvkService,
   uetkService,
+  validateSrisAuth,
 } from '@/utils';
+import { useConfigStore } from '@/stores/config';
 import { getFeatureCollection } from 'geojsonjs';
 import _ from 'lodash';
 import { computed, inject, ref } from 'vue';
@@ -111,6 +117,8 @@ const query = parseRouteParams($route.query, [
   'closeOnSearch',
   'showArea',
   'areaUnit',
+  'speciesLayers',
+  'auth',
 ]);
 const isPreview = !!query.preview;
 const doHideToolbar = !!query.hideToolbar;
@@ -123,7 +131,30 @@ const showBufferChangeBox = computed(
   () => !!query.buffer && ['Point', 'LineString'].includes(selectedFeature.value?.geometry?.type),
 );
 
+// Only the species observation form asks for the species layers; every other module keeps its map.
+const showSpeciesLayers = !!query.speciesLayers;
+const config = useConfigStore();
+let speciesUser: any = false;
+
+if (showSpeciesLayers) {
+  config.setSrisToken(query.auth);
+  speciesUser = await validateSrisAuth(query.auth);
+  config.setRusysUser(speciesUser || {});
+
+  if (speciesUser?.type !== 'ADMIN' && !speciesUser?.isExpert) {
+    invaService.sublayers
+      .filter((s) =>
+        ['radavietes_svetimzemes', 'stebejimai_tyrineta_nerasta_svetimzemes'].includes(s.value),
+      )
+      .forEach((sublayer: any) => (sublayer.isHidden = true));
+  }
+}
+
+// Protected species are served through the API, which only returns the places this user may see.
+const speciesLayers = showSpeciesLayers ? [...(speciesUser ? [srisService] : []), invaService] : [];
+
 const toggleLayers = [
+  ...speciesLayers,
   uetkService,
   stvkService,
   stvkEbBuveines,
@@ -251,6 +282,13 @@ mapLayers
   .add(stvkEbBuveines.id, { isHidden: true })
   .add(rcParcelsService.id, { isHidden: true })
   .enableLocationTracking();
+
+speciesLayers.forEach((service) => mapLayers.add(service.id, { isHidden: true }));
+if (speciesUser) {
+  mapLayers.toggleVisibility(srisPrivateService.id, true);
+  mapLayers.toggleVisibility(srisAccessService.id, false);
+}
+speciesLayers.forEach((service) => mapLayers.updateLayerQuery(service.id));
 
 mapDraw.value
   .setMulti(!!query.multi)
