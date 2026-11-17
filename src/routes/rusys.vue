@@ -154,7 +154,11 @@ config.setRusysUser(user || {});
 
 if (user?.type !== 'ADMIN' && !user?.isExpert) {
   const sublayers: any[] = invaService.sublayers.filter((s) =>
-    ['radavietes_svetimzemes', 'stebejimai_tyrineta_nerasta_svetimzemes'].includes(s.value),
+    [
+      'radavietes_svetimzemes',
+      'stebejimai_tyrineta_nerasta_svetimzemes',
+      'stebejimai_pavieniai_svetimzemes',
+    ].includes(s.value),
   );
 
   sublayers.forEach((sublayer) => {
@@ -183,6 +187,10 @@ const filtersPlacesGrid = computed(() =>
     .onAll(['radavietes', 'radavietes_invazines', 'radavietes_svetimzemes']),
 );
 const filtersPlacesSris = computed(() => mapLayers.filters(srisService.id).on('radavietes'));
+const invaInformationalLayers = [
+  'stebejimai_pavieniai_invazines',
+  'stebejimai_pavieniai_svetimzemes',
+];
 const filtersPlacesInva = computed(() =>
   mapLayers
     .filters(invaService.id)
@@ -191,6 +199,8 @@ const filtersPlacesInva = computed(() =>
       'radavietes_svetimzemes',
       'stebejimai_tyrineta_nerasta_svetimzemes',
       'stebejimai_tyrineta_nerasta_invazines',
+      'stebejimai_pavieniai_invazines',
+      'stebejimai_pavieniai_svetimzemes',
     ]),
 );
 const filters = computed(() =>
@@ -201,12 +211,18 @@ const filters = computed(() =>
       'stebejimai_interpretuojami',
       'stebejimai_tyrineta_nerasta_invazines',
       'stebejimai_tyrineta_nerasta_svetimzemes',
+      'stebejimai_pavieniai_invazines',
+      'stebejimai_pavieniai_svetimzemes',
       'radavietes_invazines',
       'radavietes_svetimzemes',
     ]),
 );
 const filtersSrisInformational = computed(() =>
   mapLayers.filters(srisService.id).on('stebejimai_interpretuojami'),
+);
+// A service-wide filter would reach the radavietės layers too, where the same id means a place.
+const filtersInvaInformational = computed(() =>
+  invaInformationalLayers.map((layer: string) => mapLayers.filters(invaService.id).on(layer)),
 );
 const toggleLayers = [
   rusysService,
@@ -240,6 +256,9 @@ if (query.species) {
 }
 if (query.informationalForm) {
   filtersSrisInformational.value.set('id', query.informationalForm);
+  filtersInvaInformational.value.forEach((filter: any) =>
+    filter.set('id', query.informationalForm),
+  );
   filtersPlacesGrid.value.set('forms', query.informationalForm);
 }
 if (query.request) {
@@ -352,7 +371,7 @@ if (query.place) {
   mapLayers.setSublayers(invaService.id, ['radavietes_invazines', 'radavietes_svetimzemes']);
 } else if (query.informationalForm) {
   mapLayers.setSublayers(srisService.id, 'stebejimai_interpretuojami');
-  mapLayers.toggleVisibility(invaService.id, false);
+  mapLayers.setSublayers(invaService.id, invaInformationalLayers);
 }
 
 mapLayers
