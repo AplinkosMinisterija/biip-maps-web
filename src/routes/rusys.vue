@@ -20,6 +20,11 @@
             Rodyti visas radavietes
           </UiInputCheckbox>
         </UiBox>
+        <UiBox v-if="canShowOwnDataBox">
+          <UiInputCheckbox @change="toggleOwnData">
+            Rodyti tik mano pateiktus duomenis
+          </UiInputCheckbox>
+        </UiBox>
         <UiBox v-if="canShowPlaceBox">
           <UiInputCheckbox v-model="showPlaceChecked" @change="showPlace">
             Rodyti tik šią radavietę.
@@ -96,7 +101,7 @@ import { useRoute } from 'vue-router';
 
 import { rusysApiHost } from '@/config';
 import { useConfigStore } from '@/stores/config';
-import { getItemsByRequest } from '@/utils/requests/rusys';
+import { getItemsByRequest, getOwnItems } from '@/utils/requests/rusys';
 
 const GRID_TO_SERVICE_LEVEL = 5;
 const filtersStore = useFiltersStore();
@@ -180,6 +185,15 @@ const userCanSeeBoxes = computed(
 const canShowPlaceBox = computed(() => userCanSeeBoxes.value && !!query.place);
 
 const canShowGridBox = computed(() => userCanSeeBoxes.value);
+
+const canShowOwnDataBox = computed(
+  () =>
+    config.user.isUser &&
+    !config.user.isExpert &&
+    !query.place &&
+    !query.request &&
+    !query.informationalForm,
+);
 
 const filtersPlacesGrid = computed(() =>
   mapLayers
@@ -293,6 +307,40 @@ async function showPlace(value: boolean) {
     filtersPlacesSris.value.clear();
     filtersPlacesGrid.value.clear();
   }
+}
+
+async function toggleOwnData(value: boolean) {
+  const invaPlacesLayers = ['radavietes_invazines', 'radavietes_svetimzemes'];
+  const invaFormsLayers = [
+    'stebejimai_tyrineta_nerasta_invazines',
+    'stebejimai_tyrineta_nerasta_svetimzemes',
+    ...invaInformationalLayers,
+  ];
+  const placesFilters = [
+    filtersPlacesSris.value,
+    ...invaPlacesLayers.map((layer) => mapLayers.filters(invaService.id).on(layer)),
+  ];
+  const formsFilters = [
+    filtersSrisInformational.value,
+    ...invaFormsLayers.map((layer) => mapLayers.filters(invaService.id).on(layer)),
+  ];
+
+  if (value) {
+    const own = await getOwnItems(config.srisHeaders);
+    const toIdIn = (ids: number[]) => ({ $in: ids?.length ? ids : [-1] });
+
+    placesFilters.forEach((filter) => filter.set('id', toIdIn(own?.places)));
+    formsFilters.forEach((filter) => filter.set('id', toIdIn(own?.forms)));
+    filtersPlacesGrid.value.set('id', toIdIn(own?.places));
+    filtersPlacesGrid.value.set('forms', toIdIn(own?.forms));
+  } else {
+    [...placesFilters, ...formsFilters].forEach((filter) => filter.remove('id'));
+    filtersPlacesGrid.value.remove('id');
+    filtersPlacesGrid.value.remove('forms');
+  }
+
+  mapLayers.updateLayerQuery(rusysService.id);
+  mapLayers.updateLayerQuery(rusysGridService.id);
 }
 
 const toggleAmateurLayers = (value: boolean) => {
