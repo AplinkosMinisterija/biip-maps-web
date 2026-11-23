@@ -129,6 +129,7 @@ const query = parseRouteParams($route.query, [
   'request',
   'screenshot',
   'hideGrid',
+  'selectPlace',
 ]);
 
 const isVisibleSrisLayer = ref(true);
@@ -414,7 +415,7 @@ mapLayers
   })
   .toggleVisibility(srisAccessService.id, !!query.amateur);
 
-if (query.place) {
+if (query.place || query.selectPlace) {
   mapLayers.setSublayers(srisService.id, 'radavietes');
   mapLayers.setSublayers(invaService.id, ['radavietes_invazines', 'radavietes_svetimzemes']);
 } else if (query.informationalForm) {
