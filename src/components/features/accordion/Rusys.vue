@@ -15,9 +15,11 @@
           size="sm"
           center-text
           class="w-full"
+          :active="isSelectedPlace(feature)"
+          :icon="isSelectedPlace(feature) ? 'check-circle' : ''"
           @click="selectFeature(feature)"
         >
-          Pasirinkti šią radavietę
+          {{ isSelectedPlace(feature) ? 'Radavietė pasirinkta' : 'Pasirinkti šią radavietę' }}
         </UiButton>
       </template>
       <UiTable class="text-xs">
@@ -45,7 +47,7 @@
 import { useConfigStore } from '@/stores/config';
 import { rusysSelectedHighlightLayer, SpeciesTypes } from '@/utils';
 import moment from 'moment';
-import { computed, inject } from 'vue';
+import { computed, inject, ref } from 'vue';
 import { useRoute } from 'vue-router';
 const props = defineProps({
   features: {
@@ -55,6 +57,7 @@ const props = defineProps({
 });
 const config = useConfigStore();
 const isPlaceSelection = !!useRoute().query.selectPlace;
+const selectedPlaceId = ref();
 const postMessage: any = inject('postMessage');
 const mapLayers: any = inject('mapLayers');
 
@@ -357,10 +360,18 @@ function canSelectPlace(feature: any) {
   );
 }
 
+function isSelectedPlace(feature: any) {
+  return !!selectedPlaceId.value && selectedPlaceId.value === getFeatureId(feature);
+}
+
 function selectFeature(feature: any) {
   const id = getFeatureId(feature);
 
   if (isFeaturePlace(feature)) {
+    if (isPlaceSelection) {
+      selectedPlaceId.value = id;
+      highlightFeature(feature);
+    }
     postMessage('selectedPlace', id);
   } else if (isFeatureForm(feature)) {
     postMessage('selectedForm', id);
