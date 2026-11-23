@@ -35,6 +35,7 @@ import { useConfigStore } from '@/stores/config';
 import { rusysSelectedHighlightLayer, SpeciesTypes } from '@/utils';
 import moment from 'moment';
 import { computed, inject } from 'vue';
+import { useRoute } from 'vue-router';
 const props = defineProps({
   features: {
     type: Array<any>,
@@ -42,6 +43,7 @@ const props = defineProps({
   },
 });
 const config = useConfigStore();
+const isPlaceSelection = !!useRoute().query.selectPlace;
 const postMessage: any = inject('postMessage');
 const mapLayers: any = inject('mapLayers');
 
@@ -247,7 +249,7 @@ const rows: any[] = [
   },
   {
     name: 'Radavietė',
-    link: 'Peržiūrėti radavietę',
+    link: isPlaceSelection ? 'Pasirinkti šią radavietę' : 'Peržiūrėti radavietę',
     click: selectFeature,
     show: (feature: any) =>
       (config.user.isAdmin || config.user.isExpert) && isFeaturePlace(feature),
