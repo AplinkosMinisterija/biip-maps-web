@@ -18,6 +18,9 @@
         <UiIcon name="chevron-down" class="transition" :class="{ 'rotate-180': isOpen }" />
       </div>
     </div>
+    <div v-if="$slots.footer" class="mt-2">
+      <slot name="footer" />
+    </div>
     <div :class="{ hidden: !isOpen }" class="mt-2">
       <slot />
     </div>

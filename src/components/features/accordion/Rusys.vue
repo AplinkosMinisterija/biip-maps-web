@@ -9,6 +9,17 @@
       :badge="feature?._layerTitle"
       @click="highlightFeature(feature)"
     >
+      <template v-if="canSelectPlace(feature)" #footer>
+        <UiButton
+          type="success"
+          size="sm"
+          center-text
+          class="w-full"
+          @click="selectFeature(feature)"
+        >
+          Pasirinkti šią radavietę
+        </UiButton>
+      </template>
       <UiTable class="text-xs">
         <UiTableRow v-for="(r, key) in filteredRows(feature)" :key="key">
           <UiTableCell>{{ r.name }}</UiTableCell>
@@ -249,10 +260,10 @@ const rows: any[] = [
   },
   {
     name: 'Radavietė',
-    link: isPlaceSelection ? 'Pasirinkti šią radavietę' : 'Peržiūrėti radavietę',
+    link: 'Peržiūrėti radavietę',
     click: selectFeature,
     show: (feature: any) =>
-      (config.user.isAdmin || config.user.isExpert) && isFeaturePlace(feature),
+      !isPlaceSelection && (config.user.isAdmin || config.user.isExpert) && isFeaturePlace(feature),
   },
   {
     name: 'Individų skaičius (gausumas)',
@@ -338,6 +349,12 @@ function highlightFeature(feature: any) {
   if (!mapLayers || !feature?._geometry) return;
 
   mapLayers.highlightFeatures(feature._geometry, { layer: rusysSelectedHighlightLayer.id });
+}
+
+function canSelectPlace(feature: any) {
+  return (
+    isPlaceSelection && (config.user.isAdmin || config.user.isExpert) && isFeaturePlace(feature)
+  );
 }
 
 function selectFeature(feature: any) {
