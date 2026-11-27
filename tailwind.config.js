@@ -7,6 +7,7 @@ export default {
     screens: {
       xs: '480px',
       ...defaultTheme.screens,
+      short: { raw: '(max-height: 500px)' },
     },
     extend: {
       fontSize: {

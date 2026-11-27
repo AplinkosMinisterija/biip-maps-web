@@ -5,7 +5,7 @@
     </div>
     <div
       v-if="isOpen"
-      class="fixed w-screen h-screen top-0 left-0 z-50 flex items-center justify-center p-2 sm:py-12 sm:px-8"
+      class="fixed w-screen h-screen top-0 left-0 z-50 flex items-center justify-center p-2 sm:py-12 sm:px-8 short:p-2"
     >
       <div
         class="fixed top-0 left-0 h-screen w-screen flex lg:items-center items-end justify-center z-50 bg-black bg-opacity-50"
@@ -16,17 +16,17 @@
         class="bg-white relative z-50 border border-gray-100 max-h-full flex flex-col"
         :class="[sizing[size || 'default']]"
       >
-        <div class="flex justify-between items-center p-6 border-b border-gray-100">
+        <div class="flex justify-between items-center p-6 short:py-2 border-b border-gray-100">
           <div>
             <h3 class="font-semibold">{{ title }}</h3>
           </div>
 
           <UiButton icon="close" type="ghost" @click="close" />
         </div>
-        <div v-if="$slots.default" class="w-full h-full p-6 overflow-y-auto">
+        <div v-if="$slots.default" class="w-full h-full p-6 short:py-3 overflow-y-auto">
           <slot />
         </div>
-        <div class="p-6 flex items-center justify-end border-t border-gray-100 pt-6">
+        <div class="p-6 short:py-2 flex items-center justify-end border-t border-gray-100 pt-6">
           <UiButtonRow>
             <UiButton v-if="showCloseBtn" type="ghost" @click="close"> Close </UiButton>
             <slot name="footer" />
